@@ -1,7 +1,10 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertSaleSchema, insertUploadHistorySchema } from "@shared/schema";
+import { 
+  insertSaleSchema, insertUploadHistorySchema, insertBancoSchema, insertTipoEgresoSchema, 
+  insertProductoSchema, insertMetodoPagoSchema, insertMonedaSchema, insertCategoriaSchema 
+} from "@shared/schema";
 import { z } from "zod";
 import multer from "multer";
 import * as XLSX from "xlsx";
@@ -383,7 +386,351 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ===========================================
+  // ADMIN CONFIGURATION ENDPOINTS
+  // ===========================================
 
+  // BANCOS endpoints
+  app.get("/api/admin/bancos", async (req, res) => {
+    try {
+      const bancos = await storage.getBancos();
+      res.json(bancos);
+    } catch (error) {
+      console.error("Get bancos error:", error);
+      res.status(500).json({ error: "Failed to get bancos" });
+    }
+  });
+
+  app.post("/api/admin/bancos", async (req, res) => {
+    try {
+      const validatedData = insertBancoSchema.parse(req.body);
+      const banco = await storage.createBanco(validatedData);
+      res.status(201).json(banco);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Invalid data", details: error.errors });
+      }
+      console.error("Create banco error:", error);
+      res.status(500).json({ error: "Failed to create banco" });
+    }
+  });
+
+  app.put("/api/admin/bancos/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const validatedData = insertBancoSchema.partial().parse(req.body);
+      const banco = await storage.updateBanco(id, validatedData);
+      if (!banco) {
+        return res.status(404).json({ error: "Banco not found" });
+      }
+      res.json(banco);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Invalid data", details: error.errors });
+      }
+      console.error("Update banco error:", error);
+      res.status(500).json({ error: "Failed to update banco" });
+    }
+  });
+
+  app.delete("/api/admin/bancos/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const deleted = await storage.deleteBanco(id);
+      if (!deleted) {
+        return res.status(404).json({ error: "Banco not found" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Delete banco error:", error);
+      res.status(500).json({ error: "Failed to delete banco" });
+    }
+  });
+
+  // TIPOS DE EGRESOS endpoints
+  app.get("/api/admin/tipos-egresos", async (req, res) => {
+    try {
+      const tipos = await storage.getTiposEgresos();
+      res.json(tipos);
+    } catch (error) {
+      console.error("Get tipos egresos error:", error);
+      res.status(500).json({ error: "Failed to get tipos egresos" });
+    }
+  });
+
+  app.post("/api/admin/tipos-egresos", async (req, res) => {
+    try {
+      const validatedData = insertTipoEgresoSchema.parse(req.body);
+      const tipo = await storage.createTipoEgreso(validatedData);
+      res.status(201).json(tipo);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Invalid data", details: error.errors });
+      }
+      console.error("Create tipo egreso error:", error);
+      res.status(500).json({ error: "Failed to create tipo egreso" });
+    }
+  });
+
+  app.put("/api/admin/tipos-egresos/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const validatedData = insertTipoEgresoSchema.partial().parse(req.body);
+      const tipo = await storage.updateTipoEgreso(id, validatedData);
+      if (!tipo) {
+        return res.status(404).json({ error: "Tipo egreso not found" });
+      }
+      res.json(tipo);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Invalid data", details: error.errors });
+      }
+      console.error("Update tipo egreso error:", error);
+      res.status(500).json({ error: "Failed to update tipo egreso" });
+    }
+  });
+
+  app.delete("/api/admin/tipos-egresos/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const deleted = await storage.deleteTipoEgreso(id);
+      if (!deleted) {
+        return res.status(404).json({ error: "Tipo egreso not found" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Delete tipo egreso error:", error);
+      res.status(500).json({ error: "Failed to delete tipo egreso" });
+    }
+  });
+
+  // PRODUCTOS endpoints
+  app.get("/api/admin/productos", async (req, res) => {
+    try {
+      const productos = await storage.getProductos();
+      res.json(productos);
+    } catch (error) {
+      console.error("Get productos error:", error);
+      res.status(500).json({ error: "Failed to get productos" });
+    }
+  });
+
+  app.post("/api/admin/productos", async (req, res) => {
+    try {
+      const validatedData = insertProductoSchema.parse(req.body);
+      const producto = await storage.createProducto(validatedData);
+      res.status(201).json(producto);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Invalid data", details: error.errors });
+      }
+      console.error("Create producto error:", error);
+      res.status(500).json({ error: "Failed to create producto" });
+    }
+  });
+
+  app.put("/api/admin/productos/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const validatedData = insertProductoSchema.partial().parse(req.body);
+      const producto = await storage.updateProducto(id, validatedData);
+      if (!producto) {
+        return res.status(404).json({ error: "Producto not found" });
+      }
+      res.json(producto);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Invalid data", details: error.errors });
+      }
+      console.error("Update producto error:", error);
+      res.status(500).json({ error: "Failed to update producto" });
+    }
+  });
+
+  app.delete("/api/admin/productos/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const deleted = await storage.deleteProducto(id);
+      if (!deleted) {
+        return res.status(404).json({ error: "Producto not found" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Delete producto error:", error);
+      res.status(500).json({ error: "Failed to delete producto" });
+    }
+  });
+
+  // MÉTODOS DE PAGO endpoints
+  app.get("/api/admin/metodos-pago", async (req, res) => {
+    try {
+      const metodos = await storage.getMetodosPago();
+      res.json(metodos);
+    } catch (error) {
+      console.error("Get metodos pago error:", error);
+      res.status(500).json({ error: "Failed to get metodos pago" });
+    }
+  });
+
+  app.post("/api/admin/metodos-pago", async (req, res) => {
+    try {
+      const validatedData = insertMetodoPagoSchema.parse(req.body);
+      const metodo = await storage.createMetodoPago(validatedData);
+      res.status(201).json(metodo);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Invalid data", details: error.errors });
+      }
+      console.error("Create metodo pago error:", error);
+      res.status(500).json({ error: "Failed to create metodo pago" });
+    }
+  });
+
+  app.put("/api/admin/metodos-pago/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const validatedData = insertMetodoPagoSchema.partial().parse(req.body);
+      const metodo = await storage.updateMetodoPago(id, validatedData);
+      if (!metodo) {
+        return res.status(404).json({ error: "Metodo pago not found" });
+      }
+      res.json(metodo);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Invalid data", details: error.errors });
+      }
+      console.error("Update metodo pago error:", error);
+      res.status(500).json({ error: "Failed to update metodo pago" });
+    }
+  });
+
+  app.delete("/api/admin/metodos-pago/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const deleted = await storage.deleteMetodoPago(id);
+      if (!deleted) {
+        return res.status(404).json({ error: "Metodo pago not found" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Delete metodo pago error:", error);
+      res.status(500).json({ error: "Failed to delete metodo pago" });
+    }
+  });
+
+  // MONEDAS endpoints
+  app.get("/api/admin/monedas", async (req, res) => {
+    try {
+      const monedas = await storage.getMonedas();
+      res.json(monedas);
+    } catch (error) {
+      console.error("Get monedas error:", error);
+      res.status(500).json({ error: "Failed to get monedas" });
+    }
+  });
+
+  app.post("/api/admin/monedas", async (req, res) => {
+    try {
+      const validatedData = insertMonedaSchema.parse(req.body);
+      const moneda = await storage.createMoneda(validatedData);
+      res.status(201).json(moneda);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Invalid data", details: error.errors });
+      }
+      console.error("Create moneda error:", error);
+      res.status(500).json({ error: "Failed to create moneda" });
+    }
+  });
+
+  app.put("/api/admin/monedas/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const validatedData = insertMonedaSchema.partial().parse(req.body);
+      const moneda = await storage.updateMoneda(id, validatedData);
+      if (!moneda) {
+        return res.status(404).json({ error: "Moneda not found" });
+      }
+      res.json(moneda);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Invalid data", details: error.errors });
+      }
+      console.error("Update moneda error:", error);
+      res.status(500).json({ error: "Failed to update moneda" });
+    }
+  });
+
+  app.delete("/api/admin/monedas/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const deleted = await storage.deleteMoneda(id);
+      if (!deleted) {
+        return res.status(404).json({ error: "Moneda not found" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Delete moneda error:", error);
+      res.status(500).json({ error: "Failed to delete moneda" });
+    }
+  });
+
+  // CATEGORÍAS endpoints
+  app.get("/api/admin/categorias", async (req, res) => {
+    try {
+      const categorias = await storage.getCategorias();
+      res.json(categorias);
+    } catch (error) {
+      console.error("Get categorias error:", error);
+      res.status(500).json({ error: "Failed to get categorias" });
+    }
+  });
+
+  app.post("/api/admin/categorias", async (req, res) => {
+    try {
+      const validatedData = insertCategoriaSchema.parse(req.body);
+      const categoria = await storage.createCategoria(validatedData);
+      res.status(201).json(categoria);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Invalid data", details: error.errors });
+      }
+      console.error("Create categoria error:", error);
+      res.status(500).json({ error: "Failed to create categoria" });
+    }
+  });
+
+  app.put("/api/admin/categorias/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const validatedData = insertCategoriaSchema.partial().parse(req.body);
+      const categoria = await storage.updateCategoria(id, validatedData);
+      if (!categoria) {
+        return res.status(404).json({ error: "Categoria not found" });
+      }
+      res.json(categoria);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Invalid data", details: error.errors });
+      }
+      console.error("Update categoria error:", error);
+      res.status(500).json({ error: "Failed to update categoria" });
+    }
+  });
+
+  app.delete("/api/admin/categorias/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const deleted = await storage.deleteCategoria(id);
+      if (!deleted) {
+        return res.status(404).json({ error: "Categoria not found" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Delete categoria error:", error);
+      res.status(500).json({ error: "Failed to delete categoria" });
+    }
+  });
 
   const httpServer = createServer(app);
   return httpServer;

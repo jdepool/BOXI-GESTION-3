@@ -9,6 +9,52 @@ export const users = pgTable("users", {
   password: text("password").notNull(),
 });
 
+// Admin configuration tables
+export const bancos = pgTable("bancos", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  banco: text("banco").notNull(),
+  numeroCuenta: text("numero_cuenta").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const tiposEgresos = pgTable("tipos_egresos", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  nombre: text("nombre").notNull().unique(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const productos = pgTable("productos", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  nombre: text("nombre").notNull().unique(),
+  categoria: text("categoria").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const metodosPago = pgTable("metodos_pago", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  nombre: text("nombre").notNull().unique(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const monedas = pgTable("monedas", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  codigo: text("codigo").notNull().unique(),
+  nombre: text("nombre").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const categorias = pgTable("categorias", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  nombre: text("nombre").notNull().unique(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 export const sales = pgTable("sales", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   nombre: text("nombre").notNull(),
@@ -74,9 +120,60 @@ export const insertUploadHistorySchema = createInsertSchema(uploadHistory).omit(
   uploadedAt: true,
 });
 
+// Admin schemas
+export const insertBancoSchema = createInsertSchema(bancos).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertTipoEgresoSchema = createInsertSchema(tiposEgresos).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertProductoSchema = createInsertSchema(productos).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertMetodoPagoSchema = createInsertSchema(metodosPago).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertMonedaSchema = createInsertSchema(monedas).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertCategoriaSchema = createInsertSchema(categorias).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type Sale = typeof sales.$inferSelect;
 export type InsertSale = z.infer<typeof insertSaleSchema>;
 export type UploadHistory = typeof uploadHistory.$inferSelect;
 export type InsertUploadHistory = z.infer<typeof insertUploadHistorySchema>;
+
+// Admin types
+export type Banco = typeof bancos.$inferSelect;
+export type InsertBanco = z.infer<typeof insertBancoSchema>;
+export type TipoEgreso = typeof tiposEgresos.$inferSelect;
+export type InsertTipoEgreso = z.infer<typeof insertTipoEgresoSchema>;
+export type Producto = typeof productos.$inferSelect;
+export type InsertProducto = z.infer<typeof insertProductoSchema>;
+export type MetodoPago = typeof metodosPago.$inferSelect;
+export type InsertMetodoPago = z.infer<typeof insertMetodoPagoSchema>;
+export type Moneda = typeof monedas.$inferSelect;
+export type InsertMoneda = z.infer<typeof insertMonedaSchema>;
+export type Categoria = typeof categorias.$inferSelect;
+export type InsertCategoria = z.infer<typeof insertCategoriaSchema>;

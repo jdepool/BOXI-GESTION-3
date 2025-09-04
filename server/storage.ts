@@ -1,4 +1,10 @@
-import { sales, uploadHistory, users, type User, type InsertUser, type Sale, type InsertSale, type UploadHistory, type InsertUploadHistory } from "@shared/schema";
+import { 
+  sales, uploadHistory, users, bancos, tiposEgresos, productos, metodosPago, monedas, categorias,
+  type User, type InsertUser, type Sale, type InsertSale, type UploadHistory, type InsertUploadHistory,
+  type Banco, type InsertBanco, type TipoEgreso, type InsertTipoEgreso,
+  type Producto, type InsertProducto, type MetodoPago, type InsertMetodoPago,
+  type Moneda, type InsertMoneda, type Categoria, type InsertCategoria
+} from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, count, sum, avg, and, gte, lte, or, ilike, isNotNull } from "drizzle-orm";
 
@@ -57,6 +63,43 @@ export interface IStorage {
   // Upload history methods
   createUploadHistory(uploadData: InsertUploadHistory): Promise<UploadHistory>;
   getRecentUploads(limit?: number): Promise<UploadHistory[]>;
+
+  // Admin configuration methods
+  // Bancos
+  getBancos(): Promise<Banco[]>;
+  createBanco(banco: InsertBanco): Promise<Banco>;
+  updateBanco(id: string, banco: Partial<InsertBanco>): Promise<Banco | undefined>;
+  deleteBanco(id: string): Promise<boolean>;
+
+  // Tipos de Egresos
+  getTiposEgresos(): Promise<TipoEgreso[]>;
+  createTipoEgreso(tipo: InsertTipoEgreso): Promise<TipoEgreso>;
+  updateTipoEgreso(id: string, tipo: Partial<InsertTipoEgreso>): Promise<TipoEgreso | undefined>;
+  deleteTipoEgreso(id: string): Promise<boolean>;
+
+  // Productos
+  getProductos(): Promise<Producto[]>;
+  createProducto(producto: InsertProducto): Promise<Producto>;
+  updateProducto(id: string, producto: Partial<InsertProducto>): Promise<Producto | undefined>;
+  deleteProducto(id: string): Promise<boolean>;
+
+  // Métodos de Pago
+  getMetodosPago(): Promise<MetodoPago[]>;
+  createMetodoPago(metodo: InsertMetodoPago): Promise<MetodoPago>;
+  updateMetodoPago(id: string, metodo: Partial<InsertMetodoPago>): Promise<MetodoPago | undefined>;
+  deleteMetodoPago(id: string): Promise<boolean>;
+
+  // Monedas
+  getMonedas(): Promise<Moneda[]>;
+  createMoneda(moneda: InsertMoneda): Promise<Moneda>;
+  updateMoneda(id: string, moneda: Partial<InsertMoneda>): Promise<Moneda | undefined>;
+  deleteMoneda(id: string): Promise<boolean>;
+
+  // Categorías
+  getCategorias(): Promise<Categoria[]>;
+  createCategoria(categoria: InsertCategoria): Promise<Categoria>;
+  updateCategoria(id: string, categoria: Partial<InsertCategoria>): Promise<Categoria | undefined>;
+  deleteCategoria(id: string): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -354,6 +397,176 @@ export class DatabaseStorage implements IStorage {
       .from(uploadHistory)
       .orderBy(desc(uploadHistory.uploadedAt))
       .limit(limit);
+  }
+
+  // Admin configuration methods implementation
+
+  // Bancos methods
+  async getBancos(): Promise<Banco[]> {
+    return await db.select().from(bancos).orderBy(bancos.banco);
+  }
+
+  async createBanco(banco: InsertBanco): Promise<Banco> {
+    const [newBanco] = await db.insert(bancos).values({
+      ...banco,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }).returning();
+    return newBanco;
+  }
+
+  async updateBanco(id: string, banco: Partial<InsertBanco>): Promise<Banco | undefined> {
+    const [updated] = await db
+      .update(bancos)
+      .set({ ...banco, updatedAt: new Date() })
+      .where(eq(bancos.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  async deleteBanco(id: string): Promise<boolean> {
+    const result = await db.delete(bancos).where(eq(bancos.id, id));
+    return result.rowCount > 0;
+  }
+
+  // Tipos de Egresos methods
+  async getTiposEgresos(): Promise<TipoEgreso[]> {
+    return await db.select().from(tiposEgresos).orderBy(tiposEgresos.nombre);
+  }
+
+  async createTipoEgreso(tipo: InsertTipoEgreso): Promise<TipoEgreso> {
+    const [newTipo] = await db.insert(tiposEgresos).values({
+      ...tipo,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }).returning();
+    return newTipo;
+  }
+
+  async updateTipoEgreso(id: string, tipo: Partial<InsertTipoEgreso>): Promise<TipoEgreso | undefined> {
+    const [updated] = await db
+      .update(tiposEgresos)
+      .set({ ...tipo, updatedAt: new Date() })
+      .where(eq(tiposEgresos.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  async deleteTipoEgreso(id: string): Promise<boolean> {
+    const result = await db.delete(tiposEgresos).where(eq(tiposEgresos.id, id));
+    return result.rowCount > 0;
+  }
+
+  // Productos methods
+  async getProductos(): Promise<Producto[]> {
+    return await db.select().from(productos).orderBy(productos.categoria, productos.nombre);
+  }
+
+  async createProducto(producto: InsertProducto): Promise<Producto> {
+    const [newProducto] = await db.insert(productos).values({
+      ...producto,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }).returning();
+    return newProducto;
+  }
+
+  async updateProducto(id: string, producto: Partial<InsertProducto>): Promise<Producto | undefined> {
+    const [updated] = await db
+      .update(productos)
+      .set({ ...producto, updatedAt: new Date() })
+      .where(eq(productos.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  async deleteProducto(id: string): Promise<boolean> {
+    const result = await db.delete(productos).where(eq(productos.id, id));
+    return result.rowCount > 0;
+  }
+
+  // Métodos de Pago methods
+  async getMetodosPago(): Promise<MetodoPago[]> {
+    return await db.select().from(metodosPago).orderBy(metodosPago.nombre);
+  }
+
+  async createMetodoPago(metodo: InsertMetodoPago): Promise<MetodoPago> {
+    const [newMetodo] = await db.insert(metodosPago).values({
+      ...metodo,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }).returning();
+    return newMetodo;
+  }
+
+  async updateMetodoPago(id: string, metodo: Partial<InsertMetodoPago>): Promise<MetodoPago | undefined> {
+    const [updated] = await db
+      .update(metodosPago)
+      .set({ ...metodo, updatedAt: new Date() })
+      .where(eq(metodosPago.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  async deleteMetodoPago(id: string): Promise<boolean> {
+    const result = await db.delete(metodosPago).where(eq(metodosPago.id, id));
+    return result.rowCount > 0;
+  }
+
+  // Monedas methods
+  async getMonedas(): Promise<Moneda[]> {
+    return await db.select().from(monedas).orderBy(monedas.codigo);
+  }
+
+  async createMoneda(moneda: InsertMoneda): Promise<Moneda> {
+    const [newMoneda] = await db.insert(monedas).values({
+      ...moneda,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }).returning();
+    return newMoneda;
+  }
+
+  async updateMoneda(id: string, moneda: Partial<InsertMoneda>): Promise<Moneda | undefined> {
+    const [updated] = await db
+      .update(monedas)
+      .set({ ...moneda, updatedAt: new Date() })
+      .where(eq(monedas.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  async deleteMoneda(id: string): Promise<boolean> {
+    const result = await db.delete(monedas).where(eq(monedas.id, id));
+    return result.rowCount > 0;
+  }
+
+  // Categorías methods
+  async getCategorias(): Promise<Categoria[]> {
+    return await db.select().from(categorias).orderBy(categorias.nombre);
+  }
+
+  async createCategoria(categoria: InsertCategoria): Promise<Categoria> {
+    const [newCategoria] = await db.insert(categorias).values({
+      ...categoria,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }).returning();
+    return newCategoria;
+  }
+
+  async updateCategoria(id: string, categoria: Partial<InsertCategoria>): Promise<Categoria | undefined> {
+    const [updated] = await db
+      .update(categorias)
+      .set({ ...categoria, updatedAt: new Date() })
+      .where(eq(categorias.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  async deleteCategoria(id: string): Promise<boolean> {
+    const result = await db.delete(categorias).where(eq(categorias.id, id));
+    return result.rowCount > 0;
   }
 }
 
