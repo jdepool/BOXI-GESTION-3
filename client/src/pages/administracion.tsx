@@ -1,11 +1,11 @@
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BancosTab } from "@/components/admin/bancos-tab";
-import { TiposEgresosTab } from "@/components/admin/tipos-egresos-tab";
-import { ProductosTab } from "@/components/admin/productos-tab";
-import { MetodosPagoTab } from "@/components/admin/metodos-pago-tab";
-import { MonedasTab } from "@/components/admin/monedas-tab";
-import { CategoriasTab } from "@/components/admin/categorias-tab";
+import { BancosTab } from "../components/admin/bancos-tab";
+import { TiposEgresosTab } from "../components/admin/tipos-egresos-tab";
+import { ProductosTab } from "../components/admin/productos-tab";
+import { MetodosPagoTab } from "../components/admin/metodos-pago-tab";
+import { MonedasTab } from "../components/admin/monedas-tab";
+import { CategoriasTab } from "../components/admin/categorias-tab";
 
 export default function Administracion() {
   const [activeTab, setActiveTab] = useState("bancos");

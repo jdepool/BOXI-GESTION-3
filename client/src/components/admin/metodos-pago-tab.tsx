@@ -40,11 +40,7 @@ export function MetodosPagoTab() {
 
   const createMutation = useMutation({
     mutationFn: (data: { nombre: string }) =>
-      apiRequest("/api/admin/metodos-pago", {
-        method: "POST",
-        body: JSON.stringify(data),
-        headers: { "Content-Type": "application/json" },
-      }),
+      apiRequest("POST", "/api/admin/metodos-pago", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/metodos-pago"] });
       setIsDialogOpen(false);
@@ -58,11 +54,7 @@ export function MetodosPagoTab() {
 
   const updateMutation = useMutation({
     mutationFn: ({ id, data }: { id: string; data: { nombre: string } }) =>
-      apiRequest(`/api/admin/metodos-pago/${id}`, {
-        method: "PUT",
-        body: JSON.stringify(data),
-        headers: { "Content-Type": "application/json" },
-      }),
+      apiRequest("PUT", `/api/admin/metodos-pago/${id}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/metodos-pago"] });
       setIsDialogOpen(false);
@@ -77,7 +69,7 @@ export function MetodosPagoTab() {
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) =>
-      apiRequest(`/api/admin/metodos-pago/${id}`, { method: "DELETE" }),
+      apiRequest("DELETE", `/api/admin/metodos-pago/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/metodos-pago"] });
       toast({ title: "Método de pago eliminado exitosamente" });
@@ -90,11 +82,7 @@ export function MetodosPagoTab() {
   const cargarMetodosPredefinidos = useMutation({
     mutationFn: async () => {
       const promises = metodosPagoPredefinidos.map(nombre =>
-        apiRequest("/api/admin/metodos-pago", {
-          method: "POST",
-          body: JSON.stringify({ nombre }),
-          headers: { "Content-Type": "application/json" },
-        })
+        apiRequest("POST", "/api/admin/metodos-pago", { nombre })
       );
       return Promise.allSettled(promises);
     },
@@ -208,14 +196,14 @@ export function MetodosPagoTab() {
                   Cargando...
                 </TableCell>
               </TableRow>
-            ) : metodos.length === 0 ? (
+            ) : (metodos as MetodoPago[]).length === 0 ? (
               <TableRow>
                 <TableCell colSpan={2} className="text-center py-8 text-muted-foreground">
                   No hay métodos de pago registrados. Usa "Cargar Predefinidos" para agregar los métodos estándar.
                 </TableCell>
               </TableRow>
             ) : (
-              metodos.map((metodo: MetodoPago) => (
+              (metodos as MetodoPago[]).map((metodo: MetodoPago) => (
                 <TableRow key={metodo.id} data-testid={`metodo-pago-row-${metodo.id}`}>
                   <TableCell className="font-medium">{metodo.nombre}</TableCell>
                   <TableCell>

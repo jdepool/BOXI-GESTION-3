@@ -426,7 +426,7 @@ export class DatabaseStorage implements IStorage {
 
   async deleteBanco(id: string): Promise<boolean> {
     const result = await db.delete(bancos).where(eq(bancos.id, id));
-    return result.rowCount > 0;
+    return (result.rowCount ?? 0) > 0;
   }
 
   // Tipos de Egresos methods
@@ -454,7 +454,7 @@ export class DatabaseStorage implements IStorage {
 
   async deleteTipoEgreso(id: string): Promise<boolean> {
     const result = await db.delete(tiposEgresos).where(eq(tiposEgresos.id, id));
-    return result.rowCount > 0;
+    return (result.rowCount ?? 0) > 0;
   }
 
   // Productos methods
@@ -482,7 +482,7 @@ export class DatabaseStorage implements IStorage {
 
   async deleteProducto(id: string): Promise<boolean> {
     const result = await db.delete(productos).where(eq(productos.id, id));
-    return result.rowCount > 0;
+    return (result.rowCount ?? 0) > 0;
   }
 
   // Métodos de Pago methods
@@ -510,7 +510,7 @@ export class DatabaseStorage implements IStorage {
 
   async deleteMetodoPago(id: string): Promise<boolean> {
     const result = await db.delete(metodosPago).where(eq(metodosPago.id, id));
-    return result.rowCount > 0;
+    return (result.rowCount ?? 0) > 0;
   }
 
   // Monedas methods
@@ -538,7 +538,7 @@ export class DatabaseStorage implements IStorage {
 
   async deleteMoneda(id: string): Promise<boolean> {
     const result = await db.delete(monedas).where(eq(monedas.id, id));
-    return result.rowCount > 0;
+    return (result.rowCount ?? 0) > 0;
   }
 
   // Categorías methods
@@ -566,7 +566,7 @@ export class DatabaseStorage implements IStorage {
 
   async deleteCategoria(id: string): Promise<boolean> {
     const result = await db.delete(categorias).where(eq(categorias.id, id));
-    return result.rowCount > 0;
+    return (result.rowCount ?? 0) > 0;
   }
 }
 

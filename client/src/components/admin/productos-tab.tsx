@@ -64,11 +64,7 @@ export function ProductosTab() {
 
   const createMutation = useMutation({
     mutationFn: (data: { nombre: string; categoria: string }) =>
-      apiRequest("/api/admin/productos", {
-        method: "POST",
-        body: JSON.stringify(data),
-        headers: { "Content-Type": "application/json" },
-      }),
+      apiRequest("POST", "/api/admin/productos", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/productos"] });
       setIsDialogOpen(false);
@@ -82,11 +78,7 @@ export function ProductosTab() {
 
   const updateMutation = useMutation({
     mutationFn: ({ id, data }: { id: string; data: { nombre: string; categoria: string } }) =>
-      apiRequest(`/api/admin/productos/${id}`, {
-        method: "PUT",
-        body: JSON.stringify(data),
-        headers: { "Content-Type": "application/json" },
-      }),
+      apiRequest("PUT", `/api/admin/productos/${id}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/productos"] });
       setIsDialogOpen(false);
@@ -101,7 +93,7 @@ export function ProductosTab() {
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) =>
-      apiRequest(`/api/admin/productos/${id}`, { method: "DELETE" }),
+      apiRequest("DELETE", `/api/admin/productos/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/productos"] });
       toast({ title: "Producto eliminado exitosamente" });
@@ -114,11 +106,7 @@ export function ProductosTab() {
   const cargarProductosPredefinidos = useMutation({
     mutationFn: async () => {
       const promises = productosPredefinidos.map(producto =>
-        apiRequest("/api/admin/productos", {
-          method: "POST",
-          body: JSON.stringify(producto),
-          headers: { "Content-Type": "application/json" },
-        })
+        apiRequest("POST", "/api/admin/productos", producto)
       );
       return Promise.allSettled(promises);
     },
@@ -262,14 +250,14 @@ export function ProductosTab() {
                   Cargando...
                 </TableCell>
               </TableRow>
-            ) : productos.length === 0 ? (
+            ) : (productos as Producto[]).length === 0 ? (
               <TableRow>
                 <TableCell colSpan={3} className="text-center py-8 text-muted-foreground">
                   No hay productos registrados. Usa "Cargar Predefinidos" para agregar el catálogo completo.
                 </TableCell>
               </TableRow>
             ) : (
-              productos.map((producto: Producto) => (
+              (productos as Producto[]).map((producto: Producto) => (
                 <TableRow key={producto.id} data-testid={`producto-row-${producto.id}`}>
                   <TableCell className="font-medium">{producto.nombre}</TableCell>
                   <TableCell>

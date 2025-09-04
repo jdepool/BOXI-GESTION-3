@@ -23,11 +23,7 @@ export function BancosTab() {
 
   const createMutation = useMutation({
     mutationFn: (data: { banco: string; numeroCuenta: string }) =>
-      apiRequest("/api/admin/bancos", {
-        method: "POST",
-        body: JSON.stringify(data),
-        headers: { "Content-Type": "application/json" },
-      }),
+      apiRequest("POST", "/api/admin/bancos", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/bancos"] });
       setIsDialogOpen(false);
@@ -41,11 +37,7 @@ export function BancosTab() {
 
   const updateMutation = useMutation({
     mutationFn: ({ id, data }: { id: string; data: { banco: string; numeroCuenta: string } }) =>
-      apiRequest(`/api/admin/bancos/${id}`, {
-        method: "PUT",
-        body: JSON.stringify(data),
-        headers: { "Content-Type": "application/json" },
-      }),
+      apiRequest("PUT", `/api/admin/bancos/${id}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/bancos"] });
       setIsDialogOpen(false);
@@ -60,7 +52,7 @@ export function BancosTab() {
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) =>
-      apiRequest(`/api/admin/bancos/${id}`, { method: "DELETE" }),
+      apiRequest("DELETE", `/api/admin/bancos/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/bancos"] });
       toast({ title: "Banco eliminado exitosamente" });
@@ -173,14 +165,14 @@ export function BancosTab() {
                   Cargando...
                 </TableCell>
               </TableRow>
-            ) : bancos.length === 0 ? (
+            ) : (bancos as Banco[]).length === 0 ? (
               <TableRow>
                 <TableCell colSpan={3} className="text-center py-8 text-muted-foreground">
                   No hay bancos registrados
                 </TableCell>
               </TableRow>
             ) : (
-              bancos.map((banco: Banco) => (
+              (bancos as Banco[]).map((banco: Banco) => (
                 <TableRow key={banco.id} data-testid={`banco-row-${banco.id}`}>
                   <TableCell className="font-medium">{banco.banco}</TableCell>
                   <TableCell>{banco.numeroCuenta}</TableCell>

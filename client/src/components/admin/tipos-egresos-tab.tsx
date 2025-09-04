@@ -47,11 +47,7 @@ export function TiposEgresosTab() {
 
   const createMutation = useMutation({
     mutationFn: (data: { nombre: string }) =>
-      apiRequest("/api/admin/tipos-egresos", {
-        method: "POST",
-        body: JSON.stringify(data),
-        headers: { "Content-Type": "application/json" },
-      }),
+      apiRequest("POST", "/api/admin/tipos-egresos", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/tipos-egresos"] });
       setIsDialogOpen(false);
@@ -65,11 +61,7 @@ export function TiposEgresosTab() {
 
   const updateMutation = useMutation({
     mutationFn: ({ id, data }: { id: string; data: { nombre: string } }) =>
-      apiRequest(`/api/admin/tipos-egresos/${id}`, {
-        method: "PUT",
-        body: JSON.stringify(data),
-        headers: { "Content-Type": "application/json" },
-      }),
+      apiRequest("PUT", `/api/admin/tipos-egresos/${id}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/tipos-egresos"] });
       setIsDialogOpen(false);
@@ -84,7 +76,7 @@ export function TiposEgresosTab() {
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) =>
-      apiRequest(`/api/admin/tipos-egresos/${id}`, { method: "DELETE" }),
+      apiRequest("DELETE", `/api/admin/tipos-egresos/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/tipos-egresos"] });
       toast({ title: "Tipo de egreso eliminado exitosamente" });
@@ -97,11 +89,7 @@ export function TiposEgresosTab() {
   const cargarTiposPredefinidos = useMutation({
     mutationFn: async () => {
       const promises = tiposEgresosPredefinidos.map(nombre =>
-        apiRequest("/api/admin/tipos-egresos", {
-          method: "POST",
-          body: JSON.stringify({ nombre }),
-          headers: { "Content-Type": "application/json" },
-        })
+        apiRequest("POST", "/api/admin/tipos-egresos", { nombre })
       );
       return Promise.allSettled(promises);
     },
@@ -215,14 +203,14 @@ export function TiposEgresosTab() {
                   Cargando...
                 </TableCell>
               </TableRow>
-            ) : tipos.length === 0 ? (
+            ) : (tipos as TipoEgreso[]).length === 0 ? (
               <TableRow>
                 <TableCell colSpan={2} className="text-center py-8 text-muted-foreground">
                   No hay tipos de egresos registrados. Usa "Cargar Predefinidos" para agregar los tipos estándar.
                 </TableCell>
               </TableRow>
             ) : (
-              tipos.map((tipo: TipoEgreso) => (
+              (tipos as TipoEgreso[]).map((tipo: TipoEgreso) => (
                 <TableRow key={tipo.id} data-testid={`tipo-egreso-row-${tipo.id}`}>
                   <TableCell className="font-medium">{tipo.nombre}</TableCell>
                   <TableCell>

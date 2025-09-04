@@ -32,11 +32,7 @@ export function CategoriasTab() {
 
   const createMutation = useMutation({
     mutationFn: (data: { nombre: string }) =>
-      apiRequest("/api/admin/categorias", {
-        method: "POST",
-        body: JSON.stringify(data),
-        headers: { "Content-Type": "application/json" },
-      }),
+      apiRequest("POST", "/api/admin/categorias", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/categorias"] });
       setIsDialogOpen(false);
@@ -50,11 +46,7 @@ export function CategoriasTab() {
 
   const updateMutation = useMutation({
     mutationFn: ({ id, data }: { id: string; data: { nombre: string } }) =>
-      apiRequest(`/api/admin/categorias/${id}`, {
-        method: "PUT",
-        body: JSON.stringify(data),
-        headers: { "Content-Type": "application/json" },
-      }),
+      apiRequest("PUT", `/api/admin/categorias/${id}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/categorias"] });
       setIsDialogOpen(false);
@@ -69,7 +61,7 @@ export function CategoriasTab() {
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) =>
-      apiRequest(`/api/admin/categorias/${id}`, { method: "DELETE" }),
+      apiRequest("DELETE", `/api/admin/categorias/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/categorias"] });
       toast({ title: "Categoría eliminada exitosamente" });
@@ -82,11 +74,7 @@ export function CategoriasTab() {
   const cargarCategoriasPredefinidas = useMutation({
     mutationFn: async () => {
       const promises = categoriasPredefinidas.map(nombre =>
-        apiRequest("/api/admin/categorias", {
-          method: "POST",
-          body: JSON.stringify({ nombre }),
-          headers: { "Content-Type": "application/json" },
-        })
+        apiRequest("POST", "/api/admin/categorias", { nombre })
       );
       return Promise.allSettled(promises);
     },
@@ -211,14 +199,14 @@ export function CategoriasTab() {
                   Cargando...
                 </TableCell>
               </TableRow>
-            ) : categorias.length === 0 ? (
+            ) : (categorias as Categoria[]).length === 0 ? (
               <TableRow>
                 <TableCell colSpan={2} className="text-center py-8 text-muted-foreground">
                   No hay categorías registradas. Usa "Cargar Predefinidas" para agregar las categorías estándar.
                 </TableCell>
               </TableRow>
             ) : (
-              categorias.map((categoria: Categoria) => (
+              (categorias as Categoria[]).map((categoria: Categoria) => (
                 <TableRow key={categoria.id} data-testid={`categoria-row-${categoria.id}`}>
                   <TableCell>
                     <Badge variant="outline" className={getCategoriaColor(categoria.nombre)}>

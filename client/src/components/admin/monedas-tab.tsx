@@ -32,11 +32,7 @@ export function MonedasTab() {
 
   const createMutation = useMutation({
     mutationFn: (data: { codigo: string; nombre: string }) =>
-      apiRequest("/api/admin/monedas", {
-        method: "POST",
-        body: JSON.stringify(data),
-        headers: { "Content-Type": "application/json" },
-      }),
+      apiRequest("POST", "/api/admin/monedas", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/monedas"] });
       setIsDialogOpen(false);
@@ -50,11 +46,7 @@ export function MonedasTab() {
 
   const updateMutation = useMutation({
     mutationFn: ({ id, data }: { id: string; data: { codigo: string; nombre: string } }) =>
-      apiRequest(`/api/admin/monedas/${id}`, {
-        method: "PUT",
-        body: JSON.stringify(data),
-        headers: { "Content-Type": "application/json" },
-      }),
+      apiRequest("PUT", `/api/admin/monedas/${id}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/monedas"] });
       setIsDialogOpen(false);
@@ -69,7 +61,7 @@ export function MonedasTab() {
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) =>
-      apiRequest(`/api/admin/monedas/${id}`, { method: "DELETE" }),
+      apiRequest("DELETE", `/api/admin/monedas/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/monedas"] });
       toast({ title: "Moneda eliminada exitosamente" });
@@ -82,11 +74,7 @@ export function MonedasTab() {
   const cargarMonedasPredefinidas = useMutation({
     mutationFn: async () => {
       const promises = monedasPredefinidas.map(moneda =>
-        apiRequest("/api/admin/monedas", {
-          method: "POST",
-          body: JSON.stringify(moneda),
-          headers: { "Content-Type": "application/json" },
-        })
+        apiRequest("POST", "/api/admin/monedas", moneda)
       );
       return Promise.allSettled(promises);
     },
@@ -212,14 +200,14 @@ export function MonedasTab() {
                   Cargando...
                 </TableCell>
               </TableRow>
-            ) : monedas.length === 0 ? (
+            ) : (monedas as Moneda[]).length === 0 ? (
               <TableRow>
                 <TableCell colSpan={3} className="text-center py-8 text-muted-foreground">
                   No hay monedas registradas. Usa "Cargar Predefinidas" para agregar las monedas estándar.
                 </TableCell>
               </TableRow>
             ) : (
-              monedas.map((moneda: Moneda) => (
+              (monedas as Moneda[]).map((moneda: Moneda) => (
                 <TableRow key={moneda.id} data-testid={`moneda-row-${moneda.id}`}>
                   <TableCell className="font-bold">{moneda.codigo}</TableCell>
                   <TableCell>{moneda.nombre}</TableCell>
