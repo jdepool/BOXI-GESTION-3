@@ -7,6 +7,7 @@ import Dashboard from "@/pages/dashboard";
 import Upload from "@/pages/upload";
 import Sales from "@/pages/sales";
 import Despachos from "@/pages/despachos";
+import VerificacionPagosCashea from "@/pages/verificacion-pagos-cashea";
 import Egresos from "@/pages/egresos";
 import Administracion from "@/pages/administracion";
 import NotFound from "@/pages/not-found";
@@ -19,6 +20,7 @@ function Router() {
       <Route path="/upload" component={Upload} />
       <Route path="/sales" component={Sales} />
       <Route path="/despachos" component={Despachos} />
+      <Route path="/verificacion-pagos-cashea" component={VerificacionPagosCashea} />
       <Route path="/egresos" component={Egresos} />
       <Route path="/administracion" component={Administracion} />
       <Route component={NotFound} />

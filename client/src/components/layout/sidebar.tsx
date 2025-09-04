@@ -23,6 +23,11 @@ const navigationItems = [
     label: "Despachos",
   },
   {
+    href: "/verificacion-pagos-cashea",
+    icon: "fas fa-credit-card",
+    label: "Verificación Pagos Cashea",
+  },
+  {
     href: "/egresos",
     icon: "fas fa-dollar-sign",
     label: "Egresos",
