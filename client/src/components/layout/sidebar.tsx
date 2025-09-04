@@ -17,6 +17,11 @@ const navigationItems = [
     icon: "fas fa-table", 
     label: "Ventas",
   },
+  {
+    href: "/despachos",
+    icon: "fas fa-truck",
+    label: "Despachos",
+  },
 ];
 
 export default function Sidebar() {

@@ -271,6 +271,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get orders with addresses for dispatch
+  app.get("/api/sales/dispatch", async (req, res) => {
+    try {
+      const limit = parseInt(req.query.limit as string) || 20;
+      const offset = parseInt(req.query.offset as string) || 0;
+
+      const result = await storage.getOrdersWithAddresses(limit, offset);
+      res.json({
+        data: result.data,
+        total: result.total,
+        limit,
+        offset
+      });
+    } catch (error) {
+      console.error("Get dispatch orders error:", error);
+      res.status(500).json({ error: "Failed to get dispatch orders" });
+    }
+  });
+
   // Export sales data
   app.get("/api/sales/export", async (req, res) => {
     try {

@@ -1,6 +1,6 @@
 import { sales, uploadHistory, users, type User, type InsertUser, type Sale, type InsertSale, type UploadHistory, type InsertUploadHistory } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, count, sum, avg, and, gte, lte, or, ilike } from "drizzle-orm";
+import { eq, desc, count, sum, avg, and, gte, lte, or, ilike, isNotNull } from "drizzle-orm";
 
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
@@ -20,6 +20,7 @@ export interface IStorage {
   }): Promise<Sale[]>;
   getSaleById(id: string): Promise<Sale | undefined>;
   getCasheaOrders(limit?: number): Promise<Sale[]>;
+  getOrdersWithAddresses(limit?: number, offset?: number): Promise<{ data: Sale[]; total: number }>;
   updateSaleAddresses(saleId: string, addresses: {
     direccionFacturacionPais?: string;
     direccionFacturacionEstado?: string;
@@ -144,6 +145,32 @@ export class DatabaseStorage implements IStorage {
       .where(eq(sales.canal, 'Cashea'))
       .orderBy(desc(sales.fecha))
       .limit(limit);
+  }
+
+  async getOrdersWithAddresses(limit: number = 20, offset: number = 0): Promise<{ data: Sale[]; total: number }> {
+    // Get orders with addresses
+    const ordersWithAddresses = await db
+      .select()
+      .from(sales)
+      .where(
+        isNotNull(sales.direccionFacturacionPais) // Only orders with addresses
+      )
+      .orderBy(desc(sales.fecha))
+      .limit(limit)
+      .offset(offset);
+
+    // Get total count
+    const [{ count }] = await db
+      .select({ count: count() })
+      .from(sales)
+      .where(
+        isNotNull(sales.direccionFacturacionPais)
+      );
+
+    return {
+      data: ordersWithAddresses,
+      total: count,
+    };
   }
 
   async updateSaleAddresses(saleId: string, addresses: {
