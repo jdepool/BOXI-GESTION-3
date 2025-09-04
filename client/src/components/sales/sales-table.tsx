@@ -21,6 +21,7 @@ interface SalesTableProps {
   onFilterChange?: (filters: any) => void;
   onPageChange?: (offset: number) => void;
   onEditSale?: (sale: Sale) => void;
+  onVerifyPayment?: (sale: Sale) => void;
 }
 
 export default function SalesTable({ 
@@ -34,7 +35,8 @@ export default function SalesTable({
   showEditActions = false,
   onFilterChange,
   onPageChange,
-  onEditSale
+  onEditSale,
+  onVerifyPayment
 }: SalesTableProps) {
   const [selectedSale, setSelectedSale] = useState<Sale | null>(null);
   const [addressModalOpen, setAddressModalOpen] = useState(false);
@@ -206,7 +208,7 @@ export default function SalesTable({
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[140px]">Producto</th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[80px]">Cantidad</th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[120px]">Direcciones</th>
-                <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[120px]">Acciones</th>
+                <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[200px]">Acciones</th>
               </tr>
             </thead>
             <tbody>
@@ -306,20 +308,33 @@ export default function SalesTable({
                         {sale.direccionFacturacionPais ? 'Editar' : 'Agregar'}
                       </Button>
                     </td>
-                    <td className="p-2 min-w-[120px]">
+                    <td className="p-2 min-w-[200px]">
                       <div className="flex gap-1">
                         {showEditActions && (
-                          <Button
-                            variant="default"
-                            size="sm"
-                            onClick={() => onEditSale?.(sale)}
-                            data-testid={`edit-sale-${sale.id}`}
-                            className="h-7 px-2 text-xs bg-blue-600 hover:bg-blue-700 text-white"
-                            title="Editar venta"
-                          >
-                            <i className="fas fa-edit text-xs mr-1"></i>
-                            Editar
-                          </Button>
+                          <>
+                            <Button
+                              variant="default"
+                              size="sm"
+                              onClick={() => onEditSale?.(sale)}
+                              data-testid={`edit-sale-${sale.id}`}
+                              className="h-7 px-2 text-xs bg-blue-600 hover:bg-blue-700 text-white"
+                              title="Editar venta"
+                            >
+                              <i className="fas fa-edit text-xs mr-1"></i>
+                              Editar
+                            </Button>
+                            <Button
+                              variant="default"
+                              size="sm"
+                              onClick={() => onVerifyPayment?.(sale)}
+                              data-testid={`verify-payment-${sale.id}`}
+                              className="h-7 px-2 text-xs bg-green-600 hover:bg-green-700 text-white"
+                              title="Verificar pago"
+                            >
+                              <i className="fas fa-check text-xs mr-1"></i>
+                              Verificado
+                            </Button>
+                          </>
                         )}
                         <Button
                           variant="ghost"

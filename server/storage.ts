@@ -23,6 +23,7 @@ export interface IStorage {
     estadoEntrega?: string;
     startDate?: Date;
     endDate?: Date;
+    excludePendingManual?: boolean;
     limit?: number;
     offset?: number;
   }): Promise<Sale[]>;
@@ -50,6 +51,7 @@ export interface IStorage {
     estadoEntrega?: string;
     startDate?: Date;
     endDate?: Date;
+    excludePendingManual?: boolean;
   }): Promise<number>;
   
   // Analytics methods
@@ -176,6 +178,7 @@ export class DatabaseStorage implements IStorage {
     estadoEntrega?: string;
     startDate?: Date;
     endDate?: Date;
+    excludePendingManual?: boolean;
     limit?: number;
     offset?: number;
   }): Promise<Sale[]> {
@@ -191,6 +194,17 @@ export class DatabaseStorage implements IStorage {
     }
     if (filters?.endDate) {
       conditions.push(lte(sales.fecha, filters.endDate));
+    }
+    if (filters?.excludePendingManual) {
+      // Exclude manual sales that are still pending (estado = "pendiente")  
+      conditions.push(
+        or(
+          and(eq(sales.canal, "manual"), eq(sales.estado, "activo")),
+          and(eq(sales.canal, "Cashea")),
+          and(eq(sales.canal, "Shopify")),
+          and(eq(sales.canal, "Treble"))
+        )
+      );
     }
     
     // Build the complete query in one go
@@ -333,6 +347,7 @@ export class DatabaseStorage implements IStorage {
     estadoEntrega?: string;
     startDate?: Date;
     endDate?: Date;
+    excludePendingManual?: boolean;
   }): Promise<number> {
     const conditions = [];
     if (filters?.canal) {
@@ -346,6 +361,17 @@ export class DatabaseStorage implements IStorage {
     }
     if (filters?.endDate) {
       conditions.push(lte(sales.fecha, filters.endDate));
+    }
+    if (filters?.excludePendingManual) {
+      // Exclude manual sales that are still pending (estado = "pendiente")
+      conditions.push(
+        or(
+          and(eq(sales.canal, "manual"), eq(sales.estado, "activo")),
+          and(eq(sales.canal, "Cashea")),
+          and(eq(sales.canal, "Shopify")),
+          and(eq(sales.canal, "Treble"))
+        )
+      );
     }
     
     // Build the complete query in one go

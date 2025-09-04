@@ -48,8 +48,31 @@ export default function ManualSalesEntry() {
     },
   });
 
+  const verifyPaymentMutation = useMutation({
+    mutationFn: (saleId: string) => apiRequest("PUT", `/api/sales/${saleId}/verify-payment`, {}),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/sales"] });
+      toast({
+        title: "Pago verificado",
+        description: "La venta ha sido verificada y ahora aparecerá en la lista principal de ventas.",
+      });
+    },
+    onError: (error: any) => {
+      console.error('Failed to verify payment:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo verificar el pago. Por favor, intenta nuevamente.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleFormSubmit = (data: any) => {
     createManualSaleMutation.mutate(data);
+  };
+
+  const handleVerifyPayment = (sale: Sale) => {
+    verifyPaymentMutation.mutate(sale.id);
   };
 
   if (showForm) {
@@ -111,6 +134,7 @@ export default function ManualSalesEntry() {
           hidePagination={incompleteSales?.data ? incompleteSales.data.length <= 20 : true}
           showEditActions={true}
           onEditSale={(sale) => setEditSale(sale)}
+          onVerifyPayment={handleVerifyPayment}
         />
       </div>
 

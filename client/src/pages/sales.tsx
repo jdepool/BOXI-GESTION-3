@@ -22,7 +22,7 @@ export default function Sales() {
     limit: number;
     offset: number;
   }>({
-    queryKey: ["/api/sales", filters],
+    queryKey: ["/api/sales", { ...filters, excludePendingManual: true }],
   });
 
   const handleFilterChange = (newFilters: Partial<typeof filters>) => {

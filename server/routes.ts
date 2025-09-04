@@ -32,6 +32,7 @@ const getSalesQuerySchema = z.object({
   estadoEntrega: z.string().optional(),
   startDate: z.string().optional(),
   endDate: z.string().optional(),
+  excludePendingManual: z.coerce.boolean().optional(),
   limit: z.coerce.number().min(1).max(100).default(20),
   offset: z.coerce.number().min(0).default(0),
 });
@@ -148,6 +149,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         estadoEntrega: query.estadoEntrega,
         startDate: query.startDate ? new Date(query.startDate) : undefined,
         endDate: query.endDate ? new Date(query.endDate) : undefined,
+        excludePendingManual: query.excludePendingManual,
         limit: query.limit,
         offset: query.offset,
       };
@@ -947,6 +949,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error updating sale:", error);
       res.status(500).json({ error: "Failed to update sale" });
+    }
+  });
+
+  // Verify payment for manual sale
+  app.put("/api/sales/:id/verify-payment", async (req, res) => {
+    try {
+      const { id } = req.params;
+      
+      // Update the sale status from "pendiente" to "activo" to make it appear in main sales list
+      const updatedSale = await storage.updateSale(id, { estado: "activo" });
+      
+      if (!updatedSale) {
+        return res.status(404).json({ error: "Sale not found" });
+      }
+      
+      res.json(updatedSale);
+    } catch (error) {
+      console.error("Error verifying payment:", error);
+      res.status(500).json({ error: "Failed to verify payment" });
     }
   });
 
