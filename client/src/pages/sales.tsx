@@ -4,6 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Sidebar from "@/components/layout/sidebar";
 import Header from "@/components/layout/header";
 import SalesTable from "@/components/sales/sales-table";
+import SimpleSalesList from "@/components/sales/simple-sales-list";
 import ManualSalesEntry from "@/components/sales/manual-sales-entry";
 
 export default function Sales() {
@@ -51,8 +52,8 @@ export default function Sales() {
             </TabsList>
             
             <TabsContent value="lista" className="h-full">
-              <div className="bg-card rounded-lg border border-border h-full">
-                <SalesTable 
+              <div className="bg-card rounded-lg border border-border h-full p-6">
+                <SimpleSalesList 
                   data={salesData?.data || []} 
                   total={salesData?.total || 0}
                   limit={filters.limit}

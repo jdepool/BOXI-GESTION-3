@@ -294,6 +294,7 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
                           {bank.banco}
                         </SelectItem>
                       ))}
+                      <SelectItem value="otro">Otro($)</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
