@@ -5,6 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import SaleDetailModal from "./sale-detail-modal";
+import AddressModal from "@/components/addresses/address-modal";
+import { MapPin } from "lucide-react";
 import type { Sale } from "@shared/schema";
 
 interface SalesTableProps {
@@ -31,6 +33,8 @@ export default function SalesTable({
   onPageChange 
 }: SalesTableProps) {
   const [selectedSale, setSelectedSale] = useState<Sale | null>(null);
+  const [addressModalOpen, setAddressModalOpen] = useState(false);
+  const [selectedSaleForAddress, setSelectedSaleForAddress] = useState<Sale | null>(null);
   const [filters, setFilters] = useState({
     canal: "all",
     estadoEntrega: "all",
@@ -174,7 +178,7 @@ export default function SalesTable({
 
       <div className="overflow-x-auto bg-background">
         <div className="min-w-max">
-          <table className="w-full min-w-[2200px]">
+          <table className="w-full min-w-[2320px]">
             <thead className="bg-muted sticky top-0 z-10">
               <tr>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[180px]">Nombre</th>
@@ -196,13 +200,14 @@ export default function SalesTable({
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[120px]">Estado Entrega</th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[140px]">Producto</th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[80px]">Cantidad</th>
+                <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[120px]">Direcciones</th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[80px]">Acciones</th>
               </tr>
             </thead>
             <tbody>
               {data.length === 0 ? (
                 <tr>
-                  <td colSpan={20} className="text-center p-8 text-muted-foreground">
+                  <td colSpan={21} className="text-center p-8 text-muted-foreground">
                     No hay datos disponibles
                   </td>
                 </tr>
@@ -278,6 +283,21 @@ export default function SalesTable({
                     <td className="p-2 min-w-[80px] text-xs text-center font-medium text-foreground">
                       {sale.cantidad}
                     </td>
+                    <td className="p-2 min-w-[120px]">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setSelectedSaleForAddress(sale);
+                          setAddressModalOpen(true);
+                        }}
+                        data-testid={`add-address-${sale.id}`}
+                        className="h-7 text-xs"
+                      >
+                        <MapPin className="h-3 w-3 mr-1" />
+                        {sale.direccionFacturacionPais ? 'Editar' : 'Agregar'}
+                      </Button>
+                    </td>
                     <td className="p-2 min-w-[80px]">
                       <Button
                         variant="ghost"
@@ -337,6 +357,17 @@ export default function SalesTable({
       <SaleDetailModal 
         sale={selectedSale} 
         onClose={() => setSelectedSale(null)} 
+      />
+
+      <AddressModal
+        open={addressModalOpen}
+        onOpenChange={(open) => {
+          setAddressModalOpen(open);
+          if (!open) {
+            setSelectedSaleForAddress(null);
+          }
+        }}
+        sale={selectedSaleForAddress}
       />
     </>
   );
