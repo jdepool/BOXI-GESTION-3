@@ -178,7 +178,7 @@ export default function SalesTable({
 
       <div className="overflow-x-auto bg-background">
         <div className="min-w-max">
-          <table className="w-full min-w-[2320px]">
+          <table className="w-full min-w-[2420px]">
             <thead className="bg-muted sticky top-0 z-10">
               <tr>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[180px]">Nombre</th>
@@ -196,6 +196,7 @@ export default function SalesTable({
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[100px]">Orden</th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[100px]">Factura</th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[120px]">Referencia</th>
+                <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[100px]">Banco</th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[110px]">Monto Bs</th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[120px]">Estado Entrega</th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[140px]">Producto</th>
@@ -207,7 +208,7 @@ export default function SalesTable({
             <tbody>
               {data.length === 0 ? (
                 <tr>
-                  <td colSpan={21} className="text-center p-8 text-muted-foreground">
+                  <td colSpan={22} className="text-center p-8 text-muted-foreground">
                     No hay datos disponibles
                   </td>
                 </tr>
@@ -269,6 +270,9 @@ export default function SalesTable({
                     <td className="p-2 min-w-[120px] text-xs font-mono text-muted-foreground truncate" title={sale.referencia || undefined}>
                       {sale.referencia || 'N/A'}
                     </td>
+                    <td className="p-2 min-w-[100px] text-xs text-muted-foreground truncate">
+                      {sale.canal.toLowerCase() === 'cashea' ? 'BNC1' : 'N/A'}
+                    </td>
                     <td className="p-2 min-w-[110px] text-xs text-muted-foreground">
                       {sale.montoBs ? `Bs ${Number(sale.montoBs).toLocaleString()}` : 'N/A'}
                     </td>
@@ -321,7 +325,7 @@ export default function SalesTable({
         <div className="p-4 border-t border-border flex flex-col sm:flex-row justify-between items-center gap-4">
           <div className="text-sm text-muted-foreground">
             <p>Mostrando {offset + 1}-{Math.min(offset + limit, total)} de {total} registros</p>
-            <p className="text-xs">💡 Desliza horizontalmente para ver todas las 19 columnas del Excel</p>
+            <p className="text-xs">💡 Desliza horizontalmente para ver todas las columnas de la tabla</p>
           </div>
           
           <div className="flex space-x-2">
