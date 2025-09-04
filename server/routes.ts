@@ -1198,6 +1198,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update existing Cashea orders from TO DELIVER to PROCESSING
+  app.post('/api/admin/update-cashea-status', async (req, res) => {
+    try {
+      const updatedCount = await storage.updateCasheaOrdersToProcessing();
+      
+      res.json({
+        updated: updatedCount,
+        message: `Successfully updated ${updatedCount} Cashea orders from TO DELIVER to PROCESSING`
+      });
+    } catch (error) {
+      console.error('Cashea status update error:', error);
+      res.status(500).json({ 
+        error: 'Failed to update Cashea orders',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

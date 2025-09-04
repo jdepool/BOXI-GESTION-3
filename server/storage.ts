@@ -793,6 +793,24 @@ export class DatabaseStorage implements IStorage {
     return totalCount;
   }
 
+  // Update existing Cashea orders from TO DELIVER to PROCESSING
+  async updateCasheaOrdersToProcessing(): Promise<number> {
+    const result = await db
+      .update(sales)
+      .set({
+        estadoEntrega: 'PROCESSING',
+        updatedAt: new Date(),
+      })
+      .where(
+        and(
+          eq(sales.canal, 'Cashea'),
+          eq(sales.estadoEntrega, 'TO DELIVER')
+        )
+      )
+      .returning();
+    
+    return result.length;
+  }
 }
 
 export const storage = new DatabaseStorage();
