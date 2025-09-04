@@ -169,8 +169,6 @@ export class DatabaseStorage implements IStorage {
     limit?: number;
     offset?: number;
   }): Promise<Sale[]> {
-    let query = db.select().from(sales);
-    
     const conditions = [];
     if (filters?.canal) {
       conditions.push(eq(sales.canal, filters.canal));
@@ -185,20 +183,16 @@ export class DatabaseStorage implements IStorage {
       conditions.push(lte(sales.fecha, filters.endDate));
     }
     
-    if (conditions.length > 0) {
-      query = query.where(and(...conditions));
-    }
+    // Build the complete query in one go
+    const queryBuilder = db.select().from(sales);
+    const withConditions = conditions.length > 0 
+      ? queryBuilder.where(and(...conditions))
+      : queryBuilder;
+    const withOrder = withConditions.orderBy(desc(sales.fecha));
+    const withLimit = filters?.limit ? withOrder.limit(filters.limit) : withOrder;
+    const finalQuery = filters?.offset ? withLimit.offset(filters.offset) : withLimit;
     
-    query = query.orderBy(desc(sales.fecha));
-    
-    if (filters?.limit) {
-      query = query.limit(filters.limit);
-    }
-    if (filters?.offset) {
-      query = query.offset(filters.offset);
-    }
-    
-    return await query;
+    return await finalQuery;
   }
 
   async getSaleById(id: string): Promise<Sale | undefined> {
@@ -330,8 +324,6 @@ export class DatabaseStorage implements IStorage {
     startDate?: Date;
     endDate?: Date;
   }): Promise<number> {
-    let query = db.select({ count: count() }).from(sales);
-    
     const conditions = [];
     if (filters?.canal) {
       conditions.push(eq(sales.canal, filters.canal));
@@ -346,11 +338,13 @@ export class DatabaseStorage implements IStorage {
       conditions.push(lte(sales.fecha, filters.endDate));
     }
     
-    if (conditions.length > 0) {
-      query = query.where(and(...conditions));
-    }
+    // Build the complete query in one go
+    const queryBuilder = db.select({ count: count() }).from(sales);
+    const finalQuery = conditions.length > 0 
+      ? queryBuilder.where(and(...conditions))
+      : queryBuilder;
     
-    const [result] = await query;
+    const [result] = await finalQuery;
     return result.count;
   }
 
@@ -603,8 +597,6 @@ export class DatabaseStorage implements IStorage {
     limit?: number;
     offset?: number;
   }): Promise<Egreso[]> {
-    let query = db.select().from(egresos);
-    
     const conditions = [];
     if (filters?.tipoEgresoId) {
       conditions.push(eq(egresos.tipoEgresoId, filters.tipoEgresoId));
@@ -622,20 +614,16 @@ export class DatabaseStorage implements IStorage {
       conditions.push(lte(egresos.fecha, filters.endDate));
     }
     
-    if (conditions.length > 0) {
-      query = query.where(and(...conditions));
-    }
+    // Build the complete query in one go
+    const queryBuilder = db.select().from(egresos);
+    const withConditions = conditions.length > 0 
+      ? queryBuilder.where(and(...conditions))
+      : queryBuilder;
+    const withOrder = withConditions.orderBy(desc(egresos.fecha));
+    const withLimit = filters?.limit ? withOrder.limit(filters.limit) : withOrder;
+    const finalQuery = filters?.offset ? withLimit.offset(filters.offset) : withLimit;
     
-    query = query.orderBy(desc(egresos.fecha));
-    
-    if (filters?.limit) {
-      query = query.limit(filters.limit);
-    }
-    if (filters?.offset) {
-      query = query.offset(filters.offset);
-    }
-    
-    return await query;
+    return await finalQuery;
   }
 
   async createEgreso(egreso: InsertEgreso): Promise<Egreso> {
@@ -688,8 +676,6 @@ export class DatabaseStorage implements IStorage {
     startDate?: Date;
     endDate?: Date;
   }): Promise<number> {
-    let query = db.select({ count: count() }).from(egresos);
-    
     const conditions = [];
     if (filters?.tipoEgresoId) {
       conditions.push(eq(egresos.tipoEgresoId, filters.tipoEgresoId));
@@ -707,11 +693,13 @@ export class DatabaseStorage implements IStorage {
       conditions.push(lte(egresos.fecha, filters.endDate));
     }
     
-    if (conditions.length > 0) {
-      query = query.where(and(...conditions));
-    }
+    // Build the complete query in one go
+    const queryBuilder = db.select({ count: count() }).from(egresos);
+    const finalQuery = conditions.length > 0 
+      ? queryBuilder.where(and(...conditions))
+      : queryBuilder;
     
-    const [{ count: totalCount }] = await query;
+    const [{ count: totalCount }] = await finalQuery;
     return totalCount;
   }
 }
