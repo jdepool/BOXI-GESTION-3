@@ -147,6 +147,71 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Export dispatch orders to Excel
+  app.get("/api/sales/dispatch/export", async (req, res) => {
+    try {
+      // Get all orders with addresses (no pagination for export)
+      const result = await storage.getOrdersWithAddresses(10000, 0);
+
+      // Convert to Excel format
+      const worksheet = XLSX.utils.json_to_sheet(result.data.map(sale => ({
+        'Número de Orden': sale.orden,
+        'Nombre': sale.nombre,
+        'Cédula': sale.cedula,
+        'Teléfono': sale.telefono,
+        'Correo': sale.email,
+        'Producto': sale.product,
+        'Cantidad': sale.cantidad,
+        'Canal': sale.canal,
+        'Estado de Entrega': sale.estadoEntrega,
+        'Fecha': new Date(sale.fecha).toLocaleDateString('es-ES'),
+        'Total USD': sale.totalUsd,
+        
+        // Billing Address
+        'País (Facturación)': sale.direccionFacturacionPais || '',
+        'Estado (Facturación)': sale.direccionFacturacionEstado || '',
+        'Ciudad (Facturación)': sale.direccionFacturacionCiudad || '',
+        'Dirección (Facturación)': sale.direccionFacturacionDireccion || '',
+        'Urbanización (Facturación)': sale.direccionFacturacionUrbanizacion || '',
+        'Referencia (Facturación)': sale.direccionFacturacionReferencia || '',
+        
+        // Shipping Address
+        'Despacho Igual a Facturación': sale.direccionDespachoIgualFacturacion === "true" ? 'Sí' : 'No',
+        'País (Despacho)': sale.direccionDespachoIgualFacturacion === "true" 
+          ? sale.direccionFacturacionPais || '' 
+          : sale.direccionDespachoPais || '',
+        'Estado (Despacho)': sale.direccionDespachoIgualFacturacion === "true" 
+          ? sale.direccionFacturacionEstado || '' 
+          : sale.direccionDespachoEstado || '',
+        'Ciudad (Despacho)': sale.direccionDespachoIgualFacturacion === "true" 
+          ? sale.direccionFacturacionCiudad || '' 
+          : sale.direccionDespachoCiudad || '',
+        'Dirección (Despacho)': sale.direccionDespachoIgualFacturacion === "true" 
+          ? sale.direccionFacturacionDireccion || '' 
+          : sale.direccionDespachoDireccion || '',
+        'Urbanización (Despacho)': sale.direccionDespachoIgualFacturacion === "true" 
+          ? sale.direccionFacturacionUrbanizacion || '' 
+          : sale.direccionDespachoUrbanizacion || '',
+        'Referencia (Despacho)': sale.direccionDespachoIgualFacturacion === "true" 
+          ? sale.direccionFacturacionReferencia || '' 
+          : sale.direccionDespachoReferencia || '',
+      })));
+
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Despachos');
+
+      const buffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' });
+
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+      res.setHeader('Content-Disposition', `attachment; filename="despachos_boxisleep_${new Date().toISOString().split('T')[0]}.xlsx"`);
+      res.send(buffer);
+
+    } catch (error) {
+      console.error("Error exporting dispatch orders:", error);
+      res.status(500).json({ error: "Failed to export dispatch orders" });
+    }
+  });
+
   // Get specific sale by ID (MUST BE AFTER specific routes)
   app.get("/api/sales/:id", async (req, res) => {
     try {

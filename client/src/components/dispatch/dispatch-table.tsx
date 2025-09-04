@@ -1,7 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Phone, Mail, Package, User } from "lucide-react";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Download, Package, User, Phone, Mail } from "lucide-react";
 import type { Sale } from "@shared/schema";
 
 interface DispatchTableProps {
@@ -31,6 +32,28 @@ export default function DispatchTable({
       case 'shopify': return 'bg-green-600';
       case 'treble': return 'bg-purple-600';
       default: return 'bg-gray-600';
+    }
+  };
+
+  const handleExportExcel = async () => {
+    try {
+      const response = await fetch('/api/sales/dispatch/export');
+      if (!response.ok) {
+        throw new Error('Failed to export');
+      }
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.style.display = 'none';
+      a.href = url;
+      a.download = `despachos_${new Date().toISOString().split('T')[0]}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error('Export failed:', error);
     }
   };
 
@@ -65,6 +88,14 @@ export default function DispatchTable({
               {total} órdenes con direcciones listas para despacho
             </p>
           </div>
+          <Button 
+            onClick={handleExportExcel}
+            className="flex items-center gap-2"
+            data-testid="export-dispatch-excel"
+          >
+            <Download className="h-4 w-4" />
+            Descargar Excel
+          </Button>
         </div>
       </div>
 
@@ -80,123 +111,109 @@ export default function DispatchTable({
             </p>
           </div>
         ) : (
-          <div className="space-y-4">
-            {data.map((sale) => (
-              <div
-                key={sale.id}
-                className="border border-border rounded-lg p-6 hover:bg-muted/50 transition-colors"
-                data-testid={`dispatch-order-${sale.id}`}
-              >
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  {/* Order Info */}
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
-                          <Package className="h-5 w-5 text-primary" />
+          <div className="border border-border rounded-lg overflow-hidden">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-32">Orden</TableHead>
+                  <TableHead className="min-w-48">Cliente</TableHead>
+                  <TableHead className="w-32">Cédula</TableHead>
+                  <TableHead className="w-36">Teléfono</TableHead>
+                  <TableHead className="min-w-48">Email</TableHead>
+                  <TableHead className="min-w-48">Producto</TableHead>
+                  <TableHead className="w-20">Cant.</TableHead>
+                  <TableHead className="w-24">Canal</TableHead>
+                  <TableHead className="min-w-72">Dirección de Facturación</TableHead>
+                  <TableHead className="min-w-72">Dirección de Despacho</TableHead>
+                  <TableHead className="w-28">Estado</TableHead>
+                  <TableHead className="w-28">Fecha</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {data.map((sale) => (
+                  <TableRow key={sale.id} data-testid={`dispatch-row-${sale.id}`}>
+                    <TableCell className="font-medium">
+                      #{sale.orden}
+                    </TableCell>
+                    
+                    <TableCell>
+                      <div className="font-medium">{sale.nombre}</div>
+                    </TableCell>
+                    
+                    <TableCell>{sale.cedula}</TableCell>
+                    
+                    <TableCell>{sale.telefono}</TableCell>
+                    
+                    <TableCell className="text-sm">{sale.email}</TableCell>
+                    
+                    <TableCell>
+                      <div className="text-sm">
+                        <div className="font-medium">{sale.product}</div>
+                        <div className="text-muted-foreground">
+                          ${Number(sale.totalUsd).toLocaleString()} USD
                         </div>
+                      </div>
+                    </TableCell>
+                    
+                    <TableCell className="text-center">{sale.cantidad}</TableCell>
+                    
+                    <TableCell>
+                      <Badge className={`${getChannelBadgeClass(sale.canal)} text-white text-xs`}>
+                        {sale.canal.charAt(0).toUpperCase() + sale.canal.slice(1)}
+                      </Badge>
+                    </TableCell>
+                    
+                    <TableCell>
+                      <div className="text-xs space-y-1 max-w-72">
+                        <div className="font-medium">{sale.direccionFacturacionDireccion}</div>
                         <div>
-                          <h3 className="font-semibold text-foreground">
-                            Orden #{sale.orden}
-                          </h3>
-                          <Badge className={`${getChannelBadgeClass(sale.canal)} text-white text-xs`}>
-                            {sale.canal.charAt(0).toUpperCase() + sale.canal.slice(1)}
-                          </Badge>
+                          {sale.direccionFacturacionCiudad}, {sale.direccionFacturacionEstado}
                         </div>
+                        <div>{sale.direccionFacturacionPais}</div>
+                        {sale.direccionFacturacionUrbanizacion && (
+                          <div className="text-muted-foreground">Urb. {sale.direccionFacturacionUrbanizacion}</div>
+                        )}
+                        {sale.direccionFacturacionReferencia && (
+                          <div className="text-muted-foreground">Ref: {sale.direccionFacturacionReferencia}</div>
+                        )}
                       </div>
-                      <div className="text-right">
-                        <p className="text-sm text-muted-foreground">
-                          {new Date(sale.fecha).toLocaleDateString('es-ES')}
-                        </p>
-                        <Badge variant="outline" className="mt-1">
-                          {sale.estadoEntrega}
-                        </Badge>
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2 text-sm">
-                        <User className="h-4 w-4 text-muted-foreground" />
-                        <span className="font-medium">{sale.nombre}</span>
-                        <span className="text-muted-foreground">• CI: {sale.cedula}</span>
-                      </div>
-                      
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Phone className="h-4 w-4" />
-                        {sale.telefono}
-                      </div>
-                      
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Mail className="h-4 w-4" />
-                        {sale.email}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Product & Address Info */}
-                  <div className="space-y-4">
-                    {/* Product */}
-                    <div className="bg-muted/30 rounded-lg p-4">
-                      <h4 className="font-medium text-foreground mb-2">Producto</h4>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-foreground font-medium">
-                          {sale.product}
-                        </span>
-                        <div className="text-right">
-                          <p className="text-sm font-medium">Cantidad: {sale.cantidad}</p>
-                          <p className="text-sm text-muted-foreground">
-                            ${Number(sale.totalUsd).toLocaleString()} USD
-                          </p>
+                    </TableCell>
+                    
+                    <TableCell>
+                      {sale.direccionDespachoIgualFacturacion === "true" ? (
+                        <div className="text-xs text-muted-foreground italic">
+                          Igual a facturación
                         </div>
-                      </div>
-                    </div>
-
-                    {/* Addresses */}
-                    <div className="space-y-3">
-                      <div>
-                        <h4 className="font-medium text-foreground mb-2 text-sm">
-                          Dirección de Facturación
-                        </h4>
-                        <div className="text-xs text-muted-foreground space-y-1">
-                          <p>{sale.direccionFacturacionDireccion}</p>
-                          <p>
-                            {sale.direccionFacturacionCiudad}, {sale.direccionFacturacionEstado}
-                          </p>
-                          <p>{sale.direccionFacturacionPais}</p>
-                          {sale.direccionFacturacionUrbanizacion && (
-                            <p>Urb. {sale.direccionFacturacionUrbanizacion}</p>
-                          )}
-                          {sale.direccionFacturacionReferencia && (
-                            <p>Ref: {sale.direccionFacturacionReferencia}</p>
-                          )}
-                        </div>
-                      </div>
-
-                      {sale.direccionDespachoIgualFacturacion !== "true" && (
-                        <div>
-                          <h4 className="font-medium text-foreground mb-2 text-sm">
-                            Dirección de Despacho
-                          </h4>
-                          <div className="text-xs text-muted-foreground space-y-1">
-                            <p>{sale.direccionDespachoDireccion}</p>
-                            <p>
-                              {sale.direccionDespachoCiudad}, {sale.direccionDespachoEstado}
-                            </p>
-                            <p>{sale.direccionDespachoPais}</p>
-                            {sale.direccionDespachoUrbanizacion && (
-                              <p>Urb. {sale.direccionDespachoUrbanizacion}</p>
-                            )}
-                            {sale.direccionDespachoReferencia && (
-                              <p>Ref: {sale.direccionDespachoReferencia}</p>
-                            )}
+                      ) : (
+                        <div className="text-xs space-y-1 max-w-72">
+                          <div className="font-medium">{sale.direccionDespachoDireccion}</div>
+                          <div>
+                            {sale.direccionDespachoCiudad}, {sale.direccionDespachoEstado}
                           </div>
+                          <div>{sale.direccionDespachoPais}</div>
+                          {sale.direccionDespachoUrbanizacion && (
+                            <div className="text-muted-foreground">Urb. {sale.direccionDespachoUrbanizacion}</div>
+                          )}
+                          {sale.direccionDespachoReferencia && (
+                            <div className="text-muted-foreground">Ref: {sale.direccionDespachoReferencia}</div>
+                          )}
                         </div>
                       )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
+                    </TableCell>
+                    
+                    <TableCell>
+                      <Badge variant="outline" className="text-xs">
+                        {sale.estadoEntrega}
+                      </Badge>
+                    </TableCell>
+                    
+                    <TableCell className="text-xs">
+                      {new Date(sale.fecha).toLocaleDateString('es-ES')}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           </div>
         )}
       </div>
