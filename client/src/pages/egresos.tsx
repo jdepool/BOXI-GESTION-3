@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Plus, Upload, Edit, Trash2, Filter, Download } from "lucide-react";
@@ -283,6 +283,12 @@ export default function Egresos() {
                   <DialogTitle>
                     {editingEgreso ? "Editar Egreso" : "Crear Nuevo Egreso"}
                   </DialogTitle>
+                  <DialogDescription>
+                    {editingEgreso 
+                      ? "Modifica los datos del egreso seleccionado" 
+                      : "Completa la información para registrar un nuevo egreso"
+                    }
+                  </DialogDescription>
                 </DialogHeader>
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
