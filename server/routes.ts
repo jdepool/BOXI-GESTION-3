@@ -235,20 +235,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Search sales for addresses
-  app.get("/api/sales/search", async (req, res) => {
+  // Get Cashea orders for address management
+  app.get("/api/sales/cashea", async (req, res) => {
     try {
-      const searchTerm = req.query.q as string;
-      
-      if (!searchTerm || searchTerm.trim().length < 2) {
-        return res.status(400).json({ error: "Search term must be at least 2 characters" });
-      }
-
-      const results = await storage.searchSales(searchTerm.trim(), 10);
+      const results = await storage.getCasheaOrders(50);
       res.json({ data: results });
     } catch (error) {
-      console.error("Search sales error:", error);
-      res.status(500).json({ error: "Failed to search sales" });
+      console.error("Get Cashea orders error:", error);
+      res.status(500).json({ error: "Failed to get Cashea orders" });
     }
   });
 

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -6,52 +7,53 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Search, MapPin, CreditCard } from "lucide-react";
+import { MapPin, Package, Calendar, User, Phone, Mail } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
+import { format } from "date-fns";
 import type { Sale } from "@shared/schema";
 
 interface AddressData {
-  direccionFacturacionCalle: string;
-  direccionFacturacionCiudad: string;
-  direccionFacturacionEstado: string;
-  direccionFacturacionCodigoPostal: string;
   direccionFacturacionPais: string;
+  direccionFacturacionEstado: string;
+  direccionFacturacionCiudad: string;
+  direccionFacturacionDireccion: string;
+  direccionFacturacionUrbanizacion: string;
+  direccionFacturacionReferencia: string;
   direccionDespachoIgualFacturacion: boolean;
-  direccionDespachoCalle: string;
-  direccionDespachoCiudad: string;
-  direccionDespachoEstado: string;
-  direccionDespachoCodigoPostal: string;
   direccionDespachoPais: string;
+  direccionDespachoEstado: string;
+  direccionDespachoCiudad: string;
+  direccionDespachoDireccion: string;
+  direccionDespachoUrbanizacion: string;
+  direccionDespachoReferencia: string;
 }
 
 export default function AddressForm() {
-  const [searchTerm, setSearchTerm] = useState("");
   const [selectedOrder, setSelectedOrder] = useState<Sale | null>(null);
   const [showShippingForm, setShowShippingForm] = useState(false);
   const [addressData, setAddressData] = useState<AddressData>({
-    direccionFacturacionCalle: "",
-    direccionFacturacionCiudad: "",
-    direccionFacturacionEstado: "",
-    direccionFacturacionCodigoPostal: "",
     direccionFacturacionPais: "Venezuela",
+    direccionFacturacionEstado: "",
+    direccionFacturacionCiudad: "",
+    direccionFacturacionDireccion: "",
+    direccionFacturacionUrbanizacion: "",
+    direccionFacturacionReferencia: "",
     direccionDespachoIgualFacturacion: true,
-    direccionDespachoCalle: "",
-    direccionDespachoCiudad: "",
+    direccionDespachoPais: "Venezuela",
     direccionDespachoEstado: "",
-    direccionDespachoCodigoPostal: "",
-    direccionDespachoPais: "Venezuela"
+    direccionDespachoCiudad: "",
+    direccionDespachoDireccion: "",
+    direccionDespachoUrbanizacion: "",
+    direccionDespachoReferencia: ""
   });
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Search for orders
-  const { data: searchResults, refetch: searchOrders } = useQuery({
-    queryKey: ['/api/sales/search', searchTerm],
-    enabled: false,
-    queryFn: () => fetch(`/api/sales/search?q=${encodeURIComponent(searchTerm)}`).then(res => res.json())
+  // Get all Cashea orders
+  const { data: casheaOrders, isLoading } = useQuery({
+    queryKey: ['/api/sales/cashea'],
+    queryFn: () => fetch('/api/sales/cashea').then(res => res.json())
   });
 
   // Update address mutation
@@ -83,39 +85,47 @@ export default function AddressForm() {
         description: "No se pudieron actualizar las direcciones",
         variant: "destructive"
       });
-      console.error('Address update error:', error);
     }
   });
 
-  const handleSearch = async () => {
-    if (!searchTerm.trim()) {
-      toast({
-        title: "Campo requerido",
-        description: "Por favor ingresa un término de búsqueda",
-        variant: "destructive"
-      });
-      return;
-    }
-    await searchOrders();
+  const resetForm = () => {
+    setSelectedOrder(null);
+    setShowShippingForm(false);
+    setAddressData({
+      direccionFacturacionPais: "Venezuela",
+      direccionFacturacionEstado: "",
+      direccionFacturacionCiudad: "",
+      direccionFacturacionDireccion: "",
+      direccionFacturacionUrbanizacion: "",
+      direccionFacturacionReferencia: "",
+      direccionDespachoIgualFacturacion: true,
+      direccionDespachoPais: "Venezuela",
+      direccionDespachoEstado: "",
+      direccionDespachoCiudad: "",
+      direccionDespachoDireccion: "",
+      direccionDespachoUrbanizacion: "",
+      direccionDespachoReferencia: ""
+    });
   };
 
-  const handleSelectOrder = (order: Sale) => {
+  const handleOrderSelect = (order: Sale) => {
     setSelectedOrder(order);
-    
     // Pre-fill with existing address data if available
-    if (order.direccionFacturacionCalle) {
+    if (order.direccionFacturacionPais) {
       setAddressData({
-        direccionFacturacionCalle: order.direccionFacturacionCalle || "",
-        direccionFacturacionCiudad: order.direccionFacturacionCiudad || "",
-        direccionFacturacionEstado: order.direccionFacturacionEstado || "",
-        direccionFacturacionCodigoPostal: order.direccionFacturacionCodigoPostal || "",
         direccionFacturacionPais: order.direccionFacturacionPais || "Venezuela",
+        direccionFacturacionEstado: order.direccionFacturacionEstado || "",
+        direccionFacturacionCiudad: order.direccionFacturacionCiudad || "",
+        direccionFacturacionDireccion: order.direccionFacturacionDireccion || "",
+        direccionFacturacionUrbanizacion: order.direccionFacturacionUrbanizacion || "",
+        direccionFacturacionReferencia: order.direccionFacturacionReferencia || "",
         direccionDespachoIgualFacturacion: order.direccionDespachoIgualFacturacion === "true",
-        direccionDespachoCalle: order.direccionDespachoCalle || "",
-        direccionDespachoCiudad: order.direccionDespachoCiudad || "",
+        direccionDespachoPais: order.direccionDespachoPais || "Venezuela",
         direccionDespachoEstado: order.direccionDespachoEstado || "",
-        direccionDespachoCodigoPostal: order.direccionDespachoCodigoPostal || "",
-        direccionDespachoPais: order.direccionDespachoPais || "Venezuela"
+        direccionDespachoCiudad: order.direccionDespachoCiudad || "",
+        direccionDespachoDireccion: order.direccionDespachoDireccion || "",
+        direccionDespachoUrbanizacion: order.direccionDespachoUrbanizacion || "",
+        direccionDespachoReferencia: order.direccionDespachoReferencia || ""
       });
       setShowShippingForm(order.direccionDespachoIgualFacturacion !== "true");
     }
@@ -126,198 +136,216 @@ export default function AddressForm() {
       ...prev,
       [field]: value
     }));
-
-    if (field === 'direccionDespachoIgualFacturacion') {
-      setShowShippingForm(!value);
-    }
   };
 
-  const handleSubmit = async () => {
-    if (!selectedOrder) return;
+  const handleSameAddressChange = (checked: boolean) => {
+    setAddressData(prev => ({
+      ...prev,
+      direccionDespachoIgualFacturacion: checked
+    }));
+    setShowShippingForm(!checked);
+  };
 
-    // Validate required billing fields
+  const validateForm = (): boolean => {
     const requiredBillingFields = [
-      'direccionFacturacionCalle',
+      'direccionFacturacionPais',
+      'direccionFacturacionEstado', 
       'direccionFacturacionCiudad',
-      'direccionFacturacionEstado'
+      'direccionFacturacionDireccion'
     ];
 
     for (const field of requiredBillingFields) {
       if (!addressData[field as keyof AddressData]) {
         toast({
           title: "Campos requeridos",
-          description: "Por favor completa todos los campos de dirección de facturación",
+          description: "Por favor complete todos los campos de la dirección de facturación",
           variant: "destructive"
         });
-        return;
+        return false;
       }
     }
 
-    // Validate shipping fields if different from billing
     if (!addressData.direccionDespachoIgualFacturacion) {
       const requiredShippingFields = [
-        'direccionDespachoCalle',
-        'direccionDespachoCiudad',
-        'direccionDespachoEstado'
+        'direccionDespachoPais',
+        'direccionDespachoEstado',
+        'direccionDespachoCiudad', 
+        'direccionDespachoDireccion'
       ];
 
       for (const field of requiredShippingFields) {
         if (!addressData[field as keyof AddressData]) {
           toast({
             title: "Campos requeridos",
-            description: "Por favor completa todos los campos de dirección de despacho",
+            description: "Por favor complete todos los campos de la dirección de despacho",
             variant: "destructive"
           });
-          return;
+          return false;
         }
       }
     }
 
-    await updateAddressMutation.mutateAsync({
+    return true;
+  };
+
+  const handleSubmit = () => {
+    if (!selectedOrder) {
+      toast({
+        title: "Error",
+        description: "Debe seleccionar una orden primero",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!validateForm()) {
+      return;
+    }
+
+    updateAddressMutation.mutate({
       saleId: selectedOrder.id,
-      addresses: {
-        ...addressData,
-        direccionDespachoIgualFacturacion: addressData.direccionDespachoIgualFacturacion
-      }
+      addresses: addressData
     });
   };
 
-  const resetForm = () => {
-    setSelectedOrder(null);
-    setSearchTerm("");
-    setShowShippingForm(false);
-    setAddressData({
-      direccionFacturacionCalle: "",
-      direccionFacturacionCiudad: "",
-      direccionFacturacionEstado: "",
-      direccionFacturacionCodigoPostal: "",
-      direccionFacturacionPais: "Venezuela",
-      direccionDespachoIgualFacturacion: true,
-      direccionDespachoCalle: "",
-      direccionDespachoCiudad: "",
-      direccionDespachoEstado: "",
-      direccionDespachoCodigoPostal: "",
-      direccionDespachoPais: "Venezuela"
-    });
-  };
-
-  return (
-    <div className="space-y-6 p-6">
-      <div className="flex items-center gap-2 mb-6">
-        <MapPin className="h-6 w-6 text-primary" />
-        <h2 className="text-2xl font-semibold">Gestión de Direcciones</h2>
-      </div>
-
-      {/* Order Search Section */}
+  if (isLoading) {
+    return (
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Search className="h-5 w-5" />
-            Buscar Orden
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex gap-2">
-            <Input
-              placeholder="Buscar por número de orden, cédula o nombre del cliente..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
-              className="flex-1"
-              data-testid="search-order-input"
-            />
-            <Button onClick={handleSearch} data-testid="search-order-button">
-              <Search className="h-4 w-4 mr-2" />
-              Buscar
-            </Button>
+        <CardContent className="flex items-center justify-center p-8">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-muted-foreground">Cargando órdenes de Cashea...</p>
           </div>
-
-          {/* Search Results */}
-          {searchResults?.data && searchResults.data.length > 0 && (
-            <div className="space-y-2">
-              <p className="text-sm text-muted-foreground">
-                {searchResults.data.length} resultado(s) encontrado(s):
-              </p>
-              {searchResults.data.map((order: Sale) => (
-                <Card 
-                  key={order.id} 
-                  className={`cursor-pointer hover:bg-muted/50 transition-colors ${
-                    selectedOrder?.id === order.id ? 'bg-primary/10 border-primary' : ''
-                  }`}
-                  onClick={() => handleSelectOrder(order)}
-                  data-testid={`order-result-${order.id}`}
-                >
-                  <CardContent className="p-4">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <p className="font-medium">{order.nombre}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {order.email && `${order.email} • `}
-                          {order.cedula && `CI: ${order.cedula} • `}
-                          {order.orden && `Orden: ${order.orden}`}
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <Badge variant="outline" className="mb-1">
-                          {order.canal}
-                        </Badge>
-                        <p className="text-sm font-medium">${Number(order.totalUsd).toLocaleString()}</p>
-                        {order.direccionFacturacionCalle && (
-                          <p className="text-xs text-green-600">✓ Con dirección</p>
-                        )}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
-
-          {searchResults?.data && searchResults.data.length === 0 && (
-            <p className="text-sm text-muted-foreground text-center py-4">
-              No se encontraron órdenes con ese criterio de búsqueda
-            </p>
-          )}
         </CardContent>
       </Card>
+    );
+  }
 
-      {/* Address Form Section */}
-      {selectedOrder && (
+  return (
+    <div className="space-y-6">
+      {/* Order Selection */}
+      {!selectedOrder && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <CreditCard className="h-5 w-5" />
-              Direcciones para: {selectedOrder.nombre}
+              <Package className="h-5 w-5" />
+              Órdenes de Cashea
             </CardTitle>
-            <p className="text-sm text-muted-foreground">
-              Orden: {selectedOrder.orden || 'N/A'} • Canal: {selectedOrder.canal} • 
-              Total: ${Number(selectedOrder.totalUsd).toLocaleString()}
-            </p>
           </CardHeader>
-          <CardContent className="space-y-6">
+          <CardContent>
+            <p className="text-sm text-muted-foreground mb-4">
+              Selecciona una orden de Cashea para agregar direcciones de facturación y despacho:
+            </p>
             
-            {/* Billing Address */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-medium">Dirección de Facturación</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="md:col-span-2">
-                  <Label htmlFor="billing-street">Calle/Dirección *</Label>
-                  <Input
-                    id="billing-street"
-                    value={addressData.direccionFacturacionCalle}
-                    onChange={(e) => handleAddressChange('direccionFacturacionCalle', e.target.value)}
-                    placeholder="Ej: Av. Principal, Casa 123"
-                    data-testid="billing-street"
-                  />
-                </div>
+            {casheaOrders?.data?.length === 0 ? (
+              <p className="text-center text-muted-foreground py-8">
+                No hay órdenes de Cashea disponibles
+              </p>
+            ) : (
+              <div className="space-y-3 max-h-96 overflow-y-auto">
+                {casheaOrders?.data?.map((order: Sale) => (
+                  <div
+                    key={order.id}
+                    className="border border-border rounded-lg p-4 cursor-pointer hover:bg-accent transition-colors"
+                    onClick={() => handleOrderSelect(order)}
+                    data-testid={`order-card-${order.id}`}
+                  >
+                    <div className="flex justify-between items-start">
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          <User className="h-4 w-4 text-muted-foreground" />
+                          <span className="font-medium">{order.nombre}</span>
+                          <Badge variant="secondary">#{order.orden}</Badge>
+                        </div>
+                        
+                        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                          <div className="flex items-center gap-1">
+                            <Phone className="h-3 w-3" />
+                            {order.telefono}
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Mail className="h-3 w-3" />
+                            {order.email}
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Calendar className="h-3 w-3" />
+                            {format(new Date(order.fecha), 'dd/MM/yyyy')}
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm">
+                            <strong>{order.product}</strong> (x{order.cantidad})
+                          </span>
+                          <Badge variant="outline">
+                            ${order.totalUsd} USD
+                          </Badge>
+                        </div>
+                      </div>
+                      
+                      <div className="text-right">
+                        <Badge 
+                          variant={order.direccionFacturacionPais ? "default" : "secondary"}
+                          className="mb-2"
+                        >
+                          {order.direccionFacturacionPais ? "Con direcciones" : "Sin direcciones"}
+                        </Badge>
+                        <div className="text-xs text-muted-foreground">
+                          Estado: {order.estadoEntrega}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Address Forms */}
+      {selectedOrder && (
+        <div className="space-y-6">
+          {/* Selected Order Info */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Package className="h-5 w-5" />
+                Orden Seleccionada
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex justify-between items-center">
                 <div>
-                  <Label htmlFor="billing-city">Ciudad *</Label>
+                  <p className="font-medium">{selectedOrder.nombre} - #{selectedOrder.orden}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {selectedOrder.product} (x{selectedOrder.cantidad}) - ${selectedOrder.totalUsd} USD
+                  </p>
+                </div>
+                <Button variant="outline" onClick={resetForm} data-testid="button-change-order">
+                  Cambiar Orden
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Billing Address */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <MapPin className="h-5 w-5" />
+                Dirección de Facturación
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="billing-country">País *</Label>
                   <Input
-                    id="billing-city"
-                    value={addressData.direccionFacturacionCiudad}
-                    onChange={(e) => handleAddressChange('direccionFacturacionCiudad', e.target.value)}
-                    placeholder="Ej: Caracas"
-                    data-testid="billing-city"
+                    id="billing-country"
+                    value={addressData.direccionFacturacionPais}
+                    onChange={(e) => handleAddressChange('direccionFacturacionPais', e.target.value)}
+                    data-testid="input-billing-country"
                   />
                 </div>
                 <div>
@@ -326,72 +354,91 @@ export default function AddressForm() {
                     id="billing-state"
                     value={addressData.direccionFacturacionEstado}
                     onChange={(e) => handleAddressChange('direccionFacturacionEstado', e.target.value)}
-                    placeholder="Ej: Distrito Capital"
-                    data-testid="billing-state"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="billing-postal">Código Postal</Label>
-                  <Input
-                    id="billing-postal"
-                    value={addressData.direccionFacturacionCodigoPostal}
-                    onChange={(e) => handleAddressChange('direccionFacturacionCodigoPostal', e.target.value)}
-                    placeholder="Ej: 1010"
-                    data-testid="billing-postal"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="billing-country">País</Label>
-                  <Input
-                    id="billing-country"
-                    value={addressData.direccionFacturacionPais}
-                    onChange={(e) => handleAddressChange('direccionFacturacionPais', e.target.value)}
-                    data-testid="billing-country"
+                    data-testid="input-billing-state"
                   />
                 </div>
               </div>
-            </div>
 
-            <Separator />
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="billing-city">Ciudad *</Label>
+                  <Input
+                    id="billing-city"
+                    value={addressData.direccionFacturacionCiudad}
+                    onChange={(e) => handleAddressChange('direccionFacturacionCiudad', e.target.value)}
+                    data-testid="input-billing-city"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="billing-urbanization">Urbanización</Label>
+                  <Input
+                    id="billing-urbanization"
+                    value={addressData.direccionFacturacionUrbanizacion}
+                    onChange={(e) => handleAddressChange('direccionFacturacionUrbanizacion', e.target.value)}
+                    data-testid="input-billing-urbanization"
+                  />
+                </div>
+              </div>
 
-            {/* Same Address Checkbox */}
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="same-address"
-                checked={addressData.direccionDespachoIgualFacturacion}
-                onCheckedChange={(checked) => 
-                  handleAddressChange('direccionDespachoIgualFacturacion', checked as boolean)
-                }
-                data-testid="same-address-checkbox"
-              />
-              <Label htmlFor="same-address" className="text-sm font-medium">
-                La dirección de despacho es la misma que la de facturación
-              </Label>
-            </div>
+              <div>
+                <Label htmlFor="billing-address">Dirección *</Label>
+                <Input
+                  id="billing-address"
+                  value={addressData.direccionFacturacionDireccion}
+                  onChange={(e) => handleAddressChange('direccionFacturacionDireccion', e.target.value)}
+                  placeholder="Calle, número, edificio, apartamento..."
+                  data-testid="input-billing-address"
+                />
+              </div>
 
-            {/* Shipping Address */}
-            {showShippingForm && (
-              <div className="space-y-4">
-                <h3 className="text-lg font-medium">Dirección de Despacho</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="md:col-span-2">
-                    <Label htmlFor="shipping-street">Calle/Dirección *</Label>
-                    <Input
-                      id="shipping-street"
-                      value={addressData.direccionDespachoCalle}
-                      onChange={(e) => handleAddressChange('direccionDespachoCalle', e.target.value)}
-                      placeholder="Ej: Av. Secundaria, Edificio 456"
-                      data-testid="shipping-street"
-                    />
-                  </div>
+              <div>
+                <Label htmlFor="billing-reference">Referencia</Label>
+                <Input
+                  id="billing-reference"
+                  value={addressData.direccionFacturacionReferencia}
+                  onChange={(e) => handleAddressChange('direccionFacturacionReferencia', e.target.value)}
+                  placeholder="Punto de referencia..."
+                  data-testid="input-billing-reference"
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Same Address Checkbox */}
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="same-address"
+                  checked={addressData.direccionDespachoIgualFacturacion}
+                  onCheckedChange={handleSameAddressChange}
+                  data-testid="checkbox-same-address"
+                />
+                <Label htmlFor="same-address">
+                  La dirección de despacho es igual a la de facturación
+                </Label>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Shipping Address */}
+          {showShippingForm && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <MapPin className="h-5 w-5" />
+                  Dirección de Despacho
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="shipping-city">Ciudad *</Label>
+                    <Label htmlFor="shipping-country">País *</Label>
                     <Input
-                      id="shipping-city"
-                      value={addressData.direccionDespachoCiudad}
-                      onChange={(e) => handleAddressChange('direccionDespachoCiudad', e.target.value)}
-                      placeholder="Ej: Valencia"
-                      data-testid="shipping-city"
+                      id="shipping-country"
+                      value={addressData.direccionDespachoPais}
+                      onChange={(e) => handleAddressChange('direccionDespachoPais', e.target.value)}
+                      data-testid="input-shipping-country"
                     />
                   </div>
                   <div>
@@ -400,53 +447,71 @@ export default function AddressForm() {
                       id="shipping-state"
                       value={addressData.direccionDespachoEstado}
                       onChange={(e) => handleAddressChange('direccionDespachoEstado', e.target.value)}
-                      placeholder="Ej: Carabobo"
-                      data-testid="shipping-state"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="shipping-postal">Código Postal</Label>
-                    <Input
-                      id="shipping-postal"
-                      value={addressData.direccionDespachoCodigoPostal}
-                      onChange={(e) => handleAddressChange('direccionDespachoCodigoPostal', e.target.value)}
-                      placeholder="Ej: 2001"
-                      data-testid="shipping-postal"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="shipping-country">País</Label>
-                    <Input
-                      id="shipping-country"
-                      value={addressData.direccionDespachoPais}
-                      onChange={(e) => handleAddressChange('direccionDespachoPais', e.target.value)}
-                      data-testid="shipping-country"
+                      data-testid="input-shipping-state"
                     />
                   </div>
                 </div>
-              </div>
-            )}
 
-            {/* Action Buttons */}
-            <div className="flex gap-3 pt-4">
-              <Button
-                onClick={handleSubmit}
-                disabled={updateAddressMutation.isPending}
-                data-testid="save-addresses-button"
-                className="flex-1"
-              >
-                {updateAddressMutation.isPending ? "Guardando..." : "Guardar Direcciones"}
-              </Button>
-              <Button
-                variant="outline"
-                onClick={resetForm}
-                data-testid="cancel-button"
-              >
-                Cancelar
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="shipping-city">Ciudad *</Label>
+                    <Input
+                      id="shipping-city"
+                      value={addressData.direccionDespachoCiudad}
+                      onChange={(e) => handleAddressChange('direccionDespachoCiudad', e.target.value)}
+                      data-testid="input-shipping-city"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="shipping-urbanization">Urbanización</Label>
+                    <Input
+                      id="shipping-urbanization"
+                      value={addressData.direccionDespachoUrbanizacion}
+                      onChange={(e) => handleAddressChange('direccionDespachoUrbanizacion', e.target.value)}
+                      data-testid="input-shipping-urbanization"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="shipping-address">Dirección *</Label>
+                  <Input
+                    id="shipping-address"
+                    value={addressData.direccionDespachoDireccion}
+                    onChange={(e) => handleAddressChange('direccionDespachoDireccion', e.target.value)}
+                    placeholder="Calle, número, edificio, apartamento..."
+                    data-testid="input-shipping-address"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="shipping-reference">Referencia</Label>
+                  <Input
+                    id="shipping-reference"
+                    value={addressData.direccionDespachoReferencia}
+                    onChange={(e) => handleAddressChange('direccionDespachoReferencia', e.target.value)}
+                    placeholder="Punto de referencia..."
+                    data-testid="input-shipping-reference"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Action Buttons */}
+          <div className="flex justify-end space-x-4">
+            <Button variant="outline" onClick={resetForm} data-testid="button-cancel">
+              Cancelar
+            </Button>
+            <Button 
+              onClick={handleSubmit}
+              disabled={updateAddressMutation.isPending}
+              data-testid="button-save-addresses"
+            >
+              {updateAddressMutation.isPending ? "Guardando..." : "Guardar Direcciones"}
+            </Button>
+          </div>
+        </div>
       )}
     </div>
   );

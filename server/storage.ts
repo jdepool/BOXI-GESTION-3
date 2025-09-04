@@ -19,19 +19,21 @@ export interface IStorage {
     offset?: number;
   }): Promise<Sale[]>;
   getSaleById(id: string): Promise<Sale | undefined>;
-  searchSales(searchTerm: string, limit?: number): Promise<Sale[]>;
+  getCasheaOrders(limit?: number): Promise<Sale[]>;
   updateSaleAddresses(saleId: string, addresses: {
-    direccionFacturacionCalle?: string;
-    direccionFacturacionCiudad?: string;
-    direccionFacturacionEstado?: string;
-    direccionFacturacionCodigoPostal?: string;
     direccionFacturacionPais?: string;
+    direccionFacturacionEstado?: string;
+    direccionFacturacionCiudad?: string;
+    direccionFacturacionDireccion?: string;
+    direccionFacturacionUrbanizacion?: string;
+    direccionFacturacionReferencia?: string;
     direccionDespachoIgualFacturacion?: boolean;
-    direccionDespachoCalle?: string;
-    direccionDespachoCiudad?: string;
-    direccionDespachoEstado?: string;
-    direccionDespachoCodigoPostal?: string;
     direccionDespachoPais?: string;
+    direccionDespachoEstado?: string;
+    direccionDespachoCiudad?: string;
+    direccionDespachoDireccion?: string;
+    direccionDespachoUrbanizacion?: string;
+    direccionDespachoReferencia?: string;
   }): Promise<Sale | undefined>;
   getTotalSalesCount(filters?: {
     canal?: string;
@@ -135,72 +137,71 @@ export class DatabaseStorage implements IStorage {
     return sale || undefined;
   }
 
-  async searchSales(searchTerm: string, limit: number = 10): Promise<Sale[]> {
-    const term = `%${searchTerm.toLowerCase()}%`;
-    
+  async getCasheaOrders(limit: number = 50): Promise<Sale[]> {
     return await db
       .select()
       .from(sales)
-      .where(
-        or(
-          ilike(sales.nombre, term),
-          ilike(sales.cedula, term),
-          ilike(sales.orden, term),
-          ilike(sales.email, term)
-        )
-      )
+      .where(eq(sales.canal, 'Cashea'))
       .orderBy(desc(sales.fecha))
       .limit(limit);
   }
 
   async updateSaleAddresses(saleId: string, addresses: {
-    direccionFacturacionCalle?: string;
-    direccionFacturacionCiudad?: string;
-    direccionFacturacionEstado?: string;
-    direccionFacturacionCodigoPostal?: string;
     direccionFacturacionPais?: string;
+    direccionFacturacionEstado?: string;
+    direccionFacturacionCiudad?: string;
+    direccionFacturacionDireccion?: string;
+    direccionFacturacionUrbanizacion?: string;
+    direccionFacturacionReferencia?: string;
     direccionDespachoIgualFacturacion?: boolean;
-    direccionDespachoCalle?: string;
-    direccionDespachoCiudad?: string;
-    direccionDespachoEstado?: string;
-    direccionDespachoCodigoPostal?: string;
     direccionDespachoPais?: string;
+    direccionDespachoEstado?: string;
+    direccionDespachoCiudad?: string;
+    direccionDespachoDireccion?: string;
+    direccionDespachoUrbanizacion?: string;
+    direccionDespachoReferencia?: string;
   }): Promise<Sale | undefined> {
     const updateData: any = {};
     
     // Add all address fields to update data
-    if (addresses.direccionFacturacionCalle !== undefined) {
-      updateData.direccionFacturacionCalle = addresses.direccionFacturacionCalle;
-    }
-    if (addresses.direccionFacturacionCiudad !== undefined) {
-      updateData.direccionFacturacionCiudad = addresses.direccionFacturacionCiudad;
+    if (addresses.direccionFacturacionPais !== undefined) {
+      updateData.direccionFacturacionPais = addresses.direccionFacturacionPais;
     }
     if (addresses.direccionFacturacionEstado !== undefined) {
       updateData.direccionFacturacionEstado = addresses.direccionFacturacionEstado;
     }
-    if (addresses.direccionFacturacionCodigoPostal !== undefined) {
-      updateData.direccionFacturacionCodigoPostal = addresses.direccionFacturacionCodigoPostal;
+    if (addresses.direccionFacturacionCiudad !== undefined) {
+      updateData.direccionFacturacionCiudad = addresses.direccionFacturacionCiudad;
     }
-    if (addresses.direccionFacturacionPais !== undefined) {
-      updateData.direccionFacturacionPais = addresses.direccionFacturacionPais;
+    if (addresses.direccionFacturacionDireccion !== undefined) {
+      updateData.direccionFacturacionDireccion = addresses.direccionFacturacionDireccion;
+    }
+    if (addresses.direccionFacturacionUrbanizacion !== undefined) {
+      updateData.direccionFacturacionUrbanizacion = addresses.direccionFacturacionUrbanizacion;
+    }
+    if (addresses.direccionFacturacionReferencia !== undefined) {
+      updateData.direccionFacturacionReferencia = addresses.direccionFacturacionReferencia;
     }
     if (addresses.direccionDespachoIgualFacturacion !== undefined) {
       updateData.direccionDespachoIgualFacturacion = addresses.direccionDespachoIgualFacturacion ? "true" : "false";
     }
-    if (addresses.direccionDespachoCalle !== undefined) {
-      updateData.direccionDespachoCalle = addresses.direccionDespachoCalle;
-    }
-    if (addresses.direccionDespachoCiudad !== undefined) {
-      updateData.direccionDespachoCiudad = addresses.direccionDespachoCiudad;
+    if (addresses.direccionDespachoPais !== undefined) {
+      updateData.direccionDespachoPais = addresses.direccionDespachoPais;
     }
     if (addresses.direccionDespachoEstado !== undefined) {
       updateData.direccionDespachoEstado = addresses.direccionDespachoEstado;
     }
-    if (addresses.direccionDespachoCodigoPostal !== undefined) {
-      updateData.direccionDespachoCodigoPostal = addresses.direccionDespachoCodigoPostal;
+    if (addresses.direccionDespachoCiudad !== undefined) {
+      updateData.direccionDespachoCiudad = addresses.direccionDespachoCiudad;
     }
-    if (addresses.direccionDespachoPais !== undefined) {
-      updateData.direccionDespachoPais = addresses.direccionDespachoPais;
+    if (addresses.direccionDespachoDireccion !== undefined) {
+      updateData.direccionDespachoDireccion = addresses.direccionDespachoDireccion;
+    }
+    if (addresses.direccionDespachoUrbanizacion !== undefined) {
+      updateData.direccionDespachoUrbanizacion = addresses.direccionDespachoUrbanizacion;
+    }
+    if (addresses.direccionDespachoReferencia !== undefined) {
+      updateData.direccionDespachoReferencia = addresses.direccionDespachoReferencia;
     }
 
     // Add updated timestamp
