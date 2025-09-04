@@ -25,7 +25,7 @@ export default function ManualSalesEntry() {
 
   // Get manual sales that are still pending (not yet verified)
   const { data: incompleteSales, isLoading } = useQuery<SalesResponse>({
-    queryKey: ["/api/sales", { canal: "manual", estadoEntrega: "pendiente" }],
+    queryKey: ["/api/sales", { canal: "manual", estado: "pendiente" }],
   });
 
   const createManualSaleMutation = useMutation({

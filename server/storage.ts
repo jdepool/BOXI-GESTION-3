@@ -21,6 +21,7 @@ export interface IStorage {
   getSales(filters?: {
     canal?: string;
     estadoEntrega?: string;
+    estado?: string;
     startDate?: Date;
     endDate?: Date;
     excludePendingManual?: boolean;
@@ -49,6 +50,7 @@ export interface IStorage {
   getTotalSalesCount(filters?: {
     canal?: string;
     estadoEntrega?: string;
+    estado?: string;
     startDate?: Date;
     endDate?: Date;
     excludePendingManual?: boolean;
@@ -176,6 +178,7 @@ export class DatabaseStorage implements IStorage {
   async getSales(filters?: {
     canal?: string;
     estadoEntrega?: string;
+    estado?: string;
     startDate?: Date;
     endDate?: Date;
     excludePendingManual?: boolean;
@@ -188,6 +191,9 @@ export class DatabaseStorage implements IStorage {
     }
     if (filters?.estadoEntrega) {
       conditions.push(eq(sales.estadoEntrega, filters.estadoEntrega));
+    }
+    if (filters?.estado) {
+      conditions.push(eq(sales.estado, filters.estado));
     }
     if (filters?.startDate) {
       conditions.push(gte(sales.fecha, filters.startDate));
@@ -349,6 +355,7 @@ export class DatabaseStorage implements IStorage {
   async getTotalSalesCount(filters?: {
     canal?: string;
     estadoEntrega?: string;
+    estado?: string;
     startDate?: Date;
     endDate?: Date;
     excludePendingManual?: boolean;
@@ -359,6 +366,9 @@ export class DatabaseStorage implements IStorage {
     }
     if (filters?.estadoEntrega) {
       conditions.push(eq(sales.estadoEntrega, filters.estadoEntrega));
+    }
+    if (filters?.estado) {
+      conditions.push(eq(sales.estado, filters.estado));
     }
     if (filters?.startDate) {
       conditions.push(gte(sales.fecha, filters.startDate));

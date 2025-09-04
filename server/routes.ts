@@ -30,6 +30,7 @@ const upload = multer({
 const getSalesQuerySchema = z.object({
   canal: z.string().optional(),
   estadoEntrega: z.string().optional(),
+  estado: z.string().optional(),
   startDate: z.string().optional(),
   endDate: z.string().optional(),
   excludePendingManual: z.coerce.boolean().optional(),
@@ -147,6 +148,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const filters = {
         canal: query.canal,
         estadoEntrega: query.estadoEntrega,
+        estado: query.estado,
         startDate: query.startDate ? new Date(query.startDate) : undefined,
         endDate: query.endDate ? new Date(query.endDate) : undefined,
         excludePendingManual: query.excludePendingManual,
