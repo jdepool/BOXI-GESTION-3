@@ -174,25 +174,35 @@ export default function SalesTable({
 
       <div className="overflow-x-auto bg-background">
         <div className="min-w-max">
-          <table className="w-full min-w-[1200px]">
+          <table className="w-full min-w-[2200px]">
             <thead className="bg-muted sticky top-0 z-10">
               <tr>
-                <th className="text-left p-3 text-xs font-medium text-muted-foreground min-w-[200px]">Cliente</th>
-                <th className="text-left p-3 text-xs font-medium text-muted-foreground min-w-[100px]">Canal</th>
-                <th className="text-left p-3 text-xs font-medium text-muted-foreground min-w-[150px]">Producto</th>
-                <th className="text-left p-3 text-xs font-medium text-muted-foreground min-w-[120px]">Total USD</th>
-                <th className="text-left p-3 text-xs font-medium text-muted-foreground min-w-[120px]">Pago Inicial</th>
-                <th className="text-left p-3 text-xs font-medium text-muted-foreground min-w-[100px]">Estado</th>
-                <th className="text-left p-3 text-xs font-medium text-muted-foreground min-w-[100px]">Fecha</th>
-                <th className="text-left p-3 text-xs font-medium text-muted-foreground min-w-[150px]">Sucursal/Tienda</th>
-                <th className="text-left p-3 text-xs font-medium text-muted-foreground min-w-[120px]">Orden/Factura</th>
-                <th className="text-left p-3 text-xs font-medium text-muted-foreground min-w-[80px]">Acciones</th>
+                <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[180px]">Nombre</th>
+                <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[100px]">Cedula</th>
+                <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[120px]">Telefono</th>
+                <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[160px]">Email</th>
+                <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[100px]">Total USD</th>
+                <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[120px]">Sucursal</th>
+                <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[120px]">Tienda</th>
+                <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[90px]">Fecha</th>
+                <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[80px]">Canal</th>
+                <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[100px]">Estado</th>
+                <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[120px]">Estado Pago Inicial</th>
+                <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[110px]">Pago Inicial USD</th>
+                <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[100px]">Orden</th>
+                <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[100px]">Factura</th>
+                <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[120px]">Referencia</th>
+                <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[110px]">Monto Bs</th>
+                <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[120px]">Estado Entrega</th>
+                <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[140px]">Producto</th>
+                <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[80px]">Cantidad</th>
+                <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[80px]">Acciones</th>
               </tr>
             </thead>
             <tbody>
               {data.length === 0 ? (
                 <tr>
-                  <td colSpan={10} className="text-center p-8 text-muted-foreground">
+                  <td colSpan={20} className="text-center p-8 text-muted-foreground">
                     No hay datos disponibles
                   </td>
                 </tr>
@@ -200,71 +210,81 @@ export default function SalesTable({
                 data.map((sale) => (
                   <tr 
                     key={sale.id} 
-                    className="border-b border-border hover:bg-muted/50 transition-colors"
+                    className="border-b border-border hover:bg-muted/50 transition-colors text-xs"
                     data-testid={`sale-row-${sale.id}`}
                   >
-                    <td className="p-3 min-w-[200px]">
-                      <div>
-                        <p className="text-sm font-medium text-foreground truncate">{sale.nombre}</p>
-                        <p className="text-xs text-muted-foreground truncate">{sale.email || sale.telefono || 'N/A'}</p>
-                      </div>
+                    <td className="p-2 min-w-[180px] text-xs font-medium text-foreground truncate" title={sale.nombre}>
+                      {sale.nombre}
                     </td>
-                    <td className="p-3 min-w-[100px]">
-                      <Badge className={`${getChannelBadgeClass(sale.canal)} text-white text-xs`}>
-                        {sale.canal.charAt(0).toUpperCase() + sale.canal.slice(1)}
-                      </Badge>
+                    <td className="p-2 min-w-[100px] text-xs text-muted-foreground truncate">
+                      {sale.cedula || 'N/A'}
                     </td>
-                    <td className="p-3 min-w-[150px]">
-                      <div>
-                        <p className="text-sm font-medium text-foreground truncate" title={sale.product}>{sale.product}</p>
-                        <p className="text-xs text-muted-foreground">Qty: {sale.cantidad}</p>
-                      </div>
+                    <td className="p-2 min-w-[120px] text-xs text-muted-foreground truncate">
+                      {sale.telefono || 'N/A'}
                     </td>
-                    <td className="p-3 text-sm font-medium text-foreground min-w-[120px]">
+                    <td className="p-2 min-w-[160px] text-xs text-muted-foreground truncate" title={sale.email || undefined}>
+                      {sale.email || 'N/A'}
+                    </td>
+                    <td className="p-2 min-w-[100px] text-xs font-medium text-foreground">
                       ${Number(sale.totalUsd).toLocaleString()}
                     </td>
-                    <td className="p-3 text-sm text-muted-foreground min-w-[120px]">
-                      {sale.pagoInicialUsd ? `$${Number(sale.pagoInicialUsd).toLocaleString()}` : 'N/A'}
+                    <td className="p-2 min-w-[120px] text-xs text-muted-foreground truncate" title={sale.sucursal || undefined}>
+                      {sale.sucursal || 'N/A'}
                     </td>
-                    <td className="p-3 min-w-[100px]">
-                      <Badge className={`${getStatusBadgeClass(sale.estadoEntrega)} text-white text-xs`}>
-                        {sale.estadoEntrega.charAt(0).toUpperCase() + sale.estadoEntrega.slice(1)}
-                      </Badge>
+                    <td className="p-2 min-w-[120px] text-xs text-muted-foreground truncate" title={sale.tienda || undefined}>
+                      {sale.tienda || 'N/A'}
                     </td>
-                    <td className="p-3 text-xs text-muted-foreground min-w-[100px]">
+                    <td className="p-2 min-w-[90px] text-xs text-muted-foreground">
                       {new Date(sale.fecha).toLocaleDateString('es-ES', { 
                         day: '2-digit', 
                         month: '2-digit', 
                         year: '2-digit' 
                       })}
                     </td>
-                    <td className="p-3 min-w-[150px]">
-                      <div>
-                        <p className="text-xs font-medium text-foreground truncate" title={sale.sucursal || undefined}>
-                          {sale.sucursal || 'N/A'}
-                        </p>
-                        <p className="text-xs text-muted-foreground truncate" title={sale.tienda || undefined}>
-                          {sale.tienda || 'N/A'}
-                        </p>
-                      </div>
+                    <td className="p-2 min-w-[80px]">
+                      <Badge className={`${getChannelBadgeClass(sale.canal)} text-white text-xs`}>
+                        {sale.canal.charAt(0).toUpperCase() + sale.canal.slice(1)}
+                      </Badge>
                     </td>
-                    <td className="p-3 min-w-[120px]">
-                      <div>
-                        <p className="text-xs font-mono text-foreground truncate" title={sale.orden || undefined}>
-                          {sale.orden ? `#${sale.orden}` : 'N/A'}
-                        </p>
-                        <p className="text-xs font-mono text-muted-foreground truncate" title={sale.factura || undefined}>
-                          {sale.factura ? `F:${sale.factura}` : 'N/A'}
-                        </p>
-                      </div>
+                    <td className="p-2 min-w-[100px] text-xs text-muted-foreground truncate">
+                      {sale.estado || 'N/A'}
                     </td>
-                    <td className="p-3 min-w-[80px]">
+                    <td className="p-2 min-w-[120px] text-xs text-muted-foreground truncate">
+                      {sale.estadoPagoInicial || 'N/A'}
+                    </td>
+                    <td className="p-2 min-w-[110px] text-xs text-muted-foreground">
+                      {sale.pagoInicialUsd ? `$${Number(sale.pagoInicialUsd).toLocaleString()}` : 'N/A'}
+                    </td>
+                    <td className="p-2 min-w-[100px] text-xs font-mono text-muted-foreground truncate" title={sale.orden || undefined}>
+                      {sale.orden || 'N/A'}
+                    </td>
+                    <td className="p-2 min-w-[100px] text-xs font-mono text-muted-foreground truncate" title={sale.factura || undefined}>
+                      {sale.factura || 'N/A'}
+                    </td>
+                    <td className="p-2 min-w-[120px] text-xs font-mono text-muted-foreground truncate" title={sale.referencia || undefined}>
+                      {sale.referencia || 'N/A'}
+                    </td>
+                    <td className="p-2 min-w-[110px] text-xs text-muted-foreground">
+                      {sale.montoBs ? `Bs ${Number(sale.montoBs).toLocaleString()}` : 'N/A'}
+                    </td>
+                    <td className="p-2 min-w-[120px]">
+                      <Badge className={`${getStatusBadgeClass(sale.estadoEntrega)} text-white text-xs`}>
+                        {sale.estadoEntrega.charAt(0).toUpperCase() + sale.estadoEntrega.slice(1)}
+                      </Badge>
+                    </td>
+                    <td className="p-2 min-w-[140px] text-xs font-medium text-foreground truncate" title={sale.product}>
+                      {sale.product}
+                    </td>
+                    <td className="p-2 min-w-[80px] text-xs text-center font-medium text-foreground">
+                      {sale.cantidad}
+                    </td>
+                    <td className="p-2 min-w-[80px]">
                       <Button
                         variant="ghost"
                         size="sm"
                         onClick={() => setSelectedSale(sale)}
                         data-testid={`view-sale-${sale.id}`}
-                        className="h-8 w-8 p-0"
+                        className="h-6 w-6 p-0"
                       >
                         <i className="fas fa-eye text-xs"></i>
                       </Button>
@@ -281,7 +301,7 @@ export default function SalesTable({
         <div className="p-4 border-t border-border flex flex-col sm:flex-row justify-between items-center gap-4">
           <div className="text-sm text-muted-foreground">
             <p>Mostrando {offset + 1}-{Math.min(offset + limit, total)} de {total} registros</p>
-            <p className="text-xs">💡 Desliza horizontalmente para ver más columnas</p>
+            <p className="text-xs">💡 Desliza horizontalmente para ver todas las 19 columnas del Excel</p>
           </div>
           
           <div className="flex space-x-2">
