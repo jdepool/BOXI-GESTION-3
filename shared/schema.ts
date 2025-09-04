@@ -177,6 +177,8 @@ export const insertEgresoSchema = createInsertSchema(egresos).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
+}).extend({
+  fecha: z.union([z.date(), z.string().transform((val) => new Date(val))]),
 });
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
