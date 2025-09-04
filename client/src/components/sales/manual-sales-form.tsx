@@ -82,7 +82,11 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
 
   const watchDespachoIgual = form.watch("direccionDespachoIgualFacturacion");
 
-  // Get payment methods and banks for dropdowns
+  // Get products, payment methods and banks for dropdowns
+  const { data: products = [] } = useQuery({
+    queryKey: ["/api/admin/productos"],
+  });
+
   const { data: paymentMethods = [] } = useQuery({
     queryKey: ["/api/admin/metodos-pago"],
   });
@@ -180,9 +184,20 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Producto *</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Nombre del producto" {...field} />
-                  </FormControl>
+                  <Select onValueChange={field.onChange} value={field.value || ""}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Seleccionar producto" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {products.map((producto: any) => (
+                        <SelectItem key={producto.id} value={producto.nombre}>
+                          {producto.nombre}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}
