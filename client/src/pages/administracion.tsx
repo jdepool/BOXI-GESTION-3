@@ -1,5 +1,8 @@
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft } from "lucide-react";
+import { Link } from "wouter";
 import { BancosTab } from "../components/admin/bancos-tab";
 import { TiposEgresosTab } from "../components/admin/tipos-egresos-tab";
 import { ProductosTab } from "../components/admin/productos-tab";
@@ -13,10 +16,20 @@ export default function Administracion() {
   return (
     <div className="p-6">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-foreground">Administración</h1>
-        <p className="text-muted-foreground">
-          Configuración y gestión de datos maestros del sistema
-        </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">Administración</h1>
+            <p className="text-muted-foreground">
+              Configuración y gestión de datos maestros del sistema
+            </p>
+          </div>
+          <Link href="/dashboard">
+            <Button variant="outline" className="flex items-center gap-2" data-testid="back-to-dashboard">
+              <ArrowLeft className="h-4 w-4" />
+              Regresar al Menú Principal
+            </Button>
+          </Link>
+        </div>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
