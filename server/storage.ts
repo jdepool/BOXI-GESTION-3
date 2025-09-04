@@ -803,7 +803,10 @@ export class DatabaseStorage implements IStorage {
       })
       .where(
         and(
-          eq(sales.canal, 'Cashea'),
+          or(
+            eq(sales.canal, 'Cashea'),
+            eq(sales.canal, 'cashea')
+          ),
           eq(sales.estadoEntrega, 'TO DELIVER')
         )
       )
