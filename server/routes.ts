@@ -235,17 +235,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get Cashea orders for address management
-  app.get("/api/sales/cashea", async (req, res) => {
-    try {
-      const results = await storage.getCasheaOrders(50);
-      res.json({ data: results });
-    } catch (error) {
-      console.error("Get Cashea orders error:", error);
-      res.status(500).json({ error: "Failed to get Cashea orders" });
-    }
-  });
-
   // Update sale addresses
   app.put("/api/sales/:saleId/addresses", async (req, res) => {
     try {
@@ -268,6 +257,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Update addresses error:", error);
       res.status(500).json({ error: "Failed to update addresses" });
+    }
+  });
+
+  // Get Cashea orders for address management
+  app.get("/api/sales/cashea", async (req, res) => {
+    try {
+      const results = await storage.getCasheaOrders(50);
+      res.json({ data: results });
+    } catch (error) {
+      console.error("Get Cashea orders error:", error);
+      res.status(500).json({ error: "Failed to get Cashea orders" });
     }
   });
 
