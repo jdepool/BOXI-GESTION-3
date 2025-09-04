@@ -437,6 +437,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ===========================================
 
   // BANCOS endpoints
+  // Canales endpoints
+  app.get("/api/admin/canales", async (req, res) => {
+    try {
+      const canales = await storage.getCanales();
+      res.json(canales);
+    } catch (error) {
+      console.error("Get canales error:", error);
+      res.status(500).json({ error: "Failed to get canales" });
+    }
+  });
+
+  app.post("/api/admin/canales", async (req, res) => {
+    try {
+      const { insertCanalSchema } = await import("@shared/schema");
+      const validatedData = insertCanalSchema.parse(req.body);
+      const canal = await storage.createCanal(validatedData);
+      res.status(201).json(canal);
+    } catch (error) {
+      console.error("Create canal error:", error);
+      res.status(500).json({ error: "Failed to create canal" });
+    }
+  });
+
+  app.put("/api/admin/canales/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { insertCanalSchema } = await import("@shared/schema");
+      const validatedData = insertCanalSchema.partial().parse(req.body);
+      const canal = await storage.updateCanal(id, validatedData);
+      if (!canal) {
+        return res.status(404).json({ error: "Canal not found" });
+      }
+      res.json(canal);
+    } catch (error) {
+      console.error("Update canal error:", error);
+      res.status(500).json({ error: "Failed to update canal" });
+    }
+  });
+
+  app.delete("/api/admin/canales/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const deleted = await storage.deleteCanal(id);
+      if (!deleted) {
+        return res.status(404).json({ error: "Canal not found" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Delete canal error:", error);
+      res.status(500).json({ error: "Failed to delete canal" });
+    }
+  });
+
   app.get("/api/admin/bancos", async (req, res) => {
     try {
       const bancos = await storage.getBancos();

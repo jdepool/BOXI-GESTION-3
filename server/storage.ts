@@ -1,10 +1,10 @@
 import { 
-  sales, uploadHistory, users, bancos, tiposEgresos, productos, metodosPago, monedas, categorias, egresos,
+  sales, uploadHistory, users, bancos, tiposEgresos, productos, metodosPago, monedas, categorias, canales, egresos,
   type User, type InsertUser, type Sale, type InsertSale, type UploadHistory, type InsertUploadHistory,
   type Banco, type InsertBanco, type TipoEgreso, type InsertTipoEgreso,
   type Producto, type InsertProducto, type MetodoPago, type InsertMetodoPago,
   type Moneda, type InsertMoneda, type Categoria, type InsertCategoria,
-  type Egreso, type InsertEgreso
+  type Canal, type InsertCanal, type Egreso, type InsertEgreso
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, count, sum, avg, and, gte, lte, or, ne, ilike, isNotNull } from "drizzle-orm";
@@ -106,6 +106,12 @@ export interface IStorage {
   createCategoria(categoria: InsertCategoria): Promise<Categoria>;
   updateCategoria(id: string, categoria: Partial<InsertCategoria>): Promise<Categoria | undefined>;
   deleteCategoria(id: string): Promise<boolean>;
+  
+  // Canales
+  getCanales(): Promise<Canal[]>;
+  createCanal(canal: InsertCanal): Promise<Canal>;
+  updateCanal(id: string, canal: Partial<InsertCanal>): Promise<Canal | undefined>;
+  deleteCanal(id: string): Promise<boolean>;
 
   // Egresos
   getEgresos(filters?: {
@@ -640,6 +646,34 @@ export class DatabaseStorage implements IStorage {
 
   async deleteCategoria(id: string): Promise<boolean> {
     const result = await db.delete(categorias).where(eq(categorias.id, id));
+    return (result.rowCount ?? 0) > 0;
+  }
+  
+  // Canales methods implementation
+  async getCanales(): Promise<Canal[]> {
+    return await db.select().from(canales).orderBy(canales.nombre);
+  }
+
+  async createCanal(canal: InsertCanal): Promise<Canal> {
+    const [newCanal] = await db.insert(canales).values({
+      ...canal,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }).returning();
+    return newCanal;
+  }
+
+  async updateCanal(id: string, canal: Partial<InsertCanal>): Promise<Canal | undefined> {
+    const [updated] = await db
+      .update(canales)
+      .set({ ...canal, updatedAt: new Date() })
+      .where(eq(canales.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteCanal(id: string): Promise<boolean> {
+    const result = await db.delete(canales).where(eq(canales.id, id));
     return (result.rowCount ?? 0) > 0;
   }
 

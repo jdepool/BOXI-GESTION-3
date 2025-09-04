@@ -55,6 +55,14 @@ export const categorias = pgTable("categorias", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+export const canales = pgTable("canales", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  nombre: text("nombre").notNull().unique(),
+  activo: text("activo").notNull().default("true"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 export const sales = pgTable("sales", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   nombre: text("nombre").notNull(),
@@ -176,6 +184,12 @@ export const insertCategoriaSchema = createInsertSchema(categorias).omit({
   updatedAt: true,
 });
 
+export const insertCanalSchema = createInsertSchema(canales).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 export const insertEgresoSchema = createInsertSchema(egresos).omit({
   id: true,
   createdAt: true,
@@ -204,5 +218,7 @@ export type Moneda = typeof monedas.$inferSelect;
 export type InsertMoneda = z.infer<typeof insertMonedaSchema>;
 export type Categoria = typeof categorias.$inferSelect;
 export type InsertCategoria = z.infer<typeof insertCategoriaSchema>;
+export type Canal = typeof canales.$inferSelect;
+export type InsertCanal = z.infer<typeof insertCanalSchema>;
 export type Egreso = typeof egresos.$inferSelect;
 export type InsertEgreso = z.infer<typeof insertEgresoSchema>;

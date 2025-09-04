@@ -26,12 +26,13 @@ const manualSaleSchema = insertSaleSchema.extend({
   direccionFacturacionEstado: z.string().min(1, "Estado es requerido"),
   direccionFacturacionCiudad: z.string().min(1, "Ciudad es requerida"),
   direccionFacturacionDireccion: z.string().min(1, "Dirección es requerida"),
+}).extend({
+  canal: z.string().min(1, "Canal es requerido"),
 }).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
   orden: true, // Will be auto-generated
-  canal: true, // Will be set to "manual"
   estado: true, // Will be set to default
   estadoEntrega: true, // Will be set to "pendiente"
   estadoPagoInicial: true, // Will be set to default
@@ -77,6 +78,7 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
       direccionDespachoDireccion: "",
       direccionDespachoUrbanizacion: "",
       direccionDespachoReferencia: "",
+      canal: "Manual",
     },
   });
 
@@ -93,6 +95,10 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
 
   const { data: banks = [] } = useQuery({
     queryKey: ["/api/admin/bancos"],
+  });
+
+  const { data: canales = [] } = useQuery({
+    queryKey: ["/api/admin/canales"],
   });
 
   const handleSubmit = (data: ManualSaleFormData) => {
@@ -178,6 +184,31 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
             </CardTitle>
           </CardHeader>
           <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <FormField
+              control={form.control}
+              name="canal"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Canal *</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value || ""}>
+                    <FormControl>
+                      <SelectTrigger data-testid="select-canal">
+                        <SelectValue placeholder="Seleccionar canal" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {canales.map((canal: any) => (
+                        <SelectItem key={canal.id} value={canal.nombre}>
+                          {canal.nombre}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             <FormField
               control={form.control}
               name="product"
