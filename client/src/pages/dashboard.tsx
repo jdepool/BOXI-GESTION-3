@@ -8,15 +8,27 @@ import UploadZone from "@/components/upload/upload-zone";
 import SalesTable from "@/components/sales/sales-table";
 
 export default function Dashboard() {
-  const { data: metrics, isLoading: metricsLoading } = useQuery({
+  const { data: metrics, isLoading: metricsLoading } = useQuery<{
+    totalSales: number;
+    completedOrders: number;
+    pendingOrders: number;
+    activeReservations: number;
+    salesByChannel: { canal: string; total: number; orders: number }[];
+    salesByDeliveryStatus: { status: string; count: number }[];
+  }>({
     queryKey: ["/api/sales/metrics"],
   });
 
-  const { data: recentSales, isLoading: salesLoading } = useQuery({
+  const { data: recentSales, isLoading: salesLoading } = useQuery<{
+    data: any[];
+    total: number;
+    limit: number;
+    offset: number;
+  }>({
     queryKey: ["/api/sales", { limit: 5 }],
   });
 
-  const { data: recentUploads } = useQuery({
+  const { data: recentUploads } = useQuery<any[]>({
     queryKey: ["/api/uploads/recent"],
   });
 

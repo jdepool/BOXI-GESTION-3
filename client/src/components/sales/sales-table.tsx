@@ -32,14 +32,16 @@ export default function SalesTable({
 }: SalesTableProps) {
   const [selectedSale, setSelectedSale] = useState<Sale | null>(null);
   const [filters, setFilters] = useState({
-    canal: "",
-    estadoEntrega: "",
+    canal: "all",
+    estadoEntrega: "all",
     startDate: "",
     endDate: ""
   });
 
   const handleFilterChange = (key: string, value: string) => {
-    const newFilters = { ...filters, [key]: value };
+    // Convert "all" back to empty string for API
+    const apiValue = value === "all" ? "" : value;
+    const newFilters = { ...filters, [key]: apiValue };
     setFilters(newFilters);
     onFilterChange?.(newFilters);
   };
@@ -123,7 +125,7 @@ export default function SalesTable({
                   <SelectValue placeholder="Todos los canales" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todos los canales</SelectItem>
+                  <SelectItem value="all">Todos los canales</SelectItem>
                   <SelectItem value="cashea">Cashea</SelectItem>
                   <SelectItem value="shopify">Shopify</SelectItem>
                   <SelectItem value="treble">Treble</SelectItem>
@@ -138,7 +140,7 @@ export default function SalesTable({
                   <SelectValue placeholder="Todos los estados" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todos los estados</SelectItem>
+                  <SelectItem value="all">Todos los estados</SelectItem>
                   <SelectItem value="entregado">Entregado</SelectItem>
                   <SelectItem value="pendiente">Pendiente</SelectItem>
                   <SelectItem value="reservado">Reservado</SelectItem>

@@ -4,7 +4,7 @@ import UploadZone from "@/components/upload/upload-zone";
 import { useQuery } from "@tanstack/react-query";
 
 export default function Upload() {
-  const { data: recentUploads } = useQuery({
+  const { data: recentUploads } = useQuery<any[]>({
     queryKey: ["/api/uploads/recent"],
   });
 

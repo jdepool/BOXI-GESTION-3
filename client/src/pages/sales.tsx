@@ -14,7 +14,12 @@ export default function Sales() {
     offset: 0,
   });
 
-  const { data: salesData, isLoading } = useQuery({
+  const { data: salesData, isLoading } = useQuery<{
+    data: any[];
+    total: number;
+    limit: number;
+    offset: number;
+  }>({
     queryKey: ["/api/sales", filters],
   });
 
