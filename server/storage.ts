@@ -196,13 +196,16 @@ export class DatabaseStorage implements IStorage {
       conditions.push(lte(sales.fecha, filters.endDate));
     }
     if (filters?.excludePendingManual) {
-      // Exclude manual sales that are still pending (estado = "pendiente")  
+      // Exclude only manual sales that are still pending (estado = "pendiente")
+      // Include all other sales (Cashea, Shopify, Treble) and manual sales that are active
       conditions.push(
         or(
-          and(eq(sales.canal, "manual"), eq(sales.estado, "activo")),
-          and(eq(sales.canal, "Cashea")),
-          and(eq(sales.canal, "Shopify")),
-          and(eq(sales.canal, "Treble"))
+          // Include all non-manual sales regardless of status
+          eq(sales.canal, "Cashea"),
+          eq(sales.canal, "Shopify"), 
+          eq(sales.canal, "Treble"),
+          // Include manual sales only if they are active (payment verified)
+          and(eq(sales.canal, "manual"), eq(sales.estado, "activo"))
         )
       );
     }
@@ -363,13 +366,16 @@ export class DatabaseStorage implements IStorage {
       conditions.push(lte(sales.fecha, filters.endDate));
     }
     if (filters?.excludePendingManual) {
-      // Exclude manual sales that are still pending (estado = "pendiente")
+      // Exclude only manual sales that are still pending (estado = "pendiente")  
+      // Include all other sales (Cashea, Shopify, Treble) and manual sales that are active
       conditions.push(
         or(
-          and(eq(sales.canal, "manual"), eq(sales.estado, "activo")),
-          and(eq(sales.canal, "Cashea")),
-          and(eq(sales.canal, "Shopify")),
-          and(eq(sales.canal, "Treble"))
+          // Include all non-manual sales regardless of status
+          eq(sales.canal, "Cashea"),
+          eq(sales.canal, "Shopify"),
+          eq(sales.canal, "Treble"), 
+          // Include manual sales only if they are active (payment verified)
+          and(eq(sales.canal, "manual"), eq(sales.estado, "activo"))
         )
       );
     }
