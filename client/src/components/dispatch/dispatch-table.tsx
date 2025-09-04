@@ -65,11 +65,7 @@ export default function DispatchTable({
 
   const updateDeliveryStatusMutation = useMutation({
     mutationFn: async ({ saleId, status }: { saleId: string; status: string }) => {
-      return apiRequest(`/api/sales/${saleId}/delivery-status`, {
-        method: 'PUT',
-        body: JSON.stringify({ status }),
-        headers: { 'Content-Type': 'application/json' },
-      });
+      return apiRequest("PUT", `/api/sales/${saleId}/delivery-status`, { status });
     },
     onSuccess: () => {
       // Invalidate the dispatch query to refresh the data
