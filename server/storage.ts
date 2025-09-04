@@ -197,10 +197,11 @@ export class DatabaseStorage implements IStorage {
     }
     if (filters?.excludePendingManual) {
       // Exclude only manual sales that are still pending (estado = "pendiente")
-      // Include all other sales (Cashea, Shopify, Treble) and manual sales that are active
+      // Include all other sales (cashea, Shopify, Treble) and manual sales that are active
       conditions.push(
         or(
-          // Include all non-manual sales regardless of status
+          // Include all non-manual sales regardless of status (using lowercase for cashea)
+          eq(sales.canal, "cashea"),
           eq(sales.canal, "Cashea"),
           eq(sales.canal, "Shopify"), 
           eq(sales.canal, "Treble"),
@@ -367,10 +368,11 @@ export class DatabaseStorage implements IStorage {
     }
     if (filters?.excludePendingManual) {
       // Exclude only manual sales that are still pending (estado = "pendiente")  
-      // Include all other sales (Cashea, Shopify, Treble) and manual sales that are active
+      // Include all other sales (cashea, Shopify, Treble) and manual sales that are active
       conditions.push(
         or(
-          // Include all non-manual sales regardless of status
+          // Include all non-manual sales regardless of status (using lowercase for cashea)
+          eq(sales.canal, "cashea"),
           eq(sales.canal, "Cashea"),
           eq(sales.canal, "Shopify"),
           eq(sales.canal, "Treble"), 
