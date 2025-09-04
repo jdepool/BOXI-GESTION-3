@@ -310,14 +310,15 @@ export default function SalesTable({
                       <div className="flex gap-1">
                         {showEditActions && (
                           <Button
-                            variant="ghost"
+                            variant="default"
                             size="sm"
                             onClick={() => onEditSale?.(sale)}
                             data-testid={`edit-sale-${sale.id}`}
-                            className="h-6 w-6 p-0"
+                            className="h-7 px-2 text-xs bg-blue-600 hover:bg-blue-700 text-white"
                             title="Editar venta"
                           >
-                            <i className="fas fa-edit text-xs"></i>
+                            <i className="fas fa-edit text-xs mr-1"></i>
+                            Editar
                           </Button>
                         )}
                         <Button
