@@ -75,7 +75,7 @@ function parseExcelFile(buffer: Buffer, canal: string) {
         factura: row.Factura ? String(row.Factura) : null,
         referencia: row.Referencia ? String(row.Referencia) : null,
         montoBs: row['Monto en bs'] ? String(row['Monto en bs']) : null,
-        estadoEntrega: String(row['Estado de entrega'] || 'pendiente'),
+        estadoEntrega: canal.toLowerCase() === 'cashea' ? 'PROCESSING' : String(row['Estado de entrega'] || 'pendiente'),
         product: String(row.Product || ''),
         cantidad: Number(row.Cantidad || 1),
       };
@@ -84,6 +84,40 @@ function parseExcelFile(buffer: Buffer, canal: string) {
     return salesData;
   } catch (error) {
     throw new Error(`Error parsing Excel file: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+}
+
+function parseBankStatementFile(buffer: Buffer) {
+  try {
+    const workbook = XLSX.read(buffer, { type: 'buffer' });
+    const sheetName = workbook.SheetNames[0];
+    const worksheet = workbook.Sheets[sheetName];
+    const data = XLSX.utils.sheet_to_json(worksheet);
+
+    // Expected columns: Fecha, Referencia, Monto, Descripcion
+    const transactions = data.map((row: any) => {
+      // Parse date
+      let fecha = new Date();
+      if (row.Fecha) {
+        if (typeof row.Fecha === 'number') {
+          // Excel date serial number
+          fecha = new Date((row.Fecha - 25569) * 86400 * 1000);
+        } else {
+          fecha = new Date(row.Fecha);
+        }
+      }
+
+      return {
+        referencia: String(row.Referencia || row.referencia || ''),
+        monto: parseFloat(String(row.Monto || row.monto || '0')),
+        fecha: fecha.toISOString().split('T')[0],
+        descripcion: String(row.Descripcion || row.descripcion || row.Descripción || ''),
+      };
+    });
+
+    return transactions;
+  } catch (error) {
+    throw new Error(`Error parsing bank statement file: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 }
 
@@ -1051,9 +1085,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         nombre: body.nombre,
         totalUsd: body.totalUsd.toString(),
         fecha: new Date(body.fecha),
-        canal: "manual",
+        canal: body.canal || "Manual",
         estado: "pendiente", // Manual sales start as pending until payment is verified
-        estadoEntrega: "pendiente",
+        estadoEntrega: (body.canal && body.canal.toLowerCase() === 'cashea') ? "PROCESSING" : "pendiente",
         product: body.product,
         cantidad: parseInt(body.cantidad) || 1,
         
@@ -1102,6 +1136,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error creating manual sale:", error);
       res.status(500).json({ error: "Failed to create manual sale" });
+    }
+  });
+
+  // Process bank statement for Cashea payment verification
+  app.post('/api/admin/process-bank-statement', upload.single('file'), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: 'No file uploaded' });
+      }
+
+      const transactions = parseBankStatementFile(req.file.buffer);
+      
+      res.json({
+        transactions,
+        count: transactions.length
+      });
+    } catch (error) {
+      console.error('Bank statement processing error:', error);
+      res.status(500).json({ 
+        error: 'Failed to process bank statement',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
+  // Verify Cashea payments and update status to TO DELIVER
+  app.post('/api/admin/verify-cashea-payments', async (req, res) => {
+    try {
+      const { matches } = req.body;
+      
+      if (!Array.isArray(matches)) {
+        return res.status(400).json({ error: 'Invalid matches data' });
+      }
+
+      let verifiedCount = 0;
+      
+      for (const match of matches) {
+        if (match.confidence >= 80) {
+          try {
+            await storage.updateSaleDeliveryStatus(match.sale.id, 'TO DELIVER');
+            verifiedCount++;
+          } catch (error) {
+            console.error(`Error updating sale ${match.sale.id}:`, error);
+          }
+        }
+      }
+      
+      res.json({
+        verified: verifiedCount,
+        total: matches.length
+      });
+    } catch (error) {
+      console.error('Payment verification error:', error);
+      res.status(500).json({ 
+        error: 'Failed to verify payments',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      });
     }
   });
 
