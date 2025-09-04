@@ -9,6 +9,7 @@ import {
 import { z } from "zod";
 import multer from "multer";
 import * as XLSX from "xlsx";
+import { nanoid } from "nanoid";
 
 // Configure multer for file uploads
 const upload = multer({
@@ -872,6 +873,81 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Get egreso error:", error);
       res.status(500).json({ error: "Failed to get egreso" });
+    }
+  });
+
+  // Create manual sale
+  app.post("/api/sales/manual", async (req, res) => {
+    try {
+      // Parse and validate the request body
+      const body = req.body;
+      
+      // Generate order number starting from 20000 for manual entries
+      const existingManualSales = await storage.getSales({ canal: "manual" });
+      const maxOrderNumber = existingManualSales
+        .map(s => parseInt(s.orden || "0"))
+        .filter(n => !isNaN(n) && n >= 20000)
+        .sort((a, b) => b - a)[0] || 19999;
+      
+      const newOrderNumber = (maxOrderNumber + 1).toString();
+
+      // Prepare sale data with defaults for manual entries
+      const saleData = {
+        // Required fields
+        nombre: body.nombre,
+        totalUsd: body.totalUsd.toString(),
+        fecha: new Date(body.fecha),
+        canal: "manual",
+        estado: "activo",
+        estadoEntrega: "pendiente",
+        product: body.product,
+        cantidad: parseInt(body.cantidad) || 1,
+        
+        // Optional fields
+        cedula: body.cedula || null,
+        telefono: body.telefono || null,
+        email: body.email || null,
+        sucursal: null,
+        tienda: null,
+        estadoPagoInicial: "pendiente",
+        pagoInicialUsd: null,
+        orden: newOrderNumber,
+        factura: null,
+        referencia: body.referencia || null,
+        montoBs: body.montoBs || null,
+        montoUsd: body.montoUsd || null,
+        metodoPagoId: body.metodoPagoId || null,
+        bancoId: body.bancoId || null,
+        
+        // Address fields
+        direccionFacturacionPais: body.direccionFacturacionPais || null,
+        direccionFacturacionEstado: body.direccionFacturacionEstado || null,
+        direccionFacturacionCiudad: body.direccionFacturacionCiudad || null,
+        direccionFacturacionDireccion: body.direccionFacturacionDireccion || null,
+        direccionFacturacionUrbanizacion: body.direccionFacturacionUrbanizacion || null,
+        direccionFacturacionReferencia: body.direccionFacturacionReferencia || null,
+        
+        // Handle shipping address logic
+        direccionDespachoIgualFacturacion: body.direccionDespachoIgualFacturacion ? "true" : "false",
+        direccionDespachoPais: body.direccionDespachoIgualFacturacion ? 
+          body.direccionFacturacionPais : body.direccionDespachoPais,
+        direccionDespachoEstado: body.direccionDespachoIgualFacturacion ? 
+          body.direccionFacturacionEstado : body.direccionDespachoEstado,
+        direccionDespachoCiudad: body.direccionDespachoIgualFacturacion ? 
+          body.direccionFacturacionCiudad : body.direccionDespachoCiudad,
+        direccionDespachoDireccion: body.direccionDespachoIgualFacturacion ? 
+          body.direccionFacturacionDireccion : body.direccionDespachoDireccion,
+        direccionDespachoUrbanizacion: body.direccionDespachoIgualFacturacion ? 
+          body.direccionFacturacionUrbanizacion : body.direccionDespachoUrbanizacion,
+        direccionDespachoReferencia: body.direccionDespachoIgualFacturacion ? 
+          body.direccionFacturacionReferencia : body.direccionDespachoReferencia,
+      };
+
+      const newSale = await storage.createSale(saleData);
+      res.status(201).json(newSale);
+    } catch (error) {
+      console.error("Error creating manual sale:", error);
+      res.status(500).json({ error: "Failed to create manual sale" });
     }
   });
 

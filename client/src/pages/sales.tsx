@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Sidebar from "@/components/layout/sidebar";
 import Header from "@/components/layout/header";
 import SalesTable from "@/components/sales/sales-table";
+import ManualSalesEntry from "@/components/sales/manual-sales-entry";
 
 export default function Sales() {
   const [filters, setFilters] = useState({
@@ -42,17 +44,30 @@ export default function Sales() {
         />
         
         <div className="flex-1 overflow-auto p-6">
-          <div className="bg-card rounded-lg border border-border">
-            <SalesTable 
-              data={salesData?.data || []} 
-              total={salesData?.total || 0}
-              limit={filters.limit}
-              offset={filters.offset}
-              isLoading={isLoading}
-              onFilterChange={handleFilterChange}
-              onPageChange={handlePageChange}
-            />
-          </div>
+          <Tabs defaultValue="lista" className="h-full">
+            <TabsList className="mb-4">
+              <TabsTrigger value="lista" data-testid="tab-sales-list">Lista de Ventas</TabsTrigger>
+              <TabsTrigger value="manual" data-testid="tab-manual-entry">Ventas por completar</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="lista" className="h-full">
+              <div className="bg-card rounded-lg border border-border h-full">
+                <SalesTable 
+                  data={salesData?.data || []} 
+                  total={salesData?.total || 0}
+                  limit={filters.limit}
+                  offset={filters.offset}
+                  isLoading={isLoading}
+                  onFilterChange={handleFilterChange}
+                  onPageChange={handlePageChange}
+                />
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="manual" className="h-full">
+              <ManualSalesEntry />
+            </TabsContent>
+          </Tabs>
         </div>
       </main>
     </div>
