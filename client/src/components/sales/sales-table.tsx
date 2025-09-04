@@ -182,7 +182,7 @@ export default function SalesTable({
 
       <div className="overflow-x-auto bg-background">
         <div className="min-w-max">
-          <table className="w-full min-w-[2420px]">
+          <table className="w-full min-w-[2460px]">
             <thead className="bg-muted sticky top-0 z-10">
               <tr>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[180px]">Nombre</th>
@@ -206,7 +206,7 @@ export default function SalesTable({
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[140px]">Producto</th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[80px]">Cantidad</th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[120px]">Direcciones</th>
-                <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[80px]">Acciones</th>
+                <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[120px]">Acciones</th>
               </tr>
             </thead>
             <tbody>
@@ -306,7 +306,7 @@ export default function SalesTable({
                         {sale.direccionFacturacionPais ? 'Editar' : 'Agregar'}
                       </Button>
                     </td>
-                    <td className="p-2 min-w-[80px]">
+                    <td className="p-2 min-w-[120px]">
                       <div className="flex gap-1">
                         {showEditActions && (
                           <Button

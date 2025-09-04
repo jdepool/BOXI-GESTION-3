@@ -23,9 +23,9 @@ export default function ManualSalesEntry() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  // Get incomplete sales (manual entries that are still in progress)
+  // Get manual sales (all manual entries)
   const { data: incompleteSales, isLoading } = useQuery<SalesResponse>({
-    queryKey: ["/api/sales", { canal: "manual", estadoEntrega: "pendiente" }],
+    queryKey: ["/api/sales", { canal: "manual" }],
   });
 
   const createManualSaleMutation = useMutation({
@@ -85,9 +85,9 @@ export default function ManualSalesEntry() {
     <div className="h-full">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-lg font-semibold text-foreground">Ventas por completar</h2>
+          <h2 className="text-lg font-semibold text-foreground">Ventas Manuales</h2>
           <p className="text-sm text-muted-foreground">
-            Ingreso manual de datos de ventas y gestión de ventas pendientes
+            Todas las ventas ingresadas manualmente - puedes editarlas aquí
           </p>
         </div>
         <Button 
