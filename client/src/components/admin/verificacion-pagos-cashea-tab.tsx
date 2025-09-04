@@ -138,14 +138,17 @@ export function VerificacionPagosCasheaTab() {
             confidence: 100
           });
         } else if (match.type === 'partial' && match.matchingDigits >= 8) {
-          // Check if amounts match (convert to same currency if needed)
+          // Si coinciden 8+ dígitos, verificar que el monto en haber (banco) sea igual al monto en VES
           const orderAmountVES = parseFloat(order.montoBs || '0');
-          if (Math.abs(transaction.monto - orderAmountVES) < 1) { // Allow small difference
+          const bankAmount = transaction.monto;
+          
+          // Los montos deben ser exactamente iguales (o con diferencia mínima de centavos)
+          if (Math.abs(bankAmount - orderAmountVES) < 0.01) {
             matches.push({
               sale: order,
               bankTransaction: transaction,
-              matchType: 'amount',
-              confidence: (match.matchingDigits / Math.max(transaction.referencia.length, order.referencia.length)) * 100
+              matchType: 'reference_amount',
+              confidence: 95 // Alta confianza por matching de referencia + monto
             });
           }
         }
@@ -157,41 +160,44 @@ export function VerificacionPagosCasheaTab() {
 
   const compareReferences = (ref1: string, ref2: string) => {
     // Remove non-numeric characters for comparison
-    const clean1 = ref1.replace(/\D/g, '');
-    const clean2 = ref2.replace(/\D/g, '');
+    let clean1 = ref1.replace(/\D/g, '');
+    let clean2 = ref2.replace(/\D/g, '');
+
+    // Remove leading zeros
+    clean1 = clean1.replace(/^0+/, '') || '0';
+    clean2 = clean2.replace(/^0+/, '') || '0';
 
     if (clean1 === clean2) {
       return { type: 'exact' as const, matchingDigits: clean1.length };
     }
 
-    // Count matching digits in sequence
+    // Count matching consecutive digits from the end (most significant digits)
     let matchingDigits = 0;
     const minLength = Math.min(clean1.length, clean2.length);
     
-    for (let i = 0; i < minLength; i++) {
-      if (clean1[i] === clean2[i]) {
+    // Match from the end of the strings (right to left)
+    for (let i = 1; i <= minLength; i++) {
+      if (clean1[clean1.length - i] === clean2[clean2.length - i]) {
         matchingDigits++;
       } else {
         break;
       }
     }
 
-    // Check for matching digits in any position
-    const digits1 = clean1.split('');
-    const digits2 = clean2.split('');
-    let totalMatches = 0;
-    
-    for (const digit of digits1) {
-      const index = digits2.indexOf(digit);
-      if (index !== -1) {
-        totalMatches++;
-        digits2.splice(index, 1);
+    // If we don't have enough consecutive matches, check for 8+ digit match anywhere
+    if (matchingDigits < 8) {
+      // Check if either reference contains the other (ignoring leading zeros)
+      const shorter = clean1.length < clean2.length ? clean1 : clean2;
+      const longer = clean1.length >= clean2.length ? clean1 : clean2;
+      
+      if (shorter.length >= 8 && longer.includes(shorter)) {
+        matchingDigits = shorter.length;
       }
     }
 
     return { 
       type: 'partial' as const, 
-      matchingDigits: Math.max(matchingDigits, totalMatches) 
+      matchingDigits: matchingDigits 
     };
   };
 
