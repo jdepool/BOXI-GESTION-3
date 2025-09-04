@@ -876,6 +876,80 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update sale
+  app.put("/api/sales/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const body = req.body;
+      
+      // Check if sale exists
+      const existingSale = await storage.getSaleById(id);
+      if (!existingSale) {
+        return res.status(404).json({ error: "Sale not found" });
+      }
+
+      // Prepare updated sale data
+      const saleData = {
+        // Core fields
+        nombre: body.nombre || existingSale.nombre,
+        totalUsd: body.totalUsd ? body.totalUsd.toString() : existingSale.totalUsd,
+        fecha: body.fecha ? new Date(body.fecha) : existingSale.fecha,
+        product: body.product || existingSale.product,
+        cantidad: body.cantidad ? parseInt(body.cantidad) : existingSale.cantidad,
+        
+        // Optional fields
+        cedula: body.cedula !== undefined ? body.cedula : existingSale.cedula,
+        telefono: body.telefono !== undefined ? body.telefono : existingSale.telefono,
+        email: body.email !== undefined ? body.email : existingSale.email,
+        referencia: body.referencia !== undefined ? body.referencia : existingSale.referencia,
+        montoBs: body.montoBs !== undefined ? body.montoBs : existingSale.montoBs,
+        montoUsd: body.montoUsd !== undefined ? body.montoUsd : existingSale.montoUsd,
+        metodoPagoId: body.metodoPagoId !== undefined ? body.metodoPagoId : existingSale.metodoPagoId,
+        bancoId: body.bancoId !== undefined ? body.bancoId : existingSale.bancoId,
+        
+        // Address fields
+        direccionFacturacionPais: body.direccionFacturacionPais !== undefined ? body.direccionFacturacionPais : existingSale.direccionFacturacionPais,
+        direccionFacturacionEstado: body.direccionFacturacionEstado !== undefined ? body.direccionFacturacionEstado : existingSale.direccionFacturacionEstado,
+        direccionFacturacionCiudad: body.direccionFacturacionCiudad !== undefined ? body.direccionFacturacionCiudad : existingSale.direccionFacturacionCiudad,
+        direccionFacturacionDireccion: body.direccionFacturacionDireccion !== undefined ? body.direccionFacturacionDireccion : existingSale.direccionFacturacionDireccion,
+        direccionFacturacionUrbanizacion: body.direccionFacturacionUrbanizacion !== undefined ? body.direccionFacturacionUrbanizacion : existingSale.direccionFacturacionUrbanizacion,
+        direccionFacturacionReferencia: body.direccionFacturacionReferencia !== undefined ? body.direccionFacturacionReferencia : existingSale.direccionFacturacionReferencia,
+        
+        // Handle shipping address logic
+        direccionDespachoIgualFacturacion: body.direccionDespachoIgualFacturacion !== undefined ? 
+          (body.direccionDespachoIgualFacturacion ? "true" : "false") : 
+          existingSale.direccionDespachoIgualFacturacion,
+        direccionDespachoPais: body.direccionDespachoIgualFacturacion ? 
+          (body.direccionFacturacionPais || existingSale.direccionFacturacionPais) : 
+          (body.direccionDespachoPais !== undefined ? body.direccionDespachoPais : existingSale.direccionDespachoPais),
+        direccionDespachoEstado: body.direccionDespachoIgualFacturacion ? 
+          (body.direccionFacturacionEstado || existingSale.direccionFacturacionEstado) : 
+          (body.direccionDespachoEstado !== undefined ? body.direccionDespachoEstado : existingSale.direccionDespachoEstado),
+        direccionDespachoCiudad: body.direccionDespachoIgualFacturacion ? 
+          (body.direccionFacturacionCiudad || existingSale.direccionFacturacionCiudad) : 
+          (body.direccionDespachoCiudad !== undefined ? body.direccionDespachoCiudad : existingSale.direccionDespachoCiudad),
+        direccionDespachoDireccion: body.direccionDespachoIgualFacturacion ? 
+          (body.direccionFacturacionDireccion || existingSale.direccionFacturacionDireccion) : 
+          (body.direccionDespachoDireccion !== undefined ? body.direccionDespachoDireccion : existingSale.direccionDespachoDireccion),
+        direccionDespachoUrbanizacion: body.direccionDespachoIgualFacturacion ? 
+          (body.direccionFacturacionUrbanizacion || existingSale.direccionFacturacionUrbanizacion) : 
+          (body.direccionDespachoUrbanizacion !== undefined ? body.direccionDespachoUrbanizacion : existingSale.direccionDespachoUrbanizacion),
+        direccionDespachoReferencia: body.direccionDespachoIgualFacturacion ? 
+          (body.direccionFacturacionReferencia || existingSale.direccionFacturacionReferencia) : 
+          (body.direccionDespachoReferencia !== undefined ? body.direccionDespachoReferencia : existingSale.direccionDespachoReferencia),
+      };
+
+      const updatedSale = await storage.updateSale(id, saleData);
+      if (!updatedSale) {
+        return res.status(404).json({ error: "Failed to update sale" });
+      }
+      res.json(updatedSale);
+    } catch (error) {
+      console.error("Error updating sale:", error);
+      res.status(500).json({ error: "Failed to update sale" });
+    }
+  });
+
   // Create manual sale
   app.post("/api/sales/manual", async (req, res) => {
     try {

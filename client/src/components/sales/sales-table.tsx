@@ -17,8 +17,10 @@ interface SalesTableProps {
   isLoading: boolean;
   hideFilters?: boolean;
   hidePagination?: boolean;
+  showEditActions?: boolean;
   onFilterChange?: (filters: any) => void;
   onPageChange?: (offset: number) => void;
+  onEditSale?: (sale: Sale) => void;
 }
 
 export default function SalesTable({ 
@@ -29,8 +31,10 @@ export default function SalesTable({
   isLoading, 
   hideFilters = false,
   hidePagination = false,
+  showEditActions = false,
   onFilterChange,
-  onPageChange 
+  onPageChange,
+  onEditSale
 }: SalesTableProps) {
   const [selectedSale, setSelectedSale] = useState<Sale | null>(null);
   const [addressModalOpen, setAddressModalOpen] = useState(false);
@@ -303,15 +307,30 @@ export default function SalesTable({
                       </Button>
                     </td>
                     <td className="p-2 min-w-[80px]">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setSelectedSale(sale)}
-                        data-testid={`view-sale-${sale.id}`}
-                        className="h-6 w-6 p-0"
-                      >
-                        <i className="fas fa-eye text-xs"></i>
-                      </Button>
+                      <div className="flex gap-1">
+                        {showEditActions && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => onEditSale?.(sale)}
+                            data-testid={`edit-sale-${sale.id}`}
+                            className="h-6 w-6 p-0"
+                            title="Editar venta"
+                          >
+                            <i className="fas fa-edit text-xs"></i>
+                          </Button>
+                        )}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setSelectedSale(sale)}
+                          data-testid={`view-sale-${sale.id}`}
+                          className="h-6 w-6 p-0"
+                          title="Ver detalles"
+                        >
+                          <i className="fas fa-eye text-xs"></i>
+                        </Button>
+                      </div>
                     </td>
                   </tr>
                 ))

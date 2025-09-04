@@ -17,6 +17,7 @@ export interface IStorage {
   // Sales methods
   createSale(sale: InsertSale): Promise<Sale>;
   createSales(salesData: InsertSale[]): Promise<Sale[]>;
+  updateSale(id: string, sale: Partial<InsertSale>): Promise<Sale | undefined>;
   getSales(filters?: {
     canal?: string;
     estadoEntrega?: string;
@@ -159,6 +160,15 @@ export class DatabaseStorage implements IStorage {
       .values(salesData)
       .returning();
     return newSales;
+  }
+
+  async updateSale(id: string, saleData: Partial<InsertSale>): Promise<Sale | undefined> {
+    const [updatedSale] = await db
+      .update(sales)
+      .set(saleData)
+      .where(eq(sales.id, id))
+      .returning();
+    return updatedSale || undefined;
   }
 
   async getSales(filters?: {

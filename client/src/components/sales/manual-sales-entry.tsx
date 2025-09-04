@@ -2,11 +2,13 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, Save, X } from "lucide-react";
+import { Plus, Save, X, Edit } from "lucide-react";
 import ManualSalesForm from "./manual-sales-form";
 import SalesTable from "./sales-table";
+import EditSaleModal from "./edit-sale-modal";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import type { Sale } from "@shared/schema";
 
 interface SalesResponse {
   data: any[];
@@ -17,6 +19,7 @@ interface SalesResponse {
 
 export default function ManualSalesEntry() {
   const [showForm, setShowForm] = useState(false);
+  const [editSale, setEditSale] = useState<Sale | null>(null);
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -106,8 +109,18 @@ export default function ManualSalesEntry() {
           isLoading={isLoading}
           hideFilters={true}
           hidePagination={incompleteSales?.data ? incompleteSales.data.length <= 20 : true}
+          showEditActions={true}
+          onEditSale={(sale) => setEditSale(sale)}
         />
       </div>
+
+      <EditSaleModal
+        open={!!editSale}
+        onOpenChange={(open) => {
+          if (!open) setEditSale(null);
+        }}
+        sale={editSale}
+      />
     </div>
   );
 }
