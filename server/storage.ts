@@ -793,18 +793,6 @@ export class DatabaseStorage implements IStorage {
     return totalCount;
   }
 
-  // Update sale delivery status - specific method for payment verification
-  async updateSaleDeliveryStatus(id: string, estadoEntrega: string): Promise<Sale | undefined> {
-    const [updatedSale] = await db
-      .update(sales)
-      .set({
-        estadoEntrega,
-        updatedAt: new Date(),
-      })
-      .where(eq(sales.id, id))
-      .returning();
-    return updatedSale || undefined;
-  }
 }
 
 export const storage = new DatabaseStorage();
