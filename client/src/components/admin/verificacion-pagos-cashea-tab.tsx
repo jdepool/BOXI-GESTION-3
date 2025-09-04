@@ -22,7 +22,7 @@ interface BankTransaction {
 interface PaymentMatch {
   sale: Sale;
   bankTransaction: BankTransaction;
-  matchType: 'exact' | 'partial' | 'amount';
+  matchType: 'exact' | 'partial' | 'amount' | 'reference_amount';
   confidence: number;
 }
 
@@ -46,11 +46,11 @@ export function VerificacionPagosCasheaTab() {
   const verifyPaymentsMutation = useMutation({
     mutationFn: (matches: PaymentMatch[]) =>
       apiRequest("POST", "/api/admin/verify-cashea-payments", { matches }),
-    onSuccess: (data) => {
+    onSuccess: (data: any) => {
       queryClient.invalidateQueries({ queryKey: ["/api/sales"] });
       toast({ 
         title: "Pagos verificados", 
-        description: `Se verificaron ${data.verified} pagos exitosamente.` 
+        description: `Se verificaron ${data?.verified || 0} pagos exitosamente.` 
       });
       setPaymentMatches([]);
       setBankTransactions([]);
@@ -124,13 +124,28 @@ export function VerificacionPagosCasheaTab() {
   const findPaymentMatches = (transactions: BankTransaction[], orders: Sale[]): PaymentMatch[] => {
     const matches: PaymentMatch[] = [];
 
+    console.log('Buscando matches...', {
+      transactions: transactions.length,
+      orders: orders.length
+    });
+
     for (const transaction of transactions) {
       for (const order of orders) {
         if (!order.referencia) continue;
 
+        console.log('Comparando:', {
+          transactionRef: transaction.referencia,
+          orderRef: order.referencia,
+          transactionAmount: transaction.monto,
+          orderAmount: order.montoBs,
+          orden: order.orden
+        });
+
         const match = compareReferences(transaction.referencia, order.referencia);
+        console.log('Match result:', match);
         
         if (match.type === 'exact') {
+          console.log('Match exacto encontrado para orden:', order.orden);
           matches.push({
             sale: order,
             bankTransaction: transaction,
@@ -142,8 +157,15 @@ export function VerificacionPagosCasheaTab() {
           const orderAmountVES = parseFloat(order.montoBs || '0');
           const bankAmount = transaction.monto;
           
+          console.log('Verificando montos:', {
+            orderAmountVES,
+            bankAmount,
+            difference: Math.abs(bankAmount - orderAmountVES)
+          });
+          
           // Los montos deben ser exactamente iguales (o con diferencia mínima de centavos)
           if (Math.abs(bankAmount - orderAmountVES) < 0.01) {
+            console.log('Match por referencia + monto encontrado para orden:', order.orden);
             matches.push({
               sale: order,
               bankTransaction: transaction,
@@ -155,6 +177,7 @@ export function VerificacionPagosCasheaTab() {
       }
     }
 
+    console.log('Total matches encontrados:', matches.length);
     return matches;
   };
 
