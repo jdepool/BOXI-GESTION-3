@@ -7,7 +7,7 @@ import {
   type Egreso, type InsertEgreso
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, count, sum, avg, and, gte, lte, or, ilike, isNotNull } from "drizzle-orm";
+import { eq, desc, count, sum, avg, and, gte, lte, or, ne, ilike, isNotNull } from "drizzle-orm";
 
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
@@ -410,10 +410,11 @@ export class DatabaseStorage implements IStorage {
     salesByChannel: { canal: string; total: number; orders: number }[];
     salesByDeliveryStatus: { status: string; count: number }[];
   }> {
-    // Total sales amount
+    // Total sales amount (excluding cancelled orders)
     const [totalSalesResult] = await db
       .select({ total: sum(sales.totalUsd) })
-      .from(sales);
+      .from(sales)
+      .where(ne(sales.estadoEntrega, "CANCELLED"));
     
     // Count by delivery status
     const deliveryStatusCounts = await db
@@ -424,7 +425,7 @@ export class DatabaseStorage implements IStorage {
       .from(sales)
       .groupBy(sales.estadoEntrega);
     
-    // Sales by channel
+    // Sales by channel (excluding cancelled orders)
     const channelStats = await db
       .select({
         canal: sales.canal,
@@ -432,6 +433,7 @@ export class DatabaseStorage implements IStorage {
         orders: count()
       })
       .from(sales)
+      .where(ne(sales.estadoEntrega, "CANCELLED"))
       .groupBy(sales.canal);
     
     const completedOrders = deliveryStatusCounts.find(s => s.status === 'entregado')?.count || 0;

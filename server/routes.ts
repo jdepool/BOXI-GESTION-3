@@ -910,6 +910,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         montoUsd: body.montoUsd !== undefined ? body.montoUsd : existingSale.montoUsd,
         metodoPagoId: body.metodoPagoId !== undefined ? body.metodoPagoId : existingSale.metodoPagoId,
         bancoId: body.bancoId !== undefined ? body.bancoId : existingSale.bancoId,
+        estadoEntrega: body.estadoEntrega !== undefined ? body.estadoEntrega : existingSale.estadoEntrega,
         
         // Address fields
         direccionFacturacionPais: body.direccionFacturacionPais !== undefined ? body.direccionFacturacionPais : existingSale.direccionFacturacionPais,

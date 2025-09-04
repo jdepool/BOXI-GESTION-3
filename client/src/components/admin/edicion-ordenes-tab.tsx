@@ -34,7 +34,9 @@ export function EdicionOrdenesTab() {
     mutationFn: ({ id, data }: { id: string; data: { estadoEntrega: string } }) =>
       apiRequest("PUT", `/api/sales/${id}`, data),
     onSuccess: () => {
+      // Invalidate all sales-related queries and metrics
       queryClient.invalidateQueries({ queryKey: ["/api/sales"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/sales/metrics"] });
       setIsDialogOpen(false);
       setEditingOrder(null);
       setFormData({ estadoEntrega: "" });
