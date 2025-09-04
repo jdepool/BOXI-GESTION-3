@@ -9,6 +9,7 @@ import { ProductosTab } from "../components/admin/productos-tab";
 import { MetodosPagoTab } from "../components/admin/metodos-pago-tab";
 import { MonedasTab } from "../components/admin/monedas-tab";
 import { CategoriasTab } from "../components/admin/categorias-tab";
+import { EdicionOrdenesTab } from "../components/admin/edicion-ordenes-tab";
 
 export default function Administracion() {
   const [activeTab, setActiveTab] = useState("bancos");
@@ -33,7 +34,7 @@ export default function Administracion() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-6 lg:w-auto lg:grid-cols-6">
+        <TabsList className="grid w-full grid-cols-7 lg:w-auto lg:grid-cols-7">
           <TabsTrigger value="bancos" className="text-xs">
             BANCOS
           </TabsTrigger>
@@ -51,6 +52,9 @@ export default function Administracion() {
           </TabsTrigger>
           <TabsTrigger value="categorias" className="text-xs">
             CATEGORIA
+          </TabsTrigger>
+          <TabsTrigger value="edicion-ordenes" className="text-xs">
+            EDICIÓN DE ÓRDENES
           </TabsTrigger>
         </TabsList>
 
@@ -76,6 +80,10 @@ export default function Administracion() {
 
         <TabsContent value="categorias" className="space-y-4">
           <CategoriasTab />
+        </TabsContent>
+
+        <TabsContent value="edicion-ordenes" className="space-y-4">
+          <EdicionOrdenesTab />
         </TabsContent>
       </Tabs>
     </div>
