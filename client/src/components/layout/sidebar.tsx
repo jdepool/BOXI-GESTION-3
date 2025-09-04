@@ -17,6 +17,11 @@ const navigationItems = [
     icon: "fas fa-table", 
     label: "Ventas",
   },
+  {
+    href: "/addresses",
+    icon: "fas fa-map-marker-alt",
+    label: "Direcciones",
+  },
 ];
 
 export default function Sidebar() {

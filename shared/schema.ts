@@ -30,6 +30,18 @@ export const sales = pgTable("sales", {
   estadoEntrega: text("estado_entrega").notNull(),
   product: text("product").notNull(),
   cantidad: integer("cantidad").notNull(),
+  // Direcciones
+  direccionFacturacionCalle: text("direccion_facturacion_calle"),
+  direccionFacturacionCiudad: text("direccion_facturacion_ciudad"),
+  direccionFacturacionEstado: text("direccion_facturacion_estado"),
+  direccionFacturacionCodigoPostal: text("direccion_facturacion_codigo_postal"),
+  direccionFacturacionPais: text("direccion_facturacion_pais"),
+  direccionDespachoIgualFacturacion: text("direccion_despacho_igual_facturacion").default("false"),
+  direccionDespachoCalle: text("direccion_despacho_calle"),
+  direccionDespachoCiudad: text("direccion_despacho_ciudad"),
+  direccionDespachoEstado: text("direccion_despacho_estado"),
+  direccionDespachoCodigoPostal: text("direccion_despacho_codigo_postal"),
+  direccionDespachoPais: text("direccion_despacho_pais"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

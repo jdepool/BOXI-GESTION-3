@@ -1,6 +1,6 @@
 import { sales, uploadHistory, users, type User, type InsertUser, type Sale, type InsertSale, type UploadHistory, type InsertUploadHistory } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, count, sum, avg, and, gte, lte } from "drizzle-orm";
+import { eq, desc, count, sum, avg, and, gte, lte, or, ilike } from "drizzle-orm";
 
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
@@ -19,6 +19,20 @@ export interface IStorage {
     offset?: number;
   }): Promise<Sale[]>;
   getSaleById(id: string): Promise<Sale | undefined>;
+  searchSales(searchTerm: string, limit?: number): Promise<Sale[]>;
+  updateSaleAddresses(saleId: string, addresses: {
+    direccionFacturacionCalle?: string;
+    direccionFacturacionCiudad?: string;
+    direccionFacturacionEstado?: string;
+    direccionFacturacionCodigoPostal?: string;
+    direccionFacturacionPais?: string;
+    direccionDespachoIgualFacturacion?: boolean;
+    direccionDespachoCalle?: string;
+    direccionDespachoCiudad?: string;
+    direccionDespachoEstado?: string;
+    direccionDespachoCodigoPostal?: string;
+    direccionDespachoPais?: string;
+  }): Promise<Sale | undefined>;
   getTotalSalesCount(filters?: {
     canal?: string;
     estadoEntrega?: string;
@@ -119,6 +133,86 @@ export class DatabaseStorage implements IStorage {
   async getSaleById(id: string): Promise<Sale | undefined> {
     const [sale] = await db.select().from(sales).where(eq(sales.id, id));
     return sale || undefined;
+  }
+
+  async searchSales(searchTerm: string, limit: number = 10): Promise<Sale[]> {
+    const term = `%${searchTerm.toLowerCase()}%`;
+    
+    return await db
+      .select()
+      .from(sales)
+      .where(
+        or(
+          ilike(sales.nombre, term),
+          ilike(sales.cedula, term),
+          ilike(sales.orden, term),
+          ilike(sales.email, term)
+        )
+      )
+      .orderBy(desc(sales.fecha))
+      .limit(limit);
+  }
+
+  async updateSaleAddresses(saleId: string, addresses: {
+    direccionFacturacionCalle?: string;
+    direccionFacturacionCiudad?: string;
+    direccionFacturacionEstado?: string;
+    direccionFacturacionCodigoPostal?: string;
+    direccionFacturacionPais?: string;
+    direccionDespachoIgualFacturacion?: boolean;
+    direccionDespachoCalle?: string;
+    direccionDespachoCiudad?: string;
+    direccionDespachoEstado?: string;
+    direccionDespachoCodigoPostal?: string;
+    direccionDespachoPais?: string;
+  }): Promise<Sale | undefined> {
+    const updateData: any = {};
+    
+    // Add all address fields to update data
+    if (addresses.direccionFacturacionCalle !== undefined) {
+      updateData.direccionFacturacionCalle = addresses.direccionFacturacionCalle;
+    }
+    if (addresses.direccionFacturacionCiudad !== undefined) {
+      updateData.direccionFacturacionCiudad = addresses.direccionFacturacionCiudad;
+    }
+    if (addresses.direccionFacturacionEstado !== undefined) {
+      updateData.direccionFacturacionEstado = addresses.direccionFacturacionEstado;
+    }
+    if (addresses.direccionFacturacionCodigoPostal !== undefined) {
+      updateData.direccionFacturacionCodigoPostal = addresses.direccionFacturacionCodigoPostal;
+    }
+    if (addresses.direccionFacturacionPais !== undefined) {
+      updateData.direccionFacturacionPais = addresses.direccionFacturacionPais;
+    }
+    if (addresses.direccionDespachoIgualFacturacion !== undefined) {
+      updateData.direccionDespachoIgualFacturacion = addresses.direccionDespachoIgualFacturacion ? "true" : "false";
+    }
+    if (addresses.direccionDespachoCalle !== undefined) {
+      updateData.direccionDespachoCalle = addresses.direccionDespachoCalle;
+    }
+    if (addresses.direccionDespachoCiudad !== undefined) {
+      updateData.direccionDespachoCiudad = addresses.direccionDespachoCiudad;
+    }
+    if (addresses.direccionDespachoEstado !== undefined) {
+      updateData.direccionDespachoEstado = addresses.direccionDespachoEstado;
+    }
+    if (addresses.direccionDespachoCodigoPostal !== undefined) {
+      updateData.direccionDespachoCodigoPostal = addresses.direccionDespachoCodigoPostal;
+    }
+    if (addresses.direccionDespachoPais !== undefined) {
+      updateData.direccionDespachoPais = addresses.direccionDespachoPais;
+    }
+
+    // Add updated timestamp
+    updateData.updatedAt = new Date();
+
+    const [updatedSale] = await db
+      .update(sales)
+      .set(updateData)
+      .where(eq(sales.id, saleId))
+      .returning();
+
+    return updatedSale || undefined;
   }
 
   async getTotalSalesCount(filters?: {

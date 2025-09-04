@@ -235,6 +235,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Search sales for addresses
+  app.get("/api/sales/search", async (req, res) => {
+    try {
+      const searchTerm = req.query.q as string;
+      
+      if (!searchTerm || searchTerm.trim().length < 2) {
+        return res.status(400).json({ error: "Search term must be at least 2 characters" });
+      }
+
+      const results = await storage.searchSales(searchTerm.trim(), 10);
+      res.json({ data: results });
+    } catch (error) {
+      console.error("Search sales error:", error);
+      res.status(500).json({ error: "Failed to search sales" });
+    }
+  });
+
+  // Update sale addresses
+  app.put("/api/sales/:saleId/addresses", async (req, res) => {
+    try {
+      const { saleId } = req.params;
+      const addressData = req.body;
+
+      // Validate that sale exists
+      const existingSale = await storage.getSaleById(saleId);
+      if (!existingSale) {
+        return res.status(404).json({ error: "Sale not found" });
+      }
+
+      const updatedSale = await storage.updateSaleAddresses(saleId, addressData);
+      
+      if (!updatedSale) {
+        return res.status(500).json({ error: "Failed to update addresses" });
+      }
+
+      res.json({ success: true, sale: updatedSale });
+    } catch (error) {
+      console.error("Update addresses error:", error);
+      res.status(500).json({ error: "Failed to update addresses" });
+    }
+  });
+
   // Export sales data
   app.get("/api/sales/export", async (req, res) => {
     try {
