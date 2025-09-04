@@ -21,6 +21,7 @@ export interface IStorage {
   getSaleById(id: string): Promise<Sale | undefined>;
   getCasheaOrders(limit?: number): Promise<Sale[]>;
   getOrdersWithAddresses(limit?: number, offset?: number): Promise<{ data: Sale[]; total: number }>;
+  updateSaleDeliveryStatus(saleId: string, newStatus: string): Promise<Sale | undefined>;
   updateSaleAddresses(saleId: string, addresses: {
     direccionFacturacionPais?: string;
     direccionFacturacionEstado?: string;
@@ -171,6 +172,19 @@ export class DatabaseStorage implements IStorage {
       data: ordersWithAddresses,
       total: totalCount,
     };
+  }
+
+  async updateSaleDeliveryStatus(saleId: string, newStatus: string): Promise<Sale | undefined> {
+    const [updatedSale] = await db
+      .update(sales)
+      .set({ 
+        estadoEntrega: newStatus,
+        updatedAt: new Date()
+      })
+      .where(eq(sales.id, saleId))
+      .returning();
+
+    return updatedSale || undefined;
   }
 
   async updateSaleAddresses(saleId: string, addresses: {

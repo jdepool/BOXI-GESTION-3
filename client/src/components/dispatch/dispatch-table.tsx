@@ -2,7 +2,11 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Download, Package, User, Phone, Mail } from "lucide-react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 import type { Sale } from "@shared/schema";
 
 interface DispatchTableProps {
@@ -25,6 +29,8 @@ export default function DispatchTable({
 
   const currentPage = Math.floor(offset / limit) + 1;
   const totalPages = Math.ceil(total / limit);
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
 
   const getChannelBadgeClass = (canal: string) => {
     switch (canal?.toLowerCase()) {
@@ -54,6 +60,46 @@ export default function DispatchTable({
       document.body.removeChild(a);
     } catch (error) {
       console.error('Export failed:', error);
+    }
+  };
+
+  const updateDeliveryStatusMutation = useMutation({
+    mutationFn: async ({ saleId, status }: { saleId: string; status: string }) => {
+      return apiRequest(`/api/sales/${saleId}/delivery-status`, {
+        method: 'PUT',
+        body: JSON.stringify({ status }),
+        headers: { 'Content-Type': 'application/json' },
+      });
+    },
+    onSuccess: () => {
+      // Invalidate the dispatch query to refresh the data
+      queryClient.invalidateQueries({ queryKey: ["/api/sales/dispatch"] });
+      toast({
+        title: "Estado actualizado",
+        description: "El estado de entrega ha sido actualizado correctamente.",
+      });
+    },
+    onError: (error) => {
+      console.error('Failed to update delivery status:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo actualizar el estado de entrega.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleStatusChange = (saleId: string, newStatus: string) => {
+    updateDeliveryStatusMutation.mutate({ saleId, status: newStatus });
+  };
+
+  const getStatusBadgeVariant = (status: string) => {
+    switch (status) {
+      case 'Despachado': return 'default';
+      case 'Cancelado': return 'destructive';
+      case 'Pospuesto': return 'secondary';
+      case 'TO DELIVER': return 'outline';
+      default: return 'outline';
     }
   };
 
@@ -125,8 +171,9 @@ export default function DispatchTable({
                   <TableHead className="w-24">Canal</TableHead>
                   <TableHead className="min-w-72">Dirección de Facturación</TableHead>
                   <TableHead className="min-w-72">Dirección de Despacho</TableHead>
-                  <TableHead className="w-28">Estado</TableHead>
+                  <TableHead className="w-36">Estado</TableHead>
                   <TableHead className="w-28">Fecha</TableHead>
+                  <TableHead className="w-36">Acciones</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -202,13 +249,34 @@ export default function DispatchTable({
                     </TableCell>
                     
                     <TableCell>
-                      <Badge variant="outline" className="text-xs">
+                      <Badge 
+                        variant={getStatusBadgeVariant(sale.estadoEntrega)}
+                        className="text-xs"
+                      >
                         {sale.estadoEntrega}
                       </Badge>
                     </TableCell>
                     
                     <TableCell className="text-xs">
                       {new Date(sale.fecha).toLocaleDateString('es-ES')}
+                    </TableCell>
+                    
+                    <TableCell>
+                      <Select
+                        value={sale.estadoEntrega}
+                        onValueChange={(newStatus) => handleStatusChange(sale.id, newStatus)}
+                        disabled={updateDeliveryStatusMutation.isPending}
+                      >
+                        <SelectTrigger className="w-32 h-8 text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="TO DELIVER">A despachar</SelectItem>
+                          <SelectItem value="Despachado">Despachado</SelectItem>
+                          <SelectItem value="Cancelado">Cancelado</SelectItem>
+                          <SelectItem value="Pospuesto">Pospuesto</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </TableCell>
                   </TableRow>
                 ))}

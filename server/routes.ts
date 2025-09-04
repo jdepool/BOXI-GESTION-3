@@ -325,6 +325,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 
 
+  // Update sale delivery status
+  app.put("/api/sales/:saleId/delivery-status", async (req, res) => {
+    try {
+      const { saleId } = req.params;
+      const { status } = req.body;
+
+      // Validate status
+      const validStatuses = ['TO DELIVER', 'Despachado', 'Cancelado', 'Pospuesto'];
+      if (!status || !validStatuses.includes(status)) {
+        return res.status(400).json({ 
+          error: "Invalid status. Must be one of: " + validStatuses.join(', ')
+        });
+      }
+
+      // Validate that sale exists
+      const existingSale = await storage.getSaleById(saleId);
+      if (!existingSale) {
+        return res.status(404).json({ error: "Sale not found" });
+      }
+
+      const updatedSale = await storage.updateSaleDeliveryStatus(saleId, status);
+      
+      if (!updatedSale) {
+        return res.status(500).json({ error: "Failed to update delivery status" });
+      }
+
+      res.json({ success: true, sale: updatedSale });
+    } catch (error) {
+      console.error("Update delivery status error:", error);
+      res.status(500).json({ error: "Failed to update delivery status" });
+    }
+  });
+
   // Update sale addresses
   app.put("/api/sales/:saleId/addresses", async (req, res) => {
     try {
