@@ -96,27 +96,93 @@ function parseBankStatementFile(buffer: Buffer) {
     const worksheet = workbook.Sheets[sheetName];
     const data = XLSX.utils.sheet_to_json(worksheet);
 
+    // First, let's log the column names to debug
+    if (data.length > 0 && typeof data[0] === 'object' && data[0] !== null) {
+      console.log('Bank statement columns found:', Object.keys(data[0] as Record<string, unknown>));
+    }
+
     // Expected columns: Fecha, Referencia, Monto, Descripcion
     const transactions = data.map((row: any) => {
       // Parse date
       let fecha = new Date();
-      if (row.Fecha) {
-        if (typeof row.Fecha === 'number') {
+      if (row.Fecha || row.fecha) {
+        const dateValue = row.Fecha || row.fecha;
+        if (typeof dateValue === 'number') {
           // Excel date serial number
-          fecha = new Date((row.Fecha - 25569) * 86400 * 1000);
+          fecha = new Date((dateValue - 25569) * 86400 * 1000);
         } else {
-          fecha = new Date(row.Fecha);
+          fecha = new Date(dateValue);
         }
       }
 
+      // Handle multiple possible reference column names
+      const referencia = String(
+        row.Referencia || 
+        row.referencia || 
+        row['Número de Referencia'] ||
+        row['Numero de Referencia'] ||
+        row['N° Referencia'] ||
+        row['No. Referencia'] ||
+        row['Num Referencia'] ||
+        row['Ref'] ||
+        row['Reference'] ||
+        row['REFERENCIA'] ||
+        ''
+      );
+
+      // Handle multiple possible amount column names
+      const montoValue = 
+        row.Monto || 
+        row.monto || 
+        row.Importe || 
+        row.importe ||
+        row.Cantidad || 
+        row.cantidad ||
+        row.Amount || 
+        row.amount ||
+        row.Valor || 
+        row.valor ||
+        row.Haber || 
+        row.haber ||
+        row.Crédito || 
+        row.credito ||
+        row['Crédito'] ||
+        row.Débito || 
+        row.debito ||
+        row['Débito'] ||
+        row.MONTO ||
+        row.IMPORTE ||
+        row.HABER ||
+        '0';
+
+      const monto = parseFloat(String(montoValue).replace(/[^\d.-]/g, '')) || 0;
+
+      // Handle multiple possible description column names
+      const descripcion = String(
+        row.Descripcion || 
+        row.descripcion || 
+        row.Descripción || 
+        row.DESCRIPCION ||
+        row.Concepto ||
+        row.concepto ||
+        row.Detalle ||
+        row.detalle ||
+        row.Observaciones ||
+        row.observaciones ||
+        ''
+      );
+
+      console.log('Parsed transaction:', { referencia, monto, fecha: fecha.toISOString().split('T')[0], descripcion });
+
       return {
-        referencia: String(row.Referencia || row.referencia || ''),
-        monto: parseFloat(String(row.Monto || row.monto || '0')),
+        referencia,
+        monto,
         fecha: fecha.toISOString().split('T')[0],
-        descripcion: String(row.Descripcion || row.descripcion || row.Descripción || ''),
+        descripcion,
       };
     });
 
+    console.log(`Parsed ${transactions.length} transactions from bank statement`);
     return transactions;
   } catch (error) {
     throw new Error(`Error parsing bank statement file: ${error instanceof Error ? error.message : 'Unknown error'}`);
