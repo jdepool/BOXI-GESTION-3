@@ -959,8 +959,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { id } = req.params;
       
-      // Update the sale status from "pendiente" to "activo" to make it appear in main sales list
-      const updatedSale = await storage.updateSale(id, { estado: "activo" });
+      // Update the sale status from "pendiente" to "activo" and set delivery status to "TO DELIVER"
+      const updatedSale = await storage.updateSale(id, { 
+        estado: "activo",
+        estadoEntrega: "TO DELIVER"
+      });
       
       if (!updatedSale) {
         return res.status(404).json({ error: "Sale not found" });
