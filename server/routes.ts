@@ -124,7 +124,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get specific sale by ID
+
+
+
+
+  // Get orders with addresses for dispatch
+  app.get("/api/sales/dispatch", async (req, res) => {
+    try {
+      const limit = parseInt(req.query.limit as string) || 20;
+      const offset = parseInt(req.query.offset as string) || 0;
+
+      const result = await storage.getOrdersWithAddresses(limit, offset);
+      res.json({
+        data: result.data,
+        total: result.total,
+        limit,
+        offset
+      });
+    } catch (error) {
+      console.error("Get dispatch orders error:", error);
+      res.status(500).json({ error: "Failed to get dispatch orders" });
+    }
+  });
+
+  // Get specific sale by ID (MUST BE AFTER specific routes)
   app.get("/api/sales/:id", async (req, res) => {
     try {
       const sale = await storage.getSaleById(req.params.id);
@@ -235,35 +258,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get Cashea orders for address management
-  app.get("/api/sales/cashea", async (req, res) => {
-    try {
-      const results = await storage.getCasheaOrders(50);
-      res.json({ data: results });
-    } catch (error) {
-      console.error("Get Cashea orders error:", error);
-      res.status(500).json({ error: "Failed to get Cashea orders" });
-    }
-  });
 
-  // Get orders with addresses for dispatch
-  app.get("/api/sales/dispatch", async (req, res) => {
-    try {
-      const limit = parseInt(req.query.limit as string) || 20;
-      const offset = parseInt(req.query.offset as string) || 0;
-
-      const result = await storage.getOrdersWithAddresses(limit, offset);
-      res.json({
-        data: result.data,
-        total: result.total,
-        limit,
-        offset
-      });
-    } catch (error) {
-      console.error("Get dispatch orders error:", error);
-      res.status(500).json({ error: "Failed to get dispatch orders" });
-    }
-  });
 
   // Update sale addresses
   app.put("/api/sales/:saleId/addresses", async (req, res) => {
@@ -290,59 +285,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Export sales data
-  app.get("/api/sales/export", async (req, res) => {
-    try {
-      const query = getSalesQuerySchema.parse(req.query);
-      
-      const filters = {
-        canal: query.canal,
-        estadoEntrega: query.estadoEntrega,
-        startDate: query.startDate ? new Date(query.startDate) : undefined,
-        endDate: query.endDate ? new Date(query.endDate) : undefined,
-        limit: 10000, // Large limit for export
-        offset: 0,
-      };
 
-      const salesData = await storage.getSales(filters);
-
-      // Convert to Excel format
-      const worksheet = XLSX.utils.json_to_sheet(salesData.map(sale => ({
-        'Nombre': sale.nombre,
-        'Cedula': sale.cedula,
-        'Telefono': sale.telefono,
-        'Email': sale.email,
-        'Total USD': sale.totalUsd,
-        'Sucursal': sale.sucursal,
-        'Tienda': sale.tienda,
-        'Fecha': sale.fecha,
-        'Canal': sale.canal,
-        'Estado': sale.estado,
-        'Estado Pago Inicial': sale.estadoPagoInicial,
-        'Pago Inicial USD': sale.pagoInicialUsd,
-        'Orden': sale.orden,
-        'Factura': sale.factura,
-        'Referencia': sale.referencia,
-        'Monto Bs': sale.montoBs,
-        'Estado de Entrega': sale.estadoEntrega,
-        'Producto': sale.product,
-        'Cantidad': sale.cantidad,
-      })));
-
-      const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, 'Ventas');
-
-      const buffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' });
-
-      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-      res.setHeader('Content-Disposition', `attachment; filename="ventas_boxisleep_${new Date().toISOString().split('T')[0]}.xlsx"`);
-      res.send(buffer);
-
-    } catch (error) {
-      console.error("Error exporting sales:", error);
-      res.status(500).json({ error: "Failed to export sales data" });
-    }
-  });
 
   const httpServer = createServer(app);
   return httpServer;

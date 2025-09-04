@@ -160,8 +160,8 @@ export class DatabaseStorage implements IStorage {
       .offset(offset);
 
     // Get total count
-    const [{ count }] = await db
-      .select({ count: count() })
+    const [{ totalCount }] = await db
+      .select({ totalCount: count() })
       .from(sales)
       .where(
         isNotNull(sales.direccionFacturacionPais)
@@ -169,7 +169,7 @@ export class DatabaseStorage implements IStorage {
 
     return {
       data: ordersWithAddresses,
-      total: count,
+      total: totalCount,
     };
   }
 
