@@ -13,7 +13,6 @@ import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Plus, Upload, Edit, Trash2, Filter, Download } from "lucide-react";
 import { Link } from "wouter";
 import { format } from "date-fns";
-import { apiRequest } from "@/lib/queryClient";
 import type { Egreso, Banco, TipoEgreso, MetodoPago, Moneda } from "@shared/schema";
 
 export default function Egresos() {
@@ -78,14 +77,17 @@ export default function Egresos() {
   // Create mutation
   const createMutation = useMutation({
     mutationFn: async (data: typeof formData) => {
-      return await apiRequest("/api/egresos", {
+      const response = await fetch("/api/egresos", {
         method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...data,
           fecha: new Date(data.fecha),
           monto: data.monto,
         }),
       });
+      if (!response.ok) throw new Error('Failed to create egreso');
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/egresos"] });
@@ -101,14 +103,17 @@ export default function Egresos() {
   // Update mutation
   const updateMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: typeof formData }) => {
-      return await apiRequest(`/api/egresos/${id}`, {
+      const response = await fetch(`/api/egresos/${id}`, {
         method: "PUT",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           ...data,
           fecha: new Date(data.fecha),
           monto: data.monto,
         }),
       });
+      if (!response.ok) throw new Error('Failed to update egreso');
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/egresos"] });
@@ -124,7 +129,9 @@ export default function Egresos() {
   // Delete mutation
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      return await apiRequest(`/api/egresos/${id}`, { method: "DELETE" });
+      const response = await fetch(`/api/egresos/${id}`, { method: "DELETE" });
+      if (!response.ok) throw new Error('Failed to delete egreso');
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/egresos"] });
