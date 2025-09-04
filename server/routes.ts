@@ -993,7 +993,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         totalUsd: body.totalUsd.toString(),
         fecha: new Date(body.fecha),
         canal: "manual",
-        estado: "activo",
+        estado: "pendiente", // Manual sales start as pending until payment is verified
         estadoEntrega: "pendiente",
         product: body.product,
         cantidad: parseInt(body.cantidad) || 1,
