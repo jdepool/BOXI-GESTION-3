@@ -235,31 +235,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Update sale addresses
-  app.put("/api/sales/:saleId/addresses", async (req, res) => {
-    try {
-      const { saleId } = req.params;
-      const addressData = req.body;
-
-      // Validate that sale exists
-      const existingSale = await storage.getSaleById(saleId);
-      if (!existingSale) {
-        return res.status(404).json({ error: "Sale not found" });
-      }
-
-      const updatedSale = await storage.updateSaleAddresses(saleId, addressData);
-      
-      if (!updatedSale) {
-        return res.status(500).json({ error: "Failed to update addresses" });
-      }
-
-      res.json({ success: true, sale: updatedSale });
-    } catch (error) {
-      console.error("Update addresses error:", error);
-      res.status(500).json({ error: "Failed to update addresses" });
-    }
-  });
-
   // Get Cashea orders for address management
   app.get("/api/sales/cashea", async (req, res) => {
     try {
@@ -287,6 +262,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Get dispatch orders error:", error);
       res.status(500).json({ error: "Failed to get dispatch orders" });
+    }
+  });
+
+  // Update sale addresses
+  app.put("/api/sales/:saleId/addresses", async (req, res) => {
+    try {
+      const { saleId } = req.params;
+      const addressData = req.body;
+
+      // Validate that sale exists
+      const existingSale = await storage.getSaleById(saleId);
+      if (!existingSale) {
+        return res.status(404).json({ error: "Sale not found" });
+      }
+
+      const updatedSale = await storage.updateSaleAddresses(saleId, addressData);
+      
+      if (!updatedSale) {
+        return res.status(500).json({ error: "Failed to update addresses" });
+      }
+
+      res.json({ success: true, sale: updatedSale });
+    } catch (error) {
+      console.error("Update addresses error:", error);
+      res.status(500).json({ error: "Failed to update addresses" });
     }
   });
 
