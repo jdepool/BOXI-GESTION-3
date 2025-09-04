@@ -1,9 +1,10 @@
 import { 
-  sales, uploadHistory, users, bancos, tiposEgresos, productos, metodosPago, monedas, categorias,
+  sales, uploadHistory, users, bancos, tiposEgresos, productos, metodosPago, monedas, categorias, egresos,
   type User, type InsertUser, type Sale, type InsertSale, type UploadHistory, type InsertUploadHistory,
   type Banco, type InsertBanco, type TipoEgreso, type InsertTipoEgreso,
   type Producto, type InsertProducto, type MetodoPago, type InsertMetodoPago,
-  type Moneda, type InsertMoneda, type Categoria, type InsertCategoria
+  type Moneda, type InsertMoneda, type Categoria, type InsertCategoria,
+  type Egreso, type InsertEgreso
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, count, sum, avg, and, gte, lte, or, ilike, isNotNull } from "drizzle-orm";
@@ -100,6 +101,29 @@ export interface IStorage {
   createCategoria(categoria: InsertCategoria): Promise<Categoria>;
   updateCategoria(id: string, categoria: Partial<InsertCategoria>): Promise<Categoria | undefined>;
   deleteCategoria(id: string): Promise<boolean>;
+
+  // Egresos
+  getEgresos(filters?: {
+    tipoEgresoId?: string;
+    metodoPagoId?: string;
+    bancoId?: string;
+    startDate?: Date;
+    endDate?: Date;
+    limit?: number;
+    offset?: number;
+  }): Promise<Egreso[]>;
+  createEgreso(egreso: InsertEgreso): Promise<Egreso>;
+  createEgresos(egresosData: InsertEgreso[]): Promise<Egreso[]>;
+  updateEgreso(id: string, egreso: Partial<InsertEgreso>): Promise<Egreso | undefined>;
+  deleteEgreso(id: string): Promise<boolean>;
+  getEgresoById(id: string): Promise<Egreso | undefined>;
+  getTotalEgresosCount(filters?: {
+    tipoEgresoId?: string;
+    metodoPagoId?: string;
+    bancoId?: string;
+    startDate?: Date;
+    endDate?: Date;
+  }): Promise<number>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -567,6 +591,128 @@ export class DatabaseStorage implements IStorage {
   async deleteCategoria(id: string): Promise<boolean> {
     const result = await db.delete(categorias).where(eq(categorias.id, id));
     return (result.rowCount ?? 0) > 0;
+  }
+
+  // Egresos methods
+  async getEgresos(filters?: {
+    tipoEgresoId?: string;
+    metodoPagoId?: string;
+    bancoId?: string;
+    startDate?: Date;
+    endDate?: Date;
+    limit?: number;
+    offset?: number;
+  }): Promise<Egreso[]> {
+    let query = db.select().from(egresos);
+    
+    const conditions = [];
+    if (filters?.tipoEgresoId) {
+      conditions.push(eq(egresos.tipoEgresoId, filters.tipoEgresoId));
+    }
+    if (filters?.metodoPagoId) {
+      conditions.push(eq(egresos.metodoPagoId, filters.metodoPagoId));
+    }
+    if (filters?.bancoId) {
+      conditions.push(eq(egresos.bancoId, filters.bancoId));
+    }
+    if (filters?.startDate) {
+      conditions.push(gte(egresos.fecha, filters.startDate));
+    }
+    if (filters?.endDate) {
+      conditions.push(lte(egresos.fecha, filters.endDate));
+    }
+    
+    if (conditions.length > 0) {
+      query = query.where(and(...conditions));
+    }
+    
+    query = query.orderBy(desc(egresos.fecha));
+    
+    if (filters?.limit) {
+      query = query.limit(filters.limit);
+    }
+    if (filters?.offset) {
+      query = query.offset(filters.offset);
+    }
+    
+    return await query;
+  }
+
+  async createEgreso(egreso: InsertEgreso): Promise<Egreso> {
+    const [newEgreso] = await db
+      .insert(egresos)
+      .values(egreso)
+      .returning();
+    return newEgreso;
+  }
+
+  async createEgresos(egresosData: InsertEgreso[]): Promise<Egreso[]> {
+    const newEgresos = await db
+      .insert(egresos)
+      .values(egresosData)
+      .returning();
+    return newEgresos;
+  }
+
+  async updateEgreso(id: string, egreso: Partial<InsertEgreso>): Promise<Egreso | undefined> {
+    const [updatedEgreso] = await db
+      .update(egresos)
+      .set({
+        ...egreso,
+        updatedAt: new Date(),
+      })
+      .where(eq(egresos.id, id))
+      .returning();
+    return updatedEgreso || undefined;
+  }
+
+  async deleteEgreso(id: string): Promise<boolean> {
+    try {
+      await db.delete(egresos).where(eq(egresos.id, id));
+      return true;
+    } catch (error) {
+      console.error("Error deleting egreso:", error);
+      return false;
+    }
+  }
+
+  async getEgresoById(id: string): Promise<Egreso | undefined> {
+    const [egreso] = await db.select().from(egresos).where(eq(egresos.id, id));
+    return egreso || undefined;
+  }
+
+  async getTotalEgresosCount(filters?: {
+    tipoEgresoId?: string;
+    metodoPagoId?: string;
+    bancoId?: string;
+    startDate?: Date;
+    endDate?: Date;
+  }): Promise<number> {
+    let query = db.select({ count: count() }).from(egresos);
+    
+    const conditions = [];
+    if (filters?.tipoEgresoId) {
+      conditions.push(eq(egresos.tipoEgresoId, filters.tipoEgresoId));
+    }
+    if (filters?.metodoPagoId) {
+      conditions.push(eq(egresos.metodoPagoId, filters.metodoPagoId));
+    }
+    if (filters?.bancoId) {
+      conditions.push(eq(egresos.bancoId, filters.bancoId));
+    }
+    if (filters?.startDate) {
+      conditions.push(gte(egresos.fecha, filters.startDate));
+    }
+    if (filters?.endDate) {
+      conditions.push(lte(egresos.fecha, filters.endDate));
+    }
+    
+    if (conditions.length > 0) {
+      query = query.where(and(...conditions));
+    }
+    
+    const [{ count: totalCount }] = await query;
+    return totalCount;
   }
 }
 

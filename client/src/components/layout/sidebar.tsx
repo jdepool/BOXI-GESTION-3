@@ -23,6 +23,11 @@ const navigationItems = [
     label: "Despachos",
   },
   {
+    href: "/egresos",
+    icon: "fas fa-dollar-sign",
+    label: "Egresos",
+  },
+  {
     href: "/administracion",
     icon: "fas fa-cogs",
     label: "Administración",

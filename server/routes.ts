@@ -3,7 +3,8 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { 
   insertSaleSchema, insertUploadHistorySchema, insertBancoSchema, insertTipoEgresoSchema, 
-  insertProductoSchema, insertMetodoPagoSchema, insertMonedaSchema, insertCategoriaSchema 
+  insertProductoSchema, insertMetodoPagoSchema, insertMonedaSchema, insertCategoriaSchema,
+  insertEgresoSchema
 } from "@shared/schema";
 import { z } from "zod";
 import multer from "multer";
@@ -80,6 +81,46 @@ function parseExcelFile(buffer: Buffer, canal: string) {
     return salesData;
   } catch (error) {
     throw new Error(`Error parsing Excel file: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+}
+
+function parseEgresosExcelFile(buffer: Buffer) {
+  try {
+    const workbook = XLSX.read(buffer, { type: 'buffer' });
+    const sheetName = workbook.SheetNames[0];
+    const worksheet = workbook.Sheets[sheetName];
+    const data = XLSX.utils.sheet_to_json(worksheet);
+
+    // Expected columns for egresos: Fecha, Descripcion, Monto, Moneda, Tipo, Metodo, Banco, Referencia, Estado, Observaciones
+    const egresosData = data.map((row: any) => {
+      // Parse date
+      let fecha = new Date();
+      if (row.Fecha) {
+        if (typeof row.Fecha === 'number') {
+          // Excel date serial number
+          fecha = new Date((row.Fecha - 25569) * 86400 * 1000);
+        } else {
+          fecha = new Date(row.Fecha);
+        }
+      }
+
+      return {
+        fecha,
+        descripcion: String(row.Descripcion || row.Descripción || ''),
+        monto: String(row.Monto || '0'),
+        monedaId: String(row.MonedaId || row.Moneda || ''),
+        tipoEgresoId: String(row.TipoEgresoId || row.Tipo || ''),
+        metodoPagoId: String(row.MetodoPagoId || row.Metodo || ''),
+        bancoId: String(row.BancoId || row.Banco || ''),
+        referencia: row.Referencia ? String(row.Referencia) : null,
+        estado: String(row.Estado || 'registrado'),
+        observaciones: row.Observaciones ? String(row.Observaciones) : null,
+      };
+    });
+
+    return egresosData;
+  } catch (error) {
+    throw new Error(`Error parsing egresos Excel file: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 }
 
@@ -729,6 +770,108 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Delete categoria error:", error);
       res.status(500).json({ error: "Failed to delete categoria" });
+    }
+  });
+
+  // EGRESOS endpoints
+  const getEgresosQuerySchema = z.object({
+    tipoEgresoId: z.string().optional(),
+    metodoPagoId: z.string().optional(),
+    bancoId: z.string().optional(),
+    startDate: z.string().optional(),
+    endDate: z.string().optional(),
+    limit: z.coerce.number().min(1).max(100).default(20),
+    offset: z.coerce.number().min(0).default(0),
+  });
+
+  app.get("/api/egresos", async (req, res) => {
+    try {
+      const query = getEgresosQuerySchema.parse(req.query);
+      
+      const filters = {
+        tipoEgresoId: query.tipoEgresoId,
+        metodoPagoId: query.metodoPagoId,
+        bancoId: query.bancoId,
+        startDate: query.startDate ? new Date(query.startDate) : undefined,
+        endDate: query.endDate ? new Date(query.endDate) : undefined,
+        limit: query.limit,
+        offset: query.offset,
+      };
+
+      const [egresosData, totalCount] = await Promise.all([
+        storage.getEgresos(filters),
+        storage.getTotalEgresosCount(filters),
+      ]);
+
+      res.json({
+        data: egresosData,
+        total: totalCount,
+        limit: query.limit,
+        offset: query.offset,
+      });
+    } catch (error) {
+      console.error("Error fetching egresos:", error);
+      res.status(500).json({ error: "Failed to fetch egresos" });
+    }
+  });
+
+  app.post("/api/egresos", async (req, res) => {
+    try {
+      const validatedData = insertEgresoSchema.parse(req.body);
+      const egreso = await storage.createEgreso(validatedData);
+      res.status(201).json(egreso);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Invalid data", details: error.errors });
+      }
+      console.error("Create egreso error:", error);
+      res.status(500).json({ error: "Failed to create egreso" });
+    }
+  });
+
+  app.put("/api/egresos/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const validatedData = insertEgresoSchema.partial().parse(req.body);
+      const egreso = await storage.updateEgreso(id, validatedData);
+      if (!egreso) {
+        return res.status(404).json({ error: "Egreso not found" });
+      }
+      res.json(egreso);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Invalid data", details: error.errors });
+      }
+      console.error("Update egreso error:", error);
+      res.status(500).json({ error: "Failed to update egreso" });
+    }
+  });
+
+  app.delete("/api/egresos/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const deleted = await storage.deleteEgreso(id);
+      if (!deleted) {
+        return res.status(404).json({ error: "Egreso not found" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Delete egreso error:", error);
+      res.status(500).json({ error: "Failed to delete egreso" });
+    }
+  });
+
+  app.get("/api/egresos/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const egreso = await storage.getEgresoById(id);
+      if (!egreso) {
+        return res.status(404).json({ error: "Egreso not found" });
+      }
+      res.json(egreso);
+    } catch (error) {
+      console.error("Get egreso error:", error);
+      res.status(500).json({ error: "Failed to get egreso" });
     }
   });
 

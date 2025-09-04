@@ -104,6 +104,22 @@ export const uploadHistory = pgTable("upload_history", {
   uploadedAt: timestamp("uploaded_at").defaultNow(),
 });
 
+export const egresos = pgTable("egresos", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  fecha: timestamp("fecha").notNull(),
+  descripcion: text("descripcion").notNull(),
+  monto: decimal("monto", { precision: 15, scale: 2 }).notNull(),
+  monedaId: varchar("moneda_id").notNull(),
+  tipoEgresoId: varchar("tipo_egreso_id").notNull(),
+  metodoPagoId: varchar("metodo_pago_id").notNull(),
+  bancoId: varchar("banco_id").notNull(),
+  referencia: text("referencia"),
+  estado: text("estado").notNull().default("registrado"), // registrado, aprobado, pagado, anulado
+  observaciones: text("observaciones"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   password: true,
@@ -157,6 +173,12 @@ export const insertCategoriaSchema = createInsertSchema(categorias).omit({
   updatedAt: true,
 });
 
+export const insertEgresoSchema = createInsertSchema(egresos).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type Sale = typeof sales.$inferSelect;
@@ -177,3 +199,5 @@ export type Moneda = typeof monedas.$inferSelect;
 export type InsertMoneda = z.infer<typeof insertMonedaSchema>;
 export type Categoria = typeof categorias.$inferSelect;
 export type InsertCategoria = z.infer<typeof insertCategoriaSchema>;
+export type Egreso = typeof egresos.$inferSelect;
+export type InsertEgreso = z.infer<typeof insertEgresoSchema>;
