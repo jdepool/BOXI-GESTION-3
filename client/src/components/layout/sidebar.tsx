@@ -46,15 +46,15 @@ export default function Sidebar() {
   return (
     <aside className="w-64 bg-card border-r border-border flex flex-col">
       <div className="p-6 border-b border-border">
-        <div className="flex flex-col items-center space-y-2">
-          <div className="w-16 h-16 flex items-center justify-center">
+        <div className="flex flex-col items-center space-y-3">
+          <div className="w-24 h-24 flex items-center justify-center">
             <img 
               src={boxiSleepLogo} 
               alt="BoxiSleep Logo" 
               className="w-full h-full object-contain"
             />
           </div>
-          <p className="text-xs text-muted-foreground text-center">Sistema de Gestión</p>
+          <p className="text-sm font-medium text-muted-foreground text-center">Sistema de Gestión</p>
         </div>
       </div>
       
