@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Upload, FileText, CheckCircle, AlertCircle, DollarSign, Hash } from "lucide-react";
+import { Upload, FileText, CheckCircle, AlertCircle, DollarSign, Hash, RotateCcw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import type { Sale } from "@shared/schema";
@@ -49,12 +49,10 @@ export function VerificacionPagosCasheaTab() {
     onSuccess: (data: any) => {
       queryClient.invalidateQueries({ queryKey: ["/api/sales"] });
       toast({ 
-        title: "Pagos verificados", 
-        description: `Se verificaron ${data?.verified || 0} pagos exitosamente.` 
+        title: "Pagos verificados automáticamente", 
+        description: `Se verificaron ${data?.verified || 0} pagos y se actualizaron a TO DELIVER.` 
       });
-      setPaymentMatches([]);
-      setBankTransactions([]);
-      setSelectedFile(null);
+      // NO limpiar los matches automáticamente - mantener hasta reset manual
     },
     onError: () => {
       toast({ 
@@ -69,9 +67,18 @@ export function VerificacionPagosCasheaTab() {
     const file = event.target.files?.[0];
     if (file) {
       setSelectedFile(file);
-      setBankTransactions([]);
-      setPaymentMatches([]);
+      // NO limpiar automáticamente las transacciones y matches previos
     }
+  };
+
+  const handleReset = () => {
+    setSelectedFile(null);
+    setBankTransactions([]);
+    setPaymentMatches([]);
+    toast({
+      title: "Reset completado",
+      description: "Se limpiaron todas las transacciones y matches."
+    });
   };
 
   const processBankStatement = async () => {
@@ -105,9 +112,16 @@ export function VerificacionPagosCasheaTab() {
       const matches = findPaymentMatches(data.transactions, casheaOrders);
       setPaymentMatches(matches);
 
+      // Automatically verify high-confidence matches (>=80%)
+      const highConfidenceMatches = matches.filter(match => match.confidence >= 80);
+      if (highConfidenceMatches.length > 0) {
+        console.log(`Verificando automáticamente ${highConfidenceMatches.length} matches con alta confianza`);
+        verifyPaymentsMutation.mutate(highConfidenceMatches);
+      }
+
       toast({ 
         title: "Archivo procesado", 
-        description: `Se encontraron ${data.transactions.length} transacciones y ${matches.length} coincidencias.` 
+        description: `Se encontraron ${data.transactions.length} transacciones y ${matches.length} coincidencias. ${highConfidenceMatches.length} se verificaron automáticamente.` 
       });
     } catch (error) {
       console.error('Error processing bank statement:', error);
@@ -259,6 +273,18 @@ export function VerificacionPagosCasheaTab() {
             <AlertCircle className="h-3 w-3" />
             {casheaOrders.length} órdenes pendientes
           </Badge>
+          {(bankTransactions.length > 0 || paymentMatches.length > 0) && (
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleReset}
+              data-testid="reset-button"
+              className="flex items-center gap-1"
+            >
+              <RotateCcw className="h-3 w-3" />
+              Reset
+            </Button>
+          )}
         </div>
       </div>
 
