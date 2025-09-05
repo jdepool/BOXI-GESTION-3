@@ -33,7 +33,7 @@ export function ThemeToggle() {
           className="bg-primary text-primary-foreground hover:bg-primary/90 border-2 border-primary shadow-lg hover:shadow-xl transition-all duration-200 font-bold"
           data-testid="theme-toggle-button"
         >
-          <i className={getIcon()}></i>
+          <i className={`${getIcon()} text-lg`}></i>
           <span className="sr-only">{getTooltipText()}</span>
         </Button>
       </TooltipTrigger>
