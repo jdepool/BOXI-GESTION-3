@@ -26,16 +26,14 @@ export function ThemeToggle() {
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <Button
-          variant="default"
-          size="lg"
+        <button
           onClick={handleToggleTheme}
-          className="bg-primary text-primary-foreground hover:bg-primary/90 border-2 border-primary shadow-lg hover:shadow-xl transition-all duration-200 font-bold w-12 h-12 p-0"
+          className="text-primary font-bold text-sm hover:text-primary/80 transition-colors duration-200 cursor-pointer"
           data-testid="theme-toggle-button"
         >
-          <i className={`${getIcon()} text-xl`} style={{ fontSize: '20px' }}></i>
+          THEME
           <span className="sr-only">{getTooltipText()}</span>
-        </Button>
+        </button>
       </TooltipTrigger>
       <TooltipContent>
         <p>{getTooltipText()}</p>
