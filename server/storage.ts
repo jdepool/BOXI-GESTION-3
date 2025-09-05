@@ -250,12 +250,15 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getOrdersWithAddresses(limit: number = 20, offset: number = 0): Promise<{ data: Sale[]; total: number }> {
-    // Get orders with addresses
-    const ordersWithAddresses = await db
+    // Get orders that either have addresses OR are ready for delivery (TO DELIVER status)
+    const ordersForDispatch = await db
       .select()
       .from(sales)
       .where(
-        isNotNull(sales.direccionFacturacionPais) // Only orders with addresses
+        or(
+          isNotNull(sales.direccionFacturacionPais), // Orders with addresses
+          eq(sales.estadoEntrega, 'TO DELIVER')       // Orders ready for delivery
+        )
       )
       .orderBy(desc(sales.fecha))
       .limit(limit)
@@ -266,11 +269,14 @@ export class DatabaseStorage implements IStorage {
       .select({ totalCount: count() })
       .from(sales)
       .where(
-        isNotNull(sales.direccionFacturacionPais)
+        or(
+          isNotNull(sales.direccionFacturacionPais), // Orders with addresses
+          eq(sales.estadoEntrega, 'TO DELIVER')       // Orders ready for delivery
+        )
       );
 
     return {
-      data: ordersWithAddresses,
+      data: ordersForDispatch,
       total: totalCount,
     };
   }
