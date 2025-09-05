@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 interface HeaderProps {
   title: string;
@@ -16,6 +17,7 @@ export default function Header({ title, description }: HeaderProps) {
         )}
       </div>
       <div className="flex items-center space-x-4">
+        <ThemeToggle />
         <button 
           className="p-2 text-muted-foreground hover:text-foreground transition-colors"
           data-testid="notifications-button"

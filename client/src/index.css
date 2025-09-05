@@ -53,38 +53,57 @@
 }
 
 .dark {
-  --background: hsl(210, 20%, 11%);
+  /* Deep blue-toned dark background */
+  --background: hsl(218, 35%, 8%);
   --foreground: hsl(210, 40%, 98%);
-  --card: hsl(210, 20%, 14%);
+  
+  /* Cards with blue undertones */
+  --card: hsl(217, 30%, 12%);
   --card-foreground: hsl(210, 40%, 98%);
-  --popover: hsl(210, 20%, 14%);
+  --popover: hsl(217, 30%, 12%);
   --popover-foreground: hsl(210, 40%, 98%);
-  --primary: hsl(214, 84%, 56%);
-  --primary-foreground: hsl(210, 40%, 98%);
-  --secondary: hsl(210, 20%, 16%);
+  
+  /* Bright contrasting blue primary */
+  --primary: hsl(210, 100%, 65%);
+  --primary-foreground: hsl(218, 35%, 8%);
+  
+  /* Secondary with blue tones */
+  --secondary: hsl(217, 25%, 18%);
   --secondary-foreground: hsl(210, 40%, 98%);
-  --muted: hsl(210, 20%, 16%);
-  --muted-foreground: hsl(210, 20%, 65%);
-  --accent: hsl(210, 20%, 16%);
-  --accent-foreground: hsl(210, 40%, 98%);
-  --destructive: hsl(0, 72%, 51%);
+  
+  /* Muted elements */
+  --muted: hsl(217, 25%, 15%);
+  --muted-foreground: hsl(215, 20%, 65%);
+  
+  /* Accent colors */
+  --accent: hsl(216, 35%, 20%);
+  --accent-foreground: hsl(210, 100%, 70%);
+  
+  /* High contrast destructive */
+  --destructive: hsl(0, 80%, 65%);
   --destructive-foreground: hsl(210, 40%, 98%);
-  --border: hsl(210, 20%, 16%);
-  --input: hsl(210, 20%, 16%);
-  --ring: hsl(214, 84%, 56%);
-  --chart-1: hsl(214, 84%, 56%);
-  --chart-2: hsl(159.78, 100%, 36.08%);
-  --chart-3: hsl(42.03, 92.83%, 56.27%);
-  --chart-4: hsl(147.14, 78.50%, 41.96%);
-  --chart-5: hsl(341.49, 75.20%, 50.98%);
-  --sidebar: hsl(210, 20%, 14%);
+  
+  /* Borders and inputs with blue tones */
+  --border: hsl(217, 25%, 22%);
+  --input: hsl(217, 25%, 18%);
+  --ring: hsl(210, 100%, 65%);
+  
+  /* Chart colors adjusted for dark theme */
+  --chart-1: hsl(210, 100%, 65%);
+  --chart-2: hsl(159, 80%, 45%);
+  --chart-3: hsl(42, 90%, 65%);
+  --chart-4: hsl(147, 70%, 50%);
+  --chart-5: hsl(341, 70%, 60%);
+  
+  /* Sidebar with deep blue */
+  --sidebar: hsl(218, 30%, 10%);
   --sidebar-foreground: hsl(210, 40%, 98%);
-  --sidebar-primary: hsl(214, 84%, 56%);
-  --sidebar-primary-foreground: hsl(210, 40%, 98%);
-  --sidebar-accent: hsl(210, 20%, 16%);
-  --sidebar-accent-foreground: hsl(214, 84%, 56%);
-  --sidebar-border: hsl(210, 20%, 16%);
-  --sidebar-ring: hsl(214, 84%, 56%);
+  --sidebar-primary: hsl(210, 100%, 65%);
+  --sidebar-primary-foreground: hsl(218, 35%, 8%);
+  --sidebar-accent: hsl(217, 25%, 18%);
+  --sidebar-accent-foreground: hsl(210, 100%, 70%);
+  --sidebar-border: hsl(217, 25%, 20%);
+  --sidebar-ring: hsl(210, 100%, 65%);
 }
 
 @layer base {
@@ -134,4 +153,41 @@
 .status-badge-reserved {
   background-color: hsl(214, 84%, 56%);
   color: white;
+}
+
+/* Enhanced button contrast for dark theme */
+.dark .upload-zone:hover {
+  border-color: hsl(210, 100%, 65%);
+  background-color: hsl(210, 100%, 65% / 0.03);
+}
+
+/* Dark theme badge adjustments */
+.dark .channel-badge-cashea {
+  background-color: hsl(142, 80%, 50%);
+  color: hsl(218, 35%, 8%);
+}
+
+.dark .channel-badge-shopify {
+  background-color: hsl(120, 70%, 55%);
+  color: hsl(218, 35%, 8%);
+}
+
+.dark .channel-badge-treble {
+  background-color: hsl(271, 85%, 65%);
+  color: hsl(218, 35%, 8%);
+}
+
+.dark .status-badge-completed {
+  background-color: hsl(142, 80%, 50%);
+  color: hsl(218, 35%, 8%);
+}
+
+.dark .status-badge-pending {
+  background-color: hsl(38, 95%, 60%);
+  color: hsl(218, 35%, 8%);
+}
+
+.dark .status-badge-reserved {
+  background-color: hsl(210, 100%, 65%);
+  color: hsl(218, 35%, 8%);
 }
