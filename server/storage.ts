@@ -250,14 +250,15 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getOrdersWithAddresses(limit: number = 20, offset: number = 0): Promise<{ data: Sale[]; total: number }> {
-    // Get orders that either have addresses OR are ready for delivery (TO DELIVER status)
+    // Get orders that have BOTH addresses AND are ready for delivery (TO DELIVER status)
+    // Orders must have complete addresses to appear in dispatch
     const ordersForDispatch = await db
       .select()
       .from(sales)
       .where(
-        or(
-          isNotNull(sales.direccionFacturacionPais), // Orders with addresses
-          eq(sales.estadoEntrega, 'TO DELIVER')       // Orders ready for delivery
+        and(
+          isNotNull(sales.direccionFacturacionPais), // Must have addresses
+          eq(sales.estadoEntrega, 'TO DELIVER')       // Must be ready for delivery
         )
       )
       .orderBy(desc(sales.fecha))
@@ -269,9 +270,9 @@ export class DatabaseStorage implements IStorage {
       .select({ totalCount: count() })
       .from(sales)
       .where(
-        or(
-          isNotNull(sales.direccionFacturacionPais), // Orders with addresses
-          eq(sales.estadoEntrega, 'TO DELIVER')       // Orders ready for delivery
+        and(
+          isNotNull(sales.direccionFacturacionPais), // Must have addresses  
+          eq(sales.estadoEntrega, 'TO DELIVER')       // Must be ready for delivery
         )
       );
 
