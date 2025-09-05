@@ -207,39 +207,61 @@ export default function DispatchTable({
                     </TableCell>
                     
                     <TableCell>
-                      <div className="text-xs space-y-1 max-w-72">
-                        <div className="font-medium">{sale.direccionFacturacionDireccion}</div>
-                        <div>
-                          {sale.direccionFacturacionCiudad}, {sale.direccionFacturacionEstado}
+                      {sale.direccionFacturacionPais ? (
+                        <div className="text-xs space-y-1 max-w-72">
+                          <div className="font-medium">{sale.direccionFacturacionDireccion}</div>
+                          <div>
+                            {sale.direccionFacturacionCiudad}, {sale.direccionFacturacionEstado}
+                          </div>
+                          <div>{sale.direccionFacturacionPais}</div>
+                          {sale.direccionFacturacionUrbanizacion && (
+                            <div className="text-muted-foreground">Urb. {sale.direccionFacturacionUrbanizacion}</div>
+                          )}
+                          {sale.direccionFacturacionReferencia && (
+                            <div className="text-muted-foreground">Ref: {sale.direccionFacturacionReferencia}</div>
+                          )}
                         </div>
-                        <div>{sale.direccionFacturacionPais}</div>
-                        {sale.direccionFacturacionUrbanizacion && (
-                          <div className="text-muted-foreground">Urb. {sale.direccionFacturacionUrbanizacion}</div>
-                        )}
-                        {sale.direccionFacturacionReferencia && (
-                          <div className="text-muted-foreground">Ref: {sale.direccionFacturacionReferencia}</div>
-                        )}
-                      </div>
+                      ) : (
+                        <div className="text-xs text-amber-600 bg-amber-50 dark:bg-amber-950/20 p-2 rounded border border-amber-200 dark:border-amber-800">
+                          <div className="font-medium flex items-center gap-1">
+                            ⚠️ Sin dirección
+                          </div>
+                          <div className="text-amber-700 dark:text-amber-300">
+                            Pendiente de agregar
+                          </div>
+                        </div>
+                      )}
                     </TableCell>
                     
                     <TableCell>
-                      {sale.direccionDespachoIgualFacturacion === "true" ? (
-                        <div className="text-xs text-muted-foreground italic">
-                          Igual a facturación
-                        </div>
-                      ) : (
-                        <div className="text-xs space-y-1 max-w-72">
-                          <div className="font-medium">{sale.direccionDespachoDireccion}</div>
-                          <div>
-                            {sale.direccionDespachoCiudad}, {sale.direccionDespachoEstado}
+                      {sale.direccionFacturacionPais ? (
+                        sale.direccionDespachoIgualFacturacion === "true" ? (
+                          <div className="text-xs text-muted-foreground italic">
+                            Igual a facturación
                           </div>
-                          <div>{sale.direccionDespachoPais}</div>
-                          {sale.direccionDespachoUrbanizacion && (
-                            <div className="text-muted-foreground">Urb. {sale.direccionDespachoUrbanizacion}</div>
-                          )}
-                          {sale.direccionDespachoReferencia && (
-                            <div className="text-muted-foreground">Ref: {sale.direccionDespachoReferencia}</div>
-                          )}
+                        ) : (
+                          <div className="text-xs space-y-1 max-w-72">
+                            <div className="font-medium">{sale.direccionDespachoDireccion}</div>
+                            <div>
+                              {sale.direccionDespachoCiudad}, {sale.direccionDespachoEstado}
+                            </div>
+                            <div>{sale.direccionDespachoPais}</div>
+                            {sale.direccionDespachoUrbanizacion && (
+                              <div className="text-muted-foreground">Urb. {sale.direccionDespachoUrbanizacion}</div>
+                            )}
+                            {sale.direccionDespachoReferencia && (
+                              <div className="text-muted-foreground">Ref: {sale.direccionDespachoReferencia}</div>
+                            )}
+                          </div>
+                        )
+                      ) : (
+                        <div className="text-xs text-amber-600 bg-amber-50 dark:bg-amber-950/20 p-2 rounded border border-amber-200 dark:border-amber-800">
+                          <div className="font-medium flex items-center gap-1">
+                            ⚠️ Sin dirección
+                          </div>
+                          <div className="text-amber-700 dark:text-amber-300">
+                            Pendiente de agregar
+                          </div>
                         </div>
                       )}
                     </TableCell>
