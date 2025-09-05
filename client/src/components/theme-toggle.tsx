@@ -30,7 +30,7 @@ export function ThemeToggle() {
           variant="outline"
           size="icon"
           onClick={handleToggleTheme}
-          className="bg-background border-border hover:bg-accent hover:text-accent-foreground"
+          className="bg-card border-2 border-primary/20 hover:bg-primary/10 hover:border-primary/40 text-foreground hover:text-primary transition-all duration-200 shadow-sm"
           data-testid="theme-toggle-button"
         >
           <i className={getIcon()}></i>
