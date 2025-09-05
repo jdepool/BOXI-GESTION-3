@@ -47,7 +47,7 @@ export default function Sidebar() {
     <aside className="w-64 bg-card border-r border-border flex flex-col">
       <div className="p-6 border-b border-border">
         <div className="flex flex-col items-center space-y-4">
-          <div className="w-28 h-28 flex items-center justify-center">
+          <div className="w-56 h-56 flex items-center justify-center">
             <img 
               src={boxiSleepLogo} 
               alt="BoxiSleep Logo" 
