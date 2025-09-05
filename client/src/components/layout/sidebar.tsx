@@ -54,7 +54,7 @@ export default function Sidebar() {
               className="w-full h-full object-contain"
             />
           </div>
-          <p className="text-base font-semibold text-muted-foreground text-center">Sistema de Gestión</p>
+          <p className="text-lg font-bold text-foreground text-center">Sistema de Gestión</p>
         </div>
       </div>
       
