@@ -27,10 +27,10 @@ export function ThemeToggle() {
     <Tooltip>
       <TooltipTrigger asChild>
         <Button
-          variant="outline"
+          variant="secondary"
           size="icon"
           onClick={handleToggleTheme}
-          className="bg-card border-2 border-primary/20 hover:bg-primary/10 hover:border-primary/40 text-foreground hover:text-primary transition-all duration-200 shadow-sm"
+          className="bg-primary/15 border-2 border-primary/30 hover:bg-primary/25 hover:border-primary text-primary hover:text-primary font-semibold shadow-md hover:shadow-lg transition-all duration-200"
           data-testid="theme-toggle-button"
         >
           <i className={getIcon()}></i>
