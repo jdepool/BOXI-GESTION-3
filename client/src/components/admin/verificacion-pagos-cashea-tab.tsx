@@ -166,25 +166,28 @@ export function VerificacionPagosCasheaTab() {
             matchType: 'exact',
             confidence: 100
           });
-        } else if (match.type === 'partial' && match.matchingDigits >= 8) {
-          // Si coinciden 8+ dígitos, verificar que el monto en haber (banco) sea igual al monto en VES
+        } else if (match.type === 'partial' && match.matchingDigits >= 6) {
+          // Si coinciden 6+ dígitos (menos restrictivo), verificar monto
           const orderAmountVES = parseFloat(order.montoBs || '0');
           const bankAmount = transaction.monto;
           
-          console.log('Verificando montos:', {
+          console.log('Verificando montos para partial match:', {
             orderAmountVES,
             bankAmount,
-            difference: Math.abs(bankAmount - orderAmountVES)
+            difference: Math.abs(bankAmount - orderAmountVES),
+            matchingDigits: match.matchingDigits
           });
           
-          // Los montos deben ser exactamente iguales (o con diferencia mínima de centavos)
-          if (Math.abs(bankAmount - orderAmountVES) < 0.01) {
+          // Para matches con menos dígitos, ser más estricto con el monto
+          const amountTolerance = match.matchingDigits >= 8 ? 1000 : 100; // Mayor tolerancia para matches largos
+          if (Math.abs(bankAmount - orderAmountVES) < amountTolerance) {
             console.log('Match por referencia + monto encontrado para orden:', order.orden);
+            const confidence = match.matchingDigits >= 8 ? 95 : 85; // Confianza basada en dígitos
             matches.push({
               sale: order,
               bankTransaction: transaction,
               matchType: 'reference_amount',
-              confidence: 95 // Alta confianza por matching de referencia + monto
+              confidence
             });
           }
         }
@@ -249,15 +252,35 @@ export function VerificacionPagosCasheaTab() {
       };
     }
 
-    // Check for substring matches (either direction)
-    if (clean1.length >= 8 && clean2.includes(clean1)) {
+    // Check for substring matches (either direction) - más agresivo
+    if (clean1.length >= 6 && clean2.includes(clean1)) {
       console.log('SUBSTRING MATCH 1:', clean1, 'found in', clean2);
       return { type: 'partial' as const, matchingDigits: clean1.length };
     }
     
-    if (clean2.length >= 8 && clean1.includes(clean2)) {
+    if (clean2.length >= 6 && clean1.includes(clean2)) {
       console.log('SUBSTRING MATCH 2:', clean2, 'found in', clean1);
       return { type: 'partial' as const, matchingDigits: clean2.length };
+    }
+    
+    // Check for partial matches - últimos 6+ dígitos
+    if (clean1.length >= 6 && clean2.length >= 6) {
+      const suffix1 = clean1.slice(-6); // Últimos 6 dígitos
+      const suffix2 = clean2.slice(-6);
+      if (suffix1 === suffix2) {
+        console.log('SUFFIX MATCH (6 digits):', suffix1);
+        return { type: 'partial' as const, matchingDigits: 6 };
+      }
+    }
+    
+    // Check for prefix matches - primeros 6+ dígitos  
+    if (clean1.length >= 8 && clean2.length >= 8) {
+      const prefix1 = clean1.slice(0, 8); // Primeros 8 dígitos
+      const prefix2 = clean2.slice(0, 8);
+      if (prefix1 === prefix2) {
+        console.log('PREFIX MATCH (8 digits):', prefix1);
+        return { type: 'partial' as const, matchingDigits: 8 };
+      }
     }
 
     return { 
