@@ -94,15 +94,63 @@ function parseBankStatementFile(buffer: Buffer) {
     const workbook = XLSX.read(buffer, { type: 'buffer' });
     const sheetName = workbook.SheetNames[0];
     const worksheet = workbook.Sheets[sheetName];
-    const data = XLSX.utils.sheet_to_json(worksheet);
-
-    // First, let's log the column names to debug
-    if (data.length > 0 && typeof data[0] === 'object' && data[0] !== null) {
-      console.log('Bank statement columns found:', Object.keys(data[0] as Record<string, unknown>));
+    
+    // Get the raw data without headers first
+    const rawData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+    console.log('Total rows in spreadsheet:', rawData.length);
+    
+    // Find the header row by looking for common banking terms
+    let headerRowIndex = -1;
+    const bankingTerms = [
+      'referencia', 'reference', 'ref', 'numero', 'número', 'no.', 'nro',
+      'monto', 'importe', 'amount', 'valor', 'haber', 'crédito', 'credito', 'débito', 'debito',
+      'fecha', 'date', 'dia'
+    ];
+    
+    for (let i = 0; i < Math.min(rawData.length, 30); i++) { // Check first 30 rows
+      const row = rawData[i] as any[];
+      if (!row || row.length === 0) continue;
+      
+      const rowText = row.join('|').toLowerCase();
+      const foundTerms = bankingTerms.filter(term => rowText.includes(term));
+      
+      console.log(`Row ${i + 1}:`, row.slice(0, 5)); // Log first 5 columns
+      console.log(`Found ${foundTerms.length} banking terms:`, foundTerms);
+      
+      if (foundTerms.length >= 2) { // Need at least 2 banking terms to consider it a header
+        headerRowIndex = i;
+        console.log(`Found potential header row at index ${i + 1}`);
+        break;
+      }
     }
+    
+    if (headerRowIndex === -1) {
+      throw new Error('Could not find header row in bank statement. Headers should contain terms like "Referencia", "Monto", "Fecha"');
+    }
+    
+    // Parse data starting from the header row
+    const dataWithHeaders = XLSX.utils.sheet_to_json(worksheet, { 
+      header: headerRowIndex, 
+      range: headerRowIndex 
+    });
+    
+    console.log('Bank statement columns found:', headerRowIndex >= 0 && dataWithHeaders.length > 0 ? Object.keys(dataWithHeaders[0] as Record<string, unknown>) : 'No headers found');
+    console.log('Number of data rows found:', dataWithHeaders.length);
+
+    // Filter out empty rows and the header row itself
+    const filteredData = dataWithHeaders.filter((row: any, index: number) => {
+      if (index === 0) return false; // Skip the header row itself
+      
+      // Check if row has meaningful data
+      const values = Object.values(row || {});
+      const hasData = values.some(val => val !== null && val !== undefined && String(val).trim() !== '');
+      return hasData;
+    });
+    
+    console.log('Filtered data rows:', filteredData.length);
 
     // Expected columns: Fecha, Referencia, Monto, Descripcion
-    const transactions = data.map((row: any) => {
+    const transactions = filteredData.map((row: any) => {
       // Parse date
       let fecha = new Date();
       if (row.Fecha || row.fecha) {
