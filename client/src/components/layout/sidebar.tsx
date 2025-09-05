@@ -1,5 +1,6 @@
 import { Link, useLocation } from "wouter";
 import { cn } from "@/lib/utils";
+import boxiSleepLogo from "@assets/image_1757033740709.png";
 
 const navigationItems = [
   {
@@ -46,12 +47,16 @@ export default function Sidebar() {
     <aside className="w-64 bg-card border-r border-border flex flex-col">
       <div className="p-6 border-b border-border">
         <div className="flex items-center space-x-3">
-          <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-            <i className="fas fa-bed text-primary-foreground text-sm"></i>
+          <div className="w-10 h-10 flex items-center justify-center">
+            <img 
+              src={boxiSleepLogo} 
+              alt="BoxiSleep Logo" 
+              className="w-full h-full object-contain"
+            />
           </div>
           <span className="text-xl font-bold text-foreground">BoxiSleep</span>
         </div>
-        <p className="text-xs text-muted-foreground mt-1">Sistema de Ventas</p>
+        <p className="text-xs text-muted-foreground mt-1">Sistema de Gestión</p>
       </div>
       
       <nav className="flex-1 p-4">
