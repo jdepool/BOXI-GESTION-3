@@ -200,12 +200,30 @@ export function VerificacionPagosCasheaTab() {
     let clean1 = ref1.replace(/\D/g, '');
     let clean2 = ref2.replace(/\D/g, '');
 
-    // Remove leading zeros
+    // Remove ALL leading zeros completely - this is key for matching
     clean1 = clean1.replace(/^0+/, '') || '0';
     clean2 = clean2.replace(/^0+/, '') || '0';
 
-    if (clean1 === clean2) {
+    console.log('Comparing cleaned references:', { 
+      original1: ref1, 
+      original2: ref2, 
+      clean1, 
+      clean2 
+    });
+
+    // Check for exact match after removing leading zeros
+    if (clean1 === clean2 && clean1 !== '0') {
+      console.log('EXACT MATCH found!');
       return { type: 'exact' as const, matchingDigits: clean1.length };
+    }
+
+    // Check if one reference contains the other completely
+    const shorter = clean1.length < clean2.length ? clean1 : clean2;
+    const longer = clean1.length >= clean2.length ? clean1 : clean2;
+    
+    if (shorter.length >= 6 && longer.includes(shorter)) {
+      console.log('CONTAINS MATCH found!', { shorter, longer });
+      return { type: 'exact' as const, matchingDigits: shorter.length };
     }
 
     // Count matching consecutive digits from the end (most significant digits)
@@ -221,15 +239,25 @@ export function VerificacionPagosCasheaTab() {
       }
     }
 
-    // If we don't have enough consecutive matches, check for 8+ digit match anywhere
-    if (matchingDigits < 8) {
-      // Check if either reference contains the other (ignoring leading zeros)
-      const shorter = clean1.length < clean2.length ? clean1 : clean2;
-      const longer = clean1.length >= clean2.length ? clean1 : clean2;
-      
-      if (shorter.length >= 8 && longer.includes(shorter)) {
-        matchingDigits = shorter.length;
-      }
+    console.log('Consecutive digits from end:', matchingDigits);
+
+    // If we have 8+ consecutive digits, that's a strong partial match
+    if (matchingDigits >= 8) {
+      return { 
+        type: 'partial' as const, 
+        matchingDigits: matchingDigits 
+      };
+    }
+
+    // Check for substring matches (either direction)
+    if (clean1.length >= 8 && clean2.includes(clean1)) {
+      console.log('SUBSTRING MATCH 1:', clean1, 'found in', clean2);
+      return { type: 'partial' as const, matchingDigits: clean1.length };
+    }
+    
+    if (clean2.length >= 8 && clean1.includes(clean2)) {
+      console.log('SUBSTRING MATCH 2:', clean2, 'found in', clean1);
+      return { type: 'partial' as const, matchingDigits: clean2.length };
     }
 
     return { 
