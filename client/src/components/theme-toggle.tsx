@@ -28,7 +28,7 @@ export function ThemeToggle() {
       <TooltipTrigger asChild>
         <button
           onClick={handleToggleTheme}
-          className="text-primary font-bold text-lg hover:text-primary/80 transition-colors duration-200 cursor-pointer"
+          className="bg-primary text-primary-foreground px-3 py-2 rounded-md font-bold text-lg hover:bg-primary/90 transition-all duration-200 cursor-pointer shadow-md"
           data-testid="theme-toggle-button"
         >
           <i className={getIcon()}></i>
