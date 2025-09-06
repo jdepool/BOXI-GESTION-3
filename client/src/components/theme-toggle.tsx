@@ -11,9 +11,9 @@ export function ThemeToggle() {
 
   const getIcon = () => {
     if (theme === "dark") {
-      return "fas fa-sun"; // Sun icon for switching to light mode
+      return "☀️"; // Sun emoji for switching to light mode
     }
-    return "fas fa-moon"; // Moon icon for switching to dark mode
+    return "🌙"; // Moon emoji for switching to dark mode
   };
 
   const getTooltipText = () => {
@@ -31,7 +31,7 @@ export function ThemeToggle() {
           className="bg-primary text-primary-foreground px-3 py-2 rounded-md font-bold text-lg hover:bg-primary/90 transition-all duration-200 cursor-pointer shadow-md"
           data-testid="theme-toggle-button"
         >
-          <i className={getIcon()}></i>
+          <span className="text-xl">{getIcon()}</span>
           <span className="sr-only">{getTooltipText()}</span>
         </button>
       </TooltipTrigger>
