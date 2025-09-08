@@ -118,7 +118,7 @@ export default function FleteModal({ open, onOpenChange, sale }: FleteModalProps
             Datos del Flete
           </DialogTitle>
           <DialogDescription>
-            Gestiona la información del flete para esta venta
+            Puedes guardar solo con el monto en US$ y completar los demás datos después. El ícono del camión se pondrá naranja una vez guardado.
           </DialogDescription>
         </DialogHeader>
 

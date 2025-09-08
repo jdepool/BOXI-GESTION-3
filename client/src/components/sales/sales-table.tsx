@@ -323,7 +323,7 @@ export default function SalesTable({
                         data-testid={`add-flete-${sale.id}`}
                         className="h-7 text-xs"
                       >
-                        <Truck className="h-3 w-3 mr-1" />
+                        <Truck className={`h-3 w-3 mr-1 ${sale.montoFleteUsd ? 'text-orange-500' : ''}`} />
                         {sale.montoFleteUsd ? 'Editar' : 'Agregar'}
                       </Button>
                     </td>
