@@ -531,7 +531,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { status } = req.body;
 
       // Validate status
-      const validStatuses = ['TO DELIVER', 'Despachado', 'Cancelado', 'Pospuesto'];
+      const validStatuses = ['A Despachar', 'Despachado', 'Cancelado', 'Pospuesto'];
       if (!status || !validStatuses.includes(status)) {
         return res.status(400).json({ 
           error: "Invalid status. Must be one of: " + validStatuses.join(', ')
@@ -1221,10 +1221,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { id } = req.params;
       
-      // Update the sale status from "pendiente" to "activo" and set delivery status to "TO DELIVER"
+      // Update the sale status from "pendiente" to "activo" and set delivery status to "A Despachar"
       const updatedSale = await storage.updateSale(id, { 
         estado: "activo",
-        estadoEntrega: "TO DELIVER"
+        estadoEntrega: "A Despachar"
       });
       
       if (!updatedSale) {
@@ -1335,7 +1335,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Verify Cashea payments and update status to TO DELIVER
+  // Verify Cashea payments and update status to A Despachar
   app.post('/api/admin/verify-cashea-payments', async (req, res) => {
     try {
       const { matches } = req.body;
@@ -1349,7 +1349,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       for (const match of matches) {
         if (match.confidence >= 80) {
           try {
-            await storage.updateSaleDeliveryStatus(match.sale.id, 'TO DELIVER');
+            await storage.updateSaleDeliveryStatus(match.sale.id, 'A Despachar');
             verifiedCount++;
           } catch (error) {
             console.error(`Error updating sale ${match.sale.id}:`, error);
@@ -1370,14 +1370,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Update existing Cashea orders from TO DELIVER to PROCESSING
+  // Update existing Cashea orders from A Despachar to PROCESSING
   app.post('/api/admin/update-cashea-status', async (req, res) => {
     try {
       const updatedCount = await storage.updateCasheaOrdersToProcessing();
       
       res.json({
         updated: updatedCount,
-        message: `Successfully updated ${updatedCount} Cashea orders from TO DELIVER to PROCESSING`
+        message: `Successfully updated ${updatedCount} Cashea orders from A Despachar to PROCESSING`
       });
     } catch (error) {
       console.error('Cashea status update error:', error);

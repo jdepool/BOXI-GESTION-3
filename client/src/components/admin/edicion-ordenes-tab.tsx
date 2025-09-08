@@ -21,11 +21,11 @@ export function EdicionOrdenesTab() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Fetch orders with TO DELIVER status
+  // Fetch orders with A Despachar status
   const { data: orders = [], isLoading } = useQuery({
-    queryKey: ["/api/sales", { estadoEntrega: "TO DELIVER" }],
+    queryKey: ["/api/sales", { estadoEntrega: "A Despachar" }],
     queryFn: () => 
-      fetch("/api/sales?estadoEntrega=TO DELIVER")
+      fetch("/api/sales?estadoEntrega=A Despachar")
         .then(res => res.json())
         .then(data => data.data || []),
   });
@@ -84,7 +84,7 @@ export function EdicionOrdenesTab() {
 
   const getStatusBadgeVariant = (status: string) => {
     switch (status) {
-      case "TO DELIVER":
+      case "A Despachar":
         return "default";
       case "DELIVERED":
         return "secondary";
@@ -104,7 +104,7 @@ export function EdicionOrdenesTab() {
             Edición de Órdenes
           </h3>
           <p className="text-sm text-muted-foreground">
-            Gestiona las órdenes pendientes por despacho (TO DELIVER)
+            Gestiona las órdenes pendientes por despacho (A Despachar)
           </p>
         </div>
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -217,7 +217,7 @@ export function EdicionOrdenesTab() {
                           <SelectValue placeholder="Seleccionar estado" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="TO DELIVER">TO DELIVER</SelectItem>
+                          <SelectItem value="A Despachar">A Despachar</SelectItem>
                           <SelectItem value="DELIVERED">DELIVERED</SelectItem>
                           <SelectItem value="CANCELLED">CANCELLED</SelectItem>
                           <SelectItem value="IN TRANSIT">IN TRANSIT</SelectItem>

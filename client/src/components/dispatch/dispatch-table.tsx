@@ -94,7 +94,7 @@ export default function DispatchTable({
       case 'Despachado': return 'default';
       case 'Cancelado': return 'destructive';
       case 'Pospuesto': return 'secondary';
-      case 'TO DELIVER': return 'outline';
+      case 'A Despachar': return 'outline';
       default: return 'outline';
     }
   };
@@ -289,7 +289,7 @@ export default function DispatchTable({
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="TO DELIVER">A despachar</SelectItem>
+                          <SelectItem value="A Despachar">A despachar</SelectItem>
                           <SelectItem value="Despachado">Despachado</SelectItem>
                           <SelectItem value="Cancelado">Cancelado</SelectItem>
                           <SelectItem value="Pospuesto">Pospuesto</SelectItem>

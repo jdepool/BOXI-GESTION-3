@@ -250,14 +250,14 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getOrdersWithAddresses(limit: number = 20, offset: number = 0): Promise<{ data: Sale[]; total: number }> {
-    // Get orders that are ready for delivery (TO DELIVER status)
+    // Get orders that are ready for delivery (A Despachar status)
     // AND have freight status "A Despacho" (ready for dispatch)
     const ordersForDispatch = await db
       .select()
       .from(sales)
       .where(
         and(
-          eq(sales.estadoEntrega, 'TO DELIVER'), // Must be TO DELIVER status
+          eq(sales.estadoEntrega, 'A Despachar'), // Must be A Despachar status
           eq(sales.statusFlete, 'A Despacho') // Must have flete status "A Despacho"
         )
       )
@@ -271,7 +271,7 @@ export class DatabaseStorage implements IStorage {
       .from(sales)
       .where(
         and(
-          eq(sales.estadoEntrega, 'TO DELIVER'), // Must be TO DELIVER status
+          eq(sales.estadoEntrega, 'A Despachar'), // Must be A Despachar status
           eq(sales.statusFlete, 'A Despacho') // Must have flete status "A Despacho"
         )
       );
@@ -865,7 +865,7 @@ export class DatabaseStorage implements IStorage {
             eq(sales.canal, 'Cashea'),
             eq(sales.canal, 'cashea')
           ),
-          eq(sales.estadoEntrega, 'TO DELIVER')
+          eq(sales.estadoEntrega, 'A Despachar')
         )
       )
       .returning();

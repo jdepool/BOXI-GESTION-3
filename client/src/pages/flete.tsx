@@ -81,9 +81,9 @@ export default function Flete() {
   const salesWithFlete = data?.data?.filter((sale: Sale) => {
     if (!sale.montoFleteUsd) return false;
     
-    // Exclude orders that are ready for dispatch (TO DELIVER + A Despacho)
+    // Exclude orders that are ready for dispatch (A Despachar + A Despacho)
     // These should only appear in Despachos, not in Flete
-    if (sale.estadoEntrega === 'TO DELIVER' && sale.statusFlete === 'A Despacho') {
+    if (sale.estadoEntrega === 'A Despachar' && sale.statusFlete === 'A Despacho') {
       return false;
     }
     

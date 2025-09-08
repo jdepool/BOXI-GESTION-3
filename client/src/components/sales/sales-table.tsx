@@ -330,7 +330,7 @@ export default function SalesTable({
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="pendiente">Pendiente</SelectItem>
-                          <SelectItem value="TO DELIVER">A despachar</SelectItem>
+                          <SelectItem value="A Despachar">A despachar</SelectItem>
                           <SelectItem value="Despachado">Despachado</SelectItem>
                           <SelectItem value="Cancelado">Cancelado</SelectItem>
                           <SelectItem value="Pospuesto">Pospuesto</SelectItem>
