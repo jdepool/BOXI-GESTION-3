@@ -24,6 +24,11 @@ const navigationItems = [
     label: "Despachos",
   },
   {
+    href: "/flete",
+    icon: "fas fa-shipping-fast",
+    label: "Flete",
+  },
+  {
     href: "/verificacion-pagos-cashea",
     icon: "fas fa-credit-card",
     label: "Verificación Pagos Cashea",
