@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -6,6 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Truck, DollarSign, CalendarIcon, FileText, Building2, Package } from "lucide-react";
 import { format } from "date-fns";
 import Sidebar from "@/components/layout/sidebar";
+import FleteModal from "@/components/sales/flete-modal";
 import type { Sale } from "@shared/schema";
 
 function getFleteStatus(sale: Sale): { status: string; color: string; description: string } {
@@ -25,6 +27,9 @@ function getFleteStatus(sale: Sale): { status: string; color: string; descriptio
 }
 
 export default function Flete() {
+  const [fleteModalOpen, setFleteModalOpen] = useState(false);
+  const [selectedSaleForFlete, setSelectedSaleForFlete] = useState<Sale | null>(null);
+  
   const { data, isLoading } = useQuery({
     queryKey: ['/api/sales'],
   });
