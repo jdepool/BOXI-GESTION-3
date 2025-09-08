@@ -19,14 +19,14 @@ const navigationItems = [
     label: "Ventas",
   },
   {
-    href: "/despachos",
-    icon: "fas fa-truck",
-    label: "Despachos",
-  },
-  {
     href: "/flete",
     icon: "fas fa-shipping-fast",
     label: "Flete",
+  },
+  {
+    href: "/despachos",
+    icon: "fas fa-truck",
+    label: "Despachos",
   },
   {
     href: "/verificacion-pagos-cashea",
