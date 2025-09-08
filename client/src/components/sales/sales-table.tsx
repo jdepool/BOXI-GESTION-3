@@ -6,7 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import SaleDetailModal from "./sale-detail-modal";
 import AddressModal from "@/components/addresses/address-modal";
-import { MapPin } from "lucide-react";
+import FleteModal from "./flete-modal";
+import { MapPin, Truck } from "lucide-react";
 import type { Sale } from "@shared/schema";
 
 interface SalesTableProps {
@@ -41,6 +42,8 @@ export default function SalesTable({
   const [selectedSale, setSelectedSale] = useState<Sale | null>(null);
   const [addressModalOpen, setAddressModalOpen] = useState(false);
   const [selectedSaleForAddress, setSelectedSaleForAddress] = useState<Sale | null>(null);
+  const [fleteModalOpen, setFleteModalOpen] = useState(false);
+  const [selectedSaleForFlete, setSelectedSaleForFlete] = useState<Sale | null>(null);
   const [filters, setFilters] = useState({
     canal: "all",
     estadoEntrega: "all",
@@ -208,13 +211,14 @@ export default function SalesTable({
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[140px]">Producto</th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[80px]">Cantidad</th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[120px]">Direcciones</th>
+                <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[120px]">Flete</th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[200px]">Acciones</th>
               </tr>
             </thead>
             <tbody>
               {data.length === 0 ? (
                 <tr>
-                  <td colSpan={22} className="text-center p-8 text-muted-foreground">
+                  <td colSpan={23} className="text-center p-8 text-muted-foreground">
                     No hay datos disponibles
                   </td>
                 </tr>
@@ -306,6 +310,21 @@ export default function SalesTable({
                       >
                         <MapPin className="h-3 w-3 mr-1" />
                         {sale.direccionFacturacionPais ? 'Editar' : 'Agregar'}
+                      </Button>
+                    </td>
+                    <td className="p-2 min-w-[120px]">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setSelectedSaleForFlete(sale);
+                          setFleteModalOpen(true);
+                        }}
+                        data-testid={`add-flete-${sale.id}`}
+                        className="h-7 text-xs"
+                      >
+                        <Truck className="h-3 w-3 mr-1" />
+                        {sale.montoFleteUsd ? 'Editar' : 'Agregar'}
                       </Button>
                     </td>
                     <td className="p-2 min-w-[200px]">
@@ -407,6 +426,17 @@ export default function SalesTable({
           }
         }}
         sale={selectedSaleForAddress}
+      />
+
+      <FleteModal
+        open={fleteModalOpen}
+        onOpenChange={(open) => {
+          setFleteModalOpen(open);
+          if (!open) {
+            setSelectedSaleForFlete(null);
+          }
+        }}
+        sale={selectedSaleForFlete}
       />
     </>
   );
