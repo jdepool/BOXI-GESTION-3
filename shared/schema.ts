@@ -101,6 +101,11 @@ export const sales = pgTable("sales", {
   direccionDespachoDireccion: text("direccion_despacho_direccion"),
   direccionDespachoUrbanizacion: text("direccion_despacho_urbanizacion"),
   direccionDespachoReferencia: text("direccion_despacho_referencia"),
+  // Flete
+  montoFleteUsd: decimal("monto_flete_usd", { precision: 10, scale: 2 }),
+  fechaFlete: timestamp("fecha_flete"),
+  referenciaFlete: text("referencia_flete"),
+  montoFleteVes: decimal("monto_flete_ves", { precision: 15, scale: 2 }),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
