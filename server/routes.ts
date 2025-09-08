@@ -76,7 +76,7 @@ function parseExcelFile(buffer: Buffer, canal: string) {
         referencia: row.Referencia ? String(row.Referencia) : null,
         montoBs: row['Monto en bs'] ? String(row['Monto en bs']) : null,
         estadoEntrega: canal.toLowerCase() === 'cashea' ? 
-          (String(row['Estado de entrega'] || '').toLowerCase() === 'to deliver' ? 'PROCESSING' : String(row['Estado de entrega'] || 'pendiente')) :
+          (String(row['Estado de entrega'] || '').toLowerCase() === 'a despachar' ? 'PROCESSING' : String(row['Estado de entrega'] || 'pendiente')) :
           String(row['Estado de entrega'] || 'pendiente'),
         product: String(row.Product || ''),
         cantidad: Number(row.Cantidad || 1),
