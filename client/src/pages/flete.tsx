@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Truck, DollarSign, CalendarIcon, FileText, Building2, Package } from "lucide-react";
 import { format } from "date-fns";
@@ -41,9 +41,9 @@ export default function Flete() {
             <div className="flex items-center justify-between">
               <h1 className="text-3xl font-bold text-foreground">Gestión de Fletes</h1>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {Array.from({ length: 6 }).map((_, i) => (
-                <Skeleton key={i} className="h-64 w-full" />
+            <div className="space-y-4">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <Skeleton key={i} className="h-16 w-full" />
               ))}
             </div>
           </div>
@@ -86,127 +86,120 @@ export default function Flete() {
               </CardContent>
             </Card>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {salesWithFlete.map((sale: Sale) => {
-                const fleteStatus = getFleteStatus(sale);
-                
-                return (
-                  <Card key={sale.id} className="hover:shadow-lg transition-shadow">
-                    <CardHeader className="pb-3">
-                      <div className="flex items-center justify-between">
-                        <CardTitle className="text-lg flex items-center gap-2">
-                          <Truck className="h-5 w-5" />
-                          Orden #{sale.orden || 'N/A'}
-                        </CardTitle>
-                        <Badge 
-                          className={`${fleteStatus.color} text-white text-xs`}
-                          data-testid={`status-${sale.id}`}
-                        >
-                          {fleteStatus.status}
-                        </Badge>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      {/* Customer Info */}
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2 text-sm">
-                          <Package className="h-4 w-4 text-muted-foreground" />
-                          <span className="font-medium">{sale.nombre}</span>
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          {sale.product} • Canal: {sale.canal}
-                        </div>
-                      </div>
-
-                      {/* Freight Information */}
-                      <div className="space-y-3 pt-3 border-t">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <DollarSign className="h-4 w-4 text-green-600" />
-                            <span className="text-sm font-medium">Monto USD</span>
-                          </div>
-                          <span className="text-sm font-bold text-green-600">
-                            ${sale.montoFleteUsd}
-                          </span>
-                        </div>
-
-                        {sale.fechaFlete && (
-                          <div className="flex items-center justify-between">
+            <div className="bg-background border rounded-lg">
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-muted">
+                    <tr>
+                      <th className="text-left p-4 font-medium text-sm">Orden</th>
+                      <th className="text-left p-4 font-medium text-sm">Cliente</th>
+                      <th className="text-left p-4 font-medium text-sm">Producto</th>
+                      <th className="text-left p-4 font-medium text-sm">Canal</th>
+                      <th className="text-left p-4 font-medium text-sm">Monto USD</th>
+                      <th className="text-left p-4 font-medium text-sm">Fecha</th>
+                      <th className="text-left p-4 font-medium text-sm">Referencia</th>
+                      <th className="text-left p-4 font-medium text-sm">Monto VES</th>
+                      <th className="text-left p-4 font-medium text-sm">Banco</th>
+                      <th className="text-left p-4 font-medium text-sm">Status</th>
+                      <th className="text-left p-4 font-medium text-sm">Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {salesWithFlete.map((sale: Sale) => {
+                      const fleteStatus = getFleteStatus(sale);
+                      
+                      return (
+                        <tr key={sale.id} className="border-b hover:bg-muted/50 transition-colors" data-testid={`flete-row-${sale.id}`}>
+                          <td className="p-4">
                             <div className="flex items-center gap-2">
-                              <CalendarIcon className="h-4 w-4 text-blue-600" />
-                              <span className="text-sm">Fecha</span>
+                              <Truck className="h-4 w-4 text-muted-foreground" />
+                              <span className="font-mono text-sm">{sale.orden || 'N/A'}</span>
                             </div>
-                            <span className="text-sm">
-                              {format(new Date(sale.fechaFlete), 'dd/MM/yyyy')}
-                            </span>
-                          </div>
-                        )}
-
-                        {sale.referenciaFlete && (
-                          <div className="flex items-center justify-between">
+                          </td>
+                          <td className="p-4">
                             <div className="flex items-center gap-2">
-                              <FileText className="h-4 w-4 text-purple-600" />
-                              <span className="text-sm">Referencia</span>
+                              <Package className="h-4 w-4 text-muted-foreground" />
+                              <span className="text-sm font-medium">{sale.nombre}</span>
                             </div>
-                            <span className="text-sm font-mono">
-                              {sale.referenciaFlete}
-                            </span>
-                          </div>
-                        )}
-
-                        {sale.montoFleteVes && (
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                              <span className="text-sm font-semibold text-orange-600">Bs</span>
-                              <span className="text-sm">Monto VES</span>
+                          </td>
+                          <td className="p-4">
+                            <span className="text-sm">{sale.product}</span>
+                          </td>
+                          <td className="p-4">
+                            <Badge variant="outline" className="text-xs">{sale.canal}</Badge>
+                          </td>
+                          <td className="p-4">
+                            <div className="flex items-center gap-1">
+                              <DollarSign className="h-3 w-3 text-green-600" />
+                              <span className="text-sm font-bold text-green-600">${sale.montoFleteUsd}</span>
                             </div>
-                            <span className="text-sm font-bold text-orange-600">
-                              Bs {Number(sale.montoFleteVes).toLocaleString()}
-                            </span>
-                          </div>
-                        )}
-
-                        {sale.bancoReceptorFlete && (
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                              <Building2 className="h-4 w-4 text-indigo-600" />
-                              <span className="text-sm">Banco</span>
-                            </div>
-                            <span className="text-sm">
-                              {sale.bancoReceptorFlete}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Status Description */}
-                      <div className="pt-3 border-t">
-                        <p className="text-xs text-muted-foreground">
-                          {fleteStatus.description}
-                        </p>
-                      </div>
-
-                      {/* Action Button */}
-                      <div className="pt-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="w-full"
-                          onClick={() => {
-                            // TODO: Implement action based on status
-                            // Could open a modal or navigate to details
-                          }}
-                          data-testid={`action-${sale.id}`}
-                        >
-                          {fleteStatus.status === 'Pendiente' && 'Completar Info'}
-                          {fleteStatus.status === 'En Proceso' && 'Ver Detalles'}
-                          {fleteStatus.status === 'A Despacho' && 'Procesar'}
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              })}
+                          </td>
+                          <td className="p-4">
+                            {sale.fechaFlete ? (
+                              <div className="flex items-center gap-1">
+                                <CalendarIcon className="h-3 w-3 text-blue-600" />
+                                <span className="text-sm">{format(new Date(sale.fechaFlete), 'dd/MM/yyyy')}</span>
+                              </div>
+                            ) : (
+                              <span className="text-sm text-muted-foreground">-</span>
+                            )}
+                          </td>
+                          <td className="p-4">
+                            {sale.referenciaFlete ? (
+                              <div className="flex items-center gap-1">
+                                <FileText className="h-3 w-3 text-purple-600" />
+                                <span className="text-sm font-mono">{sale.referenciaFlete}</span>
+                              </div>
+                            ) : (
+                              <span className="text-sm text-muted-foreground">-</span>
+                            )}
+                          </td>
+                          <td className="p-4">
+                            {sale.montoFleteVes ? (
+                              <span className="text-sm font-bold text-orange-600">Bs {Number(sale.montoFleteVes).toLocaleString()}</span>
+                            ) : (
+                              <span className="text-sm text-muted-foreground">-</span>
+                            )}
+                          </td>
+                          <td className="p-4">
+                            {sale.bancoReceptorFlete ? (
+                              <div className="flex items-center gap-1">
+                                <Building2 className="h-3 w-3 text-indigo-600" />
+                                <span className="text-sm">{sale.bancoReceptorFlete}</span>
+                              </div>
+                            ) : (
+                              <span className="text-sm text-muted-foreground">-</span>
+                            )}
+                          </td>
+                          <td className="p-4">
+                            <Badge 
+                              className={`${fleteStatus.color} text-white text-xs`}
+                              data-testid={`status-${sale.id}`}
+                            >
+                              {fleteStatus.status}
+                            </Badge>
+                          </td>
+                          <td className="p-4">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="text-xs h-7"
+                              onClick={() => {
+                                // TODO: Implement action based on status
+                              }}
+                              data-testid={`action-${sale.id}`}
+                            >
+                              {fleteStatus.status === 'Pendiente' && 'Completar'}
+                              {fleteStatus.status === 'En Proceso' && 'Ver'}
+                              {fleteStatus.status === 'A Despacho' && 'Procesar'}
+                            </Button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
             </div>
           )}
         </div>
