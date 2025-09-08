@@ -370,9 +370,16 @@ export default function SalesTable({
                         className="h-7 text-xs"
                       >
                         <Truck className={`h-3 w-3 mr-1 ${
-                          sale.montoFleteUsd && (!sale.fechaFlete || !sale.referenciaFlete || !sale.montoFleteVes || !sale.bancoReceptorFlete) 
-                            ? 'text-orange-500' 
-                            : ''
+                          (() => {
+                            // Si tiene status manual, usar ese status
+                            if (sale.statusFlete) {
+                              return sale.statusFlete === 'Pendiente' ? 'text-orange-500' : '';
+                            }
+                            // Lógica automática: solo naranja si tiene USD pero no está completo
+                            return sale.montoFleteUsd && (!sale.fechaFlete || !sale.referenciaFlete || !sale.montoFleteVes || !sale.bancoReceptorFlete) 
+                              ? 'text-orange-500' 
+                              : '';
+                          })()
                         }`} />
                         {sale.montoFleteUsd ? 'Editar' : 'Agregar'}
                       </Button>

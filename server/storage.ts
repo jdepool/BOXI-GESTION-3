@@ -251,19 +251,14 @@ export class DatabaseStorage implements IStorage {
 
   async getOrdersWithAddresses(limit: number = 20, offset: number = 0): Promise<{ data: Sale[]; total: number }> {
     // Get orders that are ready for delivery (TO DELIVER status)
-    // AND have complete freight information (ready for dispatch)
-    // Freight must have: montoFleteUsd, fechaFlete, referenciaFlete, montoFleteVes, bancoReceptorFlete
+    // AND have freight status "A Despacho" (ready for dispatch)
     const ordersForDispatch = await db
       .select()
       .from(sales)
       .where(
         and(
           eq(sales.estadoEntrega, 'TO DELIVER'), // Must be TO DELIVER status
-          isNotNull(sales.montoFleteUsd), // Must have freight amount
-          isNotNull(sales.fechaFlete), // Must have freight date
-          isNotNull(sales.referenciaFlete), // Must have freight reference
-          isNotNull(sales.montoFleteVes), // Must have VES amount
-          isNotNull(sales.bancoReceptorFlete) // Must have bank receiver
+          eq(sales.statusFlete, 'A Despacho') // Must have flete status "A Despacho"
         )
       )
       .orderBy(desc(sales.fecha))
@@ -277,11 +272,7 @@ export class DatabaseStorage implements IStorage {
       .where(
         and(
           eq(sales.estadoEntrega, 'TO DELIVER'), // Must be TO DELIVER status
-          isNotNull(sales.montoFleteUsd), // Must have freight amount
-          isNotNull(sales.fechaFlete), // Must have freight date
-          isNotNull(sales.referenciaFlete), // Must have freight reference
-          isNotNull(sales.montoFleteVes), // Must have VES amount
-          isNotNull(sales.bancoReceptorFlete) // Must have bank receiver
+          eq(sales.statusFlete, 'A Despacho') // Must have flete status "A Despacho"
         )
       );
 
@@ -296,6 +287,19 @@ export class DatabaseStorage implements IStorage {
       .update(sales)
       .set({ 
         estadoEntrega: newStatus,
+        updatedAt: new Date()
+      })
+      .where(eq(sales.id, saleId))
+      .returning();
+
+    return updatedSale || undefined;
+  }
+
+  async updateFleteStatus(saleId: string, newStatus: string): Promise<Sale | undefined> {
+    const [updatedSale] = await db
+      .update(sales)
+      .set({ 
+        statusFlete: newStatus,
         updatedAt: new Date()
       })
       .where(eq(sales.id, saleId))

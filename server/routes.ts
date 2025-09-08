@@ -607,6 +607,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update flete status
+  app.put("/api/sales/:saleId/flete-status", async (req, res) => {
+    try {
+      const { saleId } = req.params;
+      const { status } = req.body;
+
+      // Validate status
+      const validStatuses = ['Pendiente', 'En Proceso', 'A Despacho'];
+      if (!status || !validStatuses.includes(status)) {
+        return res.status(400).json({ 
+          error: "Invalid status. Must be one of: " + validStatuses.join(', ')
+        });
+      }
+
+      // Validate that sale exists
+      const existingSale = await storage.getSaleById(saleId);
+      if (!existingSale) {
+        return res.status(404).json({ error: "Sale not found" });
+      }
+
+      const updatedSale = await storage.updateFleteStatus(saleId, status);
+      
+      if (!updatedSale) {
+        return res.status(500).json({ error: "Failed to update flete status" });
+      }
+
+      res.json({ success: true, sale: updatedSale });
+    } catch (error) {
+      console.error("Update flete status error:", error);
+      res.status(500).json({ error: "Failed to update flete status" });
+    }
+  });
+
   // ===========================================
   // ADMIN CONFIGURATION ENDPOINTS
   // ===========================================

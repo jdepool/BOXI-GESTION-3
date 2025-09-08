@@ -1,16 +1,33 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Truck, DollarSign, CalendarIcon, FileText, Building2, Package } from "lucide-react";
 import { format } from "date-fns";
 import Sidebar from "@/components/layout/sidebar";
 import FleteModal from "@/components/sales/flete-modal";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 import type { Sale } from "@shared/schema";
 
 function getFleteStatus(sale: Sale): { status: string; color: string; description: string } {
+  // Si ya tiene un status manual, usarlo
+  if (sale.statusFlete) {
+    const statusMap = {
+      "Pendiente": { color: "bg-orange-500", description: "Status manual: Pendiente" },
+      "En Proceso": { color: "bg-blue-500", description: "Status manual: En proceso" },
+      "A Despacho": { color: "bg-green-500", description: "Status manual: Listo para despacho" }
+    };
+    const config = statusMap[sale.statusFlete as keyof typeof statusMap];
+    if (config) {
+      return { status: sale.statusFlete, ...config };
+    }
+  }
+
+  // Lógica automática si no hay status manual
   // No tiene monto USD - no mostrar
   if (!sale.montoFleteUsd) {
     return { status: "Sin Flete", color: "bg-gray-500", description: "No tiene información de flete" };
@@ -21,18 +38,44 @@ function getFleteStatus(sale: Sale): { status: string; color: string; descriptio
     return { status: "Pendiente", color: "bg-orange-500", description: "Solo tiene monto en USD" };
   }
 
-  // Tiene toda la información - por ahora asumimos que está listo para despacho
-  // En el futuro se podría agregar un campo de conciliación
+  // Tiene toda la información - por defecto está listo para despacho
   return { status: "A Despacho", color: "bg-green-500", description: "Información completa, listo para despacho" };
 }
 
 export default function Flete() {
+  const { toast } = useToast();
   const [fleteModalOpen, setFleteModalOpen] = useState(false);
   const [selectedSaleForFlete, setSelectedSaleForFlete] = useState<Sale | null>(null);
   
   const { data, isLoading } = useQuery({
     queryKey: ['/api/sales'],
   });
+
+  const updateFleteStatusMutation = useMutation({
+    mutationFn: async ({ saleId, status }: { saleId: string; status: string }) => {
+      return apiRequest("PUT", `/api/sales/${saleId}/flete-status`, { status });
+    },
+    onSuccess: () => {
+      // Invalidate queries to refresh the data
+      queryClient.invalidateQueries({ queryKey: ["/api/sales"] });
+      toast({
+        title: "Status de flete actualizado",
+        description: "El status del flete ha sido actualizado correctamente.",
+      });
+    },
+    onError: (error) => {
+      console.error('Failed to update flete status:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo actualizar el status del flete.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleFleteStatusChange = (saleId: string, newStatus: string) => {
+    updateFleteStatusMutation.mutate({ saleId, status: newStatus });
+  };
 
   // Filter sales that have complete freight information (not pending)
   const salesWithFlete = data?.data?.filter((sale: Sale) => {
@@ -181,12 +224,20 @@ export default function Flete() {
                             )}
                           </td>
                           <td className="p-4">
-                            <Badge 
-                              className={`${fleteStatus.color} text-white text-xs`}
-                              data-testid={`status-${sale.id}`}
+                            <Select
+                              value={fleteStatus.status}
+                              onValueChange={(newStatus) => handleFleteStatusChange(sale.id, newStatus)}
+                              disabled={updateFleteStatusMutation.isPending}
                             >
-                              {fleteStatus.status}
-                            </Badge>
+                              <SelectTrigger className="w-28 h-8 text-xs">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="Pendiente">Pendiente</SelectItem>
+                                <SelectItem value="En Proceso">En Proceso</SelectItem>
+                                <SelectItem value="A Despacho">A Despacho</SelectItem>
+                              </SelectContent>
+                            </Select>
                           </td>
                           <td className="p-4">
                             <Button
