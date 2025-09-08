@@ -180,38 +180,42 @@ export default function FleteModal({ open, onOpenChange, sale }: FleteModalProps
 
               <div className="space-y-2">
                 <Label htmlFor="fechaFlete">Fecha</Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        "w-full justify-start text-left font-normal",
-                        !fleteData.fechaFlete && "text-muted-foreground"
-                      )}
-                      data-testid="button-fecha-flete"
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {fleteData.fechaFlete ? (
-                        format(new Date(fleteData.fechaFlete), "dd/MM/yyyy")
-                      ) : (
-                        "Seleccionar fecha"
-                      )}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={fleteData.fechaFlete ? new Date(fleteData.fechaFlete) : undefined}
-                      onSelect={(date) => {
-                        setFleteData((prev) => ({
-                          ...prev,
-                          fechaFlete: date ? format(date, 'yyyy-MM-dd') : ""
-                        }));
-                      }}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
+                <div className="relative">
+                  <Input
+                    id="fechaFlete"
+                    type="text"
+                    value={fleteData.fechaFlete ? format(new Date(fleteData.fechaFlete), "dd/MM/yyyy") : ""}
+                    placeholder="Seleccionar fecha"
+                    readOnly
+                    className="pr-10 cursor-default"
+                    data-testid="input-fecha-flete"
+                  />
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="absolute right-1 top-1 h-8 w-8 p-0 hover:bg-muted"
+                        data-testid="button-calendar-trigger"
+                      >
+                        <CalendarIcon className="h-4 w-4" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={fleteData.fechaFlete ? new Date(fleteData.fechaFlete) : undefined}
+                        onSelect={(date) => {
+                          setFleteData((prev) => ({
+                            ...prev,
+                            fechaFlete: date ? format(date, 'yyyy-MM-dd') : ""
+                          }));
+                        }}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
               </div>
 
               <div className="space-y-2">
