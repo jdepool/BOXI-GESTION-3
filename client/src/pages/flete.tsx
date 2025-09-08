@@ -34,8 +34,12 @@ export default function Flete() {
     queryKey: ['/api/sales'],
   });
 
-  // Filter sales that have freight information
-  const salesWithFlete = data?.data?.filter((sale: Sale) => sale.montoFleteUsd) || [];
+  // Filter sales that have complete freight information (not pending)
+  const salesWithFlete = data?.data?.filter((sale: Sale) => {
+    if (!sale.montoFleteUsd) return false;
+    const fleteStatus = getFleteStatus(sale);
+    return fleteStatus.status !== "Pendiente";
+  }) || [];
 
   if (isLoading) {
     return (
