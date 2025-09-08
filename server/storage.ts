@@ -365,6 +365,7 @@ export class DatabaseStorage implements IStorage {
     fechaFlete?: string;
     referenciaFlete?: string;
     montoFleteVes?: string;
+    bancoReceptorFlete?: string;
   }): Promise<Sale | undefined> {
     const updateData: any = {};
     
@@ -380,6 +381,9 @@ export class DatabaseStorage implements IStorage {
     }
     if (flete.montoFleteVes !== undefined) {
       updateData.montoFleteVes = flete.montoFleteVes === "" ? null : flete.montoFleteVes;
+    }
+    if (flete.bancoReceptorFlete !== undefined) {
+      updateData.bancoReceptorFlete = flete.bancoReceptorFlete === "" ? null : flete.bancoReceptorFlete;
     }
 
     // Add updated timestamp

@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Truck, DollarSign, CalendarIcon, FileText, User, Phone, Mail } from "lucide-react";
+import { Truck, DollarSign, CalendarIcon, FileText, User, Phone, Mail, Building2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -19,6 +19,7 @@ interface FleteData {
   fechaFlete: string;
   referenciaFlete: string;
   montoFleteVes: string;
+  bancoReceptorFlete: string;
 }
 
 interface FleteModalProps {
@@ -32,7 +33,8 @@ export default function FleteModal({ open, onOpenChange, sale }: FleteModalProps
     montoFleteUsd: "",
     fechaFlete: "",
     referenciaFlete: "",
-    montoFleteVes: ""
+    montoFleteVes: "",
+    bancoReceptorFlete: ""
   });
 
   const { toast } = useToast();
@@ -78,7 +80,8 @@ export default function FleteModal({ open, onOpenChange, sale }: FleteModalProps
         montoFleteUsd: sale.montoFleteUsd ? sale.montoFleteUsd.toString() : "",
         fechaFlete: sale.fechaFlete ? format(new Date(sale.fechaFlete), 'yyyy-MM-dd') : "",
         referenciaFlete: sale.referenciaFlete || "",
-        montoFleteVes: sale.montoFleteVes ? sale.montoFleteVes.toString() : ""
+        montoFleteVes: sale.montoFleteVes ? sale.montoFleteVes.toString() : "",
+        bancoReceptorFlete: sale.bancoReceptorFlete || ""
       });
     }
   }, [sale, open]);
@@ -88,7 +91,8 @@ export default function FleteModal({ open, onOpenChange, sale }: FleteModalProps
       montoFleteUsd: "",
       fechaFlete: "",
       referenciaFlete: "",
-      montoFleteVes: ""
+      montoFleteVes: "",
+      bancoReceptorFlete: ""
     });
   };
 
@@ -247,6 +251,22 @@ export default function FleteModal({ open, onOpenChange, sale }: FleteModalProps
                     onChange={handleInputChange('montoFleteVes')}
                     className="pl-10"
                     data-testid="input-monto-flete-ves"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="bancoReceptorFlete">Banco Receptor</Label>
+                <div className="relative">
+                  <Building2 className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="bancoReceptorFlete"
+                    type="text"
+                    placeholder="Banco receptor del flete"
+                    value={fleteData.bancoReceptorFlete}
+                    onChange={handleInputChange('bancoReceptorFlete')}
+                    className="pl-10"
+                    data-testid="input-banco-receptor-flete"
                   />
                 </div>
               </div>

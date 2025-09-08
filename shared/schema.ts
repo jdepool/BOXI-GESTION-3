@@ -106,6 +106,7 @@ export const sales = pgTable("sales", {
   fechaFlete: timestamp("fecha_flete"),
   referenciaFlete: text("referencia_flete"),
   montoFleteVes: decimal("monto_flete_ves", { precision: 15, scale: 2 }),
+  bancoReceptorFlete: text("banco_receptor_flete"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

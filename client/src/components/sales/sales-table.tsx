@@ -324,7 +324,7 @@ export default function SalesTable({
                         className="h-7 text-xs"
                       >
                         <Truck className={`h-3 w-3 mr-1 ${
-                          sale.montoFleteUsd && (!sale.fechaFlete || !sale.referenciaFlete || !sale.montoFleteVes) 
+                          sale.montoFleteUsd && (!sale.fechaFlete || !sale.referenciaFlete || !sale.montoFleteVes || !sale.bancoReceptorFlete) 
                             ? 'text-orange-500' 
                             : ''
                         }`} />
