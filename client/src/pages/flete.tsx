@@ -21,9 +21,9 @@ function getFleteStatus(sale: Sale): { status: string; color: string; descriptio
     return { status: "Pendiente", color: "bg-orange-500", description: "Solo tiene monto en USD" };
   }
 
-  // Tiene toda la información pero no conciliado (por ahora asumimos que si tiene todo está en proceso)
+  // Tiene toda la información - por ahora asumimos que está listo para despacho
   // En el futuro se podría agregar un campo de conciliación
-  return { status: "En Proceso", color: "bg-blue-500", description: "Información completa, pendiente conciliación" };
+  return { status: "A Despacho", color: "bg-green-500", description: "Información completa, listo para despacho" };
 }
 
 export default function Flete() {

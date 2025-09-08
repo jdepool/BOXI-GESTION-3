@@ -251,13 +251,20 @@ export class DatabaseStorage implements IStorage {
 
   async getOrdersWithAddresses(limit: number = 20, offset: number = 0): Promise<{ data: Sale[]; total: number }> {
     // Get orders that are ready for delivery (TO DELIVER status)
-    // Orders appear in dispatch as soon as they have TO DELIVER status
-    // Addresses can be added from either Ventas or Despachos
+    // AND have complete freight information (ready for dispatch)
+    // Freight must have: montoFleteUsd, fechaFlete, referenciaFlete, montoFleteVes, bancoReceptorFlete
     const ordersForDispatch = await db
       .select()
       .from(sales)
       .where(
-        eq(sales.estadoEntrega, 'TO DELIVER') // Only need TO DELIVER status
+        and(
+          eq(sales.estadoEntrega, 'TO DELIVER'), // Must be TO DELIVER status
+          isNotNull(sales.montoFleteUsd), // Must have freight amount
+          isNotNull(sales.fechaFlete), // Must have freight date
+          isNotNull(sales.referenciaFlete), // Must have freight reference
+          isNotNull(sales.montoFleteVes), // Must have VES amount
+          isNotNull(sales.bancoReceptorFlete) // Must have bank receiver
+        )
       )
       .orderBy(desc(sales.fecha))
       .limit(limit)
@@ -268,7 +275,14 @@ export class DatabaseStorage implements IStorage {
       .select({ totalCount: count() })
       .from(sales)
       .where(
-        eq(sales.estadoEntrega, 'TO DELIVER') // Only need TO DELIVER status
+        and(
+          eq(sales.estadoEntrega, 'TO DELIVER'), // Must be TO DELIVER status
+          isNotNull(sales.montoFleteUsd), // Must have freight amount
+          isNotNull(sales.fechaFlete), // Must have freight date
+          isNotNull(sales.referenciaFlete), // Must have freight reference
+          isNotNull(sales.montoFleteVes), // Must have VES amount
+          isNotNull(sales.bancoReceptorFlete) // Must have bank receiver
+        )
       );
 
     return {
