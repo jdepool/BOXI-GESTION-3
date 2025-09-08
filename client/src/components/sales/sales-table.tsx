@@ -8,7 +8,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import SaleDetailModal from "./sale-detail-modal";
 import AddressModal from "@/components/addresses/address-modal";
 import FleteModal from "./flete-modal";
-import { MapPin, Truck } from "lucide-react";
+import EditSaleModal from "./edit-sale-modal";
+import { MapPin, Truck, Edit } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { Sale } from "@shared/schema";
@@ -48,6 +49,8 @@ export default function SalesTable({
   const [selectedSaleForAddress, setSelectedSaleForAddress] = useState<Sale | null>(null);
   const [fleteModalOpen, setFleteModalOpen] = useState(false);
   const [selectedSaleForFlete, setSelectedSaleForFlete] = useState<Sale | null>(null);
+  const [editSaleModalOpen, setEditSaleModalOpen] = useState(false);
+  const [selectedSaleForEdit, setSelectedSaleForEdit] = useState<Sale | null>(null);
   const [filters, setFilters] = useState({
     canal: "all",
     estadoEntrega: "all",
@@ -376,18 +379,31 @@ export default function SalesTable({
                     </td>
                     <td className="p-2 min-w-[200px]">
                       <div className="flex gap-1">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setSelectedSaleForEdit(sale);
+                            setEditSaleModalOpen(true);
+                          }}
+                          data-testid={`edit-sale-${sale.id}`}
+                          className="h-7 text-xs"
+                        >
+                          <Edit className="h-3 w-3 mr-1" />
+                          Editar
+                        </Button>
                         {showEditActions && (
                           <>
                             <Button
                               variant="default"
                               size="sm"
                               onClick={() => onEditSale?.(sale)}
-                              data-testid={`edit-sale-${sale.id}`}
+                              data-testid={`manual-edit-sale-${sale.id}`}
                               className="h-7 px-2 text-xs bg-blue-600 hover:bg-blue-700 text-white"
-                              title="Editar venta"
+                              title="Editar venta manual"
                             >
                               <i className="fas fa-edit text-xs mr-1"></i>
-                              Editar
+                              Manual
                             </Button>
                             <Button
                               variant="default"
@@ -484,6 +500,17 @@ export default function SalesTable({
           }
         }}
         sale={selectedSaleForFlete}
+      />
+
+      <EditSaleModal
+        open={editSaleModalOpen}
+        onOpenChange={(open) => {
+          setEditSaleModalOpen(open);
+          if (!open) {
+            setSelectedSaleForEdit(null);
+          }
+        }}
+        sale={selectedSaleForEdit}
       />
     </>
   );
