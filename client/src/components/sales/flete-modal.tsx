@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
@@ -12,7 +13,7 @@ import { Truck, DollarSign, CalendarIcon, FileText, User, Phone, Mail, Building2
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
-import type { Sale } from "@shared/schema";
+import type { Sale, Banco } from "@shared/schema";
 
 interface FleteData {
   montoFleteUsd: string;
@@ -39,6 +40,11 @@ export default function FleteModal({ open, onOpenChange, sale }: FleteModalProps
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
+
+  // Load banks data
+  const { data: bancos = [] } = useQuery({
+    queryKey: ["/api/admin/bancos"],
+  });
 
   // Update flete mutation
   const updateFleteMutation = useMutation({
@@ -257,18 +263,29 @@ export default function FleteModal({ open, onOpenChange, sale }: FleteModalProps
 
               <div className="space-y-2">
                 <Label htmlFor="bancoReceptorFlete">Banco Receptor</Label>
-                <div className="relative">
-                  <Building2 className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="bancoReceptorFlete"
-                    type="text"
-                    placeholder="Banco receptor del flete"
-                    value={fleteData.bancoReceptorFlete}
-                    onChange={handleInputChange('bancoReceptorFlete')}
-                    className="pl-10"
-                    data-testid="input-banco-receptor-flete"
-                  />
-                </div>
+                <Select
+                  value={fleteData.bancoReceptorFlete}
+                  onValueChange={(value) => {
+                    setFleteData((prev) => ({
+                      ...prev,
+                      bancoReceptorFlete: value
+                    }));
+                  }}
+                >
+                  <SelectTrigger data-testid="select-banco-receptor-flete">
+                    <div className="flex items-center">
+                      <Building2 className="h-4 w-4 mr-2 text-muted-foreground" />
+                      <SelectValue placeholder="Seleccionar banco receptor" />
+                    </div>
+                  </SelectTrigger>
+                  <SelectContent>
+                    {bancos.map((banco: Banco) => (
+                      <SelectItem key={banco.id} value={banco.banco}>
+                        {banco.banco}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           </div>
