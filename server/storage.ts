@@ -7,7 +7,7 @@ import {
   type Canal, type InsertCanal, type Egreso, type InsertEgreso
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, count, sum, avg, and, gte, lte, or, ne, ilike, isNotNull } from "drizzle-orm";
+import { eq, desc, count, sum, avg, and, gte, lte, or, ne, like, ilike, isNotNull } from "drizzle-orm";
 
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
@@ -22,6 +22,7 @@ export interface IStorage {
     canal?: string;
     estadoEntrega?: string;
     estado?: string;
+    orden?: string;
     startDate?: Date;
     endDate?: Date;
     excludePendingManual?: boolean;
@@ -185,6 +186,7 @@ export class DatabaseStorage implements IStorage {
     canal?: string;
     estadoEntrega?: string;
     estado?: string;
+    orden?: string;
     startDate?: Date;
     endDate?: Date;
     excludePendingManual?: boolean;
@@ -200,6 +202,9 @@ export class DatabaseStorage implements IStorage {
     }
     if (filters?.estado) {
       conditions.push(eq(sales.estado, filters.estado));
+    }
+    if (filters?.orden) {
+      conditions.push(like(sales.orden, `%${filters.orden}%`));
     }
     if (filters?.startDate) {
       conditions.push(gte(sales.fecha, filters.startDate));
@@ -420,6 +425,7 @@ export class DatabaseStorage implements IStorage {
     canal?: string;
     estadoEntrega?: string;
     estado?: string;
+    orden?: string;
     startDate?: Date;
     endDate?: Date;
     excludePendingManual?: boolean;
@@ -433,6 +439,9 @@ export class DatabaseStorage implements IStorage {
     }
     if (filters?.estado) {
       conditions.push(eq(sales.estado, filters.estado));
+    }
+    if (filters?.orden) {
+      conditions.push(like(sales.orden, `%${filters.orden}%`));
     }
     if (filters?.startDate) {
       conditions.push(gte(sales.fecha, filters.startDate));

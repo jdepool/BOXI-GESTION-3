@@ -10,6 +10,7 @@ export default function Sales() {
   const [filters, setFilters] = useState({
     canal: "",
     estadoEntrega: "",
+    orden: "",
     startDate: "",
     endDate: "",
     limit: 20,

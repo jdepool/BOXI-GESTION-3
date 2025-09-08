@@ -54,6 +54,7 @@ export default function SalesTable({
   const [filters, setFilters] = useState({
     canal: "all",
     estadoEntrega: "all",
+    orden: "",
     startDate: "",
     endDate: ""
   });
@@ -192,6 +193,15 @@ export default function SalesTable({
                   <SelectItem value="reservado">Reservado</SelectItem>
                 </SelectContent>
               </Select>
+
+              <Input 
+                type="text"
+                placeholder="Buscar por # orden"
+                value={filters.orden}
+                onChange={(e) => handleFilterChange('orden', e.target.value)}
+                className="w-40"
+                data-testid="filter-order-number"
+              />
 
               <Input 
                 type="date" 
