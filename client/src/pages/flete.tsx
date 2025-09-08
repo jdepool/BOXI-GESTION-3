@@ -77,9 +77,16 @@ export default function Flete() {
     updateFleteStatusMutation.mutate({ saleId, status: newStatus });
   };
 
-  // Filter sales that have complete freight information (not pending)
+  // Filter sales that have freight information but are not ready for dispatch yet
   const salesWithFlete = data?.data?.filter((sale: Sale) => {
     if (!sale.montoFleteUsd) return false;
+    
+    // Exclude orders that are ready for dispatch (TO DELIVER + A Despacho)
+    // These should only appear in Despachos, not in Flete
+    if (sale.estadoEntrega === 'TO DELIVER' && sale.statusFlete === 'A Despacho') {
+      return false;
+    }
+    
     const fleteStatus = getFleteStatus(sale);
     return fleteStatus.status !== "Pendiente";
   }) || [];
