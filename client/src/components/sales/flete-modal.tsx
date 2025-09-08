@@ -6,9 +6,12 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Truck, DollarSign, Calendar, FileText, User, Phone, Mail } from "lucide-react";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Truck, DollarSign, CalendarIcon, FileText, User, Phone, Mail } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 import type { Sale } from "@shared/schema";
 
 interface FleteData {
@@ -177,17 +180,38 @@ export default function FleteModal({ open, onOpenChange, sale }: FleteModalProps
 
               <div className="space-y-2">
                 <Label htmlFor="fechaFlete">Fecha</Label>
-                <div className="relative">
-                  <Calendar className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="fechaFlete"
-                    type="date"
-                    value={fleteData.fechaFlete}
-                    onChange={handleInputChange('fechaFlete')}
-                    className="pl-10"
-                    data-testid="input-fecha-flete"
-                  />
-                </div>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !fleteData.fechaFlete && "text-muted-foreground"
+                      )}
+                      data-testid="button-fecha-flete"
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {fleteData.fechaFlete ? (
+                        format(new Date(fleteData.fechaFlete), "dd/MM/yyyy")
+                      ) : (
+                        "Seleccionar fecha"
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={fleteData.fechaFlete ? new Date(fleteData.fechaFlete) : undefined}
+                      onSelect={(date) => {
+                        setFleteData((prev) => ({
+                          ...prev,
+                          fechaFlete: date ? format(date, 'yyyy-MM-dd') : ""
+                        }));
+                      }}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
               </div>
 
               <div className="space-y-2">
