@@ -319,13 +319,13 @@ export default function SalesTable({
                     <td className="p-2 min-w-[110px] text-xs text-muted-foreground">
                       {sale.montoBs ? `Bs ${Number(sale.montoBs).toLocaleString()}` : 'N/A'}
                     </td>
-                    <td className="p-2 min-w-[120px]">
+                    <td className="p-2 min-w-[140px]">
                       <Select
                         value={sale.estadoEntrega}
                         onValueChange={(newStatus) => handleStatusChange(sale.id, newStatus)}
                         disabled={updateDeliveryStatusMutation.isPending}
                       >
-                        <SelectTrigger className="w-24 h-8 text-xs">
+                        <SelectTrigger className="w-32 h-8 text-xs">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
