@@ -38,8 +38,8 @@ function getFleteStatus(sale: Sale): { status: string; color: string; descriptio
     return { status: "Pendiente", color: "bg-orange-500", description: "Solo tiene monto en USD" };
   }
 
-  // Tiene toda la información - por defecto está listo para despacho
-  return { status: "A Despacho", color: "bg-green-500", description: "Información completa, listo para despacho" };
+  // Tiene toda la información - por defecto está en proceso
+  return { status: "En Proceso", color: "bg-blue-500", description: "Información completa, en proceso" };
 }
 
 export default function Flete() {
