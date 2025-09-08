@@ -59,6 +59,7 @@ export default function Sales() {
                   limit={filters.limit}
                   offset={filters.offset}
                   isLoading={isLoading}
+                  filters={filters}
                   onFilterChange={handleFilterChange}
                   onPageChange={handlePageChange}
                 />

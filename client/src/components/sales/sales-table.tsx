@@ -23,6 +23,7 @@ interface SalesTableProps {
   hideFilters?: boolean;
   hidePagination?: boolean;
   showEditActions?: boolean;
+  filters?: any;
   onFilterChange?: (filters: any) => void;
   onPageChange?: (offset: number) => void;
   onEditSale?: (sale: Sale) => void;
@@ -38,6 +39,7 @@ export default function SalesTable({
   hideFilters = false,
   hidePagination = false,
   showEditActions = false,
+  filters: parentFilters,
   onFilterChange,
   onPageChange,
   onEditSale,
@@ -51,13 +53,13 @@ export default function SalesTable({
   const [selectedSaleForFlete, setSelectedSaleForFlete] = useState<Sale | null>(null);
   const [editSaleModalOpen, setEditSaleModalOpen] = useState(false);
   const [selectedSaleForEdit, setSelectedSaleForEdit] = useState<Sale | null>(null);
-  const [filters, setFilters] = useState({
-    canal: "all",
-    estadoEntrega: "all",
-    orden: "",
-    startDate: "",
-    endDate: ""
-  });
+  const filters = {
+    canal: parentFilters?.canal || "all",
+    estadoEntrega: parentFilters?.estadoEntrega || "all",
+    orden: parentFilters?.orden || "",
+    startDate: parentFilters?.startDate || "",
+    endDate: parentFilters?.endDate || ""
+  };
 
   const updateDeliveryStatusMutation = useMutation({
     mutationFn: async ({ saleId, status }: { saleId: string; status: string }) => {
@@ -88,8 +90,7 @@ export default function SalesTable({
   const handleFilterChange = (key: string, value: string) => {
     // Convert "all" back to empty string for API
     const apiValue = value === "all" ? "" : value;
-    const newFilters = { ...filters, [key]: apiValue };
-    setFilters(newFilters);
+    const newFilters = { ...parentFilters, [key]: apiValue };
     onFilterChange?.(newFilters);
   };
 
