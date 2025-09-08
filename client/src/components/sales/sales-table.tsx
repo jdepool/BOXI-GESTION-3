@@ -54,8 +54,8 @@ export default function SalesTable({
   const [editSaleModalOpen, setEditSaleModalOpen] = useState(false);
   const [selectedSaleForEdit, setSelectedSaleForEdit] = useState<Sale | null>(null);
   const filters = {
-    canal: parentFilters?.canal || "all",
-    estadoEntrega: parentFilters?.estadoEntrega || "all",
+    canal: parentFilters?.canal ? (parentFilters.canal === "" ? "all" : parentFilters.canal) : "all",
+    estadoEntrega: parentFilters?.estadoEntrega ? (parentFilters.estadoEntrega === "" ? "all" : parentFilters.estadoEntrega) : "all",
     orden: parentFilters?.orden || "",
     startDate: parentFilters?.startDate || "",
     endDate: parentFilters?.endDate || ""
@@ -90,7 +90,11 @@ export default function SalesTable({
   const handleFilterChange = (key: string, value: string) => {
     // Convert "all" back to empty string for API
     const apiValue = value === "all" ? "" : value;
-    const newFilters = { ...parentFilters, [key]: apiValue };
+    const newFilters = { 
+      ...parentFilters, 
+      [key]: apiValue,
+      offset: 0 // Reset to first page when filtering
+    };
     onFilterChange?.(newFilters);
   };
 
@@ -189,9 +193,11 @@ export default function SalesTable({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todos los estados</SelectItem>
-                  <SelectItem value="entregado">Entregado</SelectItem>
-                  <SelectItem value="pendiente">Pendiente</SelectItem>
-                  <SelectItem value="reservado">Reservado</SelectItem>
+                  <SelectItem value="En Proceso">En Proceso</SelectItem>
+                  <SelectItem value="A Despachar">A Despachar</SelectItem>
+                  <SelectItem value="Despachado">Despachado</SelectItem>
+                  <SelectItem value="Cancelado">Cancelado</SelectItem>
+                  <SelectItem value="Pospuesto">Pospuesto</SelectItem>
                 </SelectContent>
               </Select>
 
