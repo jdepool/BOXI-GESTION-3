@@ -76,7 +76,7 @@ function parseExcelFile(buffer: Buffer, canal: string) {
         referencia: row.Referencia ? String(row.Referencia) : null,
         montoBs: row['Monto en bs'] ? String(row['Monto en bs']) : null,
         estadoEntrega: canal.toLowerCase() === 'cashea' ? 
-          (String(row['Estado de entrega'] || '').toLowerCase() === 'a despachar' ? 'PROCESSING' : String(row['Estado de entrega'] || 'pendiente')) :
+          (String(row['Estado de entrega'] || '').toLowerCase() === 'a despachar' ? 'En Proceso' : String(row['Estado de entrega'] || 'pendiente')) :
           String(row['Estado de entrega'] || 'pendiente'),
         product: String(row.Product || ''),
         cantidad: Number(row.Cantidad || 1),
@@ -531,7 +531,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { status } = req.body;
 
       // Validate status
-      const validStatuses = ['A Despachar', 'Despachado', 'Cancelado', 'Pospuesto'];
+      const validStatuses = ['pendiente', 'En Proceso', 'A Despachar', 'Despachado', 'Cancelado', 'Pospuesto'];
       if (!status || !validStatuses.includes(status)) {
         return res.status(400).json({ 
           error: "Invalid status. Must be one of: " + validStatuses.join(', ')
@@ -1261,7 +1261,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         fecha: new Date(body.fecha),
         canal: body.canal || "Manual",
         estado: "pendiente", // Manual sales start as pending until payment is verified
-        estadoEntrega: (body.canal && body.canal.toLowerCase() === 'cashea') ? "PROCESSING" : "pendiente",
+        estadoEntrega: (body.canal && body.canal.toLowerCase() === 'cashea') ? "En Proceso" : "pendiente",
         product: body.product,
         cantidad: parseInt(body.cantidad) || 1,
         
@@ -1370,14 +1370,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Update existing Cashea orders from A Despachar to PROCESSING
+  // Update existing Cashea orders from A Despachar to En Proceso
   app.post('/api/admin/update-cashea-status', async (req, res) => {
     try {
       const updatedCount = await storage.updateCasheaOrdersToProcessing();
       
       res.json({
         updated: updatedCount,
-        message: `Successfully updated ${updatedCount} Cashea orders from A Despachar to PROCESSING`
+        message: `Successfully updated ${updatedCount} Cashea orders from A Despachar to En Proceso`
       });
     } catch (error) {
       console.error('Cashea status update error:', error);
