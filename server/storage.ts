@@ -370,16 +370,16 @@ export class DatabaseStorage implements IStorage {
     
     // Add all flete fields to update data
     if (flete.montoFleteUsd !== undefined) {
-      updateData.montoFleteUsd = flete.montoFleteUsd;
+      updateData.montoFleteUsd = flete.montoFleteUsd === "" ? null : flete.montoFleteUsd;
     }
     if (flete.fechaFlete !== undefined) {
       updateData.fechaFlete = flete.fechaFlete ? new Date(flete.fechaFlete) : null;
     }
     if (flete.referenciaFlete !== undefined) {
-      updateData.referenciaFlete = flete.referenciaFlete;
+      updateData.referenciaFlete = flete.referenciaFlete === "" ? null : flete.referenciaFlete;
     }
     if (flete.montoFleteVes !== undefined) {
-      updateData.montoFleteVes = flete.montoFleteVes;
+      updateData.montoFleteVes = flete.montoFleteVes === "" ? null : flete.montoFleteVes;
     }
 
     // Add updated timestamp
