@@ -201,7 +201,7 @@ export default function FleteModal({ open, onOpenChange, sale }: FleteModalProps
                         <CalendarIcon className="h-4 w-4" />
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
+                    <PopoverContent className="w-auto p-0" align="end" side="bottom">
                       <Calendar
                         mode="single"
                         selected={fleteData.fechaFlete ? new Date(fleteData.fechaFlete) : undefined}
