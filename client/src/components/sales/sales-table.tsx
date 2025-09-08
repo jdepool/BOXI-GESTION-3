@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
@@ -8,6 +9,8 @@ import SaleDetailModal from "./sale-detail-modal";
 import AddressModal from "@/components/addresses/address-modal";
 import FleteModal from "./flete-modal";
 import { MapPin, Truck } from "lucide-react";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 import type { Sale } from "@shared/schema";
 
 interface SalesTableProps {
@@ -39,6 +42,7 @@ export default function SalesTable({
   onEditSale,
   onVerifyPayment
 }: SalesTableProps) {
+  const { toast } = useToast();
   const [selectedSale, setSelectedSale] = useState<Sale | null>(null);
   const [addressModalOpen, setAddressModalOpen] = useState(false);
   const [selectedSaleForAddress, setSelectedSaleForAddress] = useState<Sale | null>(null);
@@ -50,6 +54,32 @@ export default function SalesTable({
     startDate: "",
     endDate: ""
   });
+
+  const updateDeliveryStatusMutation = useMutation({
+    mutationFn: async ({ saleId, status }: { saleId: string; status: string }) => {
+      return apiRequest("PUT", `/api/sales/${saleId}/delivery-status`, { status });
+    },
+    onSuccess: () => {
+      // Invalidate the sales query to refresh the data
+      queryClient.invalidateQueries({ queryKey: ["/api/sales"] });
+      toast({
+        title: "Estado actualizado",
+        description: "El estado de entrega ha sido actualizado correctamente.",
+      });
+    },
+    onError: (error) => {
+      console.error('Failed to update delivery status:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo actualizar el estado de entrega.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleStatusChange = (saleId: string, newStatus: string) => {
+    updateDeliveryStatusMutation.mutate({ saleId, status: newStatus });
+  };
 
   const handleFilterChange = (key: string, value: string) => {
     // Convert "all" back to empty string for API
@@ -287,9 +317,22 @@ export default function SalesTable({
                       {sale.montoBs ? `Bs ${Number(sale.montoBs).toLocaleString()}` : 'N/A'}
                     </td>
                     <td className="p-2 min-w-[120px]">
-                      <Badge className={`${getStatusBadgeClass(sale.estadoEntrega)} text-white text-xs`}>
-                        {sale.estadoEntrega.charAt(0).toUpperCase() + sale.estadoEntrega.slice(1)}
-                      </Badge>
+                      <Select
+                        value={sale.estadoEntrega}
+                        onValueChange={(newStatus) => handleStatusChange(sale.id, newStatus)}
+                        disabled={updateDeliveryStatusMutation.isPending}
+                      >
+                        <SelectTrigger className="w-24 h-8 text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="pendiente">Pendiente</SelectItem>
+                          <SelectItem value="TO DELIVER">A despachar</SelectItem>
+                          <SelectItem value="Despachado">Despachado</SelectItem>
+                          <SelectItem value="Cancelado">Cancelado</SelectItem>
+                          <SelectItem value="Pospuesto">Pospuesto</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </td>
                     <td className="p-2 min-w-[140px] text-xs font-medium text-foreground truncate" title={sale.product}>
                       {sale.product}
