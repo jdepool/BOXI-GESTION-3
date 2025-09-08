@@ -329,7 +329,6 @@ export default function SalesTable({
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="pendiente">Pendiente</SelectItem>
                           <SelectItem value="En Proceso">En Proceso</SelectItem>
                           <SelectItem value="A Despachar">A despachar</SelectItem>
                           <SelectItem value="Despachado">Despachado</SelectItem>
