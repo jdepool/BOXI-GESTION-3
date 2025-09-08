@@ -360,6 +360,40 @@ export class DatabaseStorage implements IStorage {
     return updatedSale || undefined;
   }
 
+  async updateSaleFlete(saleId: string, flete: {
+    montoFleteUsd?: string;
+    fechaFlete?: string;
+    referenciaFlete?: string;
+    montoFleteVes?: string;
+  }): Promise<Sale | undefined> {
+    const updateData: any = {};
+    
+    // Add all flete fields to update data
+    if (flete.montoFleteUsd !== undefined) {
+      updateData.montoFleteUsd = flete.montoFleteUsd;
+    }
+    if (flete.fechaFlete !== undefined) {
+      updateData.fechaFlete = flete.fechaFlete ? new Date(flete.fechaFlete) : null;
+    }
+    if (flete.referenciaFlete !== undefined) {
+      updateData.referenciaFlete = flete.referenciaFlete;
+    }
+    if (flete.montoFleteVes !== undefined) {
+      updateData.montoFleteVes = flete.montoFleteVes;
+    }
+
+    // Add updated timestamp
+    updateData.updatedAt = new Date();
+
+    const [updatedSale] = await db
+      .update(sales)
+      .set(updateData)
+      .where(eq(sales.id, saleId))
+      .returning();
+
+    return updatedSale || undefined;
+  }
+
   async getTotalSalesCount(filters?: {
     canal?: string;
     estadoEntrega?: string;
