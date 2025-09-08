@@ -140,7 +140,7 @@ export default function FleteModal({ open, onOpenChange, sale }: FleteModalProps
                 <span>${sale.totalUsd}</span>
               </div>
               <div className="flex items-center gap-2">
-                <Calendar className="h-4 w-4" />
+                <CalendarIcon className="h-4 w-4" />
                 <span className="font-medium">Fecha:</span>
                 <span>{format(new Date(sale.fecha), 'dd/MM/yyyy')}</span>
               </div>
