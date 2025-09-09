@@ -240,6 +240,7 @@ export default function SalesTable({
           <table className="w-full min-w-[2460px]">
             <thead className="bg-muted sticky top-0 z-10">
               <tr>
+                <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[100px]">Orden</th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[180px]">Nombre</th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[100px]">Cedula</th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[120px]">Telefono</th>
@@ -248,7 +249,6 @@ export default function SalesTable({
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[90px]">Fecha</th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[80px]">Canal</th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[110px]">Pago Inicial USD</th>
-                <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[100px]">Orden</th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[120px]">Referencia</th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[100px]">Banco</th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[110px]">Monto Bs</th>
@@ -274,6 +274,9 @@ export default function SalesTable({
                     className="border-b border-border hover:bg-muted/50 transition-colors text-xs"
                     data-testid={`sale-row-${sale.id}`}
                   >
+                    <td className="p-2 min-w-[100px] text-xs font-mono text-muted-foreground truncate" title={sale.orden || undefined}>
+                      {sale.orden || 'N/A'}
+                    </td>
                     <td className="p-2 min-w-[180px] text-xs font-medium text-foreground truncate" title={sale.nombre}>
                       {sale.nombre}
                     </td>
@@ -303,9 +306,6 @@ export default function SalesTable({
                     </td>
                     <td className="p-2 min-w-[110px] text-xs text-muted-foreground">
                       {sale.pagoInicialUsd ? `$${Number(sale.pagoInicialUsd).toLocaleString()}` : 'N/A'}
-                    </td>
-                    <td className="p-2 min-w-[100px] text-xs font-mono text-muted-foreground truncate" title={sale.orden || undefined}>
-                      {sale.orden || 'N/A'}
                     </td>
                     <td className="p-2 min-w-[120px] text-xs font-mono text-muted-foreground truncate" title={sale.referencia || undefined}>
                       {sale.referencia || 'N/A'}
