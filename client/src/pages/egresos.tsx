@@ -945,13 +945,13 @@ export default function Egresos() {
                     </div>
                     
                     <div>
-                      <Label htmlFor="descripcion-por-aprobar">Descripción</Label>
-                      <Input
-                        id="descripcion-por-aprobar"
+                      <Label htmlFor="observaciones-por-aprobar">Observaciones</Label>
+                      <Textarea
+                        id="observaciones-por-aprobar"
                         value={formDataPorAprobar.descripcion}
                         onChange={(e) => setFormDataPorAprobar({ ...formDataPorAprobar, descripcion: e.target.value })}
                         required
-                        data-testid="input-descripcion-por-aprobar"
+                        data-testid="input-observaciones-por-aprobar"
                       />
                     </div>
 
@@ -1067,7 +1067,7 @@ export default function Egresos() {
                             {(metodosPago as MetodoPago[]).find(m => m.id === egreso.metodoPagoId)?.nombre || "-"}
                           </TableCell>
                           <TableCell className="font-medium">
-                            {egreso.observaciones || "-"}
+                            {egreso.descripcion || "-"}
                           </TableCell>
                           <TableCell>
                             <Button
