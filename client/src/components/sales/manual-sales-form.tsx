@@ -276,8 +276,29 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
                   <FormLabel>Fecha *</FormLabel>
                   <FormControl>
                     <div className="relative">
-                      <Input type="date" {...field} className="pr-10" />
-                      <CalendarIcon className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-blue-500 pointer-events-none animate-pulse" />
+                      <Input 
+                        type="date" 
+                        {...field} 
+                        className="pr-10" 
+                        ref={(ref) => {
+                          if (ref) {
+                            (ref as any).showPicker = ref.showPicker || (() => ref.focus());
+                          }
+                        }}
+                      />
+                      <CalendarIcon 
+                        className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-blue-500 cursor-pointer hover:text-blue-600 animate-pulse transition-colors" 
+                        onClick={(e) => {
+                          e.preventDefault();
+                          const input = e.currentTarget.previousElementSibling as HTMLInputElement;
+                          if (input && input.showPicker) {
+                            input.showPicker();
+                          } else if (input) {
+                            input.focus();
+                            input.click();
+                          }
+                        }}
+                      />
                     </div>
                   </FormControl>
                   <FormMessage />
