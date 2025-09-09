@@ -279,19 +279,12 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
                       <Input 
                         type="date" 
                         {...field} 
-                        className="pr-10" 
+                        className="pr-10 cursor-pointer" 
                         id="fecha-input"
                       />
-                      <CalendarIcon 
-                        className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-blue-500 cursor-pointer hover:text-blue-600 animate-pulse transition-colors" 
-                        onClick={() => {
-                          const input = document.getElementById('fecha-input') as HTMLInputElement;
-                          if (input) {
-                            input.focus();
-                            input.click();
-                          }
-                        }}
-                      />
+                      <label htmlFor="fecha-input" className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer">
+                        <CalendarIcon className="h-5 w-5 text-blue-500 hover:text-blue-600 animate-pulse transition-colors" />
+                      </label>
                     </div>
                   </FormControl>
                   <FormMessage />
