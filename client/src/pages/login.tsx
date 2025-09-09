@@ -71,7 +71,6 @@ export default function Login() {
               className="h-20 w-auto object-contain"
             />
           </div>
-          <CardTitle className="text-2xl font-bold">BoxiSleep</CardTitle>
           <CardDescription>
             Sistema Automatizado de Gestión
           </CardDescription>
