@@ -3,9 +3,11 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
+import * as XLSX from 'xlsx';
 
 interface UploadZoneProps {
   recentUploads?: any[];
@@ -17,6 +19,8 @@ export default function UploadZone({ recentUploads }: UploadZoneProps) {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isDragOver, setIsDragOver] = useState(false);
+  const [previewData, setPreviewData] = useState<any[] | null>(null);
+  const [isShowingPreview, setIsShowingPreview] = useState(false);
   const { toast } = useToast();
 
   const validateAndSetFile = (file: File) => {
@@ -29,7 +33,40 @@ export default function UploadZone({ recentUploads }: UploadZoneProps) {
       return false;
     }
     setSelectedFile(file);
+    generatePreview(file);
     return true;
+  };
+
+  const generatePreview = async (file: File) => {
+    try {
+      const arrayBuffer = await file.arrayBuffer();
+      let data: any[][] = [];
+
+      if (file.name.endsWith('.csv')) {
+        // Parse CSV
+        const text = new TextDecoder().decode(arrayBuffer);
+        const lines = text.split('\n');
+        data = lines.slice(0, 6).map(line => line.split(',').map(cell => cell.trim().replace(/^"(.*)"$/, '$1')));
+      } else {
+        // Parse Excel
+        const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+        const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '' });
+        data = jsonData.slice(0, 6) as any[][];
+      }
+
+      setPreviewData(data);
+      setIsShowingPreview(true);
+    } catch (error) {
+      toast({
+        title: "Error al generar preview",
+        description: "No se pudo leer el contenido del archivo",
+        variant: "destructive",
+      });
+      setPreviewData(null);
+      setIsShowingPreview(false);
+    }
   };
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -69,7 +106,16 @@ export default function UploadZone({ recentUploads }: UploadZoneProps) {
     }
   };
 
-  const handleUpload = async () => {
+  const resetUpload = () => {
+    setSelectedFile(null);
+    setSelectedChannel("");
+    setPreviewData(null);
+    setIsShowingPreview(false);
+    const fileInput = document.getElementById('excel-upload') as HTMLInputElement;
+    if (fileInput) fileInput.value = '';
+  };
+
+  const confirmUpload = async () => {
     if (!selectedFile || !selectedChannel) {
       toast({
         title: "Información faltante",
@@ -119,10 +165,7 @@ export default function UploadZone({ recentUploads }: UploadZoneProps) {
       });
 
       // Reset form
-      setSelectedFile(null);
-      setSelectedChannel("");
-      const fileInput = document.getElementById('excel-upload') as HTMLInputElement;
-      if (fileInput) fileInput.value = '';
+      resetUpload();
 
       // Invalidate queries to refresh data
       queryClient.invalidateQueries({ queryKey: ['/api/uploads/recent'] });
@@ -204,15 +247,89 @@ export default function UploadZone({ recentUploads }: UploadZoneProps) {
           </div>
         )}
 
-        <Button 
-          className="w-full" 
-          onClick={handleUpload}
-          disabled={!selectedFile || !selectedChannel || isUploading}
-          data-testid="upload-submit-button"
-        >
-          <i className="fas fa-upload mr-2"></i>
-          {isUploading ? 'Cargando...' : 'Cargar Datos'}
-        </Button>
+        {/* Preview Section */}
+        {isShowingPreview && previewData && previewData.length > 0 && (
+          <div className="bg-secondary rounded-lg p-4 mb-4">
+            <h4 className="text-md font-medium text-foreground mb-3 flex items-center">
+              <i className="fas fa-eye mr-2 text-primary"></i>
+              Vista Previa del Archivo
+            </h4>
+            <div className="bg-background rounded border max-h-64 overflow-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    {previewData[0]?.map((header: any, index: number) => (
+                      <TableHead key={index} className="font-medium text-xs">
+                        {header || `Columna ${index + 1}`}
+                      </TableHead>
+                    ))}
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {previewData.slice(1, 6).map((row: any[], rowIndex: number) => (
+                    <TableRow key={rowIndex}>
+                      {row.map((cell: any, cellIndex: number) => (
+                        <TableCell key={cellIndex} className="text-xs py-2">
+                          {cell || ''}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+            <p className="text-xs text-muted-foreground mt-2">
+              Se muestran las primeras 5 filas de datos. El archivo contiene más registros.
+            </p>
+          </div>
+        )}
+
+        {/* Action Buttons */}
+        <div className="flex gap-2">
+          {isShowingPreview ? (
+            <>
+              <Button 
+                variant="outline"
+                onClick={resetUpload}
+                disabled={isUploading}
+                className="flex-1"
+                data-testid="cancel-upload-button"
+              >
+                <i className="fas fa-times mr-2"></i>
+                Cancelar
+              </Button>
+              <Button 
+                onClick={confirmUpload}
+                disabled={!selectedFile || !selectedChannel || isUploading}
+                className="flex-1"
+                data-testid="confirm-upload-button"
+              >
+                <i className="fas fa-check mr-2"></i>
+                Confirmar Carga
+              </Button>
+            </>
+          ) : (
+            <Button 
+              className="w-full" 
+              onClick={() => {
+                if (!selectedFile || !selectedChannel) {
+                  toast({
+                    title: "Información faltante",
+                    description: "Selecciona un archivo y un canal de ventas",
+                    variant: "destructive",
+                  });
+                  return;
+                }
+                setIsShowingPreview(true);
+              }}
+              disabled={!selectedFile || !selectedChannel || isUploading}
+              data-testid="preview-button"
+            >
+              <i className="fas fa-eye mr-2"></i>
+              Ver Vista Previa
+            </Button>
+          )}
+        </div>
       </div>
 
       {recentUploads && recentUploads.length > 0 && (
