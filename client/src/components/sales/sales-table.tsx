@@ -432,7 +432,7 @@ export default function SalesTable({
                               : '';
                           })()
                         }`} />
-                        {sale.montoFleteUsd ? 'Editar' : 'Agregar'}
+                        {sale.montoFleteUsd || sale.fleteGratis ? 'Editar' : 'Agregar'}
                       </Button>
                     </td>
                     <td className="p-2 min-w-[150px]">
