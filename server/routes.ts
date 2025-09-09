@@ -590,10 +590,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { saleId } = req.params;
       const fleteData = req.body;
 
-      // Debug logging
-      console.log("Flete data received:", JSON.stringify(fleteData, null, 2));
-      console.log("FleteGratis value:", fleteData.fleteGratis, typeof fleteData.fleteGratis);
-
       // Validate that sale exists
       const existingSale = await storage.getSaleById(saleId);
       if (!existingSale) {
@@ -606,7 +602,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(500).json({ error: "Failed to update flete" });
       }
 
-      console.log("Updated sale fleteGratis:", updatedSale.fleteGratis);
       res.json({ success: true, sale: updatedSale });
     } catch (error) {
       console.error("Update flete error:", error);
