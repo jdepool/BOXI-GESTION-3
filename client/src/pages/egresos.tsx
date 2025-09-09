@@ -1168,7 +1168,7 @@ export default function Egresos() {
                 id="observaciones-complete"
                 value={completePagoData.observaciones}
                 onChange={(e) => setCompletePagoData({ ...completePagoData, observaciones: e.target.value })}
-                placeholder="Observaciones adicionales sobre el pago"
+                placeholder="Observaciones existentes se mantendrán si dejas este campo vacío"
                 data-testid="input-observaciones-complete"
               />
             </div>

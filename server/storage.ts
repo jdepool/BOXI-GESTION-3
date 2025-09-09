@@ -1033,12 +1033,23 @@ export class DatabaseStorage implements IStorage {
     referencia?: string;
     observaciones?: string;
   }): Promise<Egreso | undefined> {
+    // Get current egreso to preserve existing observaciones
+    const [currentEgreso] = await db
+      .select()
+      .from(egresos)
+      .where(eq(egresos.id, id))
+      .limit(1);
+
+    if (!currentEgreso) {
+      throw new Error('Egreso not found');
+    }
+
     const [updatedEgreso] = await db
       .update(egresos)
       .set({
         bancoId: updates.bancoId,
         referencia: updates.referencia,
-        observaciones: updates.observaciones,
+        observaciones: updates.observaciones || currentEgreso.observaciones, // Preserve original if no new value
         estado: 'aprobado', // Now fully approved with complete payment info
         pendienteInfo: false, // Remove pending flag
         updatedAt: new Date(),
