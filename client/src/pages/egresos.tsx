@@ -1032,11 +1032,10 @@ export default function Egresos() {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Fecha</TableHead>
-                      <TableHead>Descripción</TableHead>
                       <TableHead>Monto</TableHead>
                       <TableHead>Tipo</TableHead>
                       <TableHead>Método Pago</TableHead>
-                      <TableHead>Observaciones</TableHead>
+                      <TableHead>Descripción</TableHead>
                       <TableHead>Aprobar</TableHead>
                       <TableHead className="w-24">Acciones</TableHead>
                     </TableRow>
@@ -1044,13 +1043,13 @@ export default function Egresos() {
                   <TableBody>
                     {isLoadingPorAprobar ? (
                       <TableRow>
-                        <TableCell colSpan={8} className="text-center py-8">
+                        <TableCell colSpan={7} className="text-center py-8">
                           Cargando...
                         </TableCell>
                       </TableRow>
                     ) : egresosPorAprobar.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                        <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                           No hay egresos por aprobar
                         </TableCell>
                       </TableRow>
@@ -1060,7 +1059,6 @@ export default function Egresos() {
                           <TableCell>
                             {egreso.fecha ? format(new Date(egreso.fecha), "dd/MM/yyyy") : "-"}
                           </TableCell>
-                          <TableCell className="font-medium">{egreso.descripcion}</TableCell>
                           <TableCell>{egreso.monto}</TableCell>
                           <TableCell>
                             {(tiposEgresos as TipoEgreso[]).find(t => t.id === egreso.tipoEgresoId)?.nombre || "-"}
@@ -1068,8 +1066,8 @@ export default function Egresos() {
                           <TableCell>
                             {(metodosPago as MetodoPago[]).find(m => m.id === egreso.metodoPagoId)?.nombre || "-"}
                           </TableCell>
-                          <TableCell>
-                            {egreso.observaciones || "-"}
+                          <TableCell className="font-medium">
+                            {egreso.descripcion}
                           </TableCell>
                           <TableCell>
                             <Button
