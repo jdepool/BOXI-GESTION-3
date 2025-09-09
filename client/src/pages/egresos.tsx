@@ -1049,7 +1049,7 @@ export default function Egresos() {
                       <TableHead>Monto</TableHead>
                       <TableHead>Tipo</TableHead>
                       <TableHead>Método Pago</TableHead>
-                      <TableHead>Registrar</TableHead>
+                      <TableHead>Aprobar</TableHead>
                       <TableHead className="w-24">Acciones</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -1088,7 +1088,7 @@ export default function Egresos() {
                               data-testid={`aprobar-egreso-${egreso.id}`}
                             >
                               <Check className="h-4 w-4 mr-2" />
-                              Registrar
+                              Aprobar
                             </Button>
                           </TableCell>
                           <TableCell>
