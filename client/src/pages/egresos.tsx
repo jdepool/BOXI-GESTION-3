@@ -1035,7 +1035,7 @@ export default function Egresos() {
                       <TableHead>Monto</TableHead>
                       <TableHead>Tipo</TableHead>
                       <TableHead>Método Pago</TableHead>
-                      <TableHead>Descripción</TableHead>
+                      <TableHead>Observaciones</TableHead>
                       <TableHead>Aprobar</TableHead>
                       <TableHead className="w-24">Acciones</TableHead>
                     </TableRow>
@@ -1067,7 +1067,7 @@ export default function Egresos() {
                             {(metodosPago as MetodoPago[]).find(m => m.id === egreso.metodoPagoId)?.nombre || "-"}
                           </TableCell>
                           <TableCell className="font-medium">
-                            {egreso.descripcion}
+                            {egreso.observaciones || "-"}
                           </TableCell>
                           <TableCell>
                             <Button
