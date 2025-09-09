@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
-import { Save, User, CreditCard, MapPin, Package } from "lucide-react";
+import { Save, User, CreditCard, MapPin, Package, CalendarIcon } from "lucide-react";
 import { insertSaleSchema } from "@shared/schema";
 
 const manualSaleSchema = insertSaleSchema.extend({
@@ -275,7 +275,10 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
                 <FormItem>
                   <FormLabel>Fecha *</FormLabel>
                   <FormControl>
-                    <Input type="date" {...field} />
+                    <div className="relative">
+                      <Input type="date" {...field} className="pr-10" />
+                      <CalendarIcon className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-blue-500 pointer-events-none animate-pulse" />
+                    </div>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
