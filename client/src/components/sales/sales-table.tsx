@@ -290,11 +290,11 @@ export default function SalesTable({
 
       <div className="overflow-x-auto bg-background">
         <div className="min-w-max">
-          <table className="w-full min-w-[2460px]">
+          <table className="w-full min-w-[2460px] relative">
             <thead className="bg-muted sticky top-0 z-10">
               <tr>
-                <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[100px]">Orden</th>
-                <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[180px]">Nombre</th>
+                <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[100px] sticky left-0 bg-muted z-20 border-r border-border shadow-[2px_0_5px_rgba(0,0,0,0.1)]">Orden</th>
+                <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[180px] sticky left-[100px] bg-muted z-20 border-r border-border shadow-[2px_0_5px_rgba(0,0,0,0.1)]">Nombre</th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[100px]">Cedula</th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[120px]">Telefono</th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[160px]">Email</th>
@@ -328,10 +328,10 @@ export default function SalesTable({
                     className="border-b border-border hover:bg-muted/50 transition-colors text-xs"
                     data-testid={`sale-row-${sale.id}`}
                   >
-                    <td className="p-2 min-w-[100px] text-xs font-mono text-muted-foreground truncate" title={sale.orden || undefined}>
+                    <td className="p-2 min-w-[100px] text-xs font-mono text-muted-foreground truncate sticky left-0 bg-background z-10 border-r border-border shadow-[2px_0_5px_rgba(0,0,0,0.1)]" title={sale.orden || undefined}>
                       {sale.orden || 'N/A'}
                     </td>
-                    <td className="p-2 min-w-[180px] text-xs font-medium text-foreground truncate" title={sale.nombre}>
+                    <td className="p-2 min-w-[180px] text-xs font-medium text-foreground truncate sticky left-[100px] bg-background z-10 border-r border-border shadow-[2px_0_5px_rgba(0,0,0,0.1)]" title={sale.nombre}>
                       {sale.nombre}
                     </td>
                     <td className="p-2 min-w-[100px] text-xs text-muted-foreground truncate">
