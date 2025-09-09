@@ -549,14 +549,18 @@ export default function Egresos() {
                             data-testid="date-picker-fecha"
                           >
                             <CalendarIcon className="mr-2 h-4 w-4" />
-                            {formData.fecha ? format(new Date(formData.fecha), "dd/MM/yyyy") : <span>Seleccionar fecha</span>}
+                            {formData.fecha ? format(new Date(formData.fecha), "dd/MM/yyyy") : "Seleccionar fecha"}
                           </Button>
                         </PopoverTrigger>
                         <PopoverContent className="w-auto p-0">
                           <Calendar
                             mode="single"
                             selected={formData.fecha ? new Date(formData.fecha) : undefined}
-                            onSelect={(date) => setFormData({ ...formData, fecha: date ? format(date, "yyyy-MM-dd") : "" })}
+                            onSelect={(date) => {
+                              if (date) {
+                                setFormData({ ...formData, fecha: format(date, "yyyy-MM-dd") });
+                              }
+                            }}
                             initialFocus
                           />
                         </PopoverContent>
