@@ -245,15 +245,10 @@ export default function SalesTable({
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[120px]">Telefono</th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[160px]">Email</th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[100px]">Total USD</th>
-                <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[120px]">Sucursal</th>
-                <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[120px]">Tienda</th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[90px]">Fecha</th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[80px]">Canal</th>
-                <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[100px]">Estado</th>
-                <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[120px]">Estado Pago Inicial</th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[110px]">Pago Inicial USD</th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[100px]">Orden</th>
-                <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[100px]">Factura</th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[120px]">Referencia</th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[100px]">Banco</th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[110px]">Monto Bs</th>
@@ -268,7 +263,7 @@ export default function SalesTable({
             <tbody>
               {data.length === 0 ? (
                 <tr>
-                  <td colSpan={23} className="text-center p-8 text-muted-foreground">
+                  <td colSpan={18} className="text-center p-8 text-muted-foreground">
                     No hay datos disponibles
                   </td>
                 </tr>
@@ -294,12 +289,6 @@ export default function SalesTable({
                     <td className="p-2 min-w-[100px] text-xs font-medium text-foreground">
                       ${Number(sale.totalUsd).toLocaleString()}
                     </td>
-                    <td className="p-2 min-w-[120px] text-xs text-muted-foreground truncate" title={sale.sucursal || undefined}>
-                      {sale.sucursal || 'N/A'}
-                    </td>
-                    <td className="p-2 min-w-[120px] text-xs text-muted-foreground truncate" title={sale.tienda || undefined}>
-                      {sale.tienda || 'N/A'}
-                    </td>
                     <td className="p-2 min-w-[90px] text-xs text-muted-foreground">
                       {new Date(sale.fecha).toLocaleDateString('es-ES', { 
                         day: '2-digit', 
@@ -312,20 +301,11 @@ export default function SalesTable({
                         {sale.canal.charAt(0).toUpperCase() + sale.canal.slice(1)}
                       </Badge>
                     </td>
-                    <td className="p-2 min-w-[100px] text-xs text-muted-foreground truncate">
-                      {sale.estado || 'N/A'}
-                    </td>
-                    <td className="p-2 min-w-[120px] text-xs text-muted-foreground truncate">
-                      {sale.estadoPagoInicial || 'N/A'}
-                    </td>
                     <td className="p-2 min-w-[110px] text-xs text-muted-foreground">
                       {sale.pagoInicialUsd ? `$${Number(sale.pagoInicialUsd).toLocaleString()}` : 'N/A'}
                     </td>
                     <td className="p-2 min-w-[100px] text-xs font-mono text-muted-foreground truncate" title={sale.orden || undefined}>
                       {sale.orden || 'N/A'}
-                    </td>
-                    <td className="p-2 min-w-[100px] text-xs font-mono text-muted-foreground truncate" title={sale.factura || undefined}>
-                      {sale.factura || 'N/A'}
                     </td>
                     <td className="p-2 min-w-[120px] text-xs font-mono text-muted-foreground truncate" title={sale.referencia || undefined}>
                       {sale.referencia || 'N/A'}
