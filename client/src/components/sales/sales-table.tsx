@@ -53,6 +53,8 @@ export default function SalesTable({
   const [selectedSaleForFlete, setSelectedSaleForFlete] = useState<Sale | null>(null);
   const [editSaleModalOpen, setEditSaleModalOpen] = useState(false);
   const [selectedSaleForEdit, setSelectedSaleForEdit] = useState<Sale | null>(null);
+  const [editingNotesId, setEditingNotesId] = useState<string | null>(null);
+  const [notesValue, setNotesValue] = useState<string>("");
   const filters = {
     canal: parentFilters?.canal ? (parentFilters.canal === "" ? "all" : parentFilters.canal) : "all",
     estadoEntrega: parentFilters?.estadoEntrega ? (parentFilters.estadoEntrega === "" ? "all" : parentFilters.estadoEntrega) : "all",
@@ -83,8 +85,59 @@ export default function SalesTable({
     },
   });
 
+  const updateNotesMutation = useMutation({
+    mutationFn: async ({ saleId, notas }: { saleId: string; notas: string }) => {
+      return apiRequest("PUT", `/api/sales/${saleId}/notes`, { notas });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/sales"] });
+      setEditingNotesId(null);
+      toast({
+        title: "Notas actualizadas",
+        description: "Las notas han sido guardadas correctamente.",
+      });
+    },
+    onError: (error) => {
+      console.error('Failed to update notes:', error);
+      toast({
+        title: "Error",
+        description: "No se pudieron actualizar las notas.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleStatusChange = (saleId: string, newStatus: string) => {
     updateDeliveryStatusMutation.mutate({ saleId, status: newStatus });
+  };
+
+  const handleNotesClick = (sale: Sale) => {
+    setEditingNotesId(sale.id);
+    setNotesValue(sale.notas || "");
+  };
+
+  const handleNotesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    if (value.length <= 150) {
+      setNotesValue(value);
+    }
+  };
+
+  const handleNotesBlur = () => {
+    if (editingNotesId) {
+      updateNotesMutation.mutate({ 
+        saleId: editingNotesId, 
+        notas: notesValue.trim() 
+      });
+    }
+  };
+
+  const handleNotesKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.currentTarget.blur();
+    } else if (e.key === 'Escape') {
+      setEditingNotesId(null);
+    }
   };
 
   const handleFilterChange = (key: string, value: string) => {
@@ -382,8 +435,29 @@ export default function SalesTable({
                         {sale.montoFleteUsd ? 'Editar' : 'Agregar'}
                       </Button>
                     </td>
-                    <td className="p-2 min-w-[150px] text-xs text-muted-foreground truncate" title={sale.notas || undefined}>
-                      {sale.notas || 'Sin notas'}
+                    <td className="p-2 min-w-[150px]">
+                      {editingNotesId === sale.id ? (
+                        <Input
+                          value={notesValue}
+                          onChange={handleNotesChange}
+                          onBlur={handleNotesBlur}
+                          onKeyDown={handleNotesKeyDown}
+                          maxLength={150}
+                          placeholder="Agregar nota..."
+                          className="h-7 text-xs"
+                          autoFocus
+                          data-testid={`notes-input-${sale.id}`}
+                        />
+                      ) : (
+                        <div 
+                          className="text-xs text-muted-foreground truncate cursor-pointer hover:bg-muted/50 rounded px-2 py-1 min-h-[28px] flex items-center"
+                          title={sale.notas || "Click para agregar nota"}
+                          onClick={() => handleNotesClick(sale)}
+                          data-testid={`notes-display-${sale.id}`}
+                        >
+                          {sale.notas || 'Click para agregar nota'}
+                        </div>
+                      )}
                     </td>
                     <td className="p-2 min-w-[200px]">
                       <div className="flex gap-1">

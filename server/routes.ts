@@ -658,6 +658,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update sale notes
+  app.put("/api/sales/:saleId/notes", async (req, res) => {
+    try {
+      const { saleId } = req.params;
+      const { notas } = req.body;
+
+      // Validate notes length (max 150 characters)
+      if (notas && notas.length > 150) {
+        return res.status(400).json({ error: "Notes cannot exceed 150 characters" });
+      }
+
+      // Validate that sale exists
+      const existingSale = await storage.getSaleById(saleId);
+      if (!existingSale) {
+        return res.status(404).json({ error: "Sale not found" });
+      }
+
+      const updatedSale = await storage.updateSaleNotes(saleId, notas);
+      
+      if (!updatedSale) {
+        return res.status(500).json({ error: "Failed to update sale notes" });
+      }
+
+      res.json({ success: true, sale: updatedSale });
+    } catch (error) {
+      console.error("Update sale notes error:", error);
+      res.status(500).json({ error: "Failed to update sale notes" });
+    }
+  });
+
   // ===========================================
   // ADMIN CONFIGURATION ENDPOINTS
   // ===========================================
