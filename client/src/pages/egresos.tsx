@@ -8,14 +8,16 @@ import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Plus, Upload, Edit, Trash2, Filter, Download } from "lucide-react";
+import { ArrowLeft, Plus, Upload, Edit, Trash2, Filter, Download, Check } from "lucide-react";
 import { Link } from "wouter";
 import { format } from "date-fns";
-import type { Egreso, Banco, TipoEgreso, MetodoPago, Moneda } from "@shared/schema";
+import type { Egreso, Banco, TipoEgreso, MetodoPago, Moneda, EgresoPorAprobar } from "@shared/schema";
 
 export default function Egresos() {
+  const [activeTab, setActiveTab] = useState("egresos");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingEgreso, setEditingEgreso] = useState<Egreso | null>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -259,6 +261,19 @@ export default function Egresos() {
                 Regresar al Menú Principal
               </Button>
             </Link>
+          </div>
+        </div>
+      </div>
+
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="egresos">Egresos</TabsTrigger>
+          <TabsTrigger value="egresos-por-aprobar">Egresos por Aprobar</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="egresos" className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div></div>
             <div className="flex items-center gap-2">
               <input
                 ref={fileInputRef}
@@ -277,14 +292,13 @@ export default function Egresos() {
                 <Upload className="h-4 w-4 mr-2" />
                 {isUploading ? "Subiendo..." : "Subir Excel"}
               </Button>
-            </div>
-            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-              <DialogTrigger asChild>
-                <Button onClick={resetForm} data-testid="add-egreso">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Nuevo Egreso
-                </Button>
-              </DialogTrigger>
+              <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button onClick={resetForm} data-testid="add-egreso">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Nuevo Egreso
+                  </Button>
+                </DialogTrigger>
               <DialogContent className="max-w-2xl">
                 <DialogHeader>
                   <DialogTitle>
@@ -474,9 +488,9 @@ export default function Egresos() {
                   </div>
                 </form>
               </DialogContent>
-            </Dialog>
+              </Dialog>
+            </div>
           </div>
-        </div>
       </div>
 
       {/* Filters Card */}
@@ -653,6 +667,54 @@ export default function Egresos() {
           </div>
         </CardContent>
       </Card>
+        </TabsContent>
+
+        <TabsContent value="egresos-por-aprobar" className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div></div>
+            <div className="flex items-center gap-2">
+              <Button data-testid="add-egreso-por-aprobar">
+                <Plus className="h-4 w-4 mr-2" />
+                Nuevo Egreso por Aprobar
+              </Button>
+            </div>
+          </div>
+
+          {/* Egresos Por Aprobar Content */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Lista de Egresos por Aprobar</CardTitle>
+              <CardDescription>
+                Egresos pendientes de aprobación
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="border rounded-lg">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Fecha</TableHead>
+                      <TableHead>Descripción</TableHead>
+                      <TableHead>Monto</TableHead>
+                      <TableHead>Tipo</TableHead>
+                      <TableHead>Método Pago</TableHead>
+                      <TableHead>Aprobado</TableHead>
+                      <TableHead className="w-24">Acciones</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    <TableRow>
+                      <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                        No hay egresos por aprobar
+                      </TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
