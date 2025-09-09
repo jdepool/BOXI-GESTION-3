@@ -56,6 +56,14 @@ export default function Egresos() {
     tipoEgresoId: "",
     metodoPagoId: "",
   });
+  const [approvalDialogOpen, setApprovalDialogOpen] = useState(false);
+  const [egresoToApprove, setEgresoToApprove] = useState<EgresoPorAprobar | null>(null);
+  const [approvalData, setApprovalData] = useState({
+    monedaId: "",
+    bancoId: "",
+    referencia: "",
+    observaciones: "",
+  });
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -239,6 +247,29 @@ export default function Egresos() {
     },
   });
 
+  const approveEgresoMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: typeof approvalData }) => {
+      const response = await fetch(`/api/egresos-por-aprobar/${id}/aprobar`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!response.ok) throw new Error('Failed to approve egreso');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/egresos-por-aprobar"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/egresos"] });
+      setApprovalDialogOpen(false);
+      setEgresoToApprove(null);
+      setApprovalData({ monedaId: "", bancoId: "", referencia: "", observaciones: "" });
+      toast({ description: "Egreso aprobado exitosamente" });
+    },
+    onError: () => {
+      toast({ variant: "destructive", description: "Error al aprobar egreso" });
+    },
+  });
+
   // File upload mutation
   const uploadMutation = useMutation({
     mutationFn: async (file: File) => {
@@ -348,6 +379,19 @@ export default function Egresos() {
       updatePorAprobarMutation.mutate({ id: editingEgresoPorAprobar.id, data: formDataPorAprobar });
     } else {
       createPorAprobarMutation.mutate(formDataPorAprobar);
+    }
+  };
+
+  const openApprovalDialog = (egreso: EgresoPorAprobar) => {
+    setEgresoToApprove(egreso);
+    setApprovalData({ monedaId: "", bancoId: "", referencia: "", observaciones: "" });
+    setApprovalDialogOpen(true);
+  };
+
+  const handleApprovalSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (egresoToApprove) {
+      approveEgresoMutation.mutate({ id: egresoToApprove.id, data: approvalData });
     }
   };
 
@@ -745,7 +789,11 @@ export default function Egresos() {
                   </TableRow>
                 ) : (
                   egresos.map((egreso: Egreso) => (
-                    <TableRow key={egreso.id} data-testid={`egreso-row-${egreso.id}`}>
+                    <TableRow 
+                      key={egreso.id} 
+                      data-testid={`egreso-row-${egreso.id}`}
+                      className={egreso.pendienteInfo ? "bg-orange-50 dark:bg-orange-950/20 border-orange-200 dark:border-orange-800" : ""}
+                    >
                       <TableCell>
                         {egreso.fecha ? format(new Date(egreso.fecha), "dd/MM/yyyy") : "-"}
                       </TableCell>
@@ -973,6 +1021,7 @@ export default function Egresos() {
                             <Button
                               variant="outline"
                               size="sm"
+                              onClick={() => openApprovalDialog(egreso)}
                               data-testid={`aprobar-egreso-${egreso.id}`}
                             >
                               <Check className="h-4 w-4 mr-2" />
@@ -1010,6 +1059,97 @@ export default function Egresos() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Approval Dialog */}
+      <Dialog open={approvalDialogOpen} onOpenChange={setApprovalDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Aprobar Egreso</DialogTitle>
+            <DialogDescription>
+              Completa la información adicional para aprobar el egreso: {egresoToApprove?.descripcion}
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleApprovalSubmit} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="monedaId-approval">Moneda *</Label>
+                <Select
+                  value={approvalData.monedaId}
+                  onValueChange={(value) => setApprovalData({ ...approvalData, monedaId: value })}
+                  required
+                >
+                  <SelectTrigger data-testid="select-moneda-approval">
+                    <SelectValue placeholder="Seleccionar moneda" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(monedas as Moneda[]).filter(moneda => moneda.id && moneda.id.trim()).map((moneda) => (
+                      <SelectItem key={moneda.id} value={moneda.id}>
+                        {moneda.nombre}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="bancoId-approval">Banco *</Label>
+                <Select
+                  value={approvalData.bancoId}
+                  onValueChange={(value) => setApprovalData({ ...approvalData, bancoId: value })}
+                  required
+                >
+                  <SelectTrigger data-testid="select-banco-approval">
+                    <SelectValue placeholder="Seleccionar banco" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(bancos as Banco[]).filter(banco => banco.id && banco.id.trim()).map((banco) => (
+                      <SelectItem key={banco.id} value={banco.id}>
+                        {banco.nombre}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="referencia-approval">Referencia</Label>
+              <Input
+                id="referencia-approval"
+                value={approvalData.referencia}
+                onChange={(e) => setApprovalData({ ...approvalData, referencia: e.target.value })}
+                data-testid="input-referencia-approval"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="observaciones-approval">Observaciones</Label>
+              <Textarea
+                id="observaciones-approval"
+                value={approvalData.observaciones}
+                onChange={(e) => setApprovalData({ ...approvalData, observaciones: e.target.value })}
+                data-testid="input-observaciones-approval"
+              />
+            </div>
+
+            <div className="flex justify-end space-x-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setApprovalDialogOpen(false)}
+              >
+                Cancelar
+              </Button>
+              <Button
+                type="submit"
+                disabled={approveEgresoMutation.isPending}
+                data-testid="submit-approval"
+              >
+                {approveEgresoMutation.isPending ? "Aprobando..." : "Aprobar Egreso"}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
