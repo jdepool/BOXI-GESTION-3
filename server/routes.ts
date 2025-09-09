@@ -46,7 +46,7 @@ function parseExcelFile(buffer: Buffer, canal: string) {
     const worksheet = workbook.Sheets[sheetName];
     const data = XLSX.utils.sheet_to_json(worksheet);
 
-    // Expected columns: Nombre, Cedula, Telefono, Email, Total usd, Sucursal, Tienda, Fecha, Canal, Estado, Estado pago inicial, Pago inicial usd, Orden, Factura, Referencia, Monto en bs, Estado de entrega, Product, Cantidad
+    // Expected columns: Orden, Nombre, Cedula, Telefono, Email, Total usd, Fecha, Canal, Pago inicial usd, Referencia, Monto en bs, Estado de entrega, Product, Cantidad, Direcciones, Flete, Acciones
     const salesData = data.map((row: any) => {
       // Parse date
       let fecha = new Date();
