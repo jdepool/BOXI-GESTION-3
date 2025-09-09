@@ -374,9 +374,15 @@ export function EdicionOrdenesTab() {
             ) : (
               orders.map((order: Sale) => (
                 <TableRow key={order.id}>
-                  <TableCell className="font-medium">{order.orden || 'Sin número'}</TableCell>
-                  <TableCell>{order.nombre}</TableCell>
-                  <TableCell>{order.product}</TableCell>
+                  <TableCell className="font-medium">
+                    {order.orden || <span className="text-gray-500 italic">Sin número</span>}
+                  </TableCell>
+                  <TableCell>
+                    {order.nombre || <span className="text-gray-500 italic">Sin nombre</span>}
+                  </TableCell>
+                  <TableCell>
+                    {order.product || <span className="text-gray-500 italic">Sin producto</span>}
+                  </TableCell>
                   <TableCell className="flex items-center gap-1">
                     <Calendar className="h-3 w-3" />
                     {formatDate(order.fecha)}
