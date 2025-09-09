@@ -11,6 +11,8 @@ import multer from "multer";
 import * as XLSX from "xlsx";
 import { parse as parseCSV } from "csv-parse/sync";
 import { nanoid } from "nanoid";
+import session from "express-session";
+import MemoryStore from "memorystore";
 
 // Configure multer for file uploads
 const upload = multer({
@@ -294,8 +296,99 @@ function parseEgresosExcelFile(buffer: Buffer) {
   }
 }
 
+// Authentication middleware
+declare module "express-session" {
+  interface SessionData {
+    user: {
+      email: string;
+      isAuthenticated: boolean;
+    } | null;
+  }
+}
+
+// Simple in-memory session store for development
+const Store = MemoryStore(session);
+
+// Valid login credentials
+const VALID_CREDENTIALS = {
+  email: 'marketplace@boxisleep.com',
+  password: 'Boxisleep123'
+};
+
 export async function registerRoutes(app: Express): Promise<Server> {
   
+  // Configure session middleware
+  app.use(session({
+    secret: process.env.SESSION_SECRET || 'boxisleep-dev-secret-key-12345',
+    resave: false,
+    saveUninitialized: false,
+    store: new Store({
+      checkPeriod: 86400000 // prune expired entries every 24h
+    }),
+    cookie: {
+      secure: false, // Set to true in production with HTTPS
+      httpOnly: true,
+      maxAge: 24 * 60 * 60 * 1000 // 24 hours
+    }
+  }));
+
+  // Authentication middleware function
+  const requireAuth = (req: any, res: any, next: any) => {
+    if (req.session?.user?.isAuthenticated) {
+      return next();
+    }
+    return res.status(401).json({ message: 'Unauthorized' });
+  };
+
+  // Login endpoint
+  app.post('/api/auth/login', (req, res) => {
+    try {
+      const { email, password } = req.body;
+
+      if (!email || !password) {
+        return res.status(400).json({ message: 'Email y contraseña son requeridos' });
+      }
+
+      if (email === VALID_CREDENTIALS.email && password === VALID_CREDENTIALS.password) {
+        req.session.user = {
+          email: email,
+          isAuthenticated: true
+        };
+        
+        res.json({ 
+          success: true, 
+          user: { email, isAuthenticated: true } 
+        });
+      } else {
+        res.status(401).json({ message: 'Email o contraseña incorrectos' });
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      res.status(500).json({ message: 'Error interno del servidor' });
+    }
+  });
+
+  // Check current user endpoint
+  app.get('/api/auth/me', (req, res) => {
+    if (req.session?.user?.isAuthenticated) {
+      res.json(req.session.user);
+    } else {
+      res.status(401).json({ message: 'Not authenticated' });
+    }
+  });
+
+  // Logout endpoint
+  app.post('/api/auth/logout', (req, res) => {
+    req.session.destroy((err) => {
+      if (err) {
+        console.error('Logout error:', err);
+        return res.status(500).json({ message: 'Error logging out' });
+      }
+      res.clearCookie('connect.sid'); // Clear session cookie
+      res.json({ success: true });
+    });
+  });
+
   // Get sales metrics for dashboard
   app.get("/api/sales/metrics", async (req, res) => {
     try {

@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { useAuth } from "@/hooks/useAuth";
 
 interface HeaderProps {
   title: string;
@@ -8,6 +9,8 @@ interface HeaderProps {
 }
 
 export default function Header({ title, description }: HeaderProps) {
+  const { user, logout, isLoggingOut } = useAuth();
+
   return (
     <header className="bg-card border-b border-border p-6 flex justify-between items-center">
       <div>
@@ -30,6 +33,28 @@ export default function Header({ title, description }: HeaderProps) {
             Cargar Datos
           </Button>
         </Link>
+        
+        {user && (
+          <div className="flex items-center space-x-3 ml-4 pl-4 border-l border-border">
+            <span className="text-sm text-muted-foreground">
+              {user.email}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => logout()}
+              disabled={isLoggingOut}
+              data-testid="logout-button"
+            >
+              {isLoggingOut ? (
+                <i className="fas fa-spinner fa-spin mr-2"></i>
+              ) : (
+                <i className="fas fa-sign-out-alt mr-2"></i>
+              )}
+              Salir
+            </Button>
+          </div>
+        )}
       </div>
     </header>
   );
