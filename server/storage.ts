@@ -427,6 +427,7 @@ export class DatabaseStorage implements IStorage {
     referenciaFlete?: string;
     montoFleteVes?: string;
     bancoReceptorFlete?: string;
+    fleteGratis?: boolean;
   }): Promise<Sale | undefined> {
     const updateData: any = {};
     
@@ -445,6 +446,9 @@ export class DatabaseStorage implements IStorage {
     }
     if (flete.bancoReceptorFlete !== undefined) {
       updateData.bancoReceptorFlete = flete.bancoReceptorFlete === "" ? null : flete.bancoReceptorFlete;
+    }
+    if (flete.fleteGratis !== undefined) {
+      updateData.fleteGratis = flete.fleteGratis;
     }
 
     // Add updated timestamp
