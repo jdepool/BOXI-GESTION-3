@@ -76,7 +76,7 @@ export function EdicionOrdenesTab() {
   const { data: orders = [], isLoading } = useQuery({
     queryKey: ["/api/sales"],
     queryFn: () => 
-      fetch("/api/sales?limit=1000")
+      fetch("/api/sales?limit=100")
         .then(res => res.json())
         .then(data => data.data || []),
   });
@@ -351,50 +351,35 @@ export function EdicionOrdenesTab() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Orden</TableHead>
-              <TableHead>Cliente</TableHead>
-              <TableHead>Canal</TableHead>
+              <TableHead>Número de Orden</TableHead>
+              <TableHead>Nombre</TableHead>
               <TableHead>Producto</TableHead>
               <TableHead>Fecha</TableHead>
-              <TableHead>Total USD</TableHead>
-              <TableHead>Estado Entrega</TableHead>
               <TableHead>Acciones</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={8} className="text-center py-4">
+                <TableCell colSpan={5} className="text-center py-4">
                   Cargando órdenes...
                 </TableCell>
               </TableRow>
             ) : orders.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className="text-center py-4">
-                  No hay órdenes pendientes por despacho
+                <TableCell colSpan={5} className="text-center py-4">
+                  No hay órdenes en el sistema
                 </TableCell>
               </TableRow>
             ) : (
               orders.map((order: Sale) => (
                 <TableRow key={order.id}>
-                  <TableCell className="font-medium">{order.orden}</TableCell>
+                  <TableCell className="font-medium">{order.orden || 'Sin número'}</TableCell>
                   <TableCell>{order.nombre}</TableCell>
-                  <TableCell>
-                    <Badge variant="outline">{order.canal}</Badge>
-                  </TableCell>
                   <TableCell>{order.product}</TableCell>
                   <TableCell className="flex items-center gap-1">
                     <Calendar className="h-3 w-3" />
                     {formatDate(order.fecha)}
-                  </TableCell>
-                  <TableCell className="flex items-center gap-1">
-                    <DollarSign className="h-3 w-3" />
-                    {formatCurrency(order.totalUsd)}
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={getStatusBadgeVariant(order.estadoEntrega)}>
-                      {order.estadoEntrega}
-                    </Badge>
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
