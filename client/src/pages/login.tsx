@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useToast } from "@/hooks/use-toast";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import boxiSleepLogo from "@assets/image_1757033740709.png";
 
 export default function Login() {
   const [, setLocation] = useLocation();
@@ -63,9 +64,16 @@ export default function Login() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 to-secondary/5 p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
+          <div className="flex justify-center mb-4">
+            <img 
+              src={boxiSleepLogo} 
+              alt="BoxiSleep Logo" 
+              className="h-20 w-auto object-contain"
+            />
+          </div>
           <CardTitle className="text-2xl font-bold">BoxiSleep</CardTitle>
           <CardDescription>
-            Sistema de Gestión de Ventas
+            Sistema Automatizado de Gestión
           </CardDescription>
         </CardHeader>
         <CardContent>
