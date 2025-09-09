@@ -388,11 +388,26 @@ export default function Egresos() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validar que la fecha sea obligatoria
-    if (!formData.fecha) {
+    // Validar campos obligatorios
+    const requiredFields = [
+      { field: formData.fecha, name: "Fecha" },
+      { field: formData.descripcion, name: "Descripción" },
+      { field: formData.monto, name: "Monto" },
+      { field: formData.monedaId, name: "Moneda" },
+      { field: formData.tipoEgresoId, name: "Tipo de Egreso" },
+      { field: formData.metodoPagoId, name: "Método de Pago" },
+      { field: formData.bancoId, name: "Banco" },
+      { field: formData.referencia, name: "Referencia" },
+      { field: formData.estado, name: "Estado" },
+    ];
+
+    const missingFields = requiredFields.filter(item => !item.field || item.field.trim() === "");
+    
+    if (missingFields.length > 0) {
+      const fieldNames = missingFields.map(item => item.name).join(", ");
       toast({
         variant: "destructive",
-        description: "La fecha es obligatoria",
+        description: `Los siguientes campos son obligatorios: ${fieldNames}`,
       });
       return;
     }
