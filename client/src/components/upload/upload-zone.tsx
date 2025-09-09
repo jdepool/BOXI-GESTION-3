@@ -16,20 +16,56 @@ export default function UploadZone({ recentUploads }: UploadZoneProps) {
   const [selectedChannel, setSelectedChannel] = useState<string>("");
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [isDragOver, setIsDragOver] = useState(false);
   const { toast } = useToast();
+
+  const validateAndSetFile = (file: File) => {
+    if (!file.name.endsWith('.xlsx') && !file.name.endsWith('.xls')) {
+      toast({
+        title: "Archivo inválido",
+        description: "Solo se aceptan archivos Excel (.xlsx, .xls)",
+        variant: "destructive",
+      });
+      return false;
+    }
+    setSelectedFile(file);
+    return true;
+  };
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      if (!file.name.endsWith('.xlsx') && !file.name.endsWith('.xls')) {
-        toast({
-          title: "Archivo inválido",
-          description: "Solo se aceptan archivos Excel (.xlsx, .xls)",
-          variant: "destructive",
-        });
-        return;
-      }
-      setSelectedFile(file);
+      validateAndSetFile(file);
+    }
+  };
+
+  const handleDragOver = (event: React.DragEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+    setIsDragOver(true);
+  };
+
+  const handleDragEnter = (event: React.DragEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+    setIsDragOver(true);
+  };
+
+  const handleDragLeave = (event: React.DragEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+    setIsDragOver(false);
+  };
+
+  const handleDrop = (event: React.DragEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+    setIsDragOver(false);
+
+    const files = event.dataTransfer.files;
+    if (files.length > 0) {
+      const file = files[0];
+      validateAndSetFile(file);
     }
   };
 
@@ -110,7 +146,18 @@ export default function UploadZone({ recentUploads }: UploadZoneProps) {
       <div className="bg-card p-6 rounded-lg border border-border">
         <h3 className="text-lg font-semibold mb-4 text-foreground">Cargar Archivo Excel</h3>
         
-        <div className="upload-zone border-2 border-dashed border-border rounded-lg p-8 text-center mb-4 hover:border-primary hover:bg-primary/2 transition-all">
+        <div 
+          className={`upload-zone border-2 border-dashed rounded-lg p-8 text-center mb-4 transition-all cursor-pointer ${
+            isDragOver 
+              ? 'border-primary bg-primary/10 scale-105' 
+              : 'border-border hover:border-primary hover:bg-primary/2'
+          }`}
+          onDragOver={handleDragOver}
+          onDragEnter={handleDragEnter}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+          onClick={() => document.getElementById('excel-upload')?.click()}
+        >
           <i className="fas fa-cloud-upload-alt text-4xl text-muted-foreground mb-4"></i>
           <p className="text-foreground font-medium mb-2">
             {selectedFile ? selectedFile.name : "Arrastra tu archivo aquí"}
