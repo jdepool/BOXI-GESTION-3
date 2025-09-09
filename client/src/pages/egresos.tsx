@@ -56,14 +56,6 @@ export default function Egresos() {
     tipoEgresoId: "",
     metodoPagoId: "",
   });
-  const [approvalDialogOpen, setApprovalDialogOpen] = useState(false);
-  const [egresoToApprove, setEgresoToApprove] = useState<EgresoPorAprobar | null>(null);
-  const [approvalData, setApprovalData] = useState({
-    monedaId: "",
-    bancoId: "",
-    referencia: "",
-    observaciones: "",
-  });
   const [completePagoDialogOpen, setCompletePagoDialogOpen] = useState(false);
   const [egresoToComplete, setEgresoToComplete] = useState<Egreso | null>(null);
   const [completePagoData, setCompletePagoData] = useState({
@@ -254,7 +246,7 @@ export default function Egresos() {
   });
 
   const approveEgresoMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: typeof approvalData }) => {
+    mutationFn: async ({ id, data }: { id: string; data: { monedaId: string; bancoId: string; referencia: string; observaciones: string; } }) => {
       const response = await fetch(`/api/egresos-por-aprobar/${id}/aprobar`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -266,10 +258,7 @@ export default function Egresos() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/egresos-por-aprobar"] });
       queryClient.invalidateQueries({ queryKey: ["/api/egresos"] });
-      setApprovalDialogOpen(false);
-      setEgresoToApprove(null);
-      setApprovalData({ monedaId: "", bancoId: "", referencia: "", observaciones: "" });
-      toast({ description: "Egreso registrado exitosamente - Pendiente información de pago completa" });
+      toast({ description: "Egreso aprobado exitosamente - Pendiente información de pago completa" });
     },
     onError: () => {
       toast({ variant: "destructive", description: "Error al aprobar egreso" });
@@ -410,18 +399,6 @@ export default function Egresos() {
     }
   };
 
-  const openApprovalDialog = (egreso: EgresoPorAprobar) => {
-    setEgresoToApprove(egreso);
-    setApprovalData({ monedaId: "", bancoId: "", referencia: "", observaciones: "" });
-    setApprovalDialogOpen(true);
-  };
-
-  const handleApprovalSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (egresoToApprove) {
-      approveEgresoMutation.mutate({ id: egresoToApprove.id, data: approvalData });
-    }
-  };
 
   const openCompletePagoDialog = (egreso: Egreso) => {
     setEgresoToComplete(egreso);
@@ -1084,11 +1061,20 @@ export default function Egresos() {
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => openApprovalDialog(egreso)}
+                              onClick={() => approveEgresoMutation.mutate({ 
+                                id: egreso.id, 
+                                data: {
+                                  monedaId: "",
+                                  bancoId: "",
+                                  referencia: "",
+                                  observaciones: ""
+                                }
+                              })}
+                              disabled={approveEgresoMutation.isPending}
                               data-testid={`aprobar-egreso-${egreso.id}`}
                             >
                               <Check className="h-4 w-4 mr-2" />
-                              Aprobar
+                              {approveEgresoMutation.isPending ? "Aprobando..." : "Aprobar"}
                             </Button>
                           </TableCell>
                           <TableCell>
@@ -1123,96 +1109,6 @@ export default function Egresos() {
         </TabsContent>
       </Tabs>
 
-      {/* Approval Dialog */}
-      <Dialog open={approvalDialogOpen} onOpenChange={setApprovalDialogOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Registrar Egreso</DialogTitle>
-            <DialogDescription>
-              Completa la información básica para registrar el egreso. Quedará pendiente de información de pago completa: {egresoToApprove?.descripcion}
-            </DialogDescription>
-          </DialogHeader>
-          <form onSubmit={handleApprovalSubmit} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="monedaId-approval">Moneda *</Label>
-                <Select
-                  value={approvalData.monedaId}
-                  onValueChange={(value) => setApprovalData({ ...approvalData, monedaId: value })}
-                  required
-                >
-                  <SelectTrigger data-testid="select-moneda-approval">
-                    <SelectValue placeholder="Seleccionar moneda" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {(monedas as Moneda[]).filter(moneda => moneda.id && moneda.id.trim()).map((moneda) => (
-                      <SelectItem key={moneda.id} value={moneda.id}>
-                        {moneda.nombre}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="bancoId-approval">Banco *</Label>
-                <Select
-                  value={approvalData.bancoId}
-                  onValueChange={(value) => setApprovalData({ ...approvalData, bancoId: value })}
-                  required
-                >
-                  <SelectTrigger data-testid="select-banco-approval">
-                    <SelectValue placeholder="Seleccionar banco" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {(bancos as Banco[]).filter(banco => banco.id && banco.id.trim()).map((banco) => (
-                      <SelectItem key={banco.id} value={banco.id}>
-                        {banco.banco}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div>
-              <Label htmlFor="referencia-approval">Referencia</Label>
-              <Input
-                id="referencia-approval"
-                value={approvalData.referencia}
-                onChange={(e) => setApprovalData({ ...approvalData, referencia: e.target.value })}
-                data-testid="input-referencia-approval"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="observaciones-approval">Observaciones</Label>
-              <Textarea
-                id="observaciones-approval"
-                value={approvalData.observaciones}
-                onChange={(e) => setApprovalData({ ...approvalData, observaciones: e.target.value })}
-                data-testid="input-observaciones-approval"
-              />
-            </div>
-
-            <div className="flex justify-end space-x-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setApprovalDialogOpen(false)}
-              >
-                Cancelar
-              </Button>
-              <Button
-                type="submit"
-                disabled={approveEgresoMutation.isPending}
-                data-testid="submit-approval"
-              >
-                {approveEgresoMutation.isPending ? "Registrando..." : "Registrar Egreso"}
-              </Button>
-            </div>
-          </form>
-        </DialogContent>
-      </Dialog>
 
       {/* Complete Payment Info Dialog */}
       <Dialog open={completePagoDialogOpen} onOpenChange={setCompletePagoDialogOpen}>
