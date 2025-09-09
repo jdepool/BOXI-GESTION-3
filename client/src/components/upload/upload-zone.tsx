@@ -20,10 +20,10 @@ export default function UploadZone({ recentUploads }: UploadZoneProps) {
   const { toast } = useToast();
 
   const validateAndSetFile = (file: File) => {
-    if (!file.name.endsWith('.xlsx') && !file.name.endsWith('.xls')) {
+    if (!file.name.endsWith('.xlsx') && !file.name.endsWith('.xls') && !file.name.endsWith('.csv')) {
       toast({
         title: "Archivo inválido",
-        description: "Solo se aceptan archivos Excel (.xlsx, .xls)",
+        description: "Solo se aceptan archivos Excel (.xlsx, .xls) y CSV (.csv)",
         variant: "destructive",
       });
       return false;
@@ -144,7 +144,7 @@ export default function UploadZone({ recentUploads }: UploadZoneProps) {
   return (
     <div className="space-y-6">
       <div className="bg-card p-6 rounded-lg border border-border">
-        <h3 className="text-lg font-semibold mb-4 text-foreground">Cargar Archivo Excel</h3>
+        <h3 className="text-lg font-semibold mb-4 text-foreground">Cargar Archivo Excel/CSV</h3>
         
         <div 
           className={`upload-zone border-2 border-dashed rounded-lg p-8 text-center mb-4 transition-all cursor-pointer ${
@@ -166,7 +166,7 @@ export default function UploadZone({ recentUploads }: UploadZoneProps) {
           <input 
             type="file" 
             id="excel-upload" 
-            accept=".xlsx,.xls" 
+            accept=".xlsx,.xls,.csv" 
             className="hidden"
             onChange={handleFileSelect}
             data-testid="file-input"

@@ -9,6 +9,7 @@ import {
 import { z } from "zod";
 import multer from "multer";
 import * as XLSX from "xlsx";
+import { parse as parseCSV } from "csv-parse/sync";
 import { nanoid } from "nanoid";
 
 // Configure multer for file uploads
@@ -19,10 +20,11 @@ const upload = multer({
   },
   fileFilter: (req, file, cb) => {
     if (file.mimetype === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ||
-        file.mimetype === 'application/vnd.ms-excel') {
+        file.mimetype === 'application/vnd.ms-excel' ||
+        file.mimetype === 'text/csv') {
       cb(null, true);
     } else {
-      cb(new Error('Only Excel files are allowed'));
+      cb(new Error('Only Excel and CSV files are allowed'));
     }
   },
 });
@@ -39,12 +41,26 @@ const getSalesQuerySchema = z.object({
   offset: z.coerce.number().min(0).default(0),
 });
 
-function parseExcelFile(buffer: Buffer, canal: string) {
+function parseFile(buffer: Buffer, canal: string, filename: string) {
   try {
-    const workbook = XLSX.read(buffer, { type: 'buffer' });
-    const sheetName = workbook.SheetNames[0];
-    const worksheet = workbook.Sheets[sheetName];
-    const data = XLSX.utils.sheet_to_json(worksheet);
+    let data: any[];
+    
+    // Determine file type and parse accordingly
+    if (filename.endsWith('.csv')) {
+      // Parse CSV file
+      const csvString = buffer.toString('utf-8');
+      data = parseCSV(csvString, {
+        columns: true, // Use first row as column headers
+        skip_empty_lines: true,
+        trim: true
+      });
+    } else {
+      // Parse Excel file
+      const workbook = XLSX.read(buffer, { type: 'buffer' });
+      const sheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[sheetName];
+      data = XLSX.utils.sheet_to_json(worksheet);
+    }
 
     // Expected columns from Cashea file: Nombre, Cedula, Telefono, Email, Total usd, Sucursal, Tienda, Fecha, Canal, Estado, Estado pago inicial, Pago inicial usd, Orden, Factura, Referencia, Monto en bs, Estado de entrega, Product, Cantidad
     const salesData = data.map((row: any) => {
@@ -86,7 +102,7 @@ function parseExcelFile(buffer: Buffer, canal: string) {
 
     return salesData;
   } catch (error) {
-    throw new Error(`Error parsing Excel file: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    throw new Error(`Error parsing file: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 }
 
@@ -439,8 +455,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Invalid or missing canal. Must be: cashea, shopify, or treble" });
       }
 
-      // Parse Excel file
-      const salesData = parseExcelFile(req.file.buffer, canal);
+      // Parse file (Excel or CSV)
+      const salesData = parseFile(req.file.buffer, canal, req.file.originalname);
       
       // Validate each row
       const validatedSales = [];
