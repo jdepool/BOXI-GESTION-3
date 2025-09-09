@@ -1,10 +1,11 @@
 import { 
-  sales, uploadHistory, users, bancos, tiposEgresos, productos, metodosPago, monedas, categorias, canales, egresos,
+  sales, uploadHistory, users, bancos, tiposEgresos, productos, metodosPago, monedas, categorias, canales, egresos, egresosPorAprobar,
   type User, type InsertUser, type Sale, type InsertSale, type UploadHistory, type InsertUploadHistory,
   type Banco, type InsertBanco, type TipoEgreso, type InsertTipoEgreso,
   type Producto, type InsertProducto, type MetodoPago, type InsertMetodoPago,
   type Moneda, type InsertMoneda, type Categoria, type InsertCategoria,
-  type Canal, type InsertCanal, type Egreso, type InsertEgreso
+  type Canal, type InsertCanal, type Egreso, type InsertEgreso,
+  type EgresoPorAprobar, type InsertEgresoPorAprobar
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, count, sum, avg, and, gte, lte, or, ne, like, ilike, isNotNull } from "drizzle-orm";
@@ -136,6 +137,32 @@ export interface IStorage {
     startDate?: Date;
     endDate?: Date;
   }): Promise<number>;
+
+  // Egresos Por Aprobar
+  getEgresosPorAprobar(filters?: {
+    tipoEgresoId?: string;
+    metodoPagoId?: string;
+    startDate?: Date;
+    endDate?: Date;
+    limit?: number;
+    offset?: number;
+  }): Promise<EgresoPorAprobar[]>;
+  createEgresoPorAprobar(egreso: InsertEgresoPorAprobar): Promise<EgresoPorAprobar>;
+  updateEgresoPorAprobar(id: string, egreso: Partial<InsertEgresoPorAprobar>): Promise<EgresoPorAprobar | undefined>;
+  deleteEgresoPorAprobar(id: string): Promise<boolean>;
+  getEgresoPorAprobarById(id: string): Promise<EgresoPorAprobar | undefined>;
+  getTotalEgresosPorAprobarCount(filters?: {
+    tipoEgresoId?: string;
+    metodoPagoId?: string;
+    startDate?: Date;
+    endDate?: Date;
+  }): Promise<number>;
+  aprobarEgreso(id: string, egresoData: {
+    monedaId: string;
+    bancoId: string;
+    referencia?: string;
+    observaciones?: string;
+  }): Promise<Egreso>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -858,6 +885,139 @@ export class DatabaseStorage implements IStorage {
     
     const [{ count: totalCount }] = await finalQuery;
     return totalCount;
+  }
+
+  // Egresos Por Aprobar methods
+  async getEgresosPorAprobar(filters?: {
+    tipoEgresoId?: string;
+    metodoPagoId?: string;
+    startDate?: Date;
+    endDate?: Date;
+    limit?: number;
+    offset?: number;
+  }): Promise<EgresoPorAprobar[]> {
+    const conditions = [];
+    if (filters?.tipoEgresoId) {
+      conditions.push(eq(egresosPorAprobar.tipoEgresoId, filters.tipoEgresoId));
+    }
+    if (filters?.metodoPagoId) {
+      conditions.push(eq(egresosPorAprobar.metodoPagoId, filters.metodoPagoId));
+    }
+    if (filters?.startDate) {
+      conditions.push(gte(egresosPorAprobar.fecha, filters.startDate));
+    }
+    if (filters?.endDate) {
+      conditions.push(lte(egresosPorAprobar.fecha, filters.endDate));
+    }
+    
+    // Build the complete query in one go
+    const queryBuilder = db.select().from(egresosPorAprobar);
+    const withConditions = conditions.length > 0 
+      ? queryBuilder.where(and(...conditions))
+      : queryBuilder;
+    const withOrder = withConditions.orderBy(desc(egresosPorAprobar.fecha));
+    const withLimit = filters?.limit ? withOrder.limit(filters.limit) : withOrder;
+    const finalQuery = filters?.offset ? withLimit.offset(filters.offset) : withLimit;
+    
+    return await finalQuery;
+  }
+
+  async createEgresoPorAprobar(egreso: InsertEgresoPorAprobar): Promise<EgresoPorAprobar> {
+    const [newEgreso] = await db
+      .insert(egresosPorAprobar)
+      .values(egreso)
+      .returning();
+    return newEgreso;
+  }
+
+  async updateEgresoPorAprobar(id: string, egreso: Partial<InsertEgresoPorAprobar>): Promise<EgresoPorAprobar | undefined> {
+    const [updatedEgreso] = await db
+      .update(egresosPorAprobar)
+      .set({
+        ...egreso,
+        updatedAt: new Date(),
+      })
+      .where(eq(egresosPorAprobar.id, id))
+      .returning();
+    return updatedEgreso || undefined;
+  }
+
+  async deleteEgresoPorAprobar(id: string): Promise<boolean> {
+    try {
+      await db.delete(egresosPorAprobar).where(eq(egresosPorAprobar.id, id));
+      return true;
+    } catch (error) {
+      console.error("Error deleting egreso por aprobar:", error);
+      return false;
+    }
+  }
+
+  async getEgresoPorAprobarById(id: string): Promise<EgresoPorAprobar | undefined> {
+    const [egreso] = await db.select().from(egresosPorAprobar).where(eq(egresosPorAprobar.id, id));
+    return egreso || undefined;
+  }
+
+  async getTotalEgresosPorAprobarCount(filters?: {
+    tipoEgresoId?: string;
+    metodoPagoId?: string;
+    startDate?: Date;
+    endDate?: Date;
+  }): Promise<number> {
+    const conditions = [];
+    if (filters?.tipoEgresoId) {
+      conditions.push(eq(egresosPorAprobar.tipoEgresoId, filters.tipoEgresoId));
+    }
+    if (filters?.metodoPagoId) {
+      conditions.push(eq(egresosPorAprobar.metodoPagoId, filters.metodoPagoId));
+    }
+    if (filters?.startDate) {
+      conditions.push(gte(egresosPorAprobar.fecha, filters.startDate));
+    }
+    if (filters?.endDate) {
+      conditions.push(lte(egresosPorAprobar.fecha, filters.endDate));
+    }
+    
+    // Build the complete query in one go
+    const queryBuilder = db.select({ count: count() }).from(egresosPorAprobar);
+    const finalQuery = conditions.length > 0 
+      ? queryBuilder.where(and(...conditions))
+      : queryBuilder;
+    
+    const [{ count: totalCount }] = await finalQuery;
+    return totalCount;
+  }
+
+  async aprobarEgreso(id: string, egresoData: {
+    monedaId: string;
+    bancoId: string;
+    referencia?: string;
+    observaciones?: string;
+  }): Promise<Egreso> {
+    // Get the egreso por aprobar first
+    const egresoPorAprobar = await this.getEgresoPorAprobarById(id);
+    if (!egresoPorAprobar) {
+      throw new Error('Egreso por aprobar no encontrado');
+    }
+
+    // Create the egreso in the main table with additional data
+    const newEgreso = await this.createEgreso({
+      fecha: egresoPorAprobar.fecha,
+      descripcion: egresoPorAprobar.descripcion,
+      monto: egresoPorAprobar.monto,
+      monedaId: egresoData.monedaId,
+      tipoEgresoId: egresoPorAprobar.tipoEgresoId,
+      metodoPagoId: egresoPorAprobar.metodoPagoId,
+      bancoId: egresoData.bancoId,
+      referencia: egresoData.referencia || '',
+      estado: 'aprobado',
+      observaciones: egresoData.observaciones || '',
+      pendienteInfo: true, // Mark as pending info (orange color)
+    });
+
+    // Delete from egresos por aprobar
+    await this.deleteEgresoPorAprobar(id);
+
+    return newEgreso;
   }
 
   // Update existing Cashea orders from TO DELIVER to PROCESSING
