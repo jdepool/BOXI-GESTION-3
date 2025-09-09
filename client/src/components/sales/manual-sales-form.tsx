@@ -279,12 +279,24 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
                       <Input 
                         type="date" 
                         {...field} 
-                        className="pr-10 cursor-pointer" 
+                        className="cursor-pointer [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-0 pr-10" 
                         id="fecha-input"
                       />
-                      <label htmlFor="fecha-input" className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer">
-                        <CalendarIcon className="h-5 w-5 text-blue-500 hover:text-blue-600 animate-pulse transition-colors" />
-                      </label>
+                      <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                        <CalendarIcon className="h-5 w-5 text-blue-500 animate-pulse" />
+                      </div>
+                      <div 
+                        className="absolute right-0 top-0 w-10 h-full cursor-pointer z-10"
+                        onClick={() => {
+                          const input = document.getElementById('fecha-input') as HTMLInputElement;
+                          if (input) {
+                            input.focus();
+                            // Simulate clicking on the calendar picker area
+                            const event = new MouseEvent('mousedown', { bubbles: true });
+                            input.dispatchEvent(event);
+                          }
+                        }}
+                      />
                     </div>
                   </FormControl>
                   <FormMessage />
