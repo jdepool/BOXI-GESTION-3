@@ -19,13 +19,21 @@ import type { Egreso, Banco, TipoEgreso, MetodoPago, Moneda, EgresoPorAprobar } 
 export default function Egresos() {
   const [activeTab, setActiveTab] = useState("egresos");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isDialogPorAprobarOpen, setIsDialogPorAprobarOpen] = useState(false);
   const [editingEgreso, setEditingEgreso] = useState<Egreso | null>(null);
+  const [editingEgresoPorAprobar, setEditingEgresoPorAprobar] = useState<EgresoPorAprobar | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [filters, setFilters] = useState({
     tipoEgresoId: "all",
     metodoPagoId: "all",
     bancoId: "all",
+    startDate: "",
+    endDate: "",
+  });
+  const [filtersPorAprobar, setFiltersPorAprobar] = useState({
+    tipoEgresoId: "all",
+    metodoPagoId: "all",
     startDate: "",
     endDate: "",
   });
@@ -40,6 +48,13 @@ export default function Egresos() {
     referencia: "",
     estado: "registrado",
     observaciones: "",
+  });
+  const [formDataPorAprobar, setFormDataPorAprobar] = useState({
+    fecha: "",
+    descripcion: "",
+    monto: "",
+    tipoEgresoId: "",
+    metodoPagoId: "",
   });
 
   const { toast } = useToast();
@@ -74,6 +89,20 @@ export default function Egresos() {
 
   const { data: monedas = [] } = useQuery({
     queryKey: ["/api/admin/monedas"],
+  });
+
+  // Fetch egresos por aprobar data
+  const { data: egresosPorAprobarData, isLoading: isLoadingPorAprobar } = useQuery({
+    queryKey: ["/api/egresos-por-aprobar", filtersPorAprobar],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      Object.entries(filtersPorAprobar).forEach(([key, value]) => {
+        if (value && value !== "all") params.append(key, value);
+      });
+      const response = await fetch(`/api/egresos-por-aprobar?${params}`);
+      if (!response.ok) throw new Error('Failed to fetch egresos por aprobar');
+      return response.json();
+    },
   });
 
   // Create mutation
@@ -144,6 +173,72 @@ export default function Egresos() {
     },
   });
 
+  // Egresos Por Aprobar mutations
+  const createPorAprobarMutation = useMutation({
+    mutationFn: async (data: typeof formDataPorAprobar) => {
+      const response = await fetch("/api/egresos-por-aprobar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...data,
+          fecha: new Date(data.fecha),
+          monto: data.monto,
+        }),
+      });
+      if (!response.ok) throw new Error('Failed to create egreso por aprobar');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/egresos-por-aprobar"] });
+      setIsDialogPorAprobarOpen(false);
+      resetFormPorAprobar();
+      toast({ description: "Egreso por aprobar creado exitosamente" });
+    },
+    onError: () => {
+      toast({ variant: "destructive", description: "Error al crear egreso por aprobar" });
+    },
+  });
+
+  const updatePorAprobarMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: typeof formDataPorAprobar }) => {
+      const response = await fetch(`/api/egresos-por-aprobar/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...data,
+          fecha: new Date(data.fecha),
+          monto: data.monto,
+        }),
+      });
+      if (!response.ok) throw new Error('Failed to update egreso por aprobar');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/egresos-por-aprobar"] });
+      setIsDialogPorAprobarOpen(false);
+      resetFormPorAprobar();
+      toast({ description: "Egreso por aprobar actualizado exitosamente" });
+    },
+    onError: () => {
+      toast({ variant: "destructive", description: "Error al actualizar egreso por aprobar" });
+    },
+  });
+
+  const deletePorAprobarMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const response = await fetch(`/api/egresos-por-aprobar/${id}`, { method: "DELETE" });
+      if (!response.ok) throw new Error('Failed to delete egreso por aprobar');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/egresos-por-aprobar"] });
+      toast({ description: "Egreso por aprobar eliminado exitosamente" });
+    },
+    onError: () => {
+      toast({ variant: "destructive", description: "Error al eliminar egreso por aprobar" });
+    },
+  });
+
   // File upload mutation
   const uploadMutation = useMutation({
     mutationFn: async (file: File) => {
@@ -198,6 +293,17 @@ export default function Egresos() {
     setEditingEgreso(null);
   };
 
+  const resetFormPorAprobar = () => {
+    setFormDataPorAprobar({
+      fecha: "",
+      descripcion: "",
+      monto: "",
+      tipoEgresoId: "",
+      metodoPagoId: "",
+    });
+    setEditingEgresoPorAprobar(null);
+  };
+
   const openEditDialog = (egreso: Egreso) => {
     setEditingEgreso(egreso);
     setFormData({
@@ -215,12 +321,33 @@ export default function Egresos() {
     setIsDialogOpen(true);
   };
 
+  const openEditDialogPorAprobar = (egreso: EgresoPorAprobar) => {
+    setEditingEgresoPorAprobar(egreso);
+    setFormDataPorAprobar({
+      fecha: egreso.fecha ? format(new Date(egreso.fecha), "yyyy-MM-dd") : "",
+      descripcion: egreso.descripcion,
+      monto: egreso.monto,
+      tipoEgresoId: egreso.tipoEgresoId,
+      metodoPagoId: egreso.metodoPagoId,
+    });
+    setIsDialogPorAprobarOpen(true);
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (editingEgreso) {
       updateMutation.mutate({ id: editingEgreso.id, data: formData });
     } else {
       createMutation.mutate(formData);
+    }
+  };
+
+  const handleSubmitPorAprobar = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (editingEgresoPorAprobar) {
+      updatePorAprobarMutation.mutate({ id: editingEgresoPorAprobar.id, data: formDataPorAprobar });
+    } else {
+      createPorAprobarMutation.mutate(formDataPorAprobar);
     }
   };
 
@@ -243,6 +370,7 @@ export default function Egresos() {
   };
 
   const egresos = egresosData?.data || [];
+  const egresosPorAprobar = egresosPorAprobarData?.data || [];
 
   return (
     <div className="p-6">
@@ -491,9 +619,8 @@ export default function Egresos() {
               </Dialog>
             </div>
           </div>
-      </div>
 
-      {/* Filters Card */}
+          {/* Filters Card */}
       <Card className="mb-6">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -673,10 +800,123 @@ export default function Egresos() {
           <div className="flex items-center justify-between">
             <div></div>
             <div className="flex items-center gap-2">
-              <Button data-testid="add-egreso-por-aprobar">
-                <Plus className="h-4 w-4 mr-2" />
-                Nuevo Egreso por Aprobar
-              </Button>
+              <Dialog open={isDialogPorAprobarOpen} onOpenChange={setIsDialogPorAprobarOpen}>
+                <DialogTrigger asChild>
+                  <Button onClick={resetFormPorAprobar} data-testid="add-egreso-por-aprobar">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Nuevo Egreso por Aprobar
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-2xl">
+                  <DialogHeader>
+                    <DialogTitle>
+                      {editingEgresoPorAprobar ? "Editar Egreso por Aprobar" : "Crear Nuevo Egreso por Aprobar"}
+                    </DialogTitle>
+                    <DialogDescription>
+                      {editingEgresoPorAprobar 
+                        ? "Modifica los datos del egreso por aprobar seleccionado" 
+                        : "Completa la información para registrar un nuevo egreso por aprobar"
+                      }
+                    </DialogDescription>
+                  </DialogHeader>
+                  <form onSubmit={handleSubmitPorAprobar} className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="fecha-por-aprobar">Fecha</Label>
+                        <Input
+                          id="fecha-por-aprobar"
+                          type="date"
+                          value={formDataPorAprobar.fecha}
+                          onChange={(e) => setFormDataPorAprobar({ ...formDataPorAprobar, fecha: e.target.value })}
+                          required
+                          data-testid="input-fecha-por-aprobar"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="monto-por-aprobar">Monto</Label>
+                        <Input
+                          id="monto-por-aprobar"
+                          type="number"
+                          step="0.01"
+                          value={formDataPorAprobar.monto}
+                          onChange={(e) => setFormDataPorAprobar({ ...formDataPorAprobar, monto: e.target.value })}
+                          required
+                          data-testid="input-monto-por-aprobar"
+                        />
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="descripcion-por-aprobar">Descripción</Label>
+                      <Input
+                        id="descripcion-por-aprobar"
+                        value={formDataPorAprobar.descripcion}
+                        onChange={(e) => setFormDataPorAprobar({ ...formDataPorAprobar, descripcion: e.target.value })}
+                        required
+                        data-testid="input-descripcion-por-aprobar"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="tipoEgresoId-por-aprobar">Tipo de Egreso</Label>
+                        <Select
+                          value={formDataPorAprobar.tipoEgresoId}
+                          onValueChange={(value) => setFormDataPorAprobar({ ...formDataPorAprobar, tipoEgresoId: value })}
+                          required
+                        >
+                          <SelectTrigger data-testid="select-tipo-egreso-por-aprobar">
+                            <SelectValue placeholder="Seleccionar tipo" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {(tiposEgresos as TipoEgreso[]).filter(tipo => tipo.id && tipo.id.trim()).map((tipo) => (
+                              <SelectItem key={tipo.id} value={tipo.id}>
+                                {tipo.nombre}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <Label htmlFor="metodoPagoId-por-aprobar">Método de Pago</Label>
+                        <Select
+                          value={formDataPorAprobar.metodoPagoId}
+                          onValueChange={(value) => setFormDataPorAprobar({ ...formDataPorAprobar, metodoPagoId: value })}
+                          required
+                        >
+                          <SelectTrigger data-testid="select-metodo-pago-por-aprobar">
+                            <SelectValue placeholder="Seleccionar método" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {(metodosPago as MetodoPago[]).filter(metodo => metodo.id && metodo.id.trim()).map((metodo) => (
+                              <SelectItem key={metodo.id} value={metodo.id}>
+                                {metodo.nombre}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
+                    <div className="flex justify-end space-x-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => setIsDialogPorAprobarOpen(false)}
+                      >
+                        Cancelar
+                      </Button>
+                      <Button
+                        type="submit"
+                        disabled={createPorAprobarMutation.isPending || updatePorAprobarMutation.isPending}
+                        data-testid="submit-egreso-por-aprobar"
+                      >
+                        {editingEgresoPorAprobar ? "Actualizar" : "Crear"}
+                      </Button>
+                    </div>
+                  </form>
+                </DialogContent>
+              </Dialog>
             </div>
           </div>
 
@@ -685,7 +925,7 @@ export default function Egresos() {
             <CardHeader>
               <CardTitle>Lista de Egresos por Aprobar</CardTitle>
               <CardDescription>
-                Egresos pendientes de aprobación
+                {egresosPorAprobarData?.total || 0} egresos pendientes de aprobación
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -703,11 +943,66 @@ export default function Egresos() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    <TableRow>
-                      <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                        No hay egresos por aprobar
-                      </TableCell>
-                    </TableRow>
+                    {isLoadingPorAprobar ? (
+                      <TableRow>
+                        <TableCell colSpan={7} className="text-center py-8">
+                          Cargando...
+                        </TableCell>
+                      </TableRow>
+                    ) : egresosPorAprobar.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                          No hay egresos por aprobar
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      egresosPorAprobar.map((egreso: EgresoPorAprobar) => (
+                        <TableRow key={egreso.id} data-testid={`egreso-por-aprobar-row-${egreso.id}`}>
+                          <TableCell>
+                            {egreso.fecha ? format(new Date(egreso.fecha), "dd/MM/yyyy") : "-"}
+                          </TableCell>
+                          <TableCell className="font-medium">{egreso.descripcion}</TableCell>
+                          <TableCell>{egreso.monto}</TableCell>
+                          <TableCell>
+                            {(tiposEgresos as TipoEgreso[]).find(t => t.id === egreso.tipoEgresoId)?.nombre || "-"}
+                          </TableCell>
+                          <TableCell>
+                            {(metodosPago as MetodoPago[]).find(m => m.id === egreso.metodoPagoId)?.nombre || "-"}
+                          </TableCell>
+                          <TableCell>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              data-testid={`aprobar-egreso-${egreso.id}`}
+                            >
+                              <Check className="h-4 w-4 mr-2" />
+                              Aprobar
+                            </Button>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex space-x-2">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => openEditDialogPorAprobar(egreso)}
+                                data-testid={`edit-egreso-por-aprobar-${egreso.id}`}
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => deletePorAprobarMutation.mutate(egreso.id)}
+                                disabled={deletePorAprobarMutation.isPending}
+                                data-testid={`delete-egreso-por-aprobar-${egreso.id}`}
+                              >
+                                <Trash2 className="h-4 w-4 text-destructive" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
                   </TableBody>
                 </Table>
               </div>
