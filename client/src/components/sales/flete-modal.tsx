@@ -126,6 +126,10 @@ export default function FleteModal({ open, onOpenChange, sale }: FleteModalProps
   const handleSave = () => {
     if (!sale) return;
 
+    // Debug logging
+    console.log("Frontend - Sending flete data:", fleteData);
+    console.log("Frontend - FleteGratis value:", fleteData.fleteGratis, typeof fleteData.fleteGratis);
+
     updateFleteMutation.mutate({
       saleId: sale.id,
       flete: fleteData
@@ -291,7 +295,7 @@ export default function FleteModal({ open, onOpenChange, sale }: FleteModalProps
                     </div>
                   </SelectTrigger>
                   <SelectContent>
-                    {bancos.map((banco: Banco) => (
+                    {(bancos as Banco[]).map((banco: Banco) => (
                       <SelectItem key={banco.id} value={banco.banco}>
                         {banco.banco}
                       </SelectItem>
