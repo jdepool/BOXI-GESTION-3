@@ -1000,19 +1000,22 @@ export class DatabaseStorage implements IStorage {
     }
 
     // Create the egreso in the main table with additional data
-    const newEgreso = await this.createEgreso({
-      fecha: egresoPorAprobar.fecha,
-      descripcion: egresoPorAprobar.descripcion,
-      monto: egresoPorAprobar.monto,
-      monedaId: egresoData.monedaId,
-      tipoEgresoId: egresoPorAprobar.tipoEgresoId,
-      metodoPagoId: egresoPorAprobar.metodoPagoId,
-      bancoId: egresoData.bancoId,
-      referencia: egresoData.referencia || '',
-      estado: 'aprobado',
-      observaciones: egresoData.observaciones || '',
-      pendienteInfo: true, // Mark as pending info (orange color)
-    });
+    const [newEgreso] = await db
+      .insert(egresos)
+      .values({
+        fecha: egresoPorAprobar.fecha,
+        descripcion: egresoPorAprobar.descripcion,
+        monto: egresoPorAprobar.monto,
+        monedaId: egresoData.monedaId,
+        tipoEgresoId: egresoPorAprobar.tipoEgresoId,
+        metodoPagoId: egresoPorAprobar.metodoPagoId,
+        bancoId: egresoData.bancoId,
+        referencia: egresoData.referencia || '',
+        estado: 'aprobado',
+        observaciones: egresoData.observaciones || '',
+        pendienteInfo: true, // Mark as pending info (orange color)
+      })
+      .returning();
 
     // Delete from egresos por aprobar
     await this.deleteEgresoPorAprobar(id);
