@@ -257,13 +257,14 @@ export default function SalesTable({
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[80px]">Cantidad</th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[120px]">Direcciones</th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[120px]">Flete</th>
+                <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[150px]">Notas</th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[200px]">Acciones</th>
               </tr>
             </thead>
             <tbody>
               {data.length === 0 ? (
                 <tr>
-                  <td colSpan={18} className="text-center p-8 text-muted-foreground">
+                  <td colSpan={19} className="text-center p-8 text-muted-foreground">
                     No hay datos disponibles
                   </td>
                 </tr>
@@ -380,6 +381,9 @@ export default function SalesTable({
                         }`} />
                         {sale.montoFleteUsd ? 'Editar' : 'Agregar'}
                       </Button>
+                    </td>
+                    <td className="p-2 min-w-[150px] text-xs text-muted-foreground truncate" title={sale.notas || undefined}>
+                      {sale.notas || 'Sin notas'}
                     </td>
                     <td className="p-2 min-w-[200px]">
                       <div className="flex gap-1">

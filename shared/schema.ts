@@ -109,6 +109,8 @@ export const sales = pgTable("sales", {
   bancoReceptorFlete: text("banco_receptor_flete"),
   statusFlete: text("status_flete"), // Pendiente, En Proceso, A Despacho
   fleteGratis: boolean("flete_gratis").default(false),
+  // Notas adicionales
+  notas: text("notas"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
