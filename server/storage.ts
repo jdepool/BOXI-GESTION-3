@@ -1011,9 +1011,9 @@ export class DatabaseStorage implements IStorage {
         metodoPagoId: egresoPorAprobar.metodoPagoId,
         bancoId: egresoData.bancoId,
         referencia: egresoData.referencia || '',
-        estado: 'aprobado',
+        estado: 'registrado',
         observaciones: egresoData.observaciones || '',
-        pendienteInfo: true, // Mark as pending info (orange color)
+        pendienteInfo: true, // Mark as pending complete payment info (orange color)
       })
       .returning();
 

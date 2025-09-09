@@ -263,7 +263,7 @@ export default function Egresos() {
       setApprovalDialogOpen(false);
       setEgresoToApprove(null);
       setApprovalData({ monedaId: "", bancoId: "", referencia: "", observaciones: "" });
-      toast({ description: "Egreso aprobado exitosamente" });
+      toast({ description: "Egreso registrado exitosamente - Pendiente información de pago completa" });
     },
     onError: () => {
       toast({ variant: "destructive", description: "Error al aprobar egreso" });
@@ -986,7 +986,7 @@ export default function Egresos() {
                       <TableHead>Monto</TableHead>
                       <TableHead>Tipo</TableHead>
                       <TableHead>Método Pago</TableHead>
-                      <TableHead>Aprobado</TableHead>
+                      <TableHead>Registrar</TableHead>
                       <TableHead className="w-24">Acciones</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -1025,7 +1025,7 @@ export default function Egresos() {
                               data-testid={`aprobar-egreso-${egreso.id}`}
                             >
                               <Check className="h-4 w-4 mr-2" />
-                              Aprobar
+                              Registrar
                             </Button>
                           </TableCell>
                           <TableCell>
@@ -1064,9 +1064,9 @@ export default function Egresos() {
       <Dialog open={approvalDialogOpen} onOpenChange={setApprovalDialogOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Aprobar Egreso</DialogTitle>
+            <DialogTitle>Registrar Egreso</DialogTitle>
             <DialogDescription>
-              Completa la información adicional para aprobar el egreso: {egresoToApprove?.descripcion}
+              Completa la información básica para registrar el egreso. Quedará pendiente de información de pago completa: {egresoToApprove?.descripcion}
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleApprovalSubmit} className="space-y-4">
@@ -1144,7 +1144,7 @@ export default function Egresos() {
                 disabled={approveEgresoMutation.isPending}
                 data-testid="submit-approval"
               >
-                {approveEgresoMutation.isPending ? "Aprobando..." : "Aprobar Egreso"}
+                {approveEgresoMutation.isPending ? "Registrando..." : "Registrar Egreso"}
               </Button>
             </div>
           </form>
