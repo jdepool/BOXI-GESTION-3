@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, decimal, timestamp, integer } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, decimal, timestamp, integer, boolean } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -134,6 +134,18 @@ export const egresos = pgTable("egresos", {
   referencia: text("referencia"),
   estado: text("estado").notNull().default("registrado"), // registrado, aprobado, pagado, anulado
   observaciones: text("observaciones"),
+  pendienteInfo: boolean("pendiente_info").default(false), // true when approved from egresos_por_aprobar
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const egresosPorAprobar = pgTable("egresos_por_aprobar", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  fecha: timestamp("fecha").notNull(),
+  descripcion: text("descripcion").notNull(),
+  monto: decimal("monto", { precision: 15, scale: 2 }).notNull(),
+  tipoEgresoId: varchar("tipo_egreso_id").notNull(),
+  metodoPagoId: varchar("metodo_pago_id").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -199,6 +211,15 @@ export const insertCanalSchema = createInsertSchema(canales).omit({
 
 export const insertEgresoSchema = createInsertSchema(egresos).omit({
   id: true,
+  pendienteInfo: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  fecha: z.union([z.date(), z.string().transform((val) => new Date(val))]),
+});
+
+export const insertEgresoPorAprobarSchema = createInsertSchema(egresosPorAprobar).omit({
+  id: true,
   createdAt: true,
   updatedAt: true,
 }).extend({
@@ -229,3 +250,5 @@ export type Canal = typeof canales.$inferSelect;
 export type InsertCanal = z.infer<typeof insertCanalSchema>;
 export type Egreso = typeof egresos.$inferSelect;
 export type InsertEgreso = z.infer<typeof insertEgresoSchema>;
+export type EgresoPorAprobar = typeof egresosPorAprobar.$inferSelect;
+export type InsertEgresoPorAprobar = z.infer<typeof insertEgresoPorAprobarSchema>;
