@@ -163,6 +163,10 @@ export interface IStorage {
     referencia?: string;
     observaciones?: string;
   }): Promise<Egreso>;
+  completarInfoPagoEgreso(id: string, updates: {
+    referencia?: string;
+    observaciones?: string;
+  }): Promise<Egreso | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1021,6 +1025,25 @@ export class DatabaseStorage implements IStorage {
     await this.deleteEgresoPorAprobar(id);
 
     return newEgreso;
+  }
+
+  async completarInfoPagoEgreso(id: string, updates: {
+    referencia?: string;
+    observaciones?: string;
+  }): Promise<Egreso | undefined> {
+    const [updatedEgreso] = await db
+      .update(egresos)
+      .set({
+        referencia: updates.referencia,
+        observaciones: updates.observaciones,
+        estado: 'aprobado', // Now fully approved with complete payment info
+        pendienteInfo: false, // Remove pending flag
+        updatedAt: new Date(),
+      })
+      .where(eq(egresos.id, id))
+      .returning();
+
+    return updatedEgreso || undefined;
   }
 
   // Update existing Cashea orders from TO DELIVER to PROCESSING

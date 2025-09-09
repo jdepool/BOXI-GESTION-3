@@ -1265,6 +1265,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Complete payment info for egreso
+  const completarInfoPagoSchema = z.object({
+    referencia: z.string().optional(),
+    observaciones: z.string().optional(),
+  });
+
+  app.put("/api/egresos/:id/completar-pago", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const validatedData = completarInfoPagoSchema.parse(req.body);
+      const updatedEgreso = await storage.completarInfoPagoEgreso(id, validatedData);
+      if (!updatedEgreso) {
+        return res.status(404).json({ error: "Egreso not found" });
+      }
+      res.json(updatedEgreso);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Invalid data", details: error.errors });
+      }
+      console.error("Complete payment info error:", error);
+      res.status(500).json({ error: "Failed to complete payment info" });
+    }
+  });
+
   // Update sale
   app.put("/api/sales/:id", async (req, res) => {
     try {

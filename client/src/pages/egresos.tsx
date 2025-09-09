@@ -64,6 +64,12 @@ export default function Egresos() {
     referencia: "",
     observaciones: "",
   });
+  const [completePagoDialogOpen, setCompletePagoDialogOpen] = useState(false);
+  const [egresoToComplete, setEgresoToComplete] = useState<Egreso | null>(null);
+  const [completePagoData, setCompletePagoData] = useState({
+    referencia: "",
+    observaciones: "",
+  });
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -270,6 +276,28 @@ export default function Egresos() {
     },
   });
 
+  const completePagoMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: typeof completePagoData }) => {
+      const response = await fetch(`/api/egresos/${id}/completar-pago`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!response.ok) throw new Error('Failed to complete payment info');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/egresos"] });
+      setCompletePagoDialogOpen(false);
+      setEgresoToComplete(null);
+      setCompletePagoData({ referencia: "", observaciones: "" });
+      toast({ description: "Información de pago completada exitosamente" });
+    },
+    onError: () => {
+      toast({ variant: "destructive", description: "Error al completar información de pago" });
+    },
+  });
+
   // File upload mutation
   const uploadMutation = useMutation({
     mutationFn: async (file: File) => {
@@ -392,6 +420,22 @@ export default function Egresos() {
     e.preventDefault();
     if (egresoToApprove) {
       approveEgresoMutation.mutate({ id: egresoToApprove.id, data: approvalData });
+    }
+  };
+
+  const openCompletePagoDialog = (egreso: Egreso) => {
+    setEgresoToComplete(egreso);
+    setCompletePagoData({
+      referencia: egreso.referencia || "",
+      observaciones: egreso.observaciones || "",
+    });
+    setCompletePagoDialogOpen(true);
+  };
+
+  const handleCompletePagoSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (egresoToComplete) {
+      completePagoMutation.mutate({ id: egresoToComplete.id, data: completePagoData });
     }
   };
 
@@ -809,20 +853,39 @@ export default function Egresos() {
                         {(bancos as Banco[]).find(b => b.id === egreso.bancoId)?.banco || "-"}
                       </TableCell>
                       <TableCell>
-                        <Badge variant={getEstadoBadgeVariant(egreso.estado)}>
-                          {egreso.estado}
-                        </Badge>
+                        <div className="flex items-center gap-2">
+                          <Badge variant={getEstadoBadgeVariant(egreso.estado)}>
+                            {egreso.estado}
+                          </Badge>
+                          {egreso.pendienteInfo && (
+                            <span className="text-orange-600 text-sm font-medium">
+                              (Pendiente info pago)
+                            </span>
+                          )}
+                        </div>
                       </TableCell>
                       <TableCell>
                         <div className="flex space-x-2">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => openEditDialog(egreso)}
-                            data-testid={`edit-egreso-${egreso.id}`}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
+                          {egreso.pendienteInfo ? (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => openCompletePagoDialog(egreso)}
+                              data-testid={`complete-pago-${egreso.id}`}
+                            >
+                              <Check className="h-4 w-4 mr-1" />
+                              Completar
+                            </Button>
+                          ) : (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => openEditDialog(egreso)}
+                              data-testid={`edit-egreso-${egreso.id}`}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                          )}
                           <Button
                             variant="ghost"
                             size="sm"
@@ -1103,7 +1166,7 @@ export default function Egresos() {
                   <SelectContent>
                     {(bancos as Banco[]).filter(banco => banco.id && banco.id.trim()).map((banco) => (
                       <SelectItem key={banco.id} value={banco.id}>
-                        {banco.nombre}
+                        {banco.banco}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -1145,6 +1208,58 @@ export default function Egresos() {
                 data-testid="submit-approval"
               >
                 {approveEgresoMutation.isPending ? "Registrando..." : "Registrar Egreso"}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Complete Payment Info Dialog */}
+      <Dialog open={completePagoDialogOpen} onOpenChange={setCompletePagoDialogOpen}>
+        <DialogContent className="max-w-xl">
+          <DialogHeader>
+            <DialogTitle>Completar Información de Pago</DialogTitle>
+            <DialogDescription>
+              Completa la información de pago para finalizar el egreso: {egresoToComplete?.descripcion}
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleCompletePagoSubmit} className="space-y-4">
+            <div>
+              <Label htmlFor="referencia-complete">Referencia de Pago</Label>
+              <Input
+                id="referencia-complete"
+                value={completePagoData.referencia}
+                onChange={(e) => setCompletePagoData({ ...completePagoData, referencia: e.target.value })}
+                placeholder="Ingresa la referencia del pago"
+                data-testid="input-referencia-complete"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="observaciones-complete">Observaciones</Label>
+              <Textarea
+                id="observaciones-complete"
+                value={completePagoData.observaciones}
+                onChange={(e) => setCompletePagoData({ ...completePagoData, observaciones: e.target.value })}
+                placeholder="Observaciones adicionales sobre el pago"
+                data-testid="input-observaciones-complete"
+              />
+            </div>
+
+            <div className="flex justify-end space-x-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setCompletePagoDialogOpen(false)}
+              >
+                Cancelar
+              </Button>
+              <Button
+                type="submit"
+                disabled={completePagoMutation.isPending}
+                data-testid="submit-complete-pago"
+              >
+                {completePagoMutation.isPending ? "Completando..." : "Completar Información"}
               </Button>
             </div>
           </form>
