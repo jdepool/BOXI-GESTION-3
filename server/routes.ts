@@ -93,7 +93,7 @@ function parseFile(buffer: Buffer, canal: string, filename: string) {
         referencia: row.Referencia ? String(row.Referencia) : null,
         montoBs: row['Monto en bs'] ? String(row['Monto en bs']) : null,
         estadoEntrega: canal.toLowerCase() === 'cashea' ? 
-          (String(row['Estado de entrega'] || '').toLowerCase() === 'a despachar' ? 'En Proceso' : String(row['Estado de entrega'] || 'En Proceso')) :
+          'En Proceso' : // All Cashea orders start with "En Proceso"
           String(row['Estado de entrega'] || 'En Proceso'),
         product: String(row.Product || ''),
         cantidad: Number(row.Cantidad || 1),
