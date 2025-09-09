@@ -491,21 +491,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // Save to database
-      await storage.createSales(validatedSales);
+      // Check for existing order numbers to avoid duplicates
+      const orderNumbers = validatedSales.map(sale => sale.orden).filter(Boolean) as string[];
+      const existingOrders = await storage.getExistingOrderNumbers(orderNumbers);
+      
+      // Filter out sales with existing order numbers
+      const newSales = validatedSales.filter(sale => 
+        !sale.orden || !existingOrders.includes(sale.orden)
+      );
+      
+      const duplicatesCount = validatedSales.length - newSales.length;
+
+      // Save to database only new sales
+      if (newSales.length > 0) {
+        await storage.createSales(newSales);
+      }
 
       // Log successful upload
       await storage.createUploadHistory({
         filename: req.file.originalname,
         canal,
-        recordsCount: validatedSales.length,
+        recordsCount: newSales.length,
         status: 'success',
+        errorMessage: duplicatesCount > 0 ? `${duplicatesCount} duplicate order(s) ignored` : undefined,
       });
 
       res.json({
         success: true,
-        recordsProcessed: validatedSales.length,
-        message: `Successfully uploaded ${validatedSales.length} sales records`
+        recordsProcessed: newSales.length,
+        duplicatesIgnored: duplicatesCount,
+        message: duplicatesCount > 0 
+          ? `Successfully uploaded ${newSales.length} sales records. ${duplicatesCount} duplicate order(s) were ignored.`
+          : `Successfully uploaded ${newSales.length} sales records`
       });
 
     } catch (error) {

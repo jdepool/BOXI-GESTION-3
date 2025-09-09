@@ -8,7 +8,7 @@ import {
   type EgresoPorAprobar, type InsertEgresoPorAprobar
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, count, sum, avg, and, gte, lte, or, ne, like, ilike, isNotNull } from "drizzle-orm";
+import { eq, desc, count, sum, avg, and, gte, lte, or, ne, like, ilike, isNotNull, sql } from "drizzle-orm";
 
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
@@ -57,6 +57,7 @@ export interface IStorage {
     endDate?: Date;
     excludePendingManual?: boolean;
   }): Promise<number>;
+  getExistingOrderNumbers(orders: string[]): Promise<string[]>;
   
   // Analytics methods
   getSalesMetrics(): Promise<{
@@ -358,6 +359,23 @@ export class DatabaseStorage implements IStorage {
       .where(eq(sales.id, id))
       .returning();
     return updatedSale || undefined;
+  }
+
+  async getExistingOrderNumbers(orders: string[]): Promise<string[]> {
+    if (orders.length === 0) return [];
+    
+    const placeholders = orders.map(() => '?').join(',');
+    const existingOrders = await db
+      .select({ orden: sales.orden })
+      .from(sales)
+      .where(
+        and(
+          isNotNull(sales.orden),
+          sql`${sales.orden} IN (${sql.raw(orders.map(o => `'${o.replace(/'/g, "''")}'`).join(','))})`
+        )
+      );
+    
+    return existingOrders.map(row => row.orden).filter(Boolean) as string[];
   }
 
   async updateSaleAddresses(saleId: string, addresses: {
