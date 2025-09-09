@@ -59,6 +59,7 @@ export default function Egresos() {
   const [completePagoDialogOpen, setCompletePagoDialogOpen] = useState(false);
   const [egresoToComplete, setEgresoToComplete] = useState<Egreso | null>(null);
   const [completePagoData, setCompletePagoData] = useState({
+    bancoId: "",
     referencia: "",
     observaciones: "",
   });
@@ -279,7 +280,7 @@ export default function Egresos() {
       queryClient.invalidateQueries({ queryKey: ["/api/egresos"] });
       setCompletePagoDialogOpen(false);
       setEgresoToComplete(null);
-      setCompletePagoData({ referencia: "", observaciones: "" });
+      setCompletePagoData({ bancoId: "", referencia: "", observaciones: "" });
       toast({ description: "Información de pago completada exitosamente" });
     },
     onError: () => {
@@ -403,6 +404,7 @@ export default function Egresos() {
   const openCompletePagoDialog = (egreso: Egreso) => {
     setEgresoToComplete(egreso);
     setCompletePagoData({
+      bancoId: egreso.bancoId || "",
       referencia: egreso.referencia || "",
       observaciones: egreso.observaciones || "",
     });
@@ -1124,6 +1126,25 @@ export default function Egresos() {
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleCompletePagoSubmit} className="space-y-4">
+            <div>
+              <Label htmlFor="banco-complete">Banco</Label>
+              <Select
+                value={completePagoData.bancoId}
+                onValueChange={(value) => setCompletePagoData({ ...completePagoData, bancoId: value })}
+              >
+                <SelectTrigger data-testid="select-banco-complete">
+                  <SelectValue placeholder="Seleccionar banco" />
+                </SelectTrigger>
+                <SelectContent>
+                  {(bancos as Banco[]).filter(banco => banco.id && banco.id.trim()).map((banco) => (
+                    <SelectItem key={banco.id} value={banco.id}>
+                      {banco.banco}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
             <div>
               <Label htmlFor="referencia-complete">Referencia de Pago</Label>
               <Input

@@ -1267,6 +1267,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Complete payment info for egreso
   const completarInfoPagoSchema = z.object({
+    bancoId: z.string().optional(),
     referencia: z.string().optional(),
     observaciones: z.string().optional(),
   });

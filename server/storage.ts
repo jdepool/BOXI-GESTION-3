@@ -164,6 +164,7 @@ export interface IStorage {
     observaciones?: string;
   }): Promise<Egreso>;
   completarInfoPagoEgreso(id: string, updates: {
+    bancoId?: string;
     referencia?: string;
     observaciones?: string;
   }): Promise<Egreso | undefined>;
@@ -1028,12 +1029,14 @@ export class DatabaseStorage implements IStorage {
   }
 
   async completarInfoPagoEgreso(id: string, updates: {
+    bancoId?: string;
     referencia?: string;
     observaciones?: string;
   }): Promise<Egreso | undefined> {
     const [updatedEgreso] = await db
       .update(egresos)
       .set({
+        bancoId: updates.bancoId,
         referencia: updates.referencia,
         observaciones: updates.observaciones,
         estado: 'aprobado', // Now fully approved with complete payment info
