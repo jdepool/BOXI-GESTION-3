@@ -19,6 +19,7 @@ export interface IStorage {
   createSale(sale: InsertSale): Promise<Sale>;
   createSales(salesData: InsertSale[]): Promise<Sale[]>;
   updateSale(id: string, sale: Partial<InsertSale>): Promise<Sale | undefined>;
+  deleteSale(id: string): Promise<boolean>;
   getSales(filters?: {
     canal?: string;
     estadoEntrega?: string;
@@ -213,6 +214,11 @@ export class DatabaseStorage implements IStorage {
       .where(eq(sales.id, id))
       .returning();
     return updatedSale || undefined;
+  }
+
+  async deleteSale(id: string): Promise<boolean> {
+    const result = await db.delete(sales).where(eq(sales.id, id));
+    return (result.rowCount ?? 0) > 0;
   }
 
   async getSales(filters?: {

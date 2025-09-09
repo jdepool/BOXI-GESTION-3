@@ -1450,6 +1450,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Delete sale
+  app.delete("/api/sales/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      
+      // Check if sale exists
+      const existingSale = await storage.getSaleById(id);
+      if (!existingSale) {
+        return res.status(404).json({ error: "Sale not found" });
+      }
+      
+      const deleted = await storage.deleteSale(id);
+      if (!deleted) {
+        return res.status(500).json({ error: "Failed to delete sale" });
+      }
+      
+      res.json({ success: true, message: "Sale deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting sale:", error);
+      res.status(500).json({ error: "Failed to delete sale" });
+    }
+  });
+
   // Create manual sale
   app.post("/api/sales/manual", async (req, res) => {
     try {
