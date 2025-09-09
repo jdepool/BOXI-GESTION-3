@@ -794,6 +794,7 @@ export default function Egresos() {
                   <TableHead>Método Pago</TableHead>
                   <TableHead>Banco</TableHead>
                   <TableHead>Referencia</TableHead>
+                  <TableHead>Observaciones</TableHead>
                   <TableHead>Estado</TableHead>
                   <TableHead className="w-24">Acciones</TableHead>
                 </TableRow>
@@ -801,13 +802,13 @@ export default function Egresos() {
               <TableBody>
                 {isLoading ? (
                   <TableRow>
-                    <TableCell colSpan={9} className="text-center py-8">
+                    <TableCell colSpan={10} className="text-center py-8">
                       Cargando...
                     </TableCell>
                   </TableRow>
                 ) : egresos.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
                       No hay egresos registrados
                     </TableCell>
                   </TableRow>
@@ -834,6 +835,9 @@ export default function Egresos() {
                       </TableCell>
                       <TableCell>
                         {egreso.referencia || "-"}
+                      </TableCell>
+                      <TableCell>
+                        {egreso.observaciones || "-"}
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
@@ -1032,6 +1036,7 @@ export default function Egresos() {
                       <TableHead>Monto</TableHead>
                       <TableHead>Tipo</TableHead>
                       <TableHead>Método Pago</TableHead>
+                      <TableHead>Observaciones</TableHead>
                       <TableHead>Aprobar</TableHead>
                       <TableHead className="w-24">Acciones</TableHead>
                     </TableRow>
@@ -1039,13 +1044,13 @@ export default function Egresos() {
                   <TableBody>
                     {isLoadingPorAprobar ? (
                       <TableRow>
-                        <TableCell colSpan={7} className="text-center py-8">
+                        <TableCell colSpan={8} className="text-center py-8">
                           Cargando...
                         </TableCell>
                       </TableRow>
                     ) : egresosPorAprobar.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                        <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                           No hay egresos por aprobar
                         </TableCell>
                       </TableRow>
@@ -1062,6 +1067,9 @@ export default function Egresos() {
                           </TableCell>
                           <TableCell>
                             {(metodosPago as MetodoPago[]).find(m => m.id === egreso.metodoPagoId)?.nombre || "-"}
+                          </TableCell>
+                          <TableCell>
+                            {egreso.observaciones || "-"}
                           </TableCell>
                           <TableCell>
                             <Button
