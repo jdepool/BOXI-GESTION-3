@@ -11,9 +11,12 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Plus, Upload, Edit, Trash2, Filter, Download, Check } from "lucide-react";
+import { ArrowLeft, Plus, Upload, Edit, Trash2, Filter, Download, Check, CalendarIcon } from "lucide-react";
 import { Link } from "wouter";
 import { format } from "date-fns";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
 import type { Egreso, Banco, TipoEgreso, MetodoPago, Moneda, EgresoPorAprobar } from "@shared/schema";
 
 export default function Egresos() {
@@ -510,14 +513,29 @@ export default function Egresos() {
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <Label htmlFor="fecha">Fecha</Label>
-                      <Input
-                        id="fecha"
-                        type="date"
-                        value={formData.fecha}
-                        onChange={(e) => setFormData({ ...formData, fecha: e.target.value })}
-                        required
-                        data-testid="input-fecha"
-                      />
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant={"outline"}
+                            className={cn(
+                              "w-full justify-start text-left font-normal",
+                              !formData.fecha && "text-muted-foreground"
+                            )}
+                            data-testid="date-picker-fecha"
+                          >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {formData.fecha ? format(new Date(formData.fecha), "dd/MM/yyyy") : <span>Seleccionar fecha</span>}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0">
+                          <Calendar
+                            mode="single"
+                            selected={formData.fecha ? new Date(formData.fecha) : undefined}
+                            onSelect={(date) => setFormData({ ...formData, fecha: date ? format(date, "yyyy-MM-dd") : "" })}
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
                     </div>
                     <div>
                       <Label htmlFor="monto">Monto</Label>
@@ -756,19 +774,53 @@ export default function Egresos() {
             </div>
             <div>
               <Label>Fecha Inicio</Label>
-              <Input
-                type="date"
-                value={filters.startDate}
-                onChange={(e) => setFilters({ ...filters, startDate: e.target.value })}
-              />
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant={"outline"}
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !filters.startDate && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {filters.startDate ? format(new Date(filters.startDate), "dd/MM/yyyy") : <span>Fecha inicio</span>}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0">
+                  <Calendar
+                    mode="single"
+                    selected={filters.startDate ? new Date(filters.startDate) : undefined}
+                    onSelect={(date) => setFilters({ ...filters, startDate: date ? format(date, "yyyy-MM-dd") : "" })}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
             </div>
             <div>
               <Label>Fecha Fin</Label>
-              <Input
-                type="date"
-                value={filters.endDate}
-                onChange={(e) => setFilters({ ...filters, endDate: e.target.value })}
-              />
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant={"outline"}
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !filters.endDate && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {filters.endDate ? format(new Date(filters.endDate), "dd/MM/yyyy") : <span>Fecha fin</span>}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0">
+                  <Calendar
+                    mode="single"
+                    selected={filters.endDate ? new Date(filters.endDate) : undefined}
+                    onSelect={(date) => setFilters({ ...filters, endDate: date ? format(date, "yyyy-MM-dd") : "" })}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
             </div>
           </div>
         </CardContent>
@@ -921,14 +973,29 @@ export default function Egresos() {
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <Label htmlFor="fecha-por-aprobar">Fecha</Label>
-                        <Input
-                          id="fecha-por-aprobar"
-                          type="date"
-                          value={formDataPorAprobar.fecha}
-                          onChange={(e) => setFormDataPorAprobar({ ...formDataPorAprobar, fecha: e.target.value })}
-                          required
-                          data-testid="input-fecha-por-aprobar"
-                        />
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant={"outline"}
+                              className={cn(
+                                "w-full justify-start text-left font-normal",
+                                !formDataPorAprobar.fecha && "text-muted-foreground"
+                              )}
+                              data-testid="date-picker-fecha-por-aprobar"
+                            >
+                              <CalendarIcon className="mr-2 h-4 w-4" />
+                              {formDataPorAprobar.fecha ? format(new Date(formDataPorAprobar.fecha), "dd/MM/yyyy") : <span>Seleccionar fecha</span>}
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0">
+                            <Calendar
+                              mode="single"
+                              selected={formDataPorAprobar.fecha ? new Date(formDataPorAprobar.fecha) : undefined}
+                              onSelect={(date) => setFormDataPorAprobar({ ...formDataPorAprobar, fecha: date ? format(date, "yyyy-MM-dd") : "" })}
+                              initialFocus
+                            />
+                          </PopoverContent>
+                        </Popover>
                       </div>
                       <div>
                         <Label htmlFor="monto-por-aprobar">Monto</Label>
