@@ -14,6 +14,11 @@ import { useToast } from "@/hooks/use-toast";
 import type { Sale } from "@shared/schema";
 
 function getFleteStatus(sale: Sale): { status: string; color: string; description: string } {
+  // Si está marcado como flete gratis, mostrar estado especial
+  if (sale.fleteGratis) {
+    return { status: "FLETE GRATIS", color: "bg-green-600", description: "Flete marcado como gratuito" };
+  }
+
   // Si ya tiene un status manual, usarlo
   if (sale.statusFlete) {
     const statusMap = {
@@ -78,7 +83,7 @@ export default function Flete() {
   };
 
   // Filter sales that have freight information but are not ready for dispatch yet
-  const salesWithFlete = data?.data?.filter((sale: Sale) => {
+  const salesWithFlete = (data as { data: Sale[] })?.data?.filter((sale: Sale) => {
     if (!sale.montoFleteUsd) return false;
     
     // Exclude orders that are ready for dispatch (A Despachar + A Despacho)
@@ -188,9 +193,16 @@ export default function Flete() {
                             <Badge variant="outline" className="text-xs">{sale.canal}</Badge>
                           </td>
                           <td className="p-4">
-                            <div className="flex items-center gap-1">
-                              <DollarSign className="h-3 w-3 text-green-600" />
-                              <span className="text-sm font-bold text-green-600">${sale.montoFleteUsd}</span>
+                            <div className="flex items-center gap-2">
+                              <div className="flex items-center gap-1">
+                                <DollarSign className="h-3 w-3 text-green-600" />
+                                <span className="text-sm font-bold text-green-600">${sale.montoFleteUsd}</span>
+                              </div>
+                              {sale.fleteGratis && (
+                                <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">
+                                  GRATIS
+                                </Badge>
+                              )}
                             </div>
                           </td>
                           <td className="p-4">

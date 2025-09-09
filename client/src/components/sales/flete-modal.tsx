@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Truck, DollarSign, CalendarIcon, FileText, User, Phone, Mail, Building2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
@@ -21,6 +22,7 @@ interface FleteData {
   referenciaFlete: string;
   montoFleteVes: string;
   bancoReceptorFlete: string;
+  fleteGratis: boolean;
 }
 
 interface FleteModalProps {
@@ -35,7 +37,8 @@ export default function FleteModal({ open, onOpenChange, sale }: FleteModalProps
     fechaFlete: "",
     referenciaFlete: "",
     montoFleteVes: "",
-    bancoReceptorFlete: ""
+    bancoReceptorFlete: "",
+    fleteGratis: false
   });
 
   const { toast } = useToast();
@@ -87,7 +90,8 @@ export default function FleteModal({ open, onOpenChange, sale }: FleteModalProps
         fechaFlete: sale.fechaFlete ? format(new Date(sale.fechaFlete), 'yyyy-MM-dd') : "",
         referenciaFlete: sale.referenciaFlete || "",
         montoFleteVes: sale.montoFleteVes ? sale.montoFleteVes.toString() : "",
-        bancoReceptorFlete: sale.bancoReceptorFlete || ""
+        bancoReceptorFlete: sale.bancoReceptorFlete || "",
+        fleteGratis: sale.fleteGratis || false
       });
     }
   }, [sale, open]);
@@ -98,7 +102,8 @@ export default function FleteModal({ open, onOpenChange, sale }: FleteModalProps
       fechaFlete: "",
       referenciaFlete: "",
       montoFleteVes: "",
-      bancoReceptorFlete: ""
+      bancoReceptorFlete: "",
+      fleteGratis: false
     });
   };
 
@@ -108,6 +113,13 @@ export default function FleteModal({ open, onOpenChange, sale }: FleteModalProps
     setFleteData((prev) => ({
       ...prev,
       [field]: e.target.value
+    }));
+  };
+
+  const handleCheckboxChange = (checked: boolean) => {
+    setFleteData((prev) => ({
+      ...prev,
+      fleteGratis: checked
     }));
   };
 
@@ -287,6 +299,24 @@ export default function FleteModal({ open, onOpenChange, sale }: FleteModalProps
                   </SelectContent>
                 </Select>
               </div>
+            </div>
+
+            {/* Flete Gratis Section */}
+            <div className="space-y-2">
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="fleteGratis"
+                  checked={fleteData.fleteGratis}
+                  onCheckedChange={handleCheckboxChange}
+                  data-testid="checkbox-flete-gratis"
+                />
+                <Label htmlFor="fleteGratis" className="text-lg font-semibold text-green-600">
+                  FLETE GRATIS
+                </Label>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Si está marcado y la orden está en estado "A Despachar", puede ser procesada en Despachos.
+              </p>
             </div>
           </div>
 

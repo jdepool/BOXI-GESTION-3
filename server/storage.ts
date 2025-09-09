@@ -288,14 +288,17 @@ export class DatabaseStorage implements IStorage {
 
   async getOrdersWithAddresses(limit: number = 20, offset: number = 0): Promise<{ data: Sale[]; total: number }> {
     // Get orders that are ready for delivery (A Despachar status)
-    // AND have freight status "A Despacho" (ready for dispatch)
+    // AND (have freight status "A Despacho" OR have "FLETE GRATIS" marked)
     const ordersForDispatch = await db
       .select()
       .from(sales)
       .where(
         and(
           eq(sales.estadoEntrega, 'A Despachar'), // Must be A Despachar status
-          eq(sales.statusFlete, 'A Despacho') // Must have flete status "A Despacho"
+          or(
+            eq(sales.statusFlete, 'A Despacho'), // Have flete status "A Despacho"
+            eq(sales.fleteGratis, true) // OR have "FLETE GRATIS" marked
+          )
         )
       )
       .orderBy(desc(sales.fecha))
@@ -309,7 +312,10 @@ export class DatabaseStorage implements IStorage {
       .where(
         and(
           eq(sales.estadoEntrega, 'A Despachar'), // Must be A Despachar status
-          eq(sales.statusFlete, 'A Despacho') // Must have flete status "A Despacho"
+          or(
+            eq(sales.statusFlete, 'A Despacho'), // Have flete status "A Despacho"
+            eq(sales.fleteGratis, true) // OR have "FLETE GRATIS" marked
+          )
         )
       );
 
