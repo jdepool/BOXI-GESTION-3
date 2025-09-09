@@ -387,6 +387,16 @@ export default function Egresos() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validar que la fecha sea obligatoria
+    if (!formData.fecha) {
+      toast({
+        variant: "destructive",
+        description: "La fecha es obligatoria",
+      });
+      return;
+    }
+    
     if (editingEgreso) {
       updateMutation.mutate({ id: editingEgreso.id, data: formData });
     } else {
@@ -512,7 +522,7 @@ export default function Egresos() {
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <Label htmlFor="fecha">Fecha</Label>
+                      <Label htmlFor="fecha">Fecha *</Label>
                       <Popover>
                         <PopoverTrigger asChild>
                           <Button
@@ -538,7 +548,7 @@ export default function Egresos() {
                       </Popover>
                     </div>
                     <div>
-                      <Label htmlFor="monto">Monto</Label>
+                      <Label htmlFor="monto">Monto *</Label>
                       <Input
                         id="monto"
                         type="number"
@@ -552,7 +562,7 @@ export default function Egresos() {
                   </div>
                   
                   <div>
-                    <Label htmlFor="descripcion">Descripción</Label>
+                    <Label htmlFor="descripcion">Descripción *</Label>
                     <Input
                       id="descripcion"
                       value={formData.descripcion}
@@ -564,7 +574,7 @@ export default function Egresos() {
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <Label htmlFor="monedaId">Moneda</Label>
+                      <Label htmlFor="monedaId">Moneda *</Label>
                       <Select
                         value={formData.monedaId}
                         onValueChange={(value) => setFormData({ ...formData, monedaId: value })}
@@ -583,7 +593,7 @@ export default function Egresos() {
                       </Select>
                     </div>
                     <div>
-                      <Label htmlFor="tipoEgresoId">Tipo de Egreso</Label>
+                      <Label htmlFor="tipoEgresoId">Tipo de Egreso *</Label>
                       <Select
                         value={formData.tipoEgresoId}
                         onValueChange={(value) => setFormData({ ...formData, tipoEgresoId: value })}
@@ -605,7 +615,7 @@ export default function Egresos() {
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <Label htmlFor="metodoPagoId">Método de Pago</Label>
+                      <Label htmlFor="metodoPagoId">Método de Pago *</Label>
                       <Select
                         value={formData.metodoPagoId}
                         onValueChange={(value) => setFormData({ ...formData, metodoPagoId: value })}
@@ -624,7 +634,7 @@ export default function Egresos() {
                       </Select>
                     </div>
                     <div>
-                      <Label htmlFor="bancoId">Banco</Label>
+                      <Label htmlFor="bancoId">Banco *</Label>
                       <Select
                         value={formData.bancoId}
                         onValueChange={(value) => setFormData({ ...formData, bancoId: value })}
@@ -646,19 +656,21 @@ export default function Egresos() {
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <Label htmlFor="referencia">Referencia</Label>
+                      <Label htmlFor="referencia">Referencia *</Label>
                       <Input
                         id="referencia"
                         value={formData.referencia}
                         onChange={(e) => setFormData({ ...formData, referencia: e.target.value })}
+                        required
                         data-testid="input-referencia"
                       />
                     </div>
                     <div>
-                      <Label htmlFor="estado">Estado</Label>
+                      <Label htmlFor="estado">Estado *</Label>
                       <Select
                         value={formData.estado}
                         onValueChange={(value) => setFormData({ ...formData, estado: value })}
+                        required
                       >
                         <SelectTrigger data-testid="select-estado">
                           <SelectValue />
