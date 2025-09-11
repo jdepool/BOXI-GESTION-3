@@ -131,8 +131,8 @@
 }
 
 .channel-badge-shopify {
-  background-color: hsl(0, 70%, 50%);
-  color: white;
+  background-color: hsl(0, 70%, 50%) !important;
+  color: white !important;
 }
 
 .channel-badge-treble {
@@ -168,8 +168,8 @@
 }
 
 .dark .channel-badge-shopify {
-  background-color: hsl(120, 70%, 55%);
-  color: hsl(218, 35%, 8%);
+  background-color: hsl(0, 70%, 55%) !important;
+  color: white !important;
 }
 
 .dark .channel-badge-treble {
