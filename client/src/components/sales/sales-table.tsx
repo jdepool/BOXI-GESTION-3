@@ -132,7 +132,7 @@ export default function SalesTable({
     }
   };
 
-  const handleNotesKeyDown = (e: React.KeyboardEvent) => {
+  const handleNotesKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       e.currentTarget.blur();
     } else if (e.key === 'Escape') {
