@@ -246,6 +246,7 @@ export default function SalesTable({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todos los estados</SelectItem>
+                  <SelectItem value="Pendiente">Pendiente</SelectItem>
                   <SelectItem value="En Proceso">En Proceso</SelectItem>
                   <SelectItem value="A Despachar">A Despachar</SelectItem>
                   <SelectItem value="Despachado">Despachado</SelectItem>
@@ -380,6 +381,7 @@ export default function SalesTable({
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
+                          <SelectItem value="Pendiente">Pendiente</SelectItem>
                           <SelectItem value="En Proceso">En Proceso</SelectItem>
                           <SelectItem value="A Despachar">A despachar</SelectItem>
                           <SelectItem value="Despachado">Despachado</SelectItem>

@@ -8,6 +8,7 @@ import { useAuth } from "@/hooks/useAuth";
 import Dashboard from "@/pages/dashboard";
 import Upload from "@/pages/upload";
 import Sales from "@/pages/sales";
+import VentasPendientes from "@/pages/ventas-pendientes";
 import Despachos from "@/pages/despachos";
 import Flete from "@/pages/flete";
 import VerificacionPagosCashea from "@/pages/verificacion-pagos-cashea";
@@ -52,6 +53,9 @@ function Router() {
       </Route>
       <Route path="/sales">
         <ProtectedRoute component={Sales} />
+      </Route>
+      <Route path="/ventas-pendientes">
+        <ProtectedRoute component={VentasPendientes} />
       </Route>
       <Route path="/despachos">
         <ProtectedRoute component={Despachos} />
