@@ -30,6 +30,7 @@ const editSaleSchema = z.object({
   referencia: z.string().optional(),
   montoUsd: z.string().optional(),
   montoBs: z.string().optional(),
+  pagoInicialUsd: z.string().optional(),
   direccionFacturacionPais: z.string().optional(),
   direccionFacturacionEstado: z.string().optional(),
   direccionFacturacionCiudad: z.string().optional(),
@@ -71,6 +72,7 @@ export default function EditSaleModal({ open, onOpenChange, sale }: EditSaleModa
       referencia: "",
       montoUsd: "",
       montoBs: "",
+      pagoInicialUsd: "",
       direccionFacturacionPais: "",
       direccionFacturacionEstado: "",
       direccionFacturacionCiudad: "",
@@ -119,6 +121,7 @@ export default function EditSaleModal({ open, onOpenChange, sale }: EditSaleModa
         referencia: sale.referencia || "",
         montoUsd: sale.montoUsd?.toString() || "",
         montoBs: sale.montoBs?.toString() || "",
+        pagoInicialUsd: sale.pagoInicialUsd?.toString() || "",
         direccionFacturacionPais: sale.direccionFacturacionPais || "",
         direccionFacturacionEstado: sale.direccionFacturacionEstado || "",
         direccionFacturacionCiudad: sale.direccionFacturacionCiudad || "",
@@ -411,6 +414,20 @@ export default function EditSaleModal({ open, onOpenChange, sale }: EditSaleModa
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Monto en USD</FormLabel>
+                      <FormControl>
+                        <Input placeholder="0.00" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="pagoInicialUsd"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Pago Inicial USD</FormLabel>
                       <FormControl>
                         <Input placeholder="0.00" {...field} />
                       </FormControl>
