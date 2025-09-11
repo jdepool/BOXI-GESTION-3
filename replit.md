@@ -35,6 +35,7 @@ The system implements a basic user management structure with username/password a
 ## File Processing
 - **SheetJS (XLSX)**: Excel file parsing library for reading and converting spreadsheet data to JSON format
 - **Multer**: Express middleware for handling multipart/form-data file uploads with validation and size limits
+- **CSV Parse**: Library for parsing CSV files from Shopify and other sales channels with column header mapping
 
 ## Development Tools
 - **Vite**: Modern build tool providing fast development server and optimized production builds
@@ -45,3 +46,42 @@ The system implements a basic user management structure with username/password a
 - **TanStack Query**: Server state management library providing caching, synchronization, and background updates
 - **date-fns**: Date manipulation library for formatting and parsing date values in sales records
 - **Zod**: Schema validation library used with Drizzle for runtime type checking and data validation
+
+# Recent Changes
+
+## December 2025 - Shopify Data Integration
+
+### Shopify CSV/Excel Mapping Implementation
+Added comprehensive Shopify data mapping functionality that automatically processes Shopify export files and maps them to the Ventas Pendientes (Pending Sales) system:
+
+**Field Mappings (Shopify → Database):**
+- Name → orden (Order number)
+- Billing Name → nombre (Customer name)  
+- Billing Phone → telefono (Phone number)
+- Email → email (Email address)
+- Outstanding Balance → totalUsd (Total amount in USD)
+- Created at → fecha (Order date)
+- Lineitem name → product (Product name)
+- Lineitem quantity → cantidad (Quantity)
+- Billing Country → direccionFacturacionPais (Billing country)
+- Billing Province → direccionFacturacionEstado (Billing state)
+- Billing City → direccionFacturacionCiudad (Billing city)
+- Billing Address1 → direccionFacturacionDireccion (Billing address)
+- Billing Address2 → direccionFacturacionUrbanizacion (Billing urbanization)
+- Shipping Country → direccionDespachoPais (Shipping country)
+- Shipping Province → direccionDespachoEstado (Shipping state)
+- Shipping City → direccionDespachoCiudad (Shipping city)  
+- Shipping Address1 → direccionDespachoDireccion (Shipping address)
+- Shipping Address2 → direccionDespachoUrbanizacion (Shipping urbanization)
+
+**Automatic Status Configuration:**
+- All Shopify orders are automatically set to estado: 'Pendiente' (Pending status)
+- estadoEntrega: 'Pendiente' (Delivery status: Pending)
+- statusFlete: 'Pendiente' (Freight status: Pending)
+- canal: 'shopify' (Sales channel: Shopify)
+
+**Default Values for Missing Shopify Fields:**
+- cedula: null (ID number not available in Shopify)
+- sucursal: null (Branch not applicable)
+- tienda: null (Store not applicable)
+- All freight-related fields initialized as null/pending for manual configuration

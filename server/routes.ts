@@ -64,42 +64,111 @@ function parseFile(buffer: Buffer, canal: string, filename: string) {
       data = XLSX.utils.sheet_to_json(worksheet);
     }
 
-    // Expected columns from Cashea file: Nombre, Cedula, Telefono, Email, Total usd, Sucursal, Tienda, Fecha, Canal, Estado, Estado pago inicial, Pago inicial usd, Orden, Factura, Referencia, Monto en bs, Estado de entrega, Product, Cantidad
     const salesData = data.map((row: any) => {
-      // Parse date
+      // Parse date based on channel
       let fecha = new Date();
-      if (row.Fecha) {
-        if (typeof row.Fecha === 'number') {
-          // Excel date serial number
-          fecha = new Date((row.Fecha - 25569) * 86400 * 1000);
-        } else {
-          fecha = new Date(row.Fecha);
+      
+      if (canal.toLowerCase() === 'shopify') {
+        // For Shopify: Created at field
+        if (row['Created at']) {
+          if (typeof row['Created at'] === 'number') {
+            // Excel date serial number
+            fecha = new Date((row['Created at'] - 25569) * 86400 * 1000);
+          } else {
+            fecha = new Date(row['Created at']);
+          }
+        }
+      } else {
+        // For Cashea and others: Fecha field
+        if (row.Fecha) {
+          if (typeof row.Fecha === 'number') {
+            // Excel date serial number
+            fecha = new Date((row.Fecha - 25569) * 86400 * 1000);
+          } else {
+            fecha = new Date(row.Fecha);
+          }
         }
       }
 
-      return {
-        nombre: String(row.Nombre || ''),
-        cedula: row.Cedula ? String(row.Cedula) : null,
-        telefono: row.Telefono ? String(row.Telefono) : null,
-        email: row.Email ? String(row.Email) : null,
-        totalUsd: String(row['Total usd'] || '0'),
-        sucursal: row.Sucursal ? String(row.Sucursal) : null,
-        tienda: row.Tienda ? String(row.Tienda) : null,
-        fecha,
-        canal: canal, // Use the provided canal parameter
-        estado: String(row.Estado || ''),
-        estadoPagoInicial: row['Estado pago inicial'] ? String(row['Estado pago inicial']) : null,
-        pagoInicialUsd: row['Pago inicial usd'] ? String(row['Pago inicial usd']) : null,
-        orden: row.Orden ? String(row.Orden) : null,
-        factura: row.Factura ? String(row.Factura) : null,
-        referencia: row.Referencia ? String(row.Referencia) : null,
-        montoBs: row['Monto en bs'] ? String(row['Monto en bs']) : null,
-        estadoEntrega: canal.toLowerCase() === 'cashea' ? 
-          'En Proceso' : // All Cashea orders start with "En Proceso"
-          String(row['Estado de entrega'] || 'En Proceso'),
-        product: String(row.Product || ''),
-        cantidad: Number(row.Cantidad || 1),
-      };
+      if (canal.toLowerCase() === 'shopify') {
+        // Shopify specific mapping
+        return {
+          nombre: String(row['Billing Name'] || ''),
+          cedula: null, // Shopify doesn't have cedula field
+          telefono: row['Billing Phone'] ? String(row['Billing Phone']) : null,
+          email: row.Email ? String(row.Email) : null,
+          totalUsd: String(row['Outstanding Balance'] || '0'),
+          sucursal: null, // Shopify doesn't have sucursal
+          tienda: null, // Shopify doesn't have tienda  
+          fecha,
+          canal: canal,
+          estado: 'Pendiente', // All Shopify orders start as "Pendiente"
+          estadoPagoInicial: null,
+          pagoInicialUsd: null,
+          metodoPagoId: null,
+          bancoId: null,
+          orden: row.Name ? String(row.Name) : null, // Name maps to Order
+          factura: null,
+          referencia: null,
+          montoBs: null,
+          montoUsd: String(row['Outstanding Balance'] || '0'),
+          estadoEntrega: 'Pendiente', // All Shopify orders start as "Pendiente"
+          product: String(row['Lineitem name'] || ''),
+          cantidad: Number(row['Lineitem quantity'] || 1),
+          // Billing address mapping
+          direccionFacturacionPais: row['Billing Country'] ? String(row['Billing Country']) : null,
+          direccionFacturacionEstado: row['Billing Province'] ? String(row['Billing Province']) : null,
+          direccionFacturacionCiudad: row['Billing City'] ? String(row['Billing City']) : null,
+          direccionFacturacionDireccion: row['Billing Address1'] ? String(row['Billing Address1']) : null,
+          direccionFacturacionUrbanizacion: row['Billing Address2'] ? String(row['Billing Address2']) : null,
+          direccionFacturacionReferencia: null,
+          direccionDespachoIgualFacturacion: 'false',
+          // Shipping address mapping  
+          direccionDespachoPais: row['Shipping Country'] ? String(row['Shipping Country']) : null,
+          direccionDespachoEstado: row['Shipping Province'] ? String(row['Shipping Province']) : null,
+          direccionDespachoCiudad: row['Shipping City'] ? String(row['Shipping City']) : null,
+          direccionDespachoDireccion: row['Shipping Address1'] ? String(row['Shipping Address1']) : null,
+          direccionDespachoUrbanizacion: row['Shipping Address2'] ? String(row['Shipping Address2']) : null,
+          direccionDespachoReferencia: null,
+          // Default freight values
+          montoFleteUsd: null,
+          fechaFlete: null,
+          referenciaFlete: null,
+          montoFleteVes: null,
+          bancoReceptorFlete: null,
+          statusFlete: 'Pendiente',
+          fleteGratis: false,
+          notas: null,
+        };
+      } else {
+        // Expected columns from Cashea/other files: Nombre, Cedula, Telefono, Email, Total usd, Sucursal, Tienda, Fecha, Canal, Estado, Estado pago inicial, Pago inicial usd, Orden, Factura, Referencia, Monto en bs, Estado de entrega, Product, Cantidad
+        return {
+          nombre: String(row.Nombre || ''),
+          cedula: row.Cedula ? String(row.Cedula) : null,
+          telefono: row.Telefono ? String(row.Telefono) : null,
+          email: row.Email ? String(row.Email) : null,
+          totalUsd: String(row['Total usd'] || '0'),
+          sucursal: row.Sucursal ? String(row.Sucursal) : null,
+          tienda: row.Tienda ? String(row.Tienda) : null,
+          fecha,
+          canal: canal, // Use the provided canal parameter
+          estado: String(row.Estado || ''),
+          estadoPagoInicial: row['Estado pago inicial'] ? String(row['Estado pago inicial']) : null,
+          pagoInicialUsd: row['Pago inicial usd'] ? String(row['Pago inicial usd']) : null,
+          metodoPagoId: null,
+          bancoId: null,
+          orden: row.Orden ? String(row.Orden) : null,
+          factura: row.Factura ? String(row.Factura) : null,
+          referencia: row.Referencia ? String(row.Referencia) : null,
+          montoBs: row['Monto en bs'] ? String(row['Monto en bs']) : null,
+          montoUsd: null,
+          estadoEntrega: canal.toLowerCase() === 'cashea' ? 
+            'En Proceso' : // All Cashea orders start with "En Proceso"
+            String(row['Estado de entrega'] || 'En Proceso'),
+          product: String(row.Product || ''),
+          cantidad: Number(row.Cantidad || 1),
+        };
+      }
     });
 
     return salesData;
