@@ -117,7 +117,7 @@ function parseFile(buffer: Buffer, canal: string, filename: string) {
           cantidad: Number(row['Lineitem quantity'] || 1),
           // Billing address mapping
           direccionFacturacionPais: row['Billing Country'] ? String(row['Billing Country']) : null,
-          direccionFacturacionEstado: row['Billing Province'] ? String(row['Billing Province']) : null,
+          direccionFacturacionEstado: row['Billing Province name'] ? String(row['Billing Province name']) : null,
           direccionFacturacionCiudad: row['Billing City'] ? String(row['Billing City']) : null,
           direccionFacturacionDireccion: row['Billing Address1'] ? String(row['Billing Address1']) : null,
           direccionFacturacionUrbanizacion: row['Billing Address2'] ? String(row['Billing Address2']) : null,
@@ -125,7 +125,7 @@ function parseFile(buffer: Buffer, canal: string, filename: string) {
           direccionDespachoIgualFacturacion: 'false',
           // Shipping address mapping  
           direccionDespachoPais: row['Shipping Country'] ? String(row['Shipping Country']) : null,
-          direccionDespachoEstado: row['Shipping Province'] ? String(row['Shipping Province']) : null,
+          direccionDespachoEstado: row['Shipping Province name'] ? String(row['Shipping Province name']) : null,
           direccionDespachoCiudad: row['Shipping City'] ? String(row['Shipping City']) : null,
           direccionDespachoDireccion: row['Shipping Address1'] ? String(row['Shipping Address1']) : null,
           direccionDespachoUrbanizacion: row['Shipping Address2'] ? String(row['Shipping Address2']) : null,
