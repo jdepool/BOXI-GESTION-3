@@ -1527,22 +1527,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Sale not found" });
       }
 
+      // Helper function to handle numeric fields
+      const handleNumericField = (value: any, existingValue: any) => {
+        if (value === undefined) return existingValue;
+        if (value === "" || value === null) return null;
+        return value.toString();
+      };
+
+      // Helper function to handle integer fields
+      const handleIntegerField = (value: any, existingValue: any) => {
+        if (value === undefined) return existingValue;
+        if (value === "" || value === null) return null;
+        return parseInt(value) || null;
+      };
+
       // Prepare updated sale data
       const saleData = {
         // Core fields
         nombre: body.nombre || existingSale.nombre,
-        totalUsd: body.totalUsd ? body.totalUsd.toString() : existingSale.totalUsd,
+        totalUsd: handleNumericField(body.totalUsd, existingSale.totalUsd),
         fecha: body.fecha ? new Date(body.fecha) : existingSale.fecha,
         product: body.product || existingSale.product,
-        cantidad: body.cantidad ? parseInt(body.cantidad) : existingSale.cantidad,
+        cantidad: handleIntegerField(body.cantidad, existingSale.cantidad),
         
         // Optional fields
         cedula: body.cedula !== undefined ? body.cedula : existingSale.cedula,
         telefono: body.telefono !== undefined ? body.telefono : existingSale.telefono,
         email: body.email !== undefined ? body.email : existingSale.email,
         referencia: body.referencia !== undefined ? body.referencia : existingSale.referencia,
-        montoBs: body.montoBs !== undefined ? body.montoBs : existingSale.montoBs,
-        montoUsd: body.montoUsd !== undefined ? body.montoUsd : existingSale.montoUsd,
+        montoBs: handleNumericField(body.montoBs, existingSale.montoBs),
+        montoUsd: handleNumericField(body.montoUsd, existingSale.montoUsd),
+        pagoInicialUsd: handleNumericField(body.pagoInicialUsd, existingSale.pagoInicialUsd),
         metodoPagoId: body.metodoPagoId !== undefined ? body.metodoPagoId : existingSale.metodoPagoId,
         bancoId: body.bancoId !== undefined ? body.bancoId : existingSale.bancoId,
         estadoEntrega: body.estadoEntrega !== undefined ? body.estadoEntrega : existingSale.estadoEntrega,
