@@ -420,7 +420,32 @@ export default function SalesTable({
                           setFleteModalOpen(true);
                         }}
                         data-testid={`add-flete-${sale.id}`}
-                        className="h-7 text-xs"
+                        className={`h-7 text-xs ${
+                          (() => {
+                            // Helper to safely convert values to numbers
+                            const toNum = (v: any): number => {
+                              if (typeof v === 'number') return v;
+                              if (typeof v === 'string') {
+                                const cleaned = v.replace(/[^0-9.-]/g, '');
+                                return parseFloat(cleaned) || 0;
+                              }
+                              return 0;
+                            };
+                            
+                            // Helper to check if freight is complete
+                            const hasPrice = toNum(sale.montoFleteUsd) > 0;
+                            const isComplete = Boolean(sale.fechaFlete) && 
+                                             !!(sale.referenciaFlete?.trim()) && 
+                                             toNum(sale.montoFleteVes) > 0 && 
+                                             !!String(sale.bancoReceptorFlete ?? '').trim();
+                            
+                            if (hasPrice && !isComplete) {
+                              return 'bg-orange-500 hover:bg-orange-600 text-white border-orange-500';
+                            }
+                            // Si está vacío o completo: blanco (outline default)
+                            return '';
+                          })()
+                        }`}
                       >
                         <Truck className={`h-3 w-3 mr-1 ${
                           (() => {
@@ -434,7 +459,7 @@ export default function SalesTable({
                               : '';
                           })()
                         }`} />
-                        {sale.montoFleteUsd || sale.fleteGratis ? 'Editar' : 'Agregar'}
+                        {sale.montoFleteUsd || sale.fechaFlete || sale.referenciaFlete || sale.montoFleteVes || sale.bancoReceptorFlete || sale.fleteGratis ? 'Editar' : 'Agregar'}
                       </Button>
                     </td>
                     <td className="p-2 min-w-[150px]">

@@ -469,7 +469,8 @@ export class DatabaseStorage implements IStorage {
       updateData.montoFleteUsd = flete.montoFleteUsd === "" ? null : flete.montoFleteUsd;
     }
     if (flete.fechaFlete !== undefined) {
-      updateData.fechaFlete = flete.fechaFlete ? new Date(flete.fechaFlete) : null;
+      const dateValue = flete.fechaFlete && flete.fechaFlete !== "" ? new Date(flete.fechaFlete) : null;
+      updateData.fechaFlete = dateValue;
     }
     if (flete.referenciaFlete !== undefined) {
       updateData.referenciaFlete = flete.referenciaFlete === "" ? null : flete.referenciaFlete;

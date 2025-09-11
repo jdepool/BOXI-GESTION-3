@@ -69,7 +69,10 @@ export default function FleteModal({ open, onOpenChange, sale }: FleteModalProps
         title: "Flete actualizado",
         description: "Los datos del flete han sido guardados correctamente",
       });
-      queryClient.invalidateQueries({ queryKey: ['/api/sales'] });
+      // Invalidate all sales queries to ensure cache refresh
+      queryClient.invalidateQueries({ 
+        predicate: (query) => Array.isArray(query.queryKey) && query.queryKey[0] === '/api/sales' 
+      });
       onOpenChange(false);
       resetForm();
     },
@@ -292,7 +295,7 @@ export default function FleteModal({ open, onOpenChange, sale }: FleteModalProps
                   </SelectTrigger>
                   <SelectContent>
                     {(bancos as Banco[]).map((banco: Banco) => (
-                      <SelectItem key={banco.id} value={banco.banco}>
+                      <SelectItem key={banco.id} value={banco.id}>
                         {banco.banco}
                       </SelectItem>
                     ))}
