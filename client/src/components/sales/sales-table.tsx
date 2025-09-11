@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
@@ -62,6 +62,11 @@ export default function SalesTable({
     startDate: parentFilters?.startDate || "",
     endDate: parentFilters?.endDate || ""
   };
+
+  // Fetch banks data to display bank names
+  const { data: banks = [] } = useQuery({
+    queryKey: ["/api/admin/bancos"],
+  });
 
   const updateDeliveryStatusMutation = useMutation({
     mutationFn: async ({ saleId, status }: { saleId: string; status: string }) => {
@@ -366,7 +371,12 @@ export default function SalesTable({
                       {sale.referencia || 'N/A'}
                     </td>
                     <td className="p-2 min-w-[100px] text-xs text-muted-foreground truncate">
-                      {sale.canal.toLowerCase() === 'cashea' ? 'BNC1' : 'N/A'}
+                      {(() => {
+                        if (!sale.bancoId) return 'N/A';
+                        if (sale.bancoId === 'otro') return 'Otro($)';
+                        const bank = (banks as any[]).find((b: any) => b.id === sale.bancoId);
+                        return bank ? bank.banco : 'N/A';
+                      })()}
                     </td>
                     <td className="p-2 min-w-[110px] text-xs text-muted-foreground">
                       {sale.montoBs ? `Bs ${Number(sale.montoBs).toLocaleString()}` : 'N/A'}

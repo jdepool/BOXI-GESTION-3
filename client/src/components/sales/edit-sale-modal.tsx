@@ -145,7 +145,9 @@ export default function EditSaleModal({ open, onOpenChange, sale }: EditSaleModa
       return apiRequest("PUT", `/api/sales/${sale.id}`, data);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/sales"] });
+      queryClient.invalidateQueries({ 
+        predicate: (query) => Array.isArray(query.queryKey) && query.queryKey[0] === '/api/sales'
+      });
       toast({
         title: "Venta actualizada",
         description: "La venta ha sido actualizada exitosamente.",
