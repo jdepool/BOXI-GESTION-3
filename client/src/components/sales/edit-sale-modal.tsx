@@ -146,7 +146,7 @@ export default function EditSaleModal({ open, onOpenChange, sale }: EditSaleModa
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ 
-        predicate: (query) => Array.isArray(query.queryKey) && query.queryKey[0] === '/api/sales'
+        predicate: (query) => Array.isArray(query.queryKey) && typeof query.queryKey[0] === 'string' && query.queryKey[0].startsWith('/api/sales')
       });
       toast({
         title: "Venta actualizada",

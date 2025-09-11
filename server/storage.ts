@@ -252,18 +252,10 @@ export class DatabaseStorage implements IStorage {
       conditions.push(lte(sales.fecha, filters.endDate));
     }
     if (filters?.excludePendingManual) {
-      // Exclude only manual sales that are still pending (estado = "pendiente")
-      // Include all other sales (cashea, Shopify, Treble) and manual sales that are active
+      // Exclude only sales with delivery status "Pendiente"
+      // Include all other sales regardless of channel or payment status
       conditions.push(
-        or(
-          // Include all non-manual sales regardless of status (using lowercase for cashea)
-          eq(sales.canal, "cashea"),
-          eq(sales.canal, "Cashea"),
-          eq(sales.canal, "Shopify"), 
-          eq(sales.canal, "Treble"),
-          // Include manual sales only if they are active (payment verified)
-          and(eq(sales.canal, "manual"), eq(sales.estado, "activo"))
-        )
+        ne(sales.estadoEntrega, "Pendiente")
       );
     }
     
@@ -294,20 +286,11 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getOrdersWithAddresses(limit: number = 20, offset: number = 0): Promise<{ data: Sale[]; total: number }> {
-    // Get orders that are ready for delivery (A Despachar status)
-    // AND (have freight status "A Despacho" OR have "FLETE GRATIS" marked)
+    // Get orders that are ready for dispatch (A Despachar status)
     const ordersForDispatch = await db
       .select()
       .from(sales)
-      .where(
-        and(
-          eq(sales.estadoEntrega, 'A Despachar'), // Must be A Despachar status
-          or(
-            eq(sales.statusFlete, 'A Despacho'), // Have flete status "A Despacho"
-            eq(sales.fleteGratis, true) // OR have "FLETE GRATIS" marked
-          )
-        )
-      )
+      .where(eq(sales.estadoEntrega, 'A Despachar'))
       .orderBy(desc(sales.fecha))
       .limit(limit)
       .offset(offset);
@@ -316,15 +299,7 @@ export class DatabaseStorage implements IStorage {
     const [{ totalCount }] = await db
       .select({ totalCount: count() })
       .from(sales)
-      .where(
-        and(
-          eq(sales.estadoEntrega, 'A Despachar'), // Must be A Despachar status
-          or(
-            eq(sales.statusFlete, 'A Despacho'), // Have flete status "A Despacho"
-            eq(sales.fleteGratis, true) // OR have "FLETE GRATIS" marked
-          )
-        )
-      );
+      .where(eq(sales.estadoEntrega, 'A Despachar'));
 
     return {
       data: ordersForDispatch,
@@ -526,18 +501,10 @@ export class DatabaseStorage implements IStorage {
       conditions.push(lte(sales.fecha, filters.endDate));
     }
     if (filters?.excludePendingManual) {
-      // Exclude only manual sales that are still pending (estado = "pendiente")  
-      // Include all other sales (cashea, Shopify, Treble) and manual sales that are active
+      // Exclude only sales with delivery status "Pendiente"
+      // Include all other sales regardless of channel or payment status
       conditions.push(
-        or(
-          // Include all non-manual sales regardless of status (using lowercase for cashea)
-          eq(sales.canal, "cashea"),
-          eq(sales.canal, "Cashea"),
-          eq(sales.canal, "Shopify"),
-          eq(sales.canal, "Treble"), 
-          // Include manual sales only if they are active (payment verified)
-          and(eq(sales.canal, "manual"), eq(sales.estado, "activo"))
-        )
+        ne(sales.estadoEntrega, "Pendiente")
       );
     }
     

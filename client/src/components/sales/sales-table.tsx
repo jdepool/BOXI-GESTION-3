@@ -73,8 +73,10 @@ export default function SalesTable({
       return apiRequest("PUT", `/api/sales/${saleId}/delivery-status`, { status });
     },
     onSuccess: () => {
-      // Invalidate the sales query to refresh the data
-      queryClient.invalidateQueries({ queryKey: ["/api/sales"] });
+      // Invalidate all sales queries to refresh data across all pages
+      queryClient.invalidateQueries({ 
+        predicate: (query) => Array.isArray(query.queryKey) && typeof query.queryKey[0] === 'string' && query.queryKey[0].startsWith('/api/sales')
+      });
       toast({
         title: "Estado actualizado",
         description: "El estado de entrega ha sido actualizado correctamente.",
