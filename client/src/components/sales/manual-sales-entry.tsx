@@ -23,9 +23,9 @@ export default function ManualSalesEntry() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  // Get manual sales that are still pending (not yet verified)
+  // Get sales that need to be completed (manual and Shopify orders)
   const { data: incompleteSales, isLoading } = useQuery<SalesResponse>({
-    queryKey: ["/api/sales", { canal: "manual", estado: "pendiente" }],
+    queryKey: ["/api/sales", { estado: "pendiente" }], // Include both manual and Shopify orders
   });
 
   const createManualSaleMutation = useMutation({

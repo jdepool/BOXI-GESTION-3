@@ -102,7 +102,7 @@ function parseFile(buffer: Buffer, canal: string, filename: string) {
           tienda: null, // Shopify doesn't have tienda  
           fecha,
           canal: canal,
-          estado: 'Pendiente', // All Shopify orders start as "Pendiente"
+          estado: 'pendiente', // Shopify orders start as pending for completion
           estadoPagoInicial: null,
           pagoInicialUsd: null,
           metodoPagoId: null,
@@ -112,7 +112,7 @@ function parseFile(buffer: Buffer, canal: string, filename: string) {
           referencia: null,
           montoBs: null,
           montoUsd: String(row['Outstanding Balance'] || '0'),
-          estadoEntrega: 'Pendiente', // All Shopify orders start as "Pendiente"
+          estadoEntrega: 'En Proceso', // Route Shopify orders to "Ventas por Completar"
           product: String(row['Lineitem name'] || ''),
           cantidad: Number(row['Lineitem quantity'] || 1),
           // Billing address mapping
@@ -139,6 +139,9 @@ function parseFile(buffer: Buffer, canal: string, filename: string) {
           statusFlete: 'Pendiente',
           fleteGratis: false,
           notas: null,
+          // New fields for sales system overhaul
+          tipo: 'Inmediato', // Default to Inmediato, users can change this later
+          fechaEntrega: undefined,
         };
       } else {
         // Expected columns from Cashea/other files: Nombre, Cedula, Telefono, Email, Total usd, Sucursal, Tienda, Fecha, Canal, Estado, Estado pago inicial, Pago inicial usd, Orden, Factura, Referencia, Monto en bs, Estado de entrega, Product, Cantidad
@@ -167,6 +170,9 @@ function parseFile(buffer: Buffer, canal: string, filename: string) {
             String(row['Estado de entrega'] || 'En Proceso'),
           product: String(row.Product || ''),
           cantidad: Number(row.Cantidad || 1),
+          // New fields for sales system overhaul
+          tipo: 'Inmediato', // Default to Inmediato, users can change this later
+          fechaEntrega: undefined,
         };
       }
     });
@@ -1715,6 +1721,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           body.direccionFacturacionUrbanizacion : body.direccionDespachoUrbanizacion,
         direccionDespachoReferencia: body.direccionDespachoIgualFacturacion ? 
           body.direccionFacturacionReferencia : body.direccionDespachoReferencia,
+        
+        // New fields for sales system overhaul
+        tipo: body.tipo || 'Inmediato', // Default to Inmediato if not provided
+        fechaEntrega: body.fechaEntrega ? new Date(body.fechaEntrega) : undefined,
       };
 
       const newSale = await storage.createSale(saleData);
