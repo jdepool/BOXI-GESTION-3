@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, decimal, timestamp, integer, boolean } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, decimal, timestamp, integer, boolean, index, unique, check } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -109,11 +109,38 @@ export const sales = pgTable("sales", {
   bancoReceptorFlete: text("banco_receptor_flete"),
   statusFlete: text("status_flete"), // Pendiente, En Proceso, A Despacho
   fleteGratis: boolean("flete_gratis").default(false),
+  // Tipo y fecha de entrega para Reservas
+  tipo: text("tipo").notNull().default("Inmediato"), // Inmediato, Reserva
+  fechaEntrega: timestamp("fecha_entrega"),
   // Notas adicionales
   notas: text("notas"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
-});
+}, (table) => ({
+  // Check constraint to enforce tipo values
+  tipoCheck: check("tipo_check", sql`${table.tipo} IN ('Inmediato', 'Reserva')`),
+}));
+
+export const paymentInstallments = pgTable("payment_installments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  saleId: varchar("sale_id").notNull().references(() => sales.id, { onDelete: 'cascade' }),
+  orden: text("orden"), // Duplicated for faster queries
+  installmentNumber: integer("installment_number").notNull(), // 1, 2, 3, etc.
+  fecha: timestamp("fecha"), // Payment date
+  cuotaAmount: decimal("cuota_amount", { precision: 10, scale: 2 }), // Payment amount
+  saldoRemaining: decimal("saldo_remaining", { precision: 10, scale: 2 }), // Balance after payment
+  referencia: text("referencia"), // Payment reference
+  bancoId: varchar("banco_id"), // Bank used for payment
+  verificado: boolean("verificado").default(false), // Payment verified
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => ({
+  // Unique constraint to prevent duplicate installment numbers per sale
+  uniqueSaleInstallment: unique().on(table.saleId, table.installmentNumber),
+  // Index for performance on common queries
+  saleIdIdx: index("payment_installments_sale_id_idx").on(table.saleId),
+  ordenIdx: index("payment_installments_orden_idx").on(table.orden),
+}));
 
 export const uploadHistory = pgTable("upload_history", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -162,6 +189,10 @@ export const insertSaleSchema = createInsertSchema(sales).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
+}).extend({
+  fecha: z.union([z.date(), z.string().transform((val) => new Date(val))]),
+  fechaEntrega: z.union([z.date(), z.string().transform((val) => new Date(val))]).optional(),
+  tipo: z.enum(["Inmediato", "Reserva"]).default("Inmediato"),
 });
 
 export const insertUploadHistorySchema = createInsertSchema(uploadHistory).omit({
@@ -229,6 +260,14 @@ export const insertEgresoPorAprobarSchema = createInsertSchema(egresosPorAprobar
   fecha: z.union([z.date(), z.string().transform((val) => new Date(val))]),
 });
 
+export const insertPaymentInstallmentSchema = createInsertSchema(paymentInstallments).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  fecha: z.union([z.date(), z.string().transform((val) => new Date(val))]).optional(),
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type Sale = typeof sales.$inferSelect;
@@ -255,3 +294,5 @@ export type Egreso = typeof egresos.$inferSelect;
 export type InsertEgreso = z.infer<typeof insertEgresoSchema>;
 export type EgresoPorAprobar = typeof egresosPorAprobar.$inferSelect;
 export type InsertEgresoPorAprobar = z.infer<typeof insertEgresoPorAprobarSchema>;
+export type PaymentInstallment = typeof paymentInstallments.$inferSelect;
+export type InsertPaymentInstallment = z.infer<typeof insertPaymentInstallmentSchema>;
