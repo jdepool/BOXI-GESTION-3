@@ -228,6 +228,7 @@ export class DatabaseStorage implements IStorage {
     orden?: string;
     startDate?: Date;
     endDate?: Date;
+    tipo?: string;
     excludePendingManual?: boolean;
     limit?: number;
     offset?: number;
@@ -250,6 +251,9 @@ export class DatabaseStorage implements IStorage {
     }
     if (filters?.endDate) {
       conditions.push(lte(sales.fecha, filters.endDate));
+    }
+    if (filters?.tipo) {
+      conditions.push(eq(sales.tipo, filters.tipo));
     }
     if (filters?.excludePendingManual) {
       // Exclude only sales with delivery status "Pendiente"
@@ -488,6 +492,7 @@ export class DatabaseStorage implements IStorage {
     orden?: string;
     startDate?: Date;
     endDate?: Date;
+    tipo?: string;
     excludePendingManual?: boolean;
   }): Promise<number> {
     const conditions = [];
@@ -508,6 +513,9 @@ export class DatabaseStorage implements IStorage {
     }
     if (filters?.endDate) {
       conditions.push(lte(sales.fecha, filters.endDate));
+    }
+    if (filters?.tipo) {
+      conditions.push(eq(sales.tipo, filters.tipo));
     }
     if (filters?.excludePendingManual) {
       // Exclude only sales with delivery status "Pendiente"
