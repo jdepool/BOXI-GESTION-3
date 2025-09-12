@@ -91,6 +91,7 @@ export default function Sales() {
                   isLoading={reservasLoading}
                   hideFilters={false}
                   hidePagination={false}
+                  showDeliveryDateColumn={true}
                 />
               </div>
             </TabsContent>

@@ -908,6 +908,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update sale fecha entrega
+  app.put("/api/sales/:saleId/fecha-entrega", async (req, res) => {
+    try {
+      const { saleId } = req.params;
+      const { fechaEntrega } = req.body;
+
+      // Validate fecha entrega (should be null or a valid date string)
+      let parsedDate: Date | null = null;
+      if (fechaEntrega !== null && fechaEntrega !== undefined && fechaEntrega !== "") {
+        parsedDate = new Date(fechaEntrega);
+        if (isNaN(parsedDate.getTime())) {
+          return res.status(400).json({ error: "Invalid date format" });
+        }
+      }
+
+      // Validate that sale exists
+      const existingSale = await storage.getSaleById(saleId);
+      if (!existingSale) {
+        return res.status(404).json({ error: "Sale not found" });
+      }
+
+      const updatedSale = await storage.updateSaleFechaEntrega(saleId, parsedDate);
+      
+      if (!updatedSale) {
+        return res.status(500).json({ error: "Failed to update fecha entrega" });
+      }
+
+      res.json(updatedSale);
+    } catch (error) {
+      console.error('Failed to update sale fecha entrega:', error);
+      res.status(500).json({ error: "Failed to update sale fecha entrega" });
+    }
+  });
+
   // ===========================================
   // ADMIN CONFIGURATION ENDPOINTS
   // ===========================================

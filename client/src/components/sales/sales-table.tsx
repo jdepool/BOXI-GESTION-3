@@ -5,13 +5,17 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import SaleDetailModal from "./sale-detail-modal";
 import AddressModal from "@/components/addresses/address-modal";
 import FleteModal from "./flete-modal";
 import EditSaleModal from "./edit-sale-modal";
-import { MapPin, Truck, Edit } from "lucide-react";
+import { MapPin, Truck, Edit, CalendarIcon } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 import type { Sale } from "@shared/schema";
 
 interface SalesTableProps {
@@ -23,6 +27,7 @@ interface SalesTableProps {
   hideFilters?: boolean;
   hidePagination?: boolean;
   showEditActions?: boolean;
+  showDeliveryDateColumn?: boolean;
   filters?: any;
   onFilterChange?: (filters: any) => void;
   onPageChange?: (offset: number) => void;
@@ -39,6 +44,7 @@ export default function SalesTable({
   hideFilters = false,
   hidePagination = false,
   showEditActions = false,
+  showDeliveryDateColumn = false,
   filters: parentFilters,
   onFilterChange,
   onPageChange,
@@ -137,12 +143,39 @@ export default function SalesTable({
     },
   });
 
+  const updateFechaEntregaMutation = useMutation({
+    mutationFn: async ({ saleId, fechaEntrega }: { saleId: string; fechaEntrega: Date | null }) => {
+      return apiRequest("PUT", `/api/sales/${saleId}/fecha-entrega`, { fechaEntrega: fechaEntrega?.toISOString() || null });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ 
+        predicate: (query) => Array.isArray(query.queryKey) && typeof query.queryKey[0] === 'string' && query.queryKey[0].startsWith('/api/sales')
+      });
+      toast({
+        title: "Fecha de entrega actualizada",
+        description: "La fecha de entrega ha sido actualizada correctamente.",
+      });
+    },
+    onError: (error) => {
+      console.error('Failed to update fecha entrega:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo actualizar la fecha de entrega.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleStatusChange = (saleId: string, newStatus: string) => {
     updateDeliveryStatusMutation.mutate({ saleId, status: newStatus });
   };
 
   const handleTipoChange = (saleId: string, newTipo: string) => {
     updateTipoMutation.mutate({ saleId, tipo: newTipo });
+  };
+
+  const handleFechaEntregaChange = (saleId: string, fechaEntrega: Date | null) => {
+    updateFechaEntregaMutation.mutate({ saleId, fechaEntrega });
   };
 
   const handleNotesClick = (sale: Sale) => {
@@ -337,6 +370,9 @@ export default function SalesTable({
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[90px]">Fecha</th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[80px]">Canal</th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[90px]">Tipo</th>
+                {showDeliveryDateColumn && (
+                  <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[130px]">Fecha Entrega</th>
+                )}
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[110px]">Pago Inicial USD</th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[120px]">Referencia</th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[100px]">Banco</th>
@@ -409,6 +445,54 @@ export default function SalesTable({
                         </SelectContent>
                       </Select>
                     </td>
+                    {showDeliveryDateColumn && (
+                      <td className="p-2 min-w-[130px]">
+                        <div className="relative">
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className={cn(
+                                  "h-8 w-full justify-start text-left font-normal text-xs",
+                                  !sale.fechaEntrega && "text-muted-foreground"
+                                )}
+                                data-testid={`fecha-entrega-picker-${sale.id}`}
+                                disabled={updateFechaEntregaMutation.isPending}
+                              >
+                                <CalendarIcon className="mr-2 h-3 w-3" />
+                                {sale.fechaEntrega 
+                                  ? format(new Date(sale.fechaEntrega), "dd/MM/yyyy")
+                                  : "Seleccionar fecha"
+                                }
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0" align="start">
+                              <Calendar
+                                mode="single"
+                                selected={sale.fechaEntrega ? new Date(sale.fechaEntrega) : undefined}
+                                onSelect={(date) => handleFechaEntregaChange(sale.id, date || null)}
+                                initialFocus
+                                disabled={(date) => date < new Date(new Date().setHours(0,0,0,0))}
+                              />
+                              {sale.fechaEntrega && (
+                                <div className="p-2 border-t">
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="w-full text-xs"
+                                    onClick={() => handleFechaEntregaChange(sale.id, null)}
+                                    data-testid={`clear-fecha-entrega-${sale.id}`}
+                                  >
+                                    Limpiar fecha
+                                  </Button>
+                                </div>
+                              )}
+                            </PopoverContent>
+                          </Popover>
+                        </div>
+                      </td>
+                    )}
                     <td className="p-2 min-w-[110px] text-xs text-muted-foreground">
                       {sale.pagoInicialUsd ? `$${Number(sale.pagoInicialUsd).toLocaleString()}` : 'N/A'}
                     </td>

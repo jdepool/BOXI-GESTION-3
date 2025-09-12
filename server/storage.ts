@@ -50,6 +50,7 @@ export interface IStorage {
     direccionDespachoUrbanizacion?: string;
     direccionDespachoReferencia?: string;
   }): Promise<Sale | undefined>;
+  updateSaleFechaEntrega(saleId: string, fechaEntrega: Date | null): Promise<Sale | undefined>;
   getTotalSalesCount(filters?: {
     canal?: string;
     estadoEntrega?: string;
@@ -351,6 +352,18 @@ export class DatabaseStorage implements IStorage {
       .update(sales)
       .set({ tipo, updatedAt: new Date() })
       .where(eq(sales.id, id))
+      .returning();
+    return updatedSale || undefined;
+  }
+
+  async updateSaleFechaEntrega(saleId: string, fechaEntrega: Date | null): Promise<Sale | undefined> {
+    const [updatedSale] = await db
+      .update(sales)
+      .set({ 
+        fechaEntrega,
+        updatedAt: new Date()
+      })
+      .where(eq(sales.id, saleId))
       .returning();
     return updatedSale || undefined;
   }
