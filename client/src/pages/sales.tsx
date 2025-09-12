@@ -26,6 +26,16 @@ export default function Sales() {
     queryKey: ["/api/sales", { ...filters, excludePendingManual: true }],
   });
 
+  // Query for Reserva orders (tipo = "Reserva")
+  const { data: reservasData, isLoading: reservasLoading } = useQuery<{
+    data: any[];
+    total: number;
+    limit: number;
+    offset: number;
+  }>({
+    queryKey: ["/api/sales", { tipo: "Reserva" }],
+  });
+
   const handleFilterChange = (newFilters: Partial<typeof filters>) => {
     setFilters(prev => ({ ...prev, ...newFilters, offset: 0 }));
   };
@@ -49,6 +59,7 @@ export default function Sales() {
             <TabsList className="mb-4">
               <TabsTrigger value="lista" data-testid="tab-sales-list">Lista de Ventas</TabsTrigger>
               <TabsTrigger value="manual" data-testid="tab-manual-entry">Ventas por completar</TabsTrigger>
+              <TabsTrigger value="reservas" data-testid="tab-reservas">Reservas</TabsTrigger>
             </TabsList>
             
             <TabsContent value="lista" className="h-full">
@@ -68,6 +79,20 @@ export default function Sales() {
             
             <TabsContent value="manual" className="h-full">
               <ManualSalesEntry />
+            </TabsContent>
+            
+            <TabsContent value="reservas" className="h-full">
+              <div className="bg-card rounded-lg border border-border h-full">
+                <SalesTable 
+                  data={reservasData?.data || []} 
+                  total={reservasData?.total || 0}
+                  limit={20}
+                  offset={0}
+                  isLoading={reservasLoading}
+                  hideFilters={false}
+                  hidePagination={false}
+                />
+              </div>
             </TabsContent>
           </Tabs>
         </div>
