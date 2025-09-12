@@ -342,6 +342,15 @@ export class DatabaseStorage implements IStorage {
     return updatedSale || undefined;
   }
 
+  async updateSaleTipo(id: string, tipo: string): Promise<Sale | undefined> {
+    const [updatedSale] = await db
+      .update(sales)
+      .set({ tipo, updatedAt: new Date() })
+      .where(eq(sales.id, id))
+      .returning();
+    return updatedSale || undefined;
+  }
+
   async getExistingOrderNumbers(orders: string[]): Promise<string[]> {
     if (orders.length === 0) return [];
     

@@ -114,8 +114,35 @@ export default function SalesTable({
     },
   });
 
+  const updateTipoMutation = useMutation({
+    mutationFn: async ({ saleId, tipo }: { saleId: string; tipo: string }) => {
+      return apiRequest("PUT", `/api/sales/${saleId}/tipo`, { tipo });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ 
+        predicate: (query) => Array.isArray(query.queryKey) && typeof query.queryKey[0] === 'string' && query.queryKey[0].startsWith('/api/sales')
+      });
+      toast({
+        title: "Tipo actualizado",
+        description: "El tipo de venta ha sido actualizado correctamente.",
+      });
+    },
+    onError: (error) => {
+      console.error('Failed to update tipo:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo actualizar el tipo de venta.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleStatusChange = (saleId: string, newStatus: string) => {
     updateDeliveryStatusMutation.mutate({ saleId, status: newStatus });
+  };
+
+  const handleTipoChange = (saleId: string, newTipo: string) => {
+    updateTipoMutation.mutate({ saleId, tipo: newTipo });
   };
 
   const handleNotesClick = (sale: Sale) => {
@@ -309,6 +336,7 @@ export default function SalesTable({
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[100px]">Total USD</th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[90px]">Fecha</th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[80px]">Canal</th>
+                <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[90px]">Tipo</th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[110px]">Pago Inicial USD</th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[120px]">Referencia</th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[100px]">Banco</th>
@@ -325,7 +353,7 @@ export default function SalesTable({
             <tbody>
               {data.length === 0 ? (
                 <tr>
-                  <td colSpan={19} className="text-center p-8 text-muted-foreground">
+                  <td colSpan={20} className="text-center p-8 text-muted-foreground">
                     No hay datos disponibles
                   </td>
                 </tr>
@@ -365,6 +393,21 @@ export default function SalesTable({
                       <Badge className={`${getChannelBadgeClass(sale.canal)} text-white text-xs`}>
                         {sale.canal.charAt(0).toUpperCase() + sale.canal.slice(1)}
                       </Badge>
+                    </td>
+                    <td className="p-2 min-w-[90px]">
+                      <Select
+                        value={sale.tipo || "Inmediato"}
+                        onValueChange={(newTipo) => handleTipoChange(sale.id, newTipo)}
+                        disabled={updateTipoMutation.isPending}
+                      >
+                        <SelectTrigger className="w-20 h-8 text-xs" data-testid={`tipo-select-${sale.id}`}>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Inmediato">Inmediato</SelectItem>
+                          <SelectItem value="Reserva">Reserva</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </td>
                     <td className="p-2 min-w-[110px] text-xs text-muted-foreground">
                       {sale.pagoInicialUsd ? `$${Number(sale.pagoInicialUsd).toLocaleString()}` : 'N/A'}

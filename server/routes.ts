@@ -873,6 +873,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update sale tipo
+  app.put("/api/sales/:saleId/tipo", async (req, res) => {
+    try {
+      const { saleId } = req.params;
+      const { tipo } = req.body;
+
+      // Validate tipo
+      const validTipos = ['Inmediato', 'Reserva'];
+      if (!tipo || !validTipos.includes(tipo)) {
+        return res.status(400).json({ 
+          error: "Invalid tipo. Must be one of: " + validTipos.join(', ')
+        });
+      }
+
+      // Validate that sale exists
+      const existingSale = await storage.getSaleById(saleId);
+      if (!existingSale) {
+        return res.status(404).json({ error: "Sale not found" });
+      }
+
+      const updatedSale = await storage.updateSaleTipo(saleId, tipo);
+      
+      if (!updatedSale) {
+        return res.status(500).json({ error: "Failed to update sale tipo" });
+      }
+
+      res.json({ success: true, sale: updatedSale });
+    } catch (error) {
+      console.error("Update sale tipo error:", error);
+      res.status(500).json({ error: "Failed to update sale tipo" });
+    }
+  });
+
   // ===========================================
   // ADMIN CONFIGURATION ENDPOINTS
   // ===========================================
