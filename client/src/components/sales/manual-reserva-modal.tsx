@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
@@ -47,6 +48,7 @@ type ManualReservaFormData = z.infer<typeof manualReservaSchema>;
 
 export default function ManualReservaModal({ isOpen, onClose, onSuccess }: ManualReservaModalProps) {
   const { toast } = useToast();
+  const [sameAddress, setSameAddress] = useState(false);
 
   const form = useForm<ManualReservaFormData>({
     resolver: zodResolver(manualReservaSchema),
@@ -149,8 +151,22 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
     createReservaMutation.mutate(data);
   };
 
+  const handleSameAddressChange = (checked: boolean) => {
+    setSameAddress(checked);
+    if (checked) {
+      // Copy billing address to shipping address
+      const billingValues = form.getValues();
+      form.setValue('direccionDespachoPais', billingValues.direccionFacturacionPais);
+      form.setValue('direccionDespachoEstado', billingValues.direccionFacturacionEstado);
+      form.setValue('direccionDespachoCiudad', billingValues.direccionFacturacionCiudad);
+      form.setValue('direccionDespachoDireccion', billingValues.direccionFacturacionDireccion);
+      form.setValue('direccionDespachoUrbanizacion', billingValues.direccionFacturacionUrbanizacion);
+    }
+  };
+
   const handleClose = () => {
     form.reset();
+    setSameAddress(false);
     onClose();
   };
 
@@ -507,6 +523,21 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
                     </FormItem>
                   )}
                 />
+              </div>
+
+              <div className="flex items-center space-x-2 py-4">
+                <Checkbox 
+                  id="same-address"
+                  checked={sameAddress}
+                  onCheckedChange={handleSameAddressChange}
+                  data-testid="checkbox-same-address"
+                />
+                <Label 
+                  htmlFor="same-address" 
+                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                >
+                  La dirección de despacho es la misma que la dirección de facturación
+                </Label>
               </div>
 
               <h3 className="text-lg font-semibold">Dirección de Despacho</h3>
