@@ -76,7 +76,7 @@ export default function PaymentInstallmentsModal({ sale, open, onOpenChange }: P
 
   // Fetch installments and summary
   const { data: installmentsData, isLoading } = useQuery<InstallmentsResponse>({
-    queryKey: ["/api/sales", sale?.id, "installments"],
+    queryKey: [`/api/sales/${sale?.id}/installments`],
     enabled: !!sale?.id && open,
   });
 
@@ -110,7 +110,7 @@ export default function PaymentInstallmentsModal({ sale, open, onOpenChange }: P
       return apiRequest("POST", `/api/sales/${sale.id}/installments`, payload);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/sales", sale?.id, "installments"] });
+      queryClient.invalidateQueries({ queryKey: [`/api/sales/${sale?.id}/installments`] });
       toast({ title: "Cuota creada exitosamente" });
       form.reset();
       setShowForm(false);
@@ -138,7 +138,7 @@ export default function PaymentInstallmentsModal({ sale, open, onOpenChange }: P
       return apiRequest("PATCH", `/api/installments/${data.id}`, payload);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/sales", sale?.id, "installments"] });
+      queryClient.invalidateQueries({ queryKey: [`/api/sales/${sale?.id}/installments`] });
       toast({ title: "Cuota actualizada exitosamente" });
       form.reset();
       setEditingInstallment(null);
@@ -159,7 +159,7 @@ export default function PaymentInstallmentsModal({ sale, open, onOpenChange }: P
       return apiRequest("DELETE", `/api/installments/${id}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/sales", sale?.id, "installments"] });
+      queryClient.invalidateQueries({ queryKey: [`/api/sales/${sale?.id}/installments`] });
       toast({ title: "Cuota eliminada exitosamente" });
     },
     onError: (error: any) => {
@@ -177,7 +177,7 @@ export default function PaymentInstallmentsModal({ sale, open, onOpenChange }: P
       return apiRequest("PATCH", `/api/installments/${id}`, { verificado });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/sales", sale?.id, "installments"] });
+      queryClient.invalidateQueries({ queryKey: [`/api/sales/${sale?.id}/installments`] });
       toast({ title: "Estado de verificación actualizado" });
     },
     onError: (error: any) => {

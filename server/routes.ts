@@ -1918,8 +1918,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Sale not found" });
       }
 
-      // Validate request body
-      const validatedData = insertPaymentInstallmentSchema.parse(req.body);
+      // Validate request body (exclude fields managed by server)
+      const validatedData = insertPaymentInstallmentSchema.omit({
+        saleId: true,
+        installmentNumber: true,
+        orden: true,
+        saldoRemaining: true
+      }).parse(req.body);
 
       // Check for overpayment
       const summary = await storage.getInstallmentSummary(saleId);
