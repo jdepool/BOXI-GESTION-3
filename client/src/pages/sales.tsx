@@ -87,10 +87,9 @@ export default function Sales() {
             
             <TabsContent value="reservas" className="h-full">
               <div className="bg-card rounded-lg border border-border h-full flex flex-col">
-                <div className="p-4 border-b border-border">
+                <div className="p-4 border-b border-border flex justify-end">
                   <Button 
                     onClick={() => setIsManualReservaModalOpen(true)}
-                    className="mb-4"
                     data-testid="button-nueva-reserva-manual"
                   >
                     <i className="fas fa-plus mr-2"></i>
