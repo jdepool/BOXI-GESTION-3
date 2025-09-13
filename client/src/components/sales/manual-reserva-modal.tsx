@@ -25,37 +25,22 @@ interface ManualReservaModalProps {
   onSuccess: () => void;
 }
 
-// Form schema with proper types for form handling
-const manualReservaSchema = z.object({
+// Form schema based on insertSaleSchema with proper numeric coercion
+const manualReservaSchema = insertSaleSchema.extend({
+  // Override numeric fields to use coercion for form inputs
+  totalUsd: z.coerce.number().min(0.01, "Total USD debe ser mayor a 0"),
+  pagoInicialUsd: z.coerce.number().optional(),
+  montoBs: z.coerce.number().optional(),
+  cantidad: z.coerce.number().int().min(1, "Cantidad debe ser al menos 1"),
+  // Email validation for empty strings
+  email: z.string().email().optional().or(z.literal("")),
+  // Ensure optional strings are handled properly
   orden: z.string().optional(),
-  nombre: z.string().min(1, "Nombre es requerido"),
   cedula: z.string().optional(),
   telefono: z.string().optional(),
-  email: z.string().email().optional().or(z.literal("")),
-  totalUsd: z.string().min(1, "Total USD es requerido"),
-  fecha: z.date(),
-  canal: z.string().default("manual"),
-  tipo: z.enum(["Inmediato", "Reserva"]).default("Reserva"),
-  estado: z.string().default("pendiente"),
-  pagoInicialUsd: z.string().optional(),
   referencia: z.string().optional(),
   bancoId: z.string().optional(),
-  montoBs: z.string().optional(),
-  estadoEntrega: z.string().default("Pendiente"),
-  product: z.string().min(1, "Producto es requerido"),
-  cantidad: z.number().min(1),
-  direccionFacturacionPais: z.string().optional(),
-  direccionFacturacionEstado: z.string().optional(),
-  direccionFacturacionCiudad: z.string().optional(),
-  direccionFacturacionDireccion: z.string().optional(),
-  direccionFacturacionUrbanizacion: z.string().optional(),
-  direccionDespachoPais: z.string().optional(),
-  direccionDespachoEstado: z.string().optional(),
-  direccionDespachoCiudad: z.string().optional(),
-  direccionDespachoDireccion: z.string().optional(),
-  direccionDespachoUrbanizacion: z.string().optional(),
   notas: z.string().optional(),
-  fechaEntrega: z.date().optional(),
 });
 
 type ManualReservaFormData = z.infer<typeof manualReservaSchema>;
@@ -71,15 +56,15 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
       cedula: "",
       telefono: "",
       email: "",
-      totalUsd: "",
+      totalUsd: 0,
       fecha: new Date(),
       canal: "manual",
       tipo: "Reserva" as const,
       estado: "pendiente",
-      pagoInicialUsd: "",
+      pagoInicialUsd: 0,
       referencia: "",
       bancoId: "",
-      montoBs: "",
+      montoBs: 0,
       estadoEntrega: "Pendiente",
       product: "",
       cantidad: 1,
@@ -113,13 +98,12 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
       // Convert form data to proper API format
       const formattedData = {
         ...data,
-        // Convert string amounts to numbers for the API
-        totalUsd: parseFloat(data.totalUsd) || 0,
-        pagoInicialUsd: data.pagoInicialUsd ? parseFloat(data.pagoInicialUsd) : undefined,
-        montoBs: data.montoBs ? parseFloat(data.montoBs) : undefined,
+        // Handle optional numeric fields
+        pagoInicialUsd: data.pagoInicialUsd || undefined,
+        montoBs: data.montoBs || undefined,
         // Convert fechaEntrega to ISO string if provided
         fechaEntrega: data.fechaEntrega?.toISOString() || undefined,
-        // Ensure null string fields are converted to null for API
+        // Ensure empty string fields are converted to null for API
         cedula: data.cedula || null,
         telefono: data.telefono || null,
         email: data.email || null,
@@ -332,8 +316,6 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
                           {...field} 
                           type="number" 
                           min="1"
-                          value={field.value || ""} 
-                          onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
                           data-testid="input-cantidad" 
                           required 
                         />
@@ -354,8 +336,7 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
                           {...field} 
                           type="number" 
                           step="0.01"
-                          value={field.value || ""} 
-                          onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                          min="0.01"
                           data-testid="input-total-usd" 
                           required 
                         />
@@ -382,8 +363,7 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
                           {...field} 
                           type="number" 
                           step="0.01"
-                          value={field.value || ""} 
-                          onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                          min="0"
                           data-testid="input-pago-inicial" 
                         />
                       </FormControl>
@@ -443,8 +423,7 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
                           {...field} 
                           type="number" 
                           step="0.01"
-                          value={field.value || ""} 
-                          onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                          min="0"
                           data-testid="input-monto-bs" 
                         />
                       </FormControl>
