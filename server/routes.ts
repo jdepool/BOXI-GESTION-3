@@ -40,6 +40,7 @@ const getSalesQuerySchema = z.object({
   endDate: z.string().optional(),
   tipo: z.string().optional(),
   excludePendingManual: z.coerce.boolean().optional(),
+  excludeReservas: z.coerce.boolean().optional(),
   limit: z.coerce.number().min(1).max(100).default(20),
   offset: z.coerce.number().min(0).default(0),
 });
@@ -140,8 +141,8 @@ function parseFile(buffer: Buffer, canal: string, filename: string) {
           statusFlete: 'Pendiente',
           fleteGratis: false,
           notas: null,
-          // New fields for sales system overhaul
-          tipo: 'Inmediato', // Default to Inmediato, users can change this later
+          // Auto-detect RESERVA products and set tipo accordingly
+          tipo: String(row['Lineitem name'] || '').toUpperCase().includes('RESERVA') ? 'Reserva' : 'Inmediato',
           fechaEntrega: undefined,
         };
       } else {
@@ -490,6 +491,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         endDate: query.endDate ? new Date(query.endDate) : undefined,
         tipo: query.tipo,
         excludePendingManual: query.excludePendingManual,
+        excludeReservas: query.excludeReservas,
         limit: query.limit,
         offset: query.offset,
       };
@@ -875,7 +877,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Update sale tipo
+  // Update sale tipo with smart routing logic
   app.put("/api/sales/:saleId/tipo", async (req, res) => {
     try {
       const { saleId } = req.params;
@@ -895,7 +897,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Sale not found" });
       }
 
-      const updatedSale = await storage.updateSaleTipo(saleId, tipo);
+      // Smart routing logic based on tipo change and payment verification status
+      let updates: Partial<any> = { tipo };
+
+      // Check if switching from Reserva to Inmediato
+      if (existingSale.tipo === 'Reserva' && tipo === 'Inmediato') {
+        // Check if payments are fully verified
+        const isFullyVerified = await storage.isPaymentFullyVerified(saleId);
+        
+        if (isFullyVerified) {
+          // Route to Lista de Ventas - set estado to completed
+          updates.estado = 'completado';
+        } else {
+          // Route to Ventas por Completar - set estado to pending
+          updates.estado = 'pendiente';
+        }
+      }
+      // For Inmediato to Reserva, no additional estado changes needed - will route to Reservas tab automatically
+
+      // Update the sale with all necessary changes
+      const updatedSale = await storage.updateSale(saleId, updates);
       
       if (!updatedSale) {
         return res.status(500).json({ error: "Failed to update sale tipo" });
@@ -1981,7 +2002,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Determine new values after update
       const newAmount = validatedData.cuotaAmount !== undefined ? 
-        parseFloat(validatedData.cuotaAmount) : 
+        parseFloat(validatedData.cuotaAmount || '0') : 
         parseFloat(currentInstallment.cuotaAmount || '0');
       
       const newVerificado = validatedData.verificado !== undefined ? 

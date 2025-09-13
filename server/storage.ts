@@ -186,6 +186,7 @@ export interface IStorage {
     totalPagado: number;
     saldoPendiente: number;
   }>;
+  isPaymentFullyVerified(saleId: string): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -246,6 +247,7 @@ export class DatabaseStorage implements IStorage {
     endDate?: Date;
     tipo?: string;
     excludePendingManual?: boolean;
+    excludeReservas?: boolean;
     limit?: number;
     offset?: number;
   }): Promise<Sale[]> {
@@ -276,6 +278,12 @@ export class DatabaseStorage implements IStorage {
       // Include all other sales regardless of channel or payment status
       conditions.push(
         ne(sales.estadoEntrega, "Pendiente")
+      );
+    }
+    if (filters?.excludeReservas) {
+      // Exclude orders with tipo "Reserva" from this view
+      conditions.push(
+        ne(sales.tipo, "Reserva")
       );
     }
     
@@ -522,6 +530,7 @@ export class DatabaseStorage implements IStorage {
     endDate?: Date;
     tipo?: string;
     excludePendingManual?: boolean;
+    excludeReservas?: boolean;
   }): Promise<number> {
     const conditions = [];
     if (filters?.canal) {
@@ -550,6 +559,12 @@ export class DatabaseStorage implements IStorage {
       // Include all other sales regardless of channel or payment status
       conditions.push(
         ne(sales.estadoEntrega, "Pendiente")
+      );
+    }
+    if (filters?.excludeReservas) {
+      // Exclude orders with tipo "Reserva" from this view
+      conditions.push(
+        ne(sales.tipo, "Reserva")
       );
     }
     
@@ -1311,6 +1326,13 @@ export class DatabaseStorage implements IStorage {
       totalPagado: Math.round(totalPagado * 100) / 100,
       saldoPendiente: Math.round(saldoPendiente * 100) / 100,
     };
+  }
+
+  async isPaymentFullyVerified(saleId: string): Promise<boolean> {
+    const summary = await this.getInstallmentSummary(saleId);
+    // Consider a payment fully verified if the remaining balance is 0 or very close to 0
+    // (allowing for small floating point errors)
+    return summary.saldoPendiente <= 0.01;
   }
 }
 

@@ -23,9 +23,9 @@ export default function ManualSalesEntry() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  // Get sales that need to be completed (manual and Shopify orders)
+  // Get sales that need to be completed (manual and Shopify orders) - exclude Reserva orders
   const { data: incompleteSales, isLoading } = useQuery<SalesResponse>({
-    queryKey: ["/api/sales", { estado: "pendiente" }], // Include both manual and Shopify orders
+    queryKey: ["/api/sales", { estado: "pendiente", excludeReservas: true }], // Include both manual and Shopify orders but exclude Reserva orders
   });
 
   const createManualSaleMutation = useMutation({
