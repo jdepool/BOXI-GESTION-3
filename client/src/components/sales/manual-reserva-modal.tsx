@@ -1,0 +1,653 @@
+import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Textarea } from "@/components/ui/textarea";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { CalendarIcon } from "lucide-react";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+import { insertSaleSchema } from "@shared/schema";
+import { z } from "zod";
+
+interface ManualReservaModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSuccess: () => void;
+}
+
+// Form schema with proper types for form handling
+const manualReservaSchema = z.object({
+  orden: z.string().optional(),
+  nombre: z.string().min(1, "Nombre es requerido"),
+  cedula: z.string().optional(),
+  telefono: z.string().optional(),
+  email: z.string().email().optional().or(z.literal("")),
+  totalUsd: z.string().min(1, "Total USD es requerido"),
+  fecha: z.date(),
+  canal: z.string().default("manual"),
+  tipo: z.enum(["Inmediato", "Reserva"]).default("Reserva"),
+  estado: z.string().default("pendiente"),
+  pagoInicialUsd: z.string().optional(),
+  referencia: z.string().optional(),
+  bancoId: z.string().optional(),
+  montoBs: z.string().optional(),
+  estadoEntrega: z.string().default("Pendiente"),
+  product: z.string().min(1, "Producto es requerido"),
+  cantidad: z.number().min(1),
+  direccionFacturacionPais: z.string().optional(),
+  direccionFacturacionEstado: z.string().optional(),
+  direccionFacturacionCiudad: z.string().optional(),
+  direccionFacturacionDireccion: z.string().optional(),
+  direccionFacturacionUrbanizacion: z.string().optional(),
+  direccionDespachoPais: z.string().optional(),
+  direccionDespachoEstado: z.string().optional(),
+  direccionDespachoCiudad: z.string().optional(),
+  direccionDespachoDireccion: z.string().optional(),
+  direccionDespachoUrbanizacion: z.string().optional(),
+  notas: z.string().optional(),
+  fechaEntrega: z.date().optional(),
+});
+
+type ManualReservaFormData = z.infer<typeof manualReservaSchema>;
+
+export default function ManualReservaModal({ isOpen, onClose, onSuccess }: ManualReservaModalProps) {
+  const { toast } = useToast();
+
+  const form = useForm<ManualReservaFormData>({
+    resolver: zodResolver(manualReservaSchema),
+    defaultValues: {
+      orden: "",
+      nombre: "",
+      cedula: "",
+      telefono: "",
+      email: "",
+      totalUsd: "",
+      fecha: new Date(),
+      canal: "manual",
+      tipo: "Reserva" as const,
+      estado: "pendiente",
+      pagoInicialUsd: "",
+      referencia: "",
+      bancoId: "",
+      montoBs: "",
+      estadoEntrega: "Pendiente",
+      product: "",
+      cantidad: 1,
+      direccionFacturacionPais: "",
+      direccionFacturacionEstado: "",
+      direccionFacturacionCiudad: "",
+      direccionFacturacionDireccion: "",
+      direccionFacturacionUrbanizacion: "",
+      direccionDespachoPais: "",
+      direccionDespachoEstado: "",
+      direccionDespachoCiudad: "",
+      direccionDespachoDireccion: "",
+      direccionDespachoUrbanizacion: "",
+      notas: "",
+      fechaEntrega: undefined,
+    },
+  });
+
+  // Fetch banks data
+  const { data: banks = [] } = useQuery({
+    queryKey: ["/api/admin/bancos"],
+  });
+
+  // Fetch products data
+  const { data: products = [] } = useQuery({
+    queryKey: ["/api/admin/productos"],
+  });
+
+  const createReservaMutation = useMutation({
+    mutationFn: async (data: ManualReservaFormData) => {
+      // Convert form data to proper API format
+      const formattedData = {
+        ...data,
+        // Convert string amounts to numbers for the API
+        totalUsd: parseFloat(data.totalUsd) || 0,
+        pagoInicialUsd: data.pagoInicialUsd ? parseFloat(data.pagoInicialUsd) : undefined,
+        montoBs: data.montoBs ? parseFloat(data.montoBs) : undefined,
+        // Convert fechaEntrega to ISO string if provided
+        fechaEntrega: data.fechaEntrega?.toISOString() || undefined,
+        // Ensure null string fields are converted to null for API
+        cedula: data.cedula || null,
+        telefono: data.telefono || null,
+        email: data.email || null,
+        referencia: data.referencia || null,
+        bancoId: data.bancoId || null,
+        orden: data.orden || null,
+        notas: data.notas || null,
+        direccionFacturacionPais: data.direccionFacturacionPais || null,
+        direccionFacturacionEstado: data.direccionFacturacionEstado || null,
+        direccionFacturacionCiudad: data.direccionFacturacionCiudad || null,
+        direccionFacturacionDireccion: data.direccionFacturacionDireccion || null,
+        direccionFacturacionUrbanizacion: data.direccionFacturacionUrbanizacion || null,
+        direccionDespachoPais: data.direccionDespachoPais || null,
+        direccionDespachoEstado: data.direccionDespachoEstado || null,
+        direccionDespachoCiudad: data.direccionDespachoCiudad || null,
+        direccionDespachoDireccion: data.direccionDespachoDireccion || null,
+        direccionDespachoUrbanizacion: data.direccionDespachoUrbanizacion || null,
+      };
+      return apiRequest("POST", "/api/sales", formattedData);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ 
+        predicate: (query) => Array.isArray(query.queryKey) && typeof query.queryKey[0] === 'string' && query.queryKey[0].startsWith('/api/sales')
+      });
+      toast({
+        title: "Reserva creada",
+        description: "La reserva manual ha sido creada exitosamente.",
+      });
+      form.reset();
+      onSuccess();
+    },
+    onError: (error: any) => {
+      console.error('Failed to create reserva:', error);
+      toast({
+        title: "Error",
+        description: error?.message || "No se pudo crear la reserva.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleSubmit = (data: ManualReservaFormData) => {
+    createReservaMutation.mutate(data);
+  };
+
+  const handleClose = () => {
+    form.reset();
+    onClose();
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={handleClose}>
+      <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto" data-testid="manual-reserva-modal">
+        <DialogHeader>
+          <DialogTitle>Nueva Reserva Manual</DialogTitle>
+        </DialogHeader>
+
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+            {/* Basic Information */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Información Básica</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="orden"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Número de Orden</FormLabel>
+                      <FormControl>
+                        <Input {...field} value={field.value || ""} data-testid="input-orden" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="nombre"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Nombre del Cliente *</FormLabel>
+                      <FormControl>
+                        <Input {...field} data-testid="input-nombre" required />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="cedula"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Cédula</FormLabel>
+                      <FormControl>
+                        <Input {...field} value={field.value || ""} data-testid="input-cedula" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="telefono"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Teléfono</FormLabel>
+                      <FormControl>
+                        <Input {...field} value={field.value || ""} data-testid="input-telefono" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email</FormLabel>
+                      <FormControl>
+                        <Input {...field} value={field.value || ""} type="email" data-testid="input-email" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="fechaEntrega"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Fecha de Entrega</FormLabel>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant="outline"
+                              className={cn(
+                                "w-full justify-start text-left font-normal",
+                                !field.value && "text-muted-foreground"
+                              )}
+                              data-testid="input-fecha-entrega"
+                            >
+                              <CalendarIcon className="mr-2 h-4 w-4" />
+                              {field.value ? format(field.value, "dd/MM/yyyy") : "Seleccionar fecha"}
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={field.value}
+                            onSelect={field.onChange}
+                            disabled={(date) => date < new Date(new Date().setHours(0,0,0,0))}
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </div>
+
+            {/* Product Information */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Información del Producto</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="product"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Producto *</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger data-testid="select-producto">
+                            <SelectValue placeholder="Seleccionar producto" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {(products as any[]).map((product: any) => (
+                            <SelectItem key={product.id} value={product.nombre}>
+                              {product.nombre}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="cantidad"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Cantidad *</FormLabel>
+                      <FormControl>
+                        <Input 
+                          {...field} 
+                          type="number" 
+                          min="1"
+                          value={field.value || ""} 
+                          onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
+                          data-testid="input-cantidad" 
+                          required 
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="totalUsd"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Total USD *</FormLabel>
+                      <FormControl>
+                        <Input 
+                          {...field} 
+                          type="number" 
+                          step="0.01"
+                          value={field.value || ""} 
+                          onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                          data-testid="input-total-usd" 
+                          required 
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </div>
+
+            {/* Payment Information */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Información de Pago</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="pagoInicialUsd"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Pago Inicial USD</FormLabel>
+                      <FormControl>
+                        <Input 
+                          {...field} 
+                          type="number" 
+                          step="0.01"
+                          value={field.value || ""} 
+                          onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                          data-testid="input-pago-inicial" 
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="referencia"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Referencia</FormLabel>
+                      <FormControl>
+                        <Input {...field} value={field.value || ""} data-testid="input-referencia" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="bancoId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Banco</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger data-testid="select-banco">
+                            <SelectValue placeholder="Seleccionar banco" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="otro">Otro ($)</SelectItem>
+                          {(banks as any[]).map((bank: any) => (
+                            <SelectItem key={bank.id} value={bank.id}>
+                              {bank.banco}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="montoBs"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Monto Bs</FormLabel>
+                      <FormControl>
+                        <Input 
+                          {...field} 
+                          type="number" 
+                          step="0.01"
+                          value={field.value || ""} 
+                          onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                          data-testid="input-monto-bs" 
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </div>
+
+            {/* Address Information */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Dirección de Facturación</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="direccionFacturacionPais"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>País</FormLabel>
+                      <FormControl>
+                        <Input {...field} value={field.value || ""} data-testid="input-facturacion-pais" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="direccionFacturacionEstado"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Estado</FormLabel>
+                      <FormControl>
+                        <Input {...field} value={field.value || ""} data-testid="input-facturacion-estado" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="direccionFacturacionCiudad"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Ciudad</FormLabel>
+                      <FormControl>
+                        <Input {...field} value={field.value || ""} data-testid="input-facturacion-ciudad" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="direccionFacturacionDireccion"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Dirección</FormLabel>
+                      <FormControl>
+                        <Input {...field} value={field.value || ""} data-testid="input-facturacion-direccion" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="direccionFacturacionUrbanizacion"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Urbanización</FormLabel>
+                      <FormControl>
+                        <Input {...field} value={field.value || ""} data-testid="input-facturacion-urbanizacion" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <h3 className="text-lg font-semibold">Dirección de Despacho</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="direccionDespachoPais"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>País</FormLabel>
+                      <FormControl>
+                        <Input {...field} value={field.value || ""} data-testid="input-despacho-pais" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="direccionDespachoEstado"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Estado</FormLabel>
+                      <FormControl>
+                        <Input {...field} value={field.value || ""} data-testid="input-despacho-estado" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="direccionDespachoCiudad"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Ciudad</FormLabel>
+                      <FormControl>
+                        <Input {...field} value={field.value || ""} data-testid="input-despacho-ciudad" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="direccionDespachoDireccion"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Dirección</FormLabel>
+                      <FormControl>
+                        <Input {...field} value={field.value || ""} data-testid="input-despacho-direccion" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="direccionDespachoUrbanizacion"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Urbanización</FormLabel>
+                      <FormControl>
+                        <Input {...field} value={field.value || ""} data-testid="input-despacho-urbanizacion" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </div>
+
+            {/* Notes */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold">Notas</h3>
+              <FormField
+                control={form.control}
+                name="notas"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Notas adicionales</FormLabel>
+                    <FormControl>
+                      <Textarea 
+                        {...field} 
+                        value={field.value || ""}
+                        rows={3}
+                        data-testid="input-notas" 
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            {/* Actions */}
+            <div className="flex justify-end gap-3">
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={handleClose}
+                data-testid="button-cancel"
+              >
+                Cancelar
+              </Button>
+              <Button 
+                type="submit" 
+                disabled={createReservaMutation.isPending}
+                data-testid="button-create-reserva"
+              >
+                {createReservaMutation.isPending ? "Creando..." : "Crear Reserva"}
+              </Button>
+            </div>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
+  );
+}
