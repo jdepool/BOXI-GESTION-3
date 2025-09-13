@@ -127,7 +127,8 @@ export const paymentInstallments = pgTable("payment_installments", {
   orden: text("orden"), // Duplicated for faster queries
   installmentNumber: integer("installment_number").notNull(), // 1, 2, 3, etc.
   fecha: timestamp("fecha"), // Payment date
-  cuotaAmount: decimal("cuota_amount", { precision: 10, scale: 2 }), // Payment amount
+  cuotaAmount: decimal("cuota_amount", { precision: 10, scale: 2 }), // Payment amount USD
+  cuotaAmountBs: decimal("cuota_amount_bs", { precision: 15, scale: 2 }), // Payment amount BS
   saldoRemaining: decimal("saldo_remaining", { precision: 10, scale: 2 }), // Balance after payment
   referencia: text("referencia"), // Payment reference
   bancoId: varchar("banco_id"), // Bank used for payment

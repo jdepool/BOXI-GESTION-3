@@ -42,6 +42,7 @@ interface PaymentInstallmentsModalProps {
 const installmentFormSchema = z.object({
   fecha: z.date().optional(),
   cuotaAmount: z.string().min(1, "Monto es requerido").refine((val) => parseFloat(val) > 0, "El monto debe ser mayor a 0"),
+  cuotaAmountBs: z.string().optional(),
   bancoId: z.string().optional(),
   referencia: z.string().optional(),
   verificado: z.boolean().default(false),
@@ -59,6 +60,7 @@ export default function PaymentInstallmentsModal({ sale, open, onOpenChange }: P
     defaultValues: {
       fecha: undefined,
       cuotaAmount: "",
+      cuotaAmountBs: "",
       bancoId: "",
       referencia: "",
       verificado: false,
@@ -102,6 +104,7 @@ export default function PaymentInstallmentsModal({ sale, open, onOpenChange }: P
       const payload = {
         fecha: data.fecha?.toISOString(),
         cuotaAmount: data.cuotaAmount,
+        cuotaAmountBs: data.cuotaAmountBs || null,
         bancoId: data.bancoId || null,
         referencia: data.referencia || null,
         verificado: data.verificado,
@@ -130,6 +133,7 @@ export default function PaymentInstallmentsModal({ sale, open, onOpenChange }: P
       const payload = {
         fecha: data.fecha?.toISOString(),
         cuotaAmount: data.cuotaAmount,
+        cuotaAmountBs: data.cuotaAmountBs || null,
         bancoId: data.bancoId || null,
         referencia: data.referencia || null,
         verificado: data.verificado,
@@ -199,6 +203,7 @@ export default function PaymentInstallmentsModal({ sale, open, onOpenChange }: P
     form.reset({
       fecha: installment.fecha ? new Date(installment.fecha) : undefined,
       cuotaAmount: installment.cuotaAmount || "",
+      cuotaAmountBs: installment.cuotaAmountBs || "",
       bancoId: installment.bancoId || "",
       referencia: installment.referencia || "",
       verificado: installment.verificado ?? false,
@@ -405,6 +410,27 @@ export default function PaymentInstallmentsModal({ sale, open, onOpenChange }: P
                               step="0.01"
                               min="0"
                               data-testid="input-installment-amount"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="cuotaAmountBs"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Monto Bs</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="0.00"
+                              type="number"
+                              step="0.01"
+                              min="0"
+                              data-testid="input-installment-amount-bs"
                               {...field}
                             />
                           </FormControl>
