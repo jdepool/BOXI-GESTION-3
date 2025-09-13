@@ -4,7 +4,7 @@ import { storage } from "./storage";
 import { 
   insertSaleSchema, insertUploadHistorySchema, insertBancoSchema, insertTipoEgresoSchema, 
   insertProductoSchema, insertMetodoPagoSchema, insertMonedaSchema, insertCategoriaSchema,
-  insertEgresoSchema, insertEgresoPorAprobarSchema
+  insertEgresoSchema, insertEgresoPorAprobarSchema, insertPaymentInstallmentSchema
 } from "@shared/schema";
 import { z } from "zod";
 import multer from "multer";
@@ -1876,6 +1876,167 @@ export async function registerRoutes(app: Express): Promise<Server> {
         error: 'Failed to update Cashea orders',
         details: error instanceof Error ? error.message : 'Unknown error'
       });
+    }
+  });
+
+  // Payment Installments Routes
+  
+  // GET /api/sales/:saleId/installments - Returns installments + summary
+  app.get("/api/sales/:saleId/installments", async (req, res) => {
+    try {
+      const { saleId } = req.params;
+      
+      // Validate that sale exists
+      const sale = await storage.getSaleById(saleId);
+      if (!sale) {
+        return res.status(404).json({ error: "Sale not found" });
+      }
+
+      const [installments, summary] = await Promise.all([
+        storage.getInstallmentsBySale(saleId),
+        storage.getInstallmentSummary(saleId),
+      ]);
+
+      res.json({
+        installments,
+        summary,
+      });
+    } catch (error) {
+      console.error("Get installments error:", error);
+      res.status(500).json({ error: "Failed to get installments" });
+    }
+  });
+
+  // POST /api/sales/:saleId/installments - Create new installment
+  app.post("/api/sales/:saleId/installments", async (req, res) => {
+    try {
+      const { saleId } = req.params;
+      
+      // Validate that sale exists
+      const sale = await storage.getSaleById(saleId);
+      if (!sale) {
+        return res.status(404).json({ error: "Sale not found" });
+      }
+
+      // Validate request body
+      const validatedData = insertPaymentInstallmentSchema.parse(req.body);
+
+      // Check for overpayment
+      const summary = await storage.getInstallmentSummary(saleId);
+      const newAmount = parseFloat(validatedData.cuotaAmount || '0');
+      
+      if (newAmount <= 0) {
+        return res.status(400).json({ error: "Payment amount must be positive" });
+      }
+
+      if (validatedData.verificado && (summary.totalPagado + newAmount > summary.totalUsd)) {
+        return res.status(400).json({ 
+          error: "Payment would exceed total amount",
+          details: {
+            totalUsd: summary.totalUsd,
+            currentPaid: summary.totalPagado,
+            attemptedPayment: newAmount,
+            wouldExceedBy: (summary.totalPagado + newAmount) - summary.totalUsd
+          }
+        });
+      }
+
+      const installment = await storage.createInstallment(saleId, validatedData);
+      res.status(201).json(installment);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Invalid data", details: error.errors });
+      }
+      console.error("Create installment error:", error);
+      res.status(500).json({ error: "Failed to create installment" });
+    }
+  });
+
+  // PATCH /api/installments/:id - Update installment
+  app.patch("/api/installments/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      
+      // Validate request body (partial update)
+      const validatedData = insertPaymentInstallmentSchema.partial().parse(req.body);
+
+      // Validate amount if provided
+      if (validatedData.cuotaAmount !== undefined && parseFloat(validatedData.cuotaAmount || '0') <= 0) {
+        return res.status(400).json({ error: "Payment amount must be positive" });
+      }
+
+      // Get current installment to check for overpayment
+      const currentInstallment = await storage.getInstallmentById(id);
+      if (!currentInstallment) {
+        return res.status(404).json({ error: "Installment not found" });
+      }
+
+      // Get installment summary to check for overpayment
+      const summary = await storage.getInstallmentSummary(currentInstallment.saleId);
+      
+      // Determine new values after update
+      const newAmount = validatedData.cuotaAmount !== undefined ? 
+        parseFloat(validatedData.cuotaAmount) : 
+        parseFloat(currentInstallment.cuotaAmount || '0');
+      
+      const newVerificado = validatedData.verificado !== undefined ? 
+        validatedData.verificado : 
+        currentInstallment.verificado;
+
+      // Calculate current verified amount from this installment
+      const currentVerifiedAmount = currentInstallment.verificado ? 
+        parseFloat(currentInstallment.cuotaAmount || '0') : 0;
+
+      // Calculate new verified amount from this installment  
+      const newVerifiedAmount = newVerificado ? newAmount : 0;
+
+      // Calculate what total paid would be with this update
+      const totalPaidWithUpdate = summary.totalPagado - currentVerifiedAmount + newVerifiedAmount;
+
+      // Check for overpayment
+      if (totalPaidWithUpdate > summary.totalUsd) {
+        return res.status(400).json({ 
+          error: "Update would exceed total sale amount",
+          details: {
+            totalUsd: summary.totalUsd,
+            currentTotalPaid: summary.totalPagado,
+            currentInstallmentPaid: currentVerifiedAmount,
+            newInstallmentAmount: newVerifiedAmount,
+            wouldResultInTotalPaid: totalPaidWithUpdate,
+            wouldExceedBy: totalPaidWithUpdate - summary.totalUsd
+          }
+        });
+      }
+
+      const installment = await storage.updateInstallment(id, validatedData);
+      if (!installment) {
+        return res.status(404).json({ error: "Installment not found" });
+      }
+      
+      res.json(installment);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Invalid data", details: error.errors });
+      }
+      console.error("Update installment error:", error);
+      res.status(500).json({ error: "Failed to update installment" });
+    }
+  });
+
+  // DELETE /api/installments/:id - Delete installment
+  app.delete("/api/installments/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      
+      const deleted = await storage.deleteInstallment(id);
+      if (!deleted) {
+        return res.status(404).json({ error: "Installment not found" });
+      }
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Delete installment error:", error);
+      res.status(500).json({ error: "Failed to delete installment" });
     }
   });
 

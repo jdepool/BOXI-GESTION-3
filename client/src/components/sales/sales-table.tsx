@@ -11,7 +11,8 @@ import SaleDetailModal from "./sale-detail-modal";
 import AddressModal from "@/components/addresses/address-modal";
 import FleteModal from "./flete-modal";
 import EditSaleModal from "./edit-sale-modal";
-import { MapPin, Truck, Edit, CalendarIcon } from "lucide-react";
+import PaymentInstallmentsModal from "./payment-installments-modal";
+import { MapPin, Truck, Edit, CalendarIcon, CreditCard } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
@@ -59,6 +60,8 @@ export default function SalesTable({
   const [selectedSaleForFlete, setSelectedSaleForFlete] = useState<Sale | null>(null);
   const [editSaleModalOpen, setEditSaleModalOpen] = useState(false);
   const [selectedSaleForEdit, setSelectedSaleForEdit] = useState<Sale | null>(null);
+  const [installmentsModalOpen, setInstallmentsModalOpen] = useState(false);
+  const [selectedSaleForInstallments, setSelectedSaleForInstallments] = useState<Sale | null>(null);
   const [editingNotesId, setEditingNotesId] = useState<string | null>(null);
   const [notesValue, setNotesValue] = useState<string>("");
   const filters = {
@@ -631,6 +634,19 @@ export default function SalesTable({
                           variant="outline"
                           size="sm"
                           onClick={() => {
+                            setSelectedSaleForInstallments(sale);
+                            setInstallmentsModalOpen(true);
+                          }}
+                          data-testid={`button-cuotas-${sale.id}`}
+                          className="h-7 text-xs"
+                        >
+                          <CreditCard className="h-3 w-3 mr-1" />
+                          Cuotas
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
                             setSelectedSaleForEdit(sale);
                             setEditSaleModalOpen(true);
                           }}
@@ -759,6 +775,17 @@ export default function SalesTable({
           }
         }}
         sale={selectedSaleForEdit}
+      />
+
+      <PaymentInstallmentsModal
+        open={installmentsModalOpen}
+        onOpenChange={(open) => {
+          setInstallmentsModalOpen(open);
+          if (!open) {
+            setSelectedSaleForInstallments(null);
+          }
+        }}
+        sale={selectedSaleForInstallments}
       />
     </>
   );

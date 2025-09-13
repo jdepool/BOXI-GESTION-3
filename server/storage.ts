@@ -1,11 +1,11 @@
 import { 
-  sales, uploadHistory, users, bancos, tiposEgresos, productos, metodosPago, monedas, categorias, canales, egresos, egresosPorAprobar,
+  sales, uploadHistory, users, bancos, tiposEgresos, productos, metodosPago, monedas, categorias, canales, egresos, egresosPorAprobar, paymentInstallments,
   type User, type InsertUser, type Sale, type InsertSale, type UploadHistory, type InsertUploadHistory,
   type Banco, type InsertBanco, type TipoEgreso, type InsertTipoEgreso,
   type Producto, type InsertProducto, type MetodoPago, type InsertMetodoPago,
   type Moneda, type InsertMoneda, type Categoria, type InsertCategoria,
   type Canal, type InsertCanal, type Egreso, type InsertEgreso,
-  type EgresoPorAprobar, type InsertEgresoPorAprobar
+  type EgresoPorAprobar, type InsertEgresoPorAprobar, type PaymentInstallment, type InsertPaymentInstallment
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, count, sum, avg, and, gte, lte, or, ne, like, ilike, isNotNull, sql } from "drizzle-orm";
@@ -171,6 +171,21 @@ export interface IStorage {
     referencia?: string;
     observaciones?: string;
   }): Promise<Egreso | undefined>;
+
+  // Payment Installments
+  getInstallmentsBySale(saleId: string): Promise<PaymentInstallment[]>;
+  getInstallmentById(id: string): Promise<PaymentInstallment | undefined>;
+  createInstallment(saleId: string, data: Partial<InsertPaymentInstallment>): Promise<PaymentInstallment>;
+  updateInstallment(id: string, data: Partial<InsertPaymentInstallment>): Promise<PaymentInstallment | undefined>;
+  deleteInstallment(id: string): Promise<boolean>;
+  recomputeInstallmentSequenceAndBalances(saleId: string): Promise<void>;
+  getInstallmentSummary(saleId: string): Promise<{
+    totalUsd: number;
+    pagoInicialUsd: number;
+    totalCuotas: number;
+    totalPagado: number;
+    saldoPendiente: number;
+  }>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1121,6 +1136,181 @@ export class DatabaseStorage implements IStorage {
       .returning();
     
     return result.length;
+  }
+
+  // Payment Installments
+  async getInstallmentsBySale(saleId: string): Promise<PaymentInstallment[]> {
+    const installments = await db
+      .select()
+      .from(paymentInstallments)
+      .where(eq(paymentInstallments.saleId, saleId))
+      .orderBy(paymentInstallments.installmentNumber);
+    return installments;
+  }
+
+  async getInstallmentById(id: string): Promise<PaymentInstallment | undefined> {
+    const [installment] = await db
+      .select()
+      .from(paymentInstallments)
+      .where(eq(paymentInstallments.id, id))
+      .limit(1);
+    return installment || undefined;
+  }
+
+  async createInstallment(saleId: string, data: Partial<InsertPaymentInstallment>): Promise<PaymentInstallment> {
+    // Get the next installment number
+    const existingInstallments = await this.getInstallmentsBySale(saleId);
+    const nextInstallmentNumber = Math.max(0, ...existingInstallments.map(i => i.installmentNumber)) + 1;
+
+    // Get sale info for orden field
+    const sale = await this.getSaleById(saleId);
+    
+    const [newInstallment] = await db
+      .insert(paymentInstallments)
+      .values({
+        saleId,
+        orden: sale?.orden || null,
+        installmentNumber: nextInstallmentNumber,
+        ...data,
+      })
+      .returning();
+
+    // Recompute balances after creating
+    await this.recomputeInstallmentSequenceAndBalances(saleId);
+    
+    return newInstallment;
+  }
+
+  async updateInstallment(id: string, data: Partial<InsertPaymentInstallment>): Promise<PaymentInstallment | undefined> {
+    const [updatedInstallment] = await db
+      .update(paymentInstallments)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(paymentInstallments.id, id))
+      .returning();
+
+    if (updatedInstallment) {
+      // Recompute balances after updating
+      await this.recomputeInstallmentSequenceAndBalances(updatedInstallment.saleId);
+    }
+    
+    return updatedInstallment || undefined;
+  }
+
+  async deleteInstallment(id: string): Promise<boolean> {
+    const [installment] = await db
+      .select()
+      .from(paymentInstallments)
+      .where(eq(paymentInstallments.id, id))
+      .limit(1);
+
+    if (!installment) {
+      return false;
+    }
+
+    const result = await db.delete(paymentInstallments).where(eq(paymentInstallments.id, id));
+    const deleted = (result.rowCount ?? 0) > 0;
+
+    if (deleted) {
+      // Recompute balances after deleting
+      await this.recomputeInstallmentSequenceAndBalances(installment.saleId);
+    }
+    
+    return deleted;
+  }
+
+  async recomputeInstallmentSequenceAndBalances(saleId: string): Promise<void> {
+    // Get sale and installments
+    const sale = await this.getSaleById(saleId);
+    if (!sale) return;
+
+    const installments = await this.getInstallmentsBySale(saleId);
+    
+    // Sort installments by installment number and recompute balances
+    const sortedInstallments = installments.sort((a, b) => a.installmentNumber - b.installmentNumber);
+    
+    const totalUsd = parseFloat(sale.totalUsd);
+    const pagoInicialUsd = parseFloat(sale.pagoInicialUsd || '0');
+    let runningBalance = totalUsd - pagoInicialUsd;
+
+    // Track total verified payments for validation
+    let totalVerifiedPayments = 0;
+
+    for (const installment of sortedInstallments) {
+      const cuotaAmount = parseFloat(installment.cuotaAmount || '0');
+      
+      // Only reduce balance if installment is verified
+      if (installment.verificado) {
+        runningBalance -= cuotaAmount;
+        totalVerifiedPayments += cuotaAmount;
+      }
+      
+      // Safeguard: Warn if balance goes negative (indicates overpayment)
+      if (runningBalance < -0.01) { // Allow for small floating point errors
+        console.warn(`Balance calculation warning for sale ${saleId}: Running balance is ${runningBalance.toFixed(2)} after installment ${installment.installmentNumber}. This indicates overpayment.`);
+      }
+      
+      // Update the saldo remaining with proper rounding to avoid floating point issues
+      await db
+        .update(paymentInstallments)
+        .set({ 
+          saldoRemaining: Math.max(0, runningBalance).toFixed(2), // Prevent negative balance display
+          updatedAt: new Date() 
+        })
+        .where(eq(paymentInstallments.id, installment.id));
+    }
+
+    // Final validation: Check if total payments exceed sale amount
+    const finalTotalPaid = pagoInicialUsd + totalVerifiedPayments;
+    if (finalTotalPaid > totalUsd + 0.01) { // Allow for small floating point errors
+      console.error(`Overpayment detected for sale ${saleId}: Total paid ${finalTotalPaid.toFixed(2)} exceeds sale total ${totalUsd.toFixed(2)} by ${(finalTotalPaid - totalUsd).toFixed(2)}`);
+    }
+  }
+
+  async getInstallmentSummary(saleId: string): Promise<{
+    totalUsd: number;
+    pagoInicialUsd: number;
+    totalCuotas: number;
+    totalPagado: number;
+    saldoPendiente: number;
+  }> {
+    const sale = await this.getSaleById(saleId);
+    if (!sale) {
+      return {
+        totalUsd: 0,
+        pagoInicialUsd: 0,
+        totalCuotas: 0,
+        totalPagado: 0,
+        saldoPendiente: 0,
+      };
+    }
+
+    const installments = await this.getInstallmentsBySale(saleId);
+    const verifiedInstallments = installments.filter(i => i.verificado);
+    
+    const totalUsd = parseFloat(sale.totalUsd);
+    const pagoInicialUsd = parseFloat(sale.pagoInicialUsd || '0');
+    const totalCuotas = installments.length;
+    
+    // Calculate total paid with proper rounding to avoid floating point issues
+    const verifiedInstallmentsTotal = verifiedInstallments.reduce((sum, i) => {
+      return sum + parseFloat(i.cuotaAmount || '0');
+    }, 0);
+    
+    const totalPagado = pagoInicialUsd + verifiedInstallmentsTotal;
+    const saldoPendiente = Math.max(0, totalUsd - totalPagado); // Prevent negative balance display
+
+    // Validation: Log warning if overpayment detected
+    if (totalPagado > totalUsd + 0.01) { // Allow for small floating point errors
+      console.warn(`Overpayment detected in installment summary for sale ${saleId}: Total paid ${totalPagado.toFixed(2)} exceeds sale total ${totalUsd.toFixed(2)}`);
+    }
+
+    return {
+      totalUsd: Math.round(totalUsd * 100) / 100, // Round to 2 decimal places
+      pagoInicialUsd: Math.round(pagoInicialUsd * 100) / 100,
+      totalCuotas,
+      totalPagado: Math.round(totalPagado * 100) / 100,
+      saldoPendiente: Math.round(saldoPendiente * 100) / 100,
+    };
   }
 }
 
