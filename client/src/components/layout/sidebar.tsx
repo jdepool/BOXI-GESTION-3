@@ -19,11 +19,6 @@ const navigationItems = [
     label: "Ventas",
   },
   {
-    href: "/ventas-pendientes",
-    icon: "fas fa-clock",
-    label: "Ventas Pendientes",
-  },
-  {
     href: "/flete",
     icon: "fas fa-shipping-fast",
     label: "Flete",
