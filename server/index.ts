@@ -43,8 +43,9 @@ app.use((req, res, next) => {
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";
 
+    console.error('Error in request:', err);
     res.status(status).json({ message });
-    throw err;
+    // Don't throw error - this would crash the process
   });
 
   // importantly only setup vite in development and after
@@ -68,4 +69,36 @@ app.use((req, res, next) => {
   }, () => {
     log(`serving on port ${port}`);
   });
+
+  // Graceful shutdown handling
+  async function gracefulShutdown(signal: string) {
+    console.log(`Received ${signal}, shutting down gracefully...`);
+    
+    // Close HTTP server first
+    server.close(async () => {
+      console.log('HTTP server closed');
+      
+      // Import pool here to avoid circular dependencies
+      const { pool } = await import('./db');
+      
+      // Close database connections
+      try {
+        await pool.end();
+        console.log('Database connections closed');
+      } catch (error) {
+        console.error('Error closing database connections:', error);
+      }
+      
+      process.exit(0);
+    });
+
+    // Force close after timeout
+    setTimeout(() => {
+      console.error('Could not close connections in time, forcefully shutting down');
+      process.exit(1);
+    }, 10000);
+  }
+
+  process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+  process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
 })();
