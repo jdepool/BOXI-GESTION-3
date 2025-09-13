@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
 import Sidebar from "@/components/layout/sidebar";
 import Header from "@/components/layout/header";
 import SalesTable from "@/components/sales/sales-table";
 import ManualSalesEntry from "@/components/sales/manual-sales-entry";
+import ManualReservaModal from "@/components/sales/manual-reserva-modal";
 
 export default function Sales() {
   const [filters, setFilters] = useState({
@@ -16,6 +18,8 @@ export default function Sales() {
     limit: 20,
     offset: 0,
   });
+
+  const [isManualReservaModalOpen, setIsManualReservaModalOpen] = useState(false);
 
   const { data: salesData, isLoading } = useQuery<{
     data: any[];
@@ -82,22 +86,43 @@ export default function Sales() {
             </TabsContent>
             
             <TabsContent value="reservas" className="h-full">
-              <div className="bg-card rounded-lg border border-border h-full">
-                <SalesTable 
-                  data={reservasData?.data || []} 
-                  total={reservasData?.total || 0}
-                  limit={20}
-                  offset={0}
-                  isLoading={reservasLoading}
-                  hideFilters={false}
-                  hidePagination={false}
-                  showDeliveryDateColumn={true}
-                />
+              <div className="bg-card rounded-lg border border-border h-full flex flex-col">
+                <div className="p-4 border-b border-border">
+                  <Button 
+                    onClick={() => setIsManualReservaModalOpen(true)}
+                    className="mb-4"
+                    data-testid="button-nueva-reserva-manual"
+                  >
+                    <i className="fas fa-plus mr-2"></i>
+                    + Nueva Reserva Manual
+                  </Button>
+                </div>
+                <div className="flex-1">
+                  <SalesTable 
+                    data={reservasData?.data || []} 
+                    total={reservasData?.total || 0}
+                    limit={20}
+                    offset={0}
+                    isLoading={reservasLoading}
+                    hideFilters={false}
+                    hidePagination={false}
+                    showDeliveryDateColumn={true}
+                  />
+                </div>
               </div>
             </TabsContent>
           </Tabs>
         </div>
       </main>
+
+      <ManualReservaModal 
+        isOpen={isManualReservaModalOpen}
+        onClose={() => setIsManualReservaModalOpen(false)}
+        onSuccess={() => {
+          setIsManualReservaModalOpen(false);
+          // The modal will handle cache invalidation internally
+        }}
+      />
     </div>
   );
 }
