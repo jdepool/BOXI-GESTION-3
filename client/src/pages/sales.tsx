@@ -30,14 +30,14 @@ export default function Sales() {
     queryKey: ["/api/sales", { ...filters, excludePendingManual: true }],
   });
 
-  // Query for Reserva orders (tipo = "Reserva")
+  // Query for Reserva orders that are still pending (exclude those ready for dispatch)
   const { data: reservasData, isLoading: reservasLoading } = useQuery<{
     data: any[];
     total: number;
     limit: number;
     offset: number;
   }>({
-    queryKey: ["/api/sales", { tipo: "Reserva" }],
+    queryKey: ["/api/sales", { tipo: "Reserva", excludeADespachar: true }],
   });
 
   const handleFilterChange = (newFilters: Partial<typeof filters>) => {

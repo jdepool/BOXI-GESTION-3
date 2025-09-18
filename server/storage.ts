@@ -248,6 +248,7 @@ export class DatabaseStorage implements IStorage {
     tipo?: string;
     excludePendingManual?: boolean;
     excludeReservas?: boolean;
+    excludeADespachar?: boolean;
     limit?: number;
     offset?: number;
   }): Promise<Sale[]> {
@@ -284,6 +285,12 @@ export class DatabaseStorage implements IStorage {
       // Exclude orders with tipo "Reserva" from this view
       conditions.push(
         ne(sales.tipo, "Reserva")
+      );
+    }
+    if (filters?.excludeADespachar) {
+      // Exclude orders with estadoEntrega "A Despachar" - for Reservas tab to only show pending reservas
+      conditions.push(
+        ne(sales.estadoEntrega, "A Despachar")
       );
     }
     
@@ -555,6 +562,7 @@ export class DatabaseStorage implements IStorage {
     tipo?: string;
     excludePendingManual?: boolean;
     excludeReservas?: boolean;
+    excludeADespachar?: boolean;
   }): Promise<number> {
     const conditions = [];
     if (filters?.canal) {
@@ -589,6 +597,12 @@ export class DatabaseStorage implements IStorage {
       // Exclude orders with tipo "Reserva" from this view
       conditions.push(
         ne(sales.tipo, "Reserva")
+      );
+    }
+    if (filters?.excludeADespachar) {
+      // Exclude orders with estadoEntrega "A Despachar" - for Reservas tab to only show pending reservas
+      conditions.push(
+        ne(sales.estadoEntrega, "A Despachar")
       );
     }
     
