@@ -1694,7 +1694,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!updatedSale) {
         return res.status(404).json({ error: "Failed to update sale" });
       }
-      res.json(updatedSale);
+      
+      // Check if we need to update sale status when payment info is filled up
+      if (existingSale.estado === "pendiente" && existingSale.canal?.toLowerCase() === "manual") {
+        // Check if any payment information is being provided
+        const hasPaymentInfo = !!(
+          saleData.referencia || 
+          saleData.bancoId || 
+          saleData.metodoPagoId ||
+          (saleData.montoUsd && parseFloat(saleData.montoUsd) > 0) ||
+          (saleData.pagoInicialUsd && parseFloat(saleData.pagoInicialUsd) > 0)
+        );
+        
+        if (hasPaymentInfo) {
+          // Update estado to move from Ventas por Completar to Lista de Ventas
+          const finalUpdatedSale = await storage.updateSale(id, {
+            estado: "activo",
+            estadoEntrega: "En Proceso"
+          });
+          res.json(finalUpdatedSale || updatedSale);
+        } else {
+          res.json(updatedSale);
+        }
+      } else {
+        res.json(updatedSale);
+      }
     } catch (error) {
       console.error("Error updating sale:", error);
       res.status(500).json({ error: "Failed to update sale" });
