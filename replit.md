@@ -109,3 +109,21 @@ Fixed the workflow for manual sales created through "Nueva Venta Manual" to prop
 - Modified `getSales` and `getTotalSalesCount` functions in `server/storage.ts`
 - Updated payment verification logic in `server/routes.ts`
 - Maintains consistent filtering across both listing and count queries
+
+### Payment Information Auto-Status Update
+Updated the system so manual sales automatically move from "Ventas por Completar" to "Lista de Ventas" when payment information is filled up (not verified):
+
+**Issue Clarification:**
+- User clarified that orders don't need verification to appear in "Lista de Ventas"
+- Orders should move when payment information is filled up (installment created with payment details)
+- Status changes to "En Proceso" and moves to "Lista de Ventas"
+
+**Changes Made:**
+1. **Updated Installment Creation Endpoint**: Added logic in `POST /api/sales/:saleId/installments` to automatically update sale status when payment info is provided
+2. **Updated Installment Update Endpoint**: Added logic in `PATCH /api/installments/:id` to check for status updates when installment is modified with payment info
+
+**Current Workflow (Updated):**
+- **Manual Sales Creation**: Created with `estado: "pendiente"` and appear in "Ventas por Completar"
+- **Payment Info Filled**: When installment is created with payment amount > 0, `estado` changes to "activo" and `estadoEntrega` remains "En Proceso"
+- **Automatic Movement**: Sale automatically moves from "Ventas por Completar" to "Lista de Ventas"
+- **Payment Verification**: Remains independent - `verificado` flag can be toggled separately without affecting tab placement
