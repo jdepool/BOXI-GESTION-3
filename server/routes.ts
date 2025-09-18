@@ -1805,7 +1805,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         sucursal: null,
         tienda: null,
         estadoPagoInicial: "pendiente",
-        pagoInicialUsd: null,
+        pagoInicialUsd: (body.pagoInicialUsd !== undefined && body.pagoInicialUsd !== null) ? String(body.pagoInicialUsd) : null,
         orden: newOrderNumber,
         factura: null,
         referencia: body.referencia || null,
