@@ -1,9 +1,6 @@
-import { Pool, neonConfig } from '@neondatabase/serverless';
+import { Pool } from 'pg';
 import { drizzle } from 'drizzle-orm/node-postgres';
-import ws from "ws";
 import * as schema from "@shared/schema";
-
-neonConfig.webSocketConstructor = ws;
 
 if (!process.env.DATABASE_URL) {
   throw new Error(
@@ -14,7 +11,7 @@ if (!process.env.DATABASE_URL) {
 // Configure pool with proper error handling and connection settings
 export const pool = new Pool({ 
   connectionString: process.env.DATABASE_URL,
-  max: 10, // Reduced from 20 to avoid exceeding Neon limits
+  max: 10, // Connection pool size
   idleTimeoutMillis: 30000, // Close idle clients after 30 seconds
   connectionTimeoutMillis: 10000, // Wait 10 seconds for new client connections
   allowExitOnIdle: false // Don't exit the process when idle
