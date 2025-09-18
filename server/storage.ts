@@ -314,20 +314,29 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getOrdersWithAddresses(limit: number = 20, offset: number = 0): Promise<{ data: Sale[]; total: number }> {
-    // Get orders that are ready for dispatch (A Despachar status)
+    // Get orders that are ready for dispatch:
+    // Estado Entrega = A Despachar AND (Flete Status = A Despacho OR fleteGratis = true)
+    const dispatchCondition = and(
+      eq(sales.estadoEntrega, 'A Despachar'),
+      or(
+        eq(sales.statusFlete, 'A Despacho'),
+        eq(sales.fleteGratis, true)
+      )
+    );
+
     const ordersForDispatch = await db
       .select()
       .from(sales)
-      .where(eq(sales.estadoEntrega, 'A Despachar'))
+      .where(dispatchCondition)
       .orderBy(desc(sales.fecha))
       .limit(limit)
       .offset(offset);
 
-    // Get total count
+    // Get total count with same conditions
     const [{ totalCount }] = await db
       .select({ totalCount: count() })
       .from(sales)
-      .where(eq(sales.estadoEntrega, 'A Despachar'));
+      .where(dispatchCondition);
 
     return {
       data: ordersForDispatch,
@@ -336,12 +345,27 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateSaleDeliveryStatus(saleId: string, newStatus: string): Promise<Sale | undefined> {
+    // Get the existing sale to check current freight status
+    const existingSale = await this.getSaleById(saleId);
+    if (!existingSale) {
+      return undefined;
+    }
+
+    const updateData: any = {
+      estadoEntrega: newStatus,
+      updatedAt: new Date()
+    };
+
+    // If moving to A Despachar and no freight info exists, initialize freight processing
+    if (newStatus === 'A Despachar' && !existingSale.montoFleteUsd && !existingSale.fleteGratis) {
+      // Initialize freight as pending - this will make the order appear in Flete page
+      updateData.montoFleteUsd = '0.01'; // Minimal amount to trigger freight processing
+      updateData.statusFlete = 'Pendiente';
+    }
+
     const [updatedSale] = await db
       .update(sales)
-      .set({ 
-        estadoEntrega: newStatus,
-        updatedAt: new Date()
-      })
+      .set(updateData)
       .where(eq(sales.id, saleId))
       .returning();
 
