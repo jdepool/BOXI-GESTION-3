@@ -1969,6 +1969,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const installment = await storage.createInstallment(saleId, validatedData);
+      
+      // If this is the first payment info for a pending manual sale, move it to Lista de Ventas
+      if (sale.estado === "pendiente" && sale.canal === "Manual" && 
+          validatedData.cuotaAmount && parseFloat(validatedData.cuotaAmount) > 0) {
+        await storage.updateSale(saleId, {
+          estado: "activo",
+          estadoEntrega: "En Proceso"
+        });
+      }
+      
       res.status(201).json(installment);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -2038,6 +2048,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const installment = await storage.updateInstallment(id, validatedData);
       if (!installment) {
         return res.status(404).json({ error: "Installment not found" });
+      }
+      
+      // Check if we need to update sale status when payment info is filled up
+      const sale = await storage.getSaleById(currentInstallment.saleId);
+      if (sale && sale.estado === "pendiente" && sale.canal === "Manual" && 
+          validatedData.cuotaAmount && parseFloat(validatedData.cuotaAmount) > 0) {
+        await storage.updateSale(currentInstallment.saleId, {
+          estado: "activo", 
+          estadoEntrega: "En Proceso"
+        });
       }
       
       res.json(installment);
