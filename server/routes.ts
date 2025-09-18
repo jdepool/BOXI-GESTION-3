@@ -1971,7 +1971,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const installment = await storage.createInstallment(saleId, validatedData);
       
       // If this is the first payment info for a pending manual sale, move it to Lista de Ventas
-      if (sale.estado === "pendiente" && sale.canal === "Manual" && 
+      if (sale.estado === "pendiente" && sale.canal?.toLowerCase() === "manual" && 
           validatedData.cuotaAmount && parseFloat(validatedData.cuotaAmount) > 0) {
         await storage.updateSale(saleId, {
           estado: "activo",
@@ -2052,7 +2052,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Check if we need to update sale status when payment info is filled up
       const sale = await storage.getSaleById(currentInstallment.saleId);
-      if (sale && sale.estado === "pendiente" && sale.canal === "Manual" && 
+      if (sale && sale.estado === "pendiente" && sale.canal?.toLowerCase() === "manual" && 
           validatedData.cuotaAmount && parseFloat(validatedData.cuotaAmount) > 0) {
         await storage.updateSale(currentInstallment.saleId, {
           estado: "activo", 
