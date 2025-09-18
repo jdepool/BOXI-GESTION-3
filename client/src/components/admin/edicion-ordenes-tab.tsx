@@ -75,26 +75,63 @@ export function EdicionOrdenesTab() {
   // Fetch ALL orders (not just A Despachar)
   const { data: orders = [], isLoading } = useQuery({
     queryKey: ["/api/sales"],
-    queryFn: () => 
-      fetch("/api/sales?limit=100")
-        .then(res => res.json())
-        .then(data => data.data || []),
+    queryFn: async () => {
+      try {
+        const res = await fetch("/api/sales?limit=100");
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        return Array.isArray(data?.data) ? data.data : [];
+      } catch (error) {
+        console.error("Failed to fetch sales:", error);
+        return [];
+      }
+    },
   });
   
   // Fetch admin data for dropdowns
   const { data: bancos = [] } = useQuery({
     queryKey: ["/api/admin/bancos"],
-    queryFn: () => fetch("/api/admin/bancos").then(res => res.json()),
+    queryFn: async () => {
+      try {
+        const res = await fetch("/api/admin/bancos");
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        return Array.isArray(data) ? data : [];
+      } catch (error) {
+        console.error("Failed to fetch bancos:", error);
+        return [];
+      }
+    },
   });
   
   const { data: metodosPago = [] } = useQuery({
     queryKey: ["/api/admin/metodos-pago"],
-    queryFn: () => fetch("/api/admin/metodos-pago").then(res => res.json()),
+    queryFn: async () => {
+      try {
+        const res = await fetch("/api/admin/metodos-pago");
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        return Array.isArray(data) ? data : [];
+      } catch (error) {
+        console.error("Failed to fetch metodos pago:", error);
+        return [];
+      }
+    },
   });
   
   const { data: productos = [] } = useQuery({
     queryKey: ["/api/admin/productos"],
-    queryFn: () => fetch("/api/admin/productos").then(res => res.json()),
+    queryFn: async () => {
+      try {
+        const res = await fetch("/api/admin/productos");
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        return Array.isArray(data) ? data : [];
+      } catch (error) {
+        console.error("Failed to fetch productos:", error);
+        return [];
+      }
+    },
   });
 
   const updateOrderMutation = useMutation({

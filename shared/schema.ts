@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, decimal, timestamp, integer, boolean, index, unique, check, references } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, decimal, timestamp, integer, boolean, index, unique, check } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -123,7 +123,7 @@ export const sales = pgTable("sales", {
   // Notas adicionales
   notas: text("notas"),
   // Asesor asignado
-  asesorId: varchar("asesor_id").references(() => asesores.id),
+  asesorId: varchar("asesor_id"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => ({
@@ -135,7 +135,7 @@ export const sales = pgTable("sales", {
 
 export const paymentInstallments = pgTable("payment_installments", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  saleId: varchar("sale_id").notNull().references(() => sales.id, { onDelete: 'cascade' }),
+  saleId: varchar("sale_id").notNull(),
   orden: text("orden"), // Duplicated for faster queries
   installmentNumber: integer("installment_number").notNull(), // 1, 2, 3, etc.
   fecha: timestamp("fecha"), // Payment date
