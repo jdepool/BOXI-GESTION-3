@@ -85,3 +85,27 @@ Added comprehensive Shopify data mapping functionality that automatically proces
 - sucursal: null (Branch not applicable)
 - tienda: null (Store not applicable)
 - All freight-related fields initialized as null/pending for manual configuration
+
+## September 2025 - Manual Sales Workflow Improvements
+
+### Manual Sales Tab Movement Fix
+Fixed the workflow for manual sales created through "Nueva Venta Manual" to properly move between sales tabs:
+
+**Issue Resolution:**
+- Manual sales were not correctly moving from "Ventas por Completar" to "Lista de Ventas" after payment completion
+- Root cause: Filter logic was checking `estadoEntrega` instead of `estado` for pending sales
+
+**Changes Made:**
+1. **Updated Sales Filtering Logic**: Modified `excludePendingManual` parameter to filter based on `estado: "pendiente"` instead of `estadoEntrega: "Pendiente"`
+2. **Fixed Payment Verification**: Updated `/api/sales/:id/verify-payment` endpoint to set `estado: "completado"` and `estadoEntrega: "En Proceso"`
+
+**Current Workflow:**
+- **Manual Sales Creation**: Created with `estado: "pendiente"` and `estadoEntrega: "En Proceso"`
+- **Ventas por Completar Tab**: Shows sales with `estado: "pendiente"` (excluding reservas)
+- **Payment Completion**: Changes `estado` to "completado", automatically moving sale to main list
+- **Lista de Ventas Tab**: Shows completed sales, excluding those with `estado: "pendiente"`
+
+**Technical Implementation:**
+- Modified `getSales` and `getTotalSalesCount` functions in `server/storage.ts`
+- Updated payment verification logic in `server/routes.ts`
+- Maintains consistent filtering across both listing and count queries
