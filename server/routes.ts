@@ -2110,11 +2110,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      // Check if Reserva order is now fully paid and verified - move to A Despachar
+      // Check if Reserva order is now fully paid and verified - move to Lista de Ventas
       if (sale.tipo === "Reserva" && await storage.isPaymentFullyVerified(saleId)) {
-        await storage.updateSale(saleId, {
-          estadoEntrega: "A Despachar"
-        });
+        // First, set estado to completado so it appears in Lista de Ventas
+        await storage.updateSale(saleId, { estado: "completado" });
+        // Then, use proper delivery status update to handle freight initialization and business logic
+        await storage.updateSaleDeliveryStatus(saleId, "A Despachar");
       }
       
       res.status(201).json(installment);
@@ -2198,11 +2199,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      // Check if Reserva order is now fully paid and verified - move to A Despachar
+      // Check if Reserva order is now fully paid and verified - move to Lista de Ventas
       if (sale && sale.tipo === "Reserva" && await storage.isPaymentFullyVerified(currentInstallment.saleId)) {
-        await storage.updateSale(currentInstallment.saleId, {
-          estadoEntrega: "A Despachar"
-        });
+        // First, set estado to completado so it appears in Lista de Ventas
+        await storage.updateSale(currentInstallment.saleId, { estado: "completado" });
+        // Then, use proper delivery status update to handle freight initialization and business logic
+        await storage.updateSaleDeliveryStatus(currentInstallment.saleId, "A Despachar");
       }
       
       res.json(installment);

@@ -1436,9 +1436,9 @@ export class DatabaseStorage implements IStorage {
 
   async isPaymentFullyVerified(saleId: string): Promise<boolean> {
     const summary = await this.getInstallmentSummary(saleId);
-    // Consider a payment fully verified if the remaining balance is 0 or very close to 0
-    // (allowing for small floating point errors)
-    return summary.saldoPendiente <= 0.01;
+    // Consider a payment fully verified if the remaining balance is $5 or less
+    // This allows for business flexibility in completing orders
+    return summary.saldoPendiente <= 5.00;
   }
 }
 
