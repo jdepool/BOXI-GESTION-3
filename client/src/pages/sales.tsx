@@ -77,6 +77,7 @@ export default function Sales() {
                   filters={filters}
                   onFilterChange={handleFilterChange}
                   onPageChange={handlePageChange}
+                  showDeliveryDateColumn={true}
                 />
               </div>
             </TabsContent>
