@@ -2003,6 +2003,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
+      // Check if Reserva order is now fully paid and verified - move to A Despachar
+      if (sale.tipo === "Reserva" && await storage.isPaymentFullyVerified(saleId)) {
+        await storage.updateSale(saleId, {
+          estadoEntrega: "A Despachar"
+        });
+      }
+      
       res.status(201).json(installment);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -2081,6 +2088,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         await storage.updateSale(currentInstallment.saleId, {
           estado: "activo", 
           estadoEntrega: "En Proceso"
+        });
+      }
+      
+      // Check if Reserva order is now fully paid and verified - move to A Despachar
+      if (sale && sale.tipo === "Reserva" && await storage.isPaymentFullyVerified(currentInstallment.saleId)) {
+        await storage.updateSale(currentInstallment.saleId, {
+          estadoEntrega: "A Despachar"
         });
       }
       
