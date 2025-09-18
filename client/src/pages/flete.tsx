@@ -82,34 +82,23 @@ export default function Flete() {
     updateFleteStatusMutation.mutate({ saleId, status: newStatus });
   };
 
-  // Filter sales that have freight information but are not ready for dispatch yet
+  // Filter sales with complete freight information (universal rule for all canals)
   const salesWithFlete = (data as { data: Sale[] })?.data?.filter((sale: Sale) => {
-    // For manual orders, check if they have completed flete information
-    const isManualOrder = sale.canal?.toLowerCase() === "manual";
+    // Define complete flete information for ALL orders regardless of canal
+    const hasFreightAmount = !!(sale.montoFleteUsd || sale.fleteGratis);
+    const hasAllFreightDetails = !!(sale.fechaFlete && sale.referenciaFlete && sale.bancoReceptorFlete);
+    const hasCompleteFleteInfo = hasFreightAmount && hasAllFreightDetails;
     
-    if (isManualOrder) {
-      // Manual orders with flete gratis and estado entrega A Despachar should go to Despachos tab, not Flete
-      if (sale.fleteGratis && sale.estadoEntrega === 'A Despachar') {
-        return false;
-      }
-      
-      // Manual orders with completed flete information should show in Flete tab
-      // Consider completed if they have freight amount or are marked as flete gratis
-      const hasFleteInfo = !!(sale.montoFleteUsd || sale.fleteGratis);
-      return hasFleteInfo;
-    }
+    // Only show orders with complete flete information
+    if (!hasCompleteFleteInfo) return false;
     
-    // For non-manual orders, use the existing logic
-    if (!sale.montoFleteUsd) return false;
-    
-    // Exclude orders that are ready for dispatch (A Despachar + A Despacho)
-    // These should only appear in Despachos, not in Flete
-    if (sale.estadoEntrega === 'A Despachar' && sale.statusFlete === 'A Despacho') {
+    // Exclude orders ready for Despachos (universal rule for all canals)
+    if (sale.estadoEntrega === 'A Despachar' && 
+        (sale.statusFlete === 'A Despacho' || sale.fleteGratis)) {
       return false;
     }
     
-    const fleteStatus = getFleteStatus(sale);
-    return fleteStatus.status !== "Pendiente";
+    return true;
   }) || [];
 
   if (isLoading) {
