@@ -1706,10 +1706,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { id } = req.params;
       
-      // Update the sale status from "pendiente" to "activo" and set delivery status to "A Despachar"
+      // Update the sale status from "pendiente" to "completado" to move it from Ventas por Completar to Lista de Ventas
+      // Keep estadoEntrega as "En Proceso" as requested by the user
       const updatedSale = await storage.updateSale(id, { 
-        estado: "activo",
-        estadoEntrega: "A Despachar"
+        estado: "completado",
+        estadoEntrega: "En Proceso"
       });
       
       if (!updatedSale) {

@@ -274,10 +274,10 @@ export class DatabaseStorage implements IStorage {
       conditions.push(eq(sales.tipo, filters.tipo));
     }
     if (filters?.excludePendingManual) {
-      // Exclude only sales with delivery status "Pendiente"
-      // Include all other sales regardless of channel or payment status
+      // Exclude sales with estado "pendiente" - this separates completed sales from pending manual sales
+      // This ensures Lista de Ventas only shows sales that have completed payment verification
       conditions.push(
-        ne(sales.estadoEntrega, "Pendiente")
+        ne(sales.estado, "pendiente")
       );
     }
     if (filters?.excludeReservas) {
@@ -579,10 +579,10 @@ export class DatabaseStorage implements IStorage {
       conditions.push(eq(sales.tipo, filters.tipo));
     }
     if (filters?.excludePendingManual) {
-      // Exclude only sales with delivery status "Pendiente"
-      // Include all other sales regardless of channel or payment status
+      // Exclude sales with estado "pendiente" - this separates completed sales from pending manual sales
+      // This ensures Lista de Ventas only shows sales that have completed payment verification
       conditions.push(
-        ne(sales.estadoEntrega, "Pendiente")
+        ne(sales.estado, "pendiente")
       );
     }
     if (filters?.excludeReservas) {
