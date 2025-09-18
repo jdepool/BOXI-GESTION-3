@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, decimal, timestamp, integer, boolean, index, unique, check } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, decimal, timestamp, integer, boolean, index, unique, check, references } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -63,6 +63,14 @@ export const canales = pgTable("canales", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+export const asesores = pgTable("asesores", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  nombre: text("nombre").notNull().unique(),
+  activo: boolean("activo").notNull().default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 export const sales = pgTable("sales", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   nombre: text("nombre").notNull(),
@@ -114,11 +122,15 @@ export const sales = pgTable("sales", {
   fechaEntrega: timestamp("fecha_entrega"),
   // Notas adicionales
   notas: text("notas"),
+  // Asesor asignado
+  asesorId: varchar("asesor_id").references(() => asesores.id),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => ({
   // Check constraint to enforce tipo values
   tipoCheck: check("tipo_check", sql`${table.tipo} IN ('Inmediato', 'Reserva')`),
+  // Index for performance on asesor queries
+  asesorIdIdx: index("sales_asesor_id_idx").on(table.asesorId),
 }));
 
 export const paymentInstallments = pgTable("payment_installments", {
@@ -244,6 +256,12 @@ export const insertCanalSchema = createInsertSchema(canales).omit({
   updatedAt: true,
 });
 
+export const insertAsesorSchema = createInsertSchema(asesores).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 export const insertEgresoSchema = createInsertSchema(egresos).omit({
   id: true,
   pendienteInfo: true,
@@ -291,6 +309,8 @@ export type Categoria = typeof categorias.$inferSelect;
 export type InsertCategoria = z.infer<typeof insertCategoriaSchema>;
 export type Canal = typeof canales.$inferSelect;
 export type InsertCanal = z.infer<typeof insertCanalSchema>;
+export type Asesor = typeof asesores.$inferSelect;
+export type InsertAsesor = z.infer<typeof insertAsesorSchema>;
 export type Egreso = typeof egresos.$inferSelect;
 export type InsertEgreso = z.infer<typeof insertEgresoSchema>;
 export type EgresoPorAprobar = typeof egresosPorAprobar.$inferSelect;

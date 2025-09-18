@@ -12,6 +12,7 @@ import { CategoriasTab } from "../components/admin/categorias-tab";
 import { EdicionOrdenesTab } from "../components/admin/edicion-ordenes-tab";
 import { CanalesTab } from "../components/admin/canales-tab";
 import { VerificacionPagosCasheaTab } from "../components/admin/verificacion-pagos-cashea-tab";
+import { AsesorTab } from "../components/admin/asesores-tab";
 
 export default function Administracion() {
   const [activeTab, setActiveTab] = useState("bancos");
@@ -36,7 +37,7 @@ export default function Administracion() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-9 lg:w-auto lg:grid-cols-9">
+        <TabsList className="grid w-full grid-cols-10 lg:w-auto lg:grid-cols-10">
           <TabsTrigger value="bancos" className="text-xs">
             BANCOS
           </TabsTrigger>
@@ -63,6 +64,9 @@ export default function Administracion() {
           </TabsTrigger>
           <TabsTrigger value="verificacion-pagos-cashea" className="text-xs">
             VERIFICACIÓN PAGOS CASHEA
+          </TabsTrigger>
+          <TabsTrigger value="asesores" className="text-xs">
+            ASESORES
           </TabsTrigger>
         </TabsList>
 
@@ -100,6 +104,10 @@ export default function Administracion() {
 
         <TabsContent value="verificacion-pagos-cashea" className="space-y-4">
           <VerificacionPagosCasheaTab />
+        </TabsContent>
+
+        <TabsContent value="asesores" className="space-y-4">
+          <AsesorTab />
         </TabsContent>
       </Tabs>
     </div>

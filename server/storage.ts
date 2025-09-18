@@ -1,14 +1,14 @@
 import { 
-  sales, uploadHistory, users, bancos, tiposEgresos, productos, metodosPago, monedas, categorias, canales, egresos, egresosPorAprobar, paymentInstallments,
+  sales, uploadHistory, users, bancos, tiposEgresos, productos, metodosPago, monedas, categorias, canales, asesores, egresos, egresosPorAprobar, paymentInstallments,
   type User, type InsertUser, type Sale, type InsertSale, type UploadHistory, type InsertUploadHistory,
   type Banco, type InsertBanco, type TipoEgreso, type InsertTipoEgreso,
   type Producto, type InsertProducto, type MetodoPago, type InsertMetodoPago,
   type Moneda, type InsertMoneda, type Categoria, type InsertCategoria,
-  type Canal, type InsertCanal, type Egreso, type InsertEgreso,
+  type Canal, type InsertCanal, type Asesor, type InsertAsesor, type Egreso, type InsertEgreso,
   type EgresoPorAprobar, type InsertEgresoPorAprobar, type PaymentInstallment, type InsertPaymentInstallment
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, count, sum, avg, and, gte, lte, or, ne, like, ilike, isNotNull, sql } from "drizzle-orm";
+import { eq, desc, count, sum, avg, and, gte, lte, or, ne, like, ilike, isNotNull, isNull, sql } from "drizzle-orm";
 
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
@@ -27,7 +27,11 @@ export interface IStorage {
     orden?: string;
     startDate?: Date;
     endDate?: Date;
+    tipo?: string;
+    asesorId?: string;
     excludePendingManual?: boolean;
+    excludeReservas?: boolean;
+    excludeADespachar?: boolean;
     limit?: number;
     offset?: number;
   }): Promise<Sale[]>;
@@ -57,7 +61,11 @@ export interface IStorage {
     estado?: string;
     startDate?: Date;
     endDate?: Date;
+    tipo?: string;
+    asesorId?: string;
     excludePendingManual?: boolean;
+    excludeReservas?: boolean;
+    excludeADespachar?: boolean;
   }): Promise<number>;
   getExistingOrderNumbers(orders: string[]): Promise<string[]>;
   
@@ -117,6 +125,13 @@ export interface IStorage {
   createCanal(canal: InsertCanal): Promise<Canal>;
   updateCanal(id: string, canal: Partial<InsertCanal>): Promise<Canal | undefined>;
   deleteCanal(id: string): Promise<boolean>;
+
+  // Asesores
+  getAsesores(): Promise<Asesor[]>;
+  getAsesorById(id: string): Promise<Asesor | undefined>;
+  createAsesor(asesor: InsertAsesor): Promise<Asesor>;
+  updateAsesor(id: string, asesor: Partial<InsertAsesor>): Promise<Asesor | undefined>;
+  deleteAsesor(id: string): Promise<boolean>;
 
   // Egresos
   getEgresos(filters?: {
@@ -246,6 +261,7 @@ export class DatabaseStorage implements IStorage {
     startDate?: Date;
     endDate?: Date;
     tipo?: string;
+    asesorId?: string;
     excludePendingManual?: boolean;
     excludeReservas?: boolean;
     excludeADespachar?: boolean;
@@ -273,6 +289,15 @@ export class DatabaseStorage implements IStorage {
     }
     if (filters?.tipo) {
       conditions.push(eq(sales.tipo, filters.tipo));
+    }
+    if (filters?.asesorId) {
+      if (filters.asesorId === 'null') {
+        // Filter for unassigned asesores (null values)
+        conditions.push(isNull(sales.asesorId));
+      } else {
+        // Filter for specific asesor
+        conditions.push(eq(sales.asesorId, filters.asesorId));
+      }
     }
     if (filters?.excludePendingManual) {
       // Exclude sales with estado "pendiente" - this separates completed sales from pending manual sales
@@ -560,6 +585,7 @@ export class DatabaseStorage implements IStorage {
     startDate?: Date;
     endDate?: Date;
     tipo?: string;
+    asesorId?: string;
     excludePendingManual?: boolean;
     excludeReservas?: boolean;
     excludeADespachar?: boolean;
@@ -585,6 +611,15 @@ export class DatabaseStorage implements IStorage {
     }
     if (filters?.tipo) {
       conditions.push(eq(sales.tipo, filters.tipo));
+    }
+    if (filters?.asesorId) {
+      if (filters.asesorId === 'null') {
+        // Filter for unassigned asesores (null values)
+        conditions.push(isNull(sales.asesorId));
+      } else {
+        // Filter for specific asesor
+        conditions.push(eq(sales.asesorId, filters.asesorId));
+      }
     }
     if (filters?.excludePendingManual) {
       // Exclude sales with estado "pendiente" - this separates completed sales from pending manual sales
@@ -882,6 +917,39 @@ export class DatabaseStorage implements IStorage {
 
   async deleteCanal(id: string): Promise<boolean> {
     const result = await db.delete(canales).where(eq(canales.id, id));
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  // Asesores methods implementation
+  async getAsesores(): Promise<Asesor[]> {
+    return await db.select().from(asesores).orderBy(asesores.nombre);
+  }
+
+  async getAsesorById(id: string): Promise<Asesor | undefined> {
+    const [asesor] = await db.select().from(asesores).where(eq(asesores.id, id));
+    return asesor;
+  }
+
+  async createAsesor(asesor: InsertAsesor): Promise<Asesor> {
+    const [newAsesor] = await db.insert(asesores).values({
+      ...asesor,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }).returning();
+    return newAsesor;
+  }
+
+  async updateAsesor(id: string, asesor: Partial<InsertAsesor>): Promise<Asesor | undefined> {
+    const [updated] = await db
+      .update(asesores)
+      .set({ ...asesor, updatedAt: new Date() })
+      .where(eq(asesores.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteAsesor(id: string): Promise<boolean> {
+    const result = await db.delete(asesores).where(eq(asesores.id, id));
     return (result.rowCount ?? 0) > 0;
   }
 

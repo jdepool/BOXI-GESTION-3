@@ -4,7 +4,7 @@ import { storage } from "./storage";
 import { 
   insertSaleSchema, insertUploadHistorySchema, insertBancoSchema, insertTipoEgresoSchema, 
   insertProductoSchema, insertMetodoPagoSchema, insertMonedaSchema, insertCategoriaSchema,
-  insertEgresoSchema, insertEgresoPorAprobarSchema, insertPaymentInstallmentSchema
+  insertEgresoSchema, insertEgresoPorAprobarSchema, insertPaymentInstallmentSchema, insertAsesorSchema
 } from "@shared/schema";
 import { z } from "zod";
 import multer from "multer";
@@ -39,6 +39,7 @@ const getSalesQuerySchema = z.object({
   startDate: z.string().optional(),
   endDate: z.string().optional(),
   tipo: z.string().optional(),
+  asesorId: z.string().optional(),
   excludePendingManual: z.coerce.boolean().optional(),
   excludeReservas: z.coerce.boolean().optional(),
   excludeADespachar: z.coerce.boolean().optional(),
@@ -483,6 +484,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const query = getSalesQuerySchema.parse(req.query);
       
+      // Normalize asesorId filter values
+      let normalizedAsesorId = query.asesorId;
+      if (query.asesorId === 'all') {
+        normalizedAsesorId = undefined; // Don't filter by asesor
+      } else if (query.asesorId === 'none') {
+        normalizedAsesorId = 'null'; // Special value to indicate null filter
+      }
+      
       const filters = {
         canal: query.canal,
         estadoEntrega: query.estadoEntrega,
@@ -491,6 +500,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         startDate: query.startDate ? new Date(query.startDate) : undefined,
         endDate: query.endDate ? new Date(query.endDate) : undefined,
         tipo: query.tipo,
+        asesorId: normalizedAsesorId,
         excludePendingManual: query.excludePendingManual,
         excludeReservas: query.excludeReservas,
         excludeADespachar: query.excludeADespachar,
@@ -965,6 +975,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Assign asesor to sale
+  app.put("/api/sales/:saleId/asesor", async (req, res) => {
+    try {
+      const { saleId } = req.params;
+      
+      // Validate request body with Zod
+      const updateAsesorSchema = z.object({
+        asesorId: z.string().nullable(),
+      });
+      
+      const { asesorId } = updateAsesorSchema.parse(req.body);
+
+      // If asesorId is provided (not null), validate that the asesor exists and is active
+      if (asesorId) {
+        const asesor = await storage.getAsesorById(asesorId);
+        if (!asesor) {
+          return res.status(400).json({ error: "Asesor not found" });
+        }
+        if (!asesor.activo) {
+          return res.status(400).json({ error: "Cannot assign inactive asesor" });
+        }
+      }
+
+      const updatedSale = await storage.updateSale(saleId, { asesorId });
+      if (!updatedSale) {
+        return res.status(404).json({ error: "Sale not found" });
+      }
+
+      res.json(updatedSale);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Invalid request data", details: error.errors });
+      }
+      console.error("Update sale asesor error:", error);
+      res.status(500).json({ error: "Failed to update sale asesor" });
+    }
+  });
+
   // ===========================================
   // ADMIN CONFIGURATION ENDPOINTS
   // ===========================================
@@ -1361,6 +1409,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Delete categoria error:", error);
       res.status(500).json({ error: "Failed to delete categoria" });
+    }
+  });
+
+  // ASESORES endpoints
+  app.get("/api/admin/asesores", async (req, res) => {
+    try {
+      const asesores = await storage.getAsesores();
+      res.json(asesores);
+    } catch (error) {
+      console.error("Fetch asesores error:", error);
+      res.status(500).json({ error: "Failed to fetch asesores" });
+    }
+  });
+
+  app.post("/api/admin/asesores", async (req, res) => {
+    try {
+      const validatedData = insertAsesorSchema.parse(req.body);
+      const asesor = await storage.createAsesor(validatedData);
+      res.status(201).json(asesor);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Invalid data", details: error.errors });
+      }
+      console.error("Create asesor error:", error);
+      res.status(500).json({ error: "Failed to create asesor" });
+    }
+  });
+
+  app.put("/api/admin/asesores/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const validatedData = insertAsesorSchema.partial().parse(req.body);
+      const asesor = await storage.updateAsesor(id, validatedData);
+      if (!asesor) {
+        return res.status(404).json({ error: "Asesor not found" });
+      }
+      res.json(asesor);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Invalid data", details: error.errors });
+      }
+      console.error("Update asesor error:", error);
+      res.status(500).json({ error: "Failed to update asesor" });
+    }
+  });
+
+  app.delete("/api/admin/asesores/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const deleted = await storage.deleteAsesor(id);
+      if (!deleted) {
+        return res.status(404).json({ error: "Asesor not found" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Delete asesor error:", error);
+      res.status(500).json({ error: "Failed to delete asesor" });
     }
   });
 

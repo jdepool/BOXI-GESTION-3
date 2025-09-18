@@ -67,6 +67,7 @@ export default function SalesTable({
   const filters = {
     canal: parentFilters?.canal ? (parentFilters.canal === "" ? "all" : parentFilters.canal) : "all",
     estadoEntrega: parentFilters?.estadoEntrega ? (parentFilters.estadoEntrega === "" ? "all" : parentFilters.estadoEntrega) : "all",
+    asesorId: parentFilters?.asesorId ? (parentFilters.asesorId === "" ? "all" : parentFilters.asesorId) : "all",
     orden: parentFilters?.orden || "",
     startDate: parentFilters?.startDate || "",
     endDate: parentFilters?.endDate || ""
@@ -75,6 +76,11 @@ export default function SalesTable({
   // Fetch banks data to display bank names
   const { data: banks = [] } = useQuery({
     queryKey: ["/api/admin/bancos"],
+  });
+
+  // Fetch asesores data for the dropdown
+  const { data: asesores = [] } = useQuery({
+    queryKey: ["/api/admin/asesores"],
   });
 
   const updateDeliveryStatusMutation = useMutation({
@@ -118,6 +124,27 @@ export default function SalesTable({
       toast({
         title: "Error",
         description: "No se pudieron actualizar las notas.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const updateAsesorMutation = useMutation({
+    mutationFn: async ({ saleId, asesorId }: { saleId: string; asesorId: string | null }) => {
+      return apiRequest("PUT", `/api/sales/${saleId}/asesor`, { asesorId });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/sales"] });
+      toast({
+        title: "Asesor actualizado",
+        description: "El asesor ha sido asignado correctamente.",
+      });
+    },
+    onError: (error) => {
+      console.error('Failed to update asesor:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo asignar el asesor.",
         variant: "destructive",
       });
     },
@@ -325,6 +352,24 @@ export default function SalesTable({
                 </SelectContent>
               </Select>
 
+              <Select 
+                value={filters.asesorId} 
+                onValueChange={(value) => handleFilterChange('asesorId', value)}
+              >
+                <SelectTrigger className="w-40" data-testid="filter-asesor">
+                  <SelectValue placeholder="Todos los asesores" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos los asesores</SelectItem>
+                  <SelectItem value="none">Sin asesor</SelectItem>
+                  {(asesores as any[]).map((asesor: any) => (
+                    <SelectItem key={asesor.id} value={asesor.id}>
+                      {asesor.nombre}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
               <Input 
                 type="text"
                 placeholder="Buscar por # orden"
@@ -373,6 +418,7 @@ export default function SalesTable({
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[90px]">Fecha</th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[80px]">Canal</th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[90px]">Tipo</th>
+                <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[120px]">Asesor</th>
                 {showDeliveryDateColumn && (
                   <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[130px]">Fecha Entrega</th>
                 )}
@@ -445,6 +491,25 @@ export default function SalesTable({
                         <SelectContent>
                           <SelectItem value="Inmediato">Inmediato</SelectItem>
                           <SelectItem value="Reserva">Reserva</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </td>
+                    <td className="p-2 min-w-[120px]">
+                      <Select
+                        value={sale.asesorId || "none"}
+                        onValueChange={(asesorId) => updateAsesorMutation.mutate({ saleId: sale.id, asesorId: asesorId === "none" ? null : asesorId })}
+                        disabled={updateAsesorMutation.isPending}
+                      >
+                        <SelectTrigger className="w-28 h-8 text-xs" data-testid={`asesor-select-${sale.id}`}>
+                          <SelectValue placeholder="Sin asignar" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">Sin asignar</SelectItem>
+                          {(asesores as any[]).map((asesor: any) => (
+                            <SelectItem key={asesor.id} value={asesor.id}>
+                              {asesor.nombre}
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                     </td>
