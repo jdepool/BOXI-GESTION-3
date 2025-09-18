@@ -458,7 +458,7 @@ export default function SalesTable({
                                 size="sm"
                                 className={cn(
                                   "h-8 w-full justify-start text-left font-normal text-xs",
-                                  !sale.fechaEntrega && "text-muted-foreground"
+                                  !sale.fechaEntrega && sale.tipo === "Reserva" && "text-muted-foreground"
                                 )}
                                 data-testid={`fecha-entrega-picker-${sale.id}`}
                                 disabled={updateFechaEntregaMutation.isPending}
@@ -466,14 +466,21 @@ export default function SalesTable({
                                 <CalendarIcon className="mr-2 h-3 w-3" />
                                 {sale.fechaEntrega 
                                   ? format(new Date(sale.fechaEntrega), "dd/MM/yyyy")
-                                  : "Seleccionar fecha"
+                                  : sale.tipo !== "Reserva" 
+                                    ? format(new Date(sale.fecha), "dd/MM/yyyy")
+                                    : "Seleccionar fecha"
                                 }
                               </Button>
                             </PopoverTrigger>
                             <PopoverContent className="w-auto p-0" align="start">
                               <Calendar
                                 mode="single"
-                                selected={sale.fechaEntrega ? new Date(sale.fechaEntrega) : undefined}
+                                selected={sale.fechaEntrega 
+                                  ? new Date(sale.fechaEntrega) 
+                                  : sale.tipo !== "Reserva" 
+                                    ? new Date(sale.fecha)
+                                    : undefined
+                                }
                                 onSelect={(date) => handleFechaEntregaChange(sale.id, date || null)}
                                 initialFocus
                                 disabled={(date) => date < new Date(new Date().setHours(0,0,0,0))}
