@@ -84,6 +84,22 @@ export default function Flete() {
 
   // Filter sales that have freight information but are not ready for dispatch yet
   const salesWithFlete = (data as { data: Sale[] })?.data?.filter((sale: Sale) => {
+    // For manual orders, check if they have completed flete information
+    const isManualOrder = sale.canal?.toLowerCase() === "manual";
+    
+    if (isManualOrder) {
+      // Manual orders with flete gratis and estado entrega A Despachar should go to Despachos tab, not Flete
+      if (sale.fleteGratis && sale.estadoEntrega === 'A Despachar') {
+        return false;
+      }
+      
+      // Manual orders with completed flete information should show in Flete tab
+      // Consider completed if they have freight amount or are marked as flete gratis
+      const hasFleteInfo = !!(sale.montoFleteUsd || sale.fleteGratis);
+      return hasFleteInfo;
+    }
+    
+    // For non-manual orders, use the existing logic
     if (!sale.montoFleteUsd) return false;
     
     // Exclude orders that are ready for dispatch (A Despachar + A Despacho)
