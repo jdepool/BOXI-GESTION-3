@@ -47,6 +47,41 @@ const getSalesQuerySchema = z.object({
   offset: z.coerce.number().min(0).default(0),
 });
 
+// Transform Shopify webhook order data to CSV format for existing mapping logic
+function transformShopifyWebhookToCSV(shopifyOrder: any) {
+  // Extract line item data (for multiple products, we'll use the first one)
+  const lineItem = shopifyOrder.line_items?.[0] || {};
+  
+  return {
+    // Order info
+    'Created at': shopifyOrder.created_at,
+    'Name': shopifyOrder.name, // Order number like #1001
+    'Email': shopifyOrder.email,
+    'Outstanding Balance': shopifyOrder.current_total_price || shopifyOrder.total_price,
+    
+    // Customer billing info
+    'Billing Name': shopifyOrder.billing_address?.name || 
+                   `${shopifyOrder.billing_address?.first_name || ''} ${shopifyOrder.billing_address?.last_name || ''}`.trim(),
+    'Billing Phone': shopifyOrder.billing_address?.phone,
+    'Billing Country': shopifyOrder.billing_address?.country,
+    'Billing Province name': shopifyOrder.billing_address?.province,
+    'Billing City': shopifyOrder.billing_address?.city,
+    'Billing Address1': shopifyOrder.billing_address?.address1,
+    'Billing Address2': shopifyOrder.billing_address?.address2,
+    
+    // Shipping info  
+    'Shipping Country': shopifyOrder.shipping_address?.country,
+    'Shipping Province name': shopifyOrder.shipping_address?.province,
+    'Shipping City': shopifyOrder.shipping_address?.city,
+    'Shipping Address1': shopifyOrder.shipping_address?.address1,
+    'Shipping Address2': shopifyOrder.shipping_address?.address2,
+    
+    // Product info (first line item)
+    'Lineitem name': lineItem.name || lineItem.title,
+    'Lineitem quantity': lineItem.quantity || 1,
+  };
+}
+
 function parseFile(buffer: Buffer, canal: string, filename: string) {
   try {
     let data: any[];
@@ -624,6 +659,155 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching sale:", error);
       res.status(500).json({ error: "Failed to fetch sale" });
+    }
+  });
+
+  // Shopify webhook endpoint for order creation
+  app.post("/api/webhooks/shopify", async (req, res) => {
+    try {
+      // Verify webhook authenticity (basic check)
+      const shopifyOrder = req.body;
+      
+      // Basic validation that this is a Shopify order
+      if (!shopifyOrder || !shopifyOrder.id || !shopifyOrder.name) {
+        return res.status(400).json({ error: "Invalid Shopify order data" });
+      }
+
+      console.log(`📦 Received Shopify webhook for order: ${shopifyOrder.name}`);
+
+      // Transform Shopify webhook data to CSV format for existing mapping logic
+      const csvFormatData = transformShopifyWebhookToCSV(shopifyOrder);
+
+      // Use existing parseFile logic to process the transformed data
+      const salesData = [csvFormatData].map((row: any) => {
+        // Parse date based on channel
+        let fecha = new Date();
+        
+        if (row['Created at']) {
+          fecha = new Date(row['Created at']);
+        }
+
+        // Use existing Shopify mapping logic from parseFile function
+        return {
+          nombre: String(row['Billing Name'] || ''),
+          cedula: null, // Shopify doesn't have cedula field
+          telefono: row['Billing Phone'] ? String(row['Billing Phone']) : null,
+          email: row.Email ? String(row.Email) : null,
+          totalUsd: String(row['Outstanding Balance'] || '0'),
+          sucursal: null, // Shopify doesn't have sucursal
+          tienda: null, // Shopify doesn't have tienda  
+          fecha,
+          canal: 'shopify',
+          estado: 'pendiente', // Shopify orders start as pending for completion
+          estadoPagoInicial: null,
+          pagoInicialUsd: null,
+          metodoPagoId: null,
+          bancoId: null,
+          orden: row.Name ? String(row.Name) : null, // Name maps to Order
+          factura: null,
+          referencia: null,
+          montoBs: null,
+          montoUsd: String(row['Outstanding Balance'] || '0'),
+          estadoEntrega: 'En Proceso', // Route Shopify orders to "Ventas por Completar"
+          product: String(row['Lineitem name'] || ''),
+          cantidad: Number(row['Lineitem quantity'] || 1),
+          // Billing address mapping
+          direccionFacturacionPais: row['Billing Country'] ? String(row['Billing Country']) : null,
+          direccionFacturacionEstado: row['Billing Province name'] ? String(row['Billing Province name']) : null,
+          direccionFacturacionCiudad: row['Billing City'] ? String(row['Billing City']) : null,
+          direccionFacturacionDireccion: row['Billing Address1'] ? String(row['Billing Address1']) : null,
+          direccionFacturacionUrbanizacion: row['Billing Address2'] ? String(row['Billing Address2']) : null,
+          direccionFacturacionReferencia: null,
+          direccionDespachoIgualFacturacion: 'false',
+          // Shipping address mapping  
+          direccionDespachoPais: row['Shipping Country'] ? String(row['Shipping Country']) : null,
+          direccionDespachoEstado: row['Shipping Province name'] ? String(row['Shipping Province name']) : null,
+          direccionDespachoCiudad: row['Shipping City'] ? String(row['Shipping City']) : null,
+          direccionDespachoDireccion: row['Shipping Address1'] ? String(row['Shipping Address1']) : null,
+          direccionDespachoUrbanizacion: row['Shipping Address2'] ? String(row['Shipping Address2']) : null,
+          direccionDespachoReferencia: null,
+          // Default freight values
+          montoFleteUsd: null,
+          fechaFlete: null,
+          referenciaFlete: null,
+          montoFleteVes: null,
+          bancoReceptorFlete: null,
+          statusFlete: 'Pendiente',
+          fleteGratis: false,
+          notas: null,
+          // Auto-detect RESERVA products and set tipo accordingly
+          tipo: String(row['Lineitem name'] || '').toUpperCase().includes('RESERVA') ? 'Reserva' : 'Inmediato',
+          fechaEntrega: undefined,
+        };
+      });
+
+      // Validate the sales data
+      const validatedSales = [];
+      const errors = [];
+      
+      for (let i = 0; i < salesData.length; i++) {
+        try {
+          const validatedSale = insertSaleSchema.parse(salesData[i]);
+          validatedSales.push(validatedSale);
+        } catch (error) {
+          errors.push({
+            row: i + 1,
+            error: error instanceof z.ZodError ? error.errors : String(error)
+          });
+        }
+      }
+
+      if (errors.length > 0) {
+        console.error(`❌ Validation errors in Shopify webhook order ${shopifyOrder.name}:`, errors);
+        return res.status(400).json({
+          error: "Validation errors found",
+          details: errors
+        });
+      }
+
+      // Check for existing order numbers to avoid duplicates
+      const orderNumbers = validatedSales.map(sale => sale.orden).filter(Boolean) as string[];
+      const existingOrders = await storage.getExistingOrderNumbers(orderNumbers);
+      
+      // Filter out sales with existing order numbers
+      const newSales = validatedSales.filter(sale => 
+        !sale.orden || !existingOrders.includes(sale.orden)
+      );
+      
+      if (newSales.length === 0) {
+        console.log(`⚠️ Shopify order ${shopifyOrder.name} already exists in database`);
+        return res.status(200).json({ 
+          message: "Order already exists",
+          duplicate: true 
+        });
+      }
+
+      // Save to database
+      await storage.createSales(newSales);
+
+      // Log successful webhook processing
+      await storage.createUploadHistory({
+        filename: `shopify_webhook_${shopifyOrder.name}`,
+        canal: 'shopify',
+        recordsCount: newSales.length,
+        status: 'success',
+        errorMessage: null,
+      });
+
+      console.log(`✅ Successfully processed Shopify webhook for order ${shopifyOrder.name}`);
+      
+      res.status(200).json({ 
+        success: true, 
+        message: "Order processed successfully",
+        ordersCreated: newSales.length 
+      });
+
+    } catch (error) {
+      console.error("Shopify webhook error:", error);
+      res.status(500).json({ 
+        error: "Failed to process Shopify webhook",
+        message: error instanceof Error ? error.message : 'Unknown error'
+      });
     }
   });
 
