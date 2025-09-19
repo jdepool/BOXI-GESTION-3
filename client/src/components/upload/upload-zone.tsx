@@ -14,9 +14,10 @@ import * as XLSX from 'xlsx';
 
 interface UploadZoneProps {
   recentUploads?: any[];
+  showOnlyCashea?: boolean;
 }
 
-export default function UploadZone({ recentUploads }: UploadZoneProps) {
+export default function UploadZone({ recentUploads, showOnlyCashea = false }: UploadZoneProps) {
   // File upload state
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [selectedChannel, setSelectedChannel] = useState<string>("");
@@ -314,16 +315,92 @@ export default function UploadZone({ recentUploads }: UploadZoneProps) {
     }
   };
 
+  // CASHEA Download Content Component
+  const casheaContent = (
+    <div className="space-y-4 mt-6">
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <Label htmlFor="start-date">Fecha de Inicio</Label>
+          <Input
+            id="start-date"
+            type="date"
+            value={startDate}
+            onChange={(e) => setStartDate(e.target.value)}
+            data-testid="start-date-input"
+          />
+        </div>
+        <div>
+          <Label htmlFor="end-date">Fecha de Fin</Label>
+          <Input
+            id="end-date"
+            type="date"
+            value={endDate}
+            onChange={(e) => setEndDate(e.target.value)}
+            data-testid="end-date-input"
+          />
+        </div>
+      </div>
+
+      <div className="bg-muted/30 rounded-lg p-4 border border-border">
+        <div className="flex items-center space-x-2 mb-2">
+          <i className="fas fa-info-circle text-primary"></i>
+          <span className="text-sm font-medium">Información CASHEA</span>
+        </div>
+        <p className="text-sm text-muted-foreground">
+          Selecciona un rango de fechas para descargar órdenes desde CASHEA. 
+          Los datos se integrarán automáticamente en tu Lista de Ventas con estado "En Proceso".
+          Se evitarán duplicados basados en número de orden.
+        </p>
+      </div>
+
+      {(isUploading || isDownloadingCashea) && (
+        <div className="bg-secondary rounded-lg p-4 mb-4">
+          <div className="flex items-center space-x-3">
+            <i className="fas fa-spinner fa-spin text-primary"></i>
+            <div className="flex-1">
+              <p className="text-sm font-medium text-foreground">Descargando datos CASHEA...</p>
+              <Progress value={uploadProgress} className="mt-2" />
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="flex space-x-3">
+        <Button 
+          onClick={downloadCasheaData}
+          disabled={!startDate || !endDate || isDownloadingCashea}
+          className="flex-1"
+          data-testid="cashea-download-button"
+        >
+          {isDownloadingCashea ? "Descargando..." : "Descargar Datos CASHEA"}
+        </Button>
+        <Button 
+          variant="outline" 
+          onClick={resetCashea}
+          disabled={isDownloadingCashea}
+          data-testid="reset-cashea-button"
+        >
+          Limpiar
+        </Button>
+      </div>
+    </div>
+  );
+
   return (
     <div className="space-y-6">
       <div className="bg-card p-6 rounded-lg border border-border">
-        <h3 className="text-lg font-semibold mb-4 text-foreground">Cargar Datos</h3>
+        <h3 className="text-lg font-semibold mb-4 text-foreground">
+          {showOnlyCashea ? "Descargar CASHEA" : "Cargar Datos"}
+        </h3>
         
-        <Tabs defaultValue="cashea" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="cashea">Descargar CASHEA</TabsTrigger>
-            <TabsTrigger value="file">Cargar Archivo</TabsTrigger>
-          </TabsList>
+        {showOnlyCashea ? (
+          casheaContent
+        ) : (
+          <Tabs defaultValue="cashea" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="cashea">Descargar CASHEA</TabsTrigger>
+              <TabsTrigger value="file">Cargar Archivo</TabsTrigger>
+            </TabsList>
           
           <TabsContent value="file" className="space-y-4 mt-6">
             <div 
@@ -407,73 +484,10 @@ export default function UploadZone({ recentUploads }: UploadZoneProps) {
           </TabsContent>
           
           <TabsContent value="cashea" className="space-y-4 mt-6">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="start-date">Fecha de Inicio</Label>
-                <Input
-                  id="start-date"
-                  type="date"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  data-testid="start-date-input"
-                />
-              </div>
-              <div>
-                <Label htmlFor="end-date">Fecha de Fin</Label>
-                <Input
-                  id="end-date"
-                  type="date"
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                  data-testid="end-date-input"
-                />
-              </div>
-            </div>
-
-            <div className="bg-muted/30 rounded-lg p-4 border border-border">
-              <div className="flex items-center space-x-2 mb-2">
-                <i className="fas fa-info-circle text-primary"></i>
-                <span className="text-sm font-medium">Información CASHEA</span>
-              </div>
-              <p className="text-sm text-muted-foreground">
-                Selecciona un rango de fechas para descargar órdenes desde CASHEA. 
-                Los datos se integrarán automáticamente en tu Lista de Ventas con estado "En Proceso".
-                Se evitarán duplicados basados en número de orden.
-              </p>
-            </div>
-
-            {(isUploading || isDownloadingCashea) && (
-              <div className="bg-secondary rounded-lg p-4 mb-4">
-                <div className="flex items-center space-x-3">
-                  <i className="fas fa-spinner fa-spin text-primary"></i>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-foreground">Descargando datos CASHEA...</p>
-                    <Progress value={uploadProgress} className="mt-2" />
-                  </div>
-                </div>
-              </div>
-            )}
-
-            <div className="flex space-x-3">
-              <Button 
-                onClick={downloadCasheaData}
-                disabled={!startDate || !endDate || isDownloadingCashea}
-                className="flex-1"
-                data-testid="cashea-download-button"
-              >
-                {isDownloadingCashea ? "Descargando..." : "Descargar Datos CASHEA"}
-              </Button>
-              <Button 
-                variant="outline" 
-                onClick={resetCashea}
-                disabled={isDownloadingCashea}
-                data-testid="reset-cashea-button"
-              >
-                Limpiar
-              </Button>
-            </div>
+            {casheaContent}
           </TabsContent>
         </Tabs>
+        )}
 
         {/* File Preview Section */}
         {isShowingPreview && previewData && previewData.length > 0 && (
