@@ -941,7 +941,270 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // CASHEA API Functions
+  async function callCasheaApi(startDate: string, endDate: string): Promise<any[]> {
+    const casheaEmail = process.env.CASHEA_EMAIL;
+    const casheaPassword = process.env.CASHEA_PASSWORD;
 
+    if (!casheaEmail || !casheaPassword) {
+      throw new Error("CASHEA credentials not configured");
+    }
+
+    console.log(`🔍 CASHEA API Investigation for date range: ${startDate} to ${endDate}`);
+    console.log(`📧 Using credentials: ${casheaEmail}`);
+
+    // Convert user input dates to ISO format for CASHEA API
+    const startDateISO = new Date(startDate + "T04:00:00.000Z").toISOString();
+    const endDateISO = new Date(endDate + "T04:00:00.000Z").toISOString();
+
+    console.log(`📅 Date conversion: ${startDate} -> ${startDateISO}`);
+    console.log(`📅 Date conversion: ${endDate} -> ${endDateISO}`);
+
+    const url = "https://cashea.retool.com/api/public/83942c1c-e0a6-11ee-9c54-4bdcfcdd4f2c/query?queryName=getOnlineOrdersWithProducts";
+    
+    const body = JSON.stringify({
+      "userParams": {
+        "queryParams": {
+          "0": "Boxi Sleep",
+          "1": "Boxi Sleep", 
+          "2": startDateISO,
+          "3": endDateISO,
+          "length": 4
+        },
+        "databaseNameOverrideParams": { "length": 0 },
+        "databaseHostOverrideParams": { "length": 0 },
+        "databasePasswordOverrideParams": { "length": 0 },
+        "databaseUsernameOverrideParams": { "length": 0 }
+      },
+      "environment": "production",
+      "frontendVersion": "1",
+      "includeQueryExecutionMetadata": true,
+      "isInGlobalWidget": true,
+      "password": "",
+      "queryType": "SqlQueryUnified",
+      "releaseVersion": null,
+      "streamResponse": false
+    });
+
+    const headers = {
+      "Content-Type": "application/json",
+      "Authorization": `Basic ${Buffer.from(`${casheaEmail}:${casheaPassword}`).toString('base64')}`,
+    };
+
+    console.log(`🧪 Trying: ✅ User-Provided Exact CASHEA Format`);
+    console.log(`📡 URL: ${url}`);
+    console.log(`🔧 Method: POST`);
+
+    const response = await fetch(url, {
+      method: "POST",
+      headers: headers,
+      body: body,
+    });
+
+    console.log(`📊 Response: ${response.status} ${response.statusText}`);
+
+    if (!response.ok) {
+      throw new Error(`CASHEA API request failed: ${response.status} ${response.statusText}`);
+    }
+
+    const data = await response.json();
+    console.log(`🎉 CASHEA API SUCCESS! Status: ${response.status}`);
+    console.log(`📊 Response size: ${JSON.stringify(data).length} bytes`);
+
+    return [data];
+  }
+
+  function transformCasheaData(rawData: any[]): any[] {
+    if (!rawData || rawData.length === 0) return [];
+    
+    const casheaEntry = rawData[0];
+    if (!casheaEntry || !casheaEntry.__retoolWrappedQuery__ || !casheaEntry.queryData) {
+      return rawData; // Return as-is if not CASHEA format
+    }
+    
+    const queryData = casheaEntry.queryData;
+    const ordenes = queryData['# Orden'] || [];
+    const nombres = queryData.Nombre || [];
+    const cedulas = queryData.Cédula || [];
+    const telefonos = queryData.Teléfono || [];
+    const emails = queryData.Email || [];
+    const totalesUSD = queryData['Total (USD)'] || [];
+    const fechas = queryData.Fecha || [];
+    const canales = queryData.Canal || [];
+    const pagosIniciales = queryData['Pago Inicial (USD)'] || [];
+    const referencias = queryData['# Referencia'] || [];
+    const montosBs = queryData['Monto en Bs'] || [];
+    const estadosEntrega = queryData['Estado de Entrega'] || [];
+    const productos = queryData.Product || [];
+    
+    // Convert arrays into individual records
+    const records: any[] = [];
+    const maxLength = Math.max(
+      ordenes.length, nombres.length, cedulas.length, telefonos.length,
+      emails.length, totalesUSD.length, fechas.length, canales.length,
+      pagosIniciales.length, referencias.length, montosBs.length,
+      estadosEntrega.length, productos.length
+    );
+    
+    for (let i = 0; i < maxLength; i++) {
+      const fecha = fechas[i] ? new Date(fechas[i]) : new Date();
+      
+      records.push({
+        nombre: String(nombres[i] || 'Unknown Customer'),
+        cedula: String(cedulas[i] || ''),
+        telefono: telefonos[i] ? String(telefonos[i]) : null,
+        email: emails[i] ? String(emails[i]) : null,
+        totalUsd: String(totalesUSD[i] || '0'),
+        sucursal: null,
+        tienda: null,
+        fecha,
+        canal: 'cashea',
+        estado: 'pendiente',
+        estadoEntrega: 'En Proceso', // All CASHEA orders start as "En Proceso"
+        estadoPagoInicial: null,
+        pagoInicialUsd: null,
+        metodoPagoId: null,
+        bancoId: null,
+        orden: ordenes[i] ? String(ordenes[i]) : null,
+        factura: null,
+        referencia: referencias[i] ? String(referencias[i]) : null,
+        montoBs: montosBs[i] ? String(montosBs[i]) : null,
+        montoUsd: String(totalesUSD[i] || '0'),
+        direccionFacturacionPais: null,
+        direccionFacturacionEstado: null,
+        direccionFacturacionCiudad: null,
+        direccionFacturacionDireccion: null,
+        direccionFacturacionUrbanizacion: null,
+        direccionFacturacionReferencia: null,
+        direccionDespachoIgualFacturacion: false,
+        direccionDespachoPais: null,
+        direccionDespachoEstado: null,
+        direccionDespachoCiudad: null,
+        direccionDespachoDireccion: null,
+        direccionDespachoUrbanizacion: null,
+        direccionDespachoReferencia: null,
+        montoFleteUsd: null,
+        fechaFlete: null,
+        referenciaFlete: null,
+        montoFleteVes: null,
+        bancoReceptorFlete: null,
+        statusFlete: null,
+        fleteGratis: false,
+        notas: null,
+        fechaAtencion: null,
+        producto: productos[i] ? String(productos[i]) : 'CASHEA Product',
+        cantidad: '1'
+      });
+    }
+    
+    return records;
+  }
+
+  // CASHEA API endpoint
+  app.post("/api/cashea/download", async (req, res) => {
+    try {
+      const { startDate, endDate } = req.body;
+
+      if (!startDate || !endDate) {
+        return res.status(400).json({ error: "Start date and end date are required" });
+      }
+
+      console.log(`📊 CASHEA download request: ${startDate} to ${endDate}`);
+
+      // Call CASHEA API
+      const casheaData = await callCasheaApi(startDate, endDate);
+      
+      // Transform the data
+      const transformedData = transformCasheaData(casheaData);
+      
+      // Validate each row (same as file upload)
+      const validatedSales = [];
+      const errors = [];
+      
+      for (let i = 0; i < transformedData.length; i++) {
+        try {
+          const validatedSale = insertSaleSchema.parse(transformedData[i]);
+          validatedSales.push(validatedSale);
+        } catch (error) {
+          errors.push({
+            row: i + 1,
+            error: error instanceof z.ZodError ? error.errors : String(error)
+          });
+        }
+      }
+
+      if (errors.length > 0) {
+        await storage.createUploadHistory({
+          filename: `cashea_download_${startDate}_to_${endDate}`,
+          canal: 'cashea',
+          recordsCount: 0,
+          status: 'error',
+          errorMessage: `Validation errors in ${errors.length} rows`,
+        });
+
+        return res.status(400).json({
+          error: "Validation errors found",
+          details: errors.slice(0, 10),
+          totalErrors: errors.length
+        });
+      }
+
+      // Check for existing order numbers to avoid duplicates (same as file upload)
+      const orderNumbers = validatedSales.map(sale => sale.orden).filter(Boolean) as string[];
+      const existingOrders = await storage.getExistingOrderNumbers(orderNumbers);
+      
+      // Filter out sales with existing order numbers
+      const newSales = validatedSales.filter(sale => 
+        !sale.orden || !existingOrders.includes(sale.orden)
+      );
+      
+      const duplicatesCount = validatedSales.length - newSales.length;
+
+      // Save to database only new sales
+      if (newSales.length > 0) {
+        await storage.createSales(newSales);
+      }
+
+      // Log successful download
+      await storage.createUploadHistory({
+        filename: `cashea_download_${startDate}_to_${endDate}`,
+        canal: 'cashea',
+        recordsCount: newSales.length,
+        status: 'success',
+        errorMessage: duplicatesCount > 0 ? `${duplicatesCount} duplicate order(s) ignored` : undefined,
+      });
+
+      console.log(`✅ Transformed ${transformedData.length} CASHEA records`);
+
+      res.json({
+        success: true,
+        data: transformedData,
+        recordsProcessed: newSales.length,
+        duplicatesIgnored: duplicatesCount,
+        message: duplicatesCount > 0 
+          ? `Downloaded ${newSales.length} CASHEA records. ${duplicatesCount} duplicate order(s) were ignored.`
+          : `Downloaded ${newSales.length} CASHEA records successfully`,
+        recordCount: newSales.length
+      });
+
+    } catch (error) {
+      console.error("Error downloading CASHEA data:", error);
+      
+      // Log failed download
+      await storage.createUploadHistory({
+        filename: `cashea_download_${req.body.startDate || 'unknown'}_to_${req.body.endDate || 'unknown'}`,
+        canal: 'cashea',
+        recordsCount: 0,
+        status: 'error',
+        errorMessage: error instanceof Error ? error.message : 'Unknown error',
+      });
+
+      res.status(500).json({ 
+        error: "Failed to download CASHEA data",
+        details: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
 
   // Update sale delivery status
   app.put("/api/sales/:saleId/delivery-status", async (req, res) => {

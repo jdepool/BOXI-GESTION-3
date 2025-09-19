@@ -4,6 +4,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
@@ -14,6 +17,7 @@ interface UploadZoneProps {
 }
 
 export default function UploadZone({ recentUploads }: UploadZoneProps) {
+  // File upload state
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [selectedChannel, setSelectedChannel] = useState<string>("");
   const [isUploading, setIsUploading] = useState(false);
@@ -21,6 +25,14 @@ export default function UploadZone({ recentUploads }: UploadZoneProps) {
   const [isDragOver, setIsDragOver] = useState(false);
   const [previewData, setPreviewData] = useState<any[] | null>(null);
   const [isShowingPreview, setIsShowingPreview] = useState(false);
+  
+  // CASHEA download state
+  const [startDate, setStartDate] = useState<string>("");
+  const [endDate, setEndDate] = useState<string>("");
+  const [isDownloadingCashea, setIsDownloadingCashea] = useState(false);
+  const [casheaPreviewData, setCasheaPreviewData] = useState<any[] | null>(null);
+  const [isShowingCasheaPreview, setIsShowingCasheaPreview] = useState(false);
+  
   const { toast } = useToast();
 
   const validateAndSetFile = (file: File) => {
@@ -184,72 +196,288 @@ export default function UploadZone({ recentUploads }: UploadZoneProps) {
     }
   };
 
+  const resetCashea = () => {
+    setStartDate("");
+    setEndDate("");
+    setCasheaPreviewData(null);
+    setIsShowingCasheaPreview(false);
+  };
+
+  const generateCasheaPreview = (data: any[]) => {
+    // Convert CASHEA data to preview format similar to file preview
+    if (!data || data.length === 0) {
+      setCasheaPreviewData(null);
+      setIsShowingCasheaPreview(false);
+      return;
+    }
+    
+    // Take first 5 records for preview
+    const previewRecords = data.slice(0, 5);
+    const previewData = [
+      // Header row
+      ['Orden', 'Cliente', 'Email', 'Total USD', 'Fecha', 'Canal'],
+      // Data rows
+      ...previewRecords.map(record => [
+        record.orden || '',
+        record.nombre || '',
+        record.email || '',
+        record.totalUsd || '',
+        record.fecha || '',
+        'cashea'
+      ])
+    ];
+    
+    setCasheaPreviewData(previewData);
+    setIsShowingCasheaPreview(true);
+  };
+
+  const downloadCasheaData = async () => {
+    if (!startDate || !endDate) {
+      toast({
+        title: "Fechas requeridas",
+        description: "Selecciona las fechas de inicio y fin",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validate date range
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    if (start > end) {
+      toast({
+        title: "Rango de fechas inválido",
+        description: "La fecha de inicio debe ser anterior a la fecha de fin",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsDownloadingCashea(true);
+    setUploadProgress(0);
+
+    try {
+      // Simulate progress
+      const progressInterval = setInterval(() => {
+        setUploadProgress(prev => {
+          if (prev >= 90) {
+            clearInterval(progressInterval);
+            return prev;
+          }
+          return prev + 15;
+        });
+      }, 300);
+
+      const response = await fetch('/api/cashea/download', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          startDate,
+          endDate,
+        }),
+      });
+
+      clearInterval(progressInterval);
+      setUploadProgress(100);
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.details || error.error || 'Error downloading CASHEA data');
+      }
+
+      const result = await response.json();
+
+      // Generate preview of downloaded data
+      generateCasheaPreview(result.data);
+
+      toast({
+        title: "Datos CASHEA descargados exitosamente",
+        description: `${result.recordsProcessed} registros procesados. ${result.duplicatesIgnored > 0 ? `${result.duplicatesIgnored} duplicados ignorados.` : ''}`,
+      });
+
+      // Invalidate queries to refresh data
+      queryClient.invalidateQueries({ queryKey: ['/api/uploads/recent'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/sales/metrics'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/sales'] });
+
+    } catch (error) {
+      toast({
+        title: "Error al descargar datos CASHEA",
+        description: error instanceof Error ? error.message : 'Error desconocido',
+        variant: "destructive",
+      });
+    } finally {
+      setIsDownloadingCashea(false);
+      setUploadProgress(0);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="bg-card p-6 rounded-lg border border-border">
-        <h3 className="text-lg font-semibold mb-4 text-foreground">Cargar Archivo Excel/CSV</h3>
+        <h3 className="text-lg font-semibold mb-4 text-foreground">Cargar Datos</h3>
         
-        <div 
-          className={`upload-zone border-2 border-dashed rounded-lg p-8 text-center mb-4 transition-all cursor-pointer ${
-            isDragOver 
-              ? 'border-primary bg-primary/10 scale-105' 
-              : 'border-border hover:border-primary hover:bg-primary/2'
-          }`}
-          onDragOver={handleDragOver}
-          onDragEnter={handleDragEnter}
-          onDragLeave={handleDragLeave}
-          onDrop={handleDrop}
-          onClick={() => document.getElementById('excel-upload')?.click()}
-        >
-          <i className="fas fa-cloud-upload-alt text-4xl text-muted-foreground mb-4"></i>
-          <p className="text-foreground font-medium mb-2">
-            {selectedFile ? selectedFile.name : "Arrastra tu archivo aquí"}
-          </p>
-          <p className="text-muted-foreground text-sm mb-4">o haz clic para seleccionar</p>
-          <input 
-            type="file" 
-            id="excel-upload" 
-            accept=".xlsx,.xls,.csv" 
-            className="hidden"
-            onChange={handleFileSelect}
-            data-testid="file-input"
-          />
-          <label htmlFor="excel-upload" className="inline-block">
-            <Button variant="outline" asChild>
-              <span data-testid="file-select-button">Seleccionar Archivo</span>
-            </Button>
-          </label>
-        </div>
+        <Tabs defaultValue="file" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="file">Cargar Archivo</TabsTrigger>
+            <TabsTrigger value="cashea">Descargar CASHEA</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="file" className="space-y-4 mt-6">
+            <div 
+              className={`upload-zone border-2 border-dashed rounded-lg p-8 text-center mb-4 transition-all cursor-pointer ${
+                isDragOver 
+                  ? 'border-primary bg-primary/10 scale-105' 
+                  : 'border-border hover:border-primary hover:bg-primary/2'
+              }`}
+              onDragOver={handleDragOver}
+              onDragEnter={handleDragEnter}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+              onClick={() => document.getElementById('excel-upload')?.click()}
+            >
+              <i className="fas fa-cloud-upload-alt text-4xl text-muted-foreground mb-4"></i>
+              <p className="text-foreground font-medium mb-2">
+                {selectedFile ? selectedFile.name : "Arrastra tu archivo aquí"}
+              </p>
+              <p className="text-muted-foreground text-sm mb-4">o haz clic para seleccionar</p>
+              <input 
+                type="file" 
+                id="excel-upload" 
+                accept=".xlsx,.xls,.csv" 
+                className="hidden"
+                onChange={handleFileSelect}
+                data-testid="file-input"
+              />
+              <label htmlFor="excel-upload" className="inline-block">
+                <Button variant="outline" asChild>
+                  <span data-testid="file-select-button">Seleccionar Archivo</span>
+                </Button>
+              </label>
+            </div>
 
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-foreground mb-2">Canal de Ventas</label>
-          <Select value={selectedChannel} onValueChange={setSelectedChannel}>
-            <SelectTrigger data-testid="channel-select">
-              <SelectValue placeholder="Seleccionar canal..." />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="cashea">Cashea</SelectItem>
-              <SelectItem value="shopify">Shopify</SelectItem>
-              <SelectItem value="treble">Treble</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-foreground mb-2">Canal de Ventas</label>
+              <Select value={selectedChannel} onValueChange={setSelectedChannel}>
+                <SelectTrigger data-testid="channel-select">
+                  <SelectValue placeholder="Seleccionar canal..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="cashea">Cashea</SelectItem>
+                  <SelectItem value="shopify">Shopify</SelectItem>
+                  <SelectItem value="treble">Treble</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
-        {isUploading && (
-          <div className="bg-secondary rounded-lg p-4 mb-4">
-            <div className="flex items-center space-x-3">
-              <i className="fas fa-spinner fa-spin text-primary"></i>
-              <div className="flex-1">
-                <p className="text-sm font-medium text-foreground">Procesando archivo...</p>
-                <Progress value={uploadProgress} className="mt-2" />
+            {(isUploading || isDownloadingCashea) && (
+              <div className="bg-secondary rounded-lg p-4 mb-4">
+                <div className="flex items-center space-x-3">
+                  <i className="fas fa-spinner fa-spin text-primary"></i>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-foreground">
+                      {isUploading ? "Procesando archivo..." : "Descargando datos CASHEA..."}
+                    </p>
+                    <Progress value={uploadProgress} className="mt-2" />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="flex space-x-3">
+              <Button 
+                onClick={confirmUpload}
+                disabled={!selectedFile || !selectedChannel || isUploading}
+                className="flex-1"
+                data-testid="upload-button"
+              >
+                {isUploading ? "Procesando..." : "Cargar Archivo"}
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={resetUpload}
+                disabled={isUploading}
+                data-testid="reset-button"
+              >
+                Limpiar
+              </Button>
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="cashea" className="space-y-4 mt-6">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="start-date">Fecha de Inicio</Label>
+                <Input
+                  id="start-date"
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  data-testid="start-date-input"
+                />
+              </div>
+              <div>
+                <Label htmlFor="end-date">Fecha de Fin</Label>
+                <Input
+                  id="end-date"
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  data-testid="end-date-input"
+                />
               </div>
             </div>
-          </div>
-        )}
 
-        {/* Preview Section */}
+            <div className="bg-muted/30 rounded-lg p-4 border border-border">
+              <div className="flex items-center space-x-2 mb-2">
+                <i className="fas fa-info-circle text-primary"></i>
+                <span className="text-sm font-medium">Información CASHEA</span>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Selecciona un rango de fechas para descargar órdenes desde CASHEA. 
+                Los datos se integrarán automáticamente en tu Lista de Ventas con estado "En Proceso".
+                Se evitarán duplicados basados en número de orden.
+              </p>
+            </div>
+
+            {(isUploading || isDownloadingCashea) && (
+              <div className="bg-secondary rounded-lg p-4 mb-4">
+                <div className="flex items-center space-x-3">
+                  <i className="fas fa-spinner fa-spin text-primary"></i>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-foreground">Descargando datos CASHEA...</p>
+                    <Progress value={uploadProgress} className="mt-2" />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="flex space-x-3">
+              <Button 
+                onClick={downloadCasheaData}
+                disabled={!startDate || !endDate || isDownloadingCashea}
+                className="flex-1"
+                data-testid="cashea-download-button"
+              >
+                {isDownloadingCashea ? "Descargando..." : "Descargar Datos CASHEA"}
+              </Button>
+              <Button 
+                variant="outline" 
+                onClick={resetCashea}
+                disabled={isDownloadingCashea}
+                data-testid="reset-cashea-button"
+              >
+                Limpiar
+              </Button>
+            </div>
+          </TabsContent>
+        </Tabs>
+
+        {/* File Preview Section */}
         {isShowingPreview && previewData && previewData.length > 0 && (
-          <div className="bg-secondary rounded-lg p-4 mb-4">
+          <div className="bg-secondary rounded-lg p-4 mt-4">
             <h4 className="text-md font-medium text-foreground mb-3 flex items-center">
               <i className="fas fa-eye mr-2 text-primary"></i>
               Vista Previa del Archivo
@@ -284,52 +512,43 @@ export default function UploadZone({ recentUploads }: UploadZoneProps) {
           </div>
         )}
 
-        {/* Action Buttons */}
-        <div className="flex gap-2">
-          {isShowingPreview ? (
-            <>
-              <Button 
-                variant="outline"
-                onClick={resetUpload}
-                disabled={isUploading}
-                className="flex-1"
-                data-testid="cancel-upload-button"
-              >
-                <i className="fas fa-times mr-2"></i>
-                Cancelar
-              </Button>
-              <Button 
-                onClick={confirmUpload}
-                disabled={!selectedFile || !selectedChannel || isUploading}
-                className="flex-1"
-                data-testid="confirm-upload-button"
-              >
-                <i className="fas fa-check mr-2"></i>
-                Confirmar Carga
-              </Button>
-            </>
-          ) : (
-            <Button 
-              className="w-full" 
-              onClick={() => {
-                if (!selectedFile || !selectedChannel) {
-                  toast({
-                    title: "Información faltante",
-                    description: "Selecciona un archivo y un canal de ventas",
-                    variant: "destructive",
-                  });
-                  return;
-                }
-                setIsShowingPreview(true);
-              }}
-              disabled={!selectedFile || !selectedChannel || isUploading}
-              data-testid="preview-button"
-            >
-              <i className="fas fa-eye mr-2"></i>
-              Ver Vista Previa
-            </Button>
-          )}
-        </div>
+        {/* CASHEA Preview Section */}
+        {isShowingCasheaPreview && casheaPreviewData && casheaPreviewData.length > 0 && (
+          <div className="bg-secondary rounded-lg p-4 mt-4">
+            <h4 className="text-md font-medium text-foreground mb-3 flex items-center">
+              <i className="fas fa-eye mr-2 text-primary"></i>
+              Vista Previa de Datos CASHEA
+            </h4>
+            <div className="bg-background rounded border max-h-64 overflow-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    {casheaPreviewData[0]?.map((header: any, index: number) => (
+                      <TableHead key={index} className="font-medium text-xs">
+                        {header || `Columna ${index + 1}`}
+                      </TableHead>
+                    ))}
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {casheaPreviewData.slice(1, 6).map((row: any[], rowIndex: number) => (
+                    <TableRow key={rowIndex}>
+                      {row.map((cell: any, cellIndex: number) => (
+                        <TableCell key={cellIndex} className="text-xs py-2">
+                          {cell || ''}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+            <p className="text-xs text-muted-foreground mt-2">
+              Se muestran las primeras 5 filas descargadas. Todos los registros han sido procesados y agregados a la Lista de Ventas.
+            </p>
+          </div>
+        )}
+
       </div>
 
       {recentUploads && recentUploads.length > 0 && (

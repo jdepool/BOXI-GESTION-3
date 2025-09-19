@@ -1,0 +1,232 @@
+🔧 Backend Code (Add to your server routes)
+1. CASHEA API Function
+
+// Add this function to your backend routes file
+async function callCasheaApi(startDate: string, endDate: string): Promise<any[]> {
+  const casheaEmail = process.env.CASHEA_EMAIL;
+  const casheaPassword = process.env.CASHEA_PASSWORD;
+
+  if (!casheaEmail || !casheaPassword) {
+    throw new Error("CASHEA credentials not configured");
+  }
+
+  console.log(`🔍 CASHEA API Investigation for date range: ${startDate} to ${endDate}`);
+  console.log(`📧 Using credentials: ${casheaEmail}`);
+
+  // Convert user input dates to ISO format for CASHEA API
+  const startDateISO = new Date(startDate + "T04:00:00.000Z").toISOString();
+  const endDateISO = new Date(endDate + "T04:00:00.000Z").toISOString();
+
+  console.log(`📅 Date conversion: ${startDate} -> ${startDateISO}`);
+  console.log(`📅 Date conversion: ${endDate} -> ${endDateISO}`);
+
+  const url = "https://cashea.retool.com/api/public/83942c1c-e0a6-11ee-9c54-4bdcfcdd4f2c/query?queryName=getOnlineOrdersWithProducts";
+  
+  const body = JSON.stringify({
+    "userParams": {
+      "queryParams": {
+        "0": "Boxi Sleep",
+        "1": "Boxi Sleep", 
+        "2": startDateISO,
+        "3": endDateISO,
+        "length": 4
+      },
+      "databaseNameOverrideParams": { "length": 0 },
+      "databaseHostOverrideParams": { "length": 0 },
+      "databasePasswordOverrideParams": { "length": 0 },
+      "databaseUsernameOverrideParams": { "length": 0 }
+    },
+    "environment": "production",
+    "frontendVersion": "1",
+    "includeQueryExecutionMetadata": true,
+    "isInGlobalWidget": true,
+    "password": "",
+    "queryType": "SqlQueryUnified",
+    "releaseVersion": null,
+    "streamResponse": false
+  });
+
+  const headers = {
+    "Content-Type": "application/json",
+    "Authorization": `Basic ${Buffer.from(`${casheaEmail}:${casheaPassword}`).toString('base64')}`,
+  };
+
+  console.log(`🧪 Trying: ✅ User-Provided Exact CASHEA Format`);
+  console.log(`📡 URL: ${url}`);
+  console.log(`🔧 Method: POST`);
+  console.log(`📝 Body: ${body}`);
+
+  const response = await fetch(url, {
+    method: "POST",
+    headers: headers,
+    body: body,
+  });
+
+  console.log(`📊 Response: ${response.status} ${response.statusText}`);
+
+  if (!response.ok) {
+    throw new Error(`CASHEA API request failed: ${response.status} ${response.statusText}`);
+  }
+
+  const data = await response.json();
+  console.log(`🎉 CASHEA API SUCCESS! Status: ${response.status}`);
+  console.log(`📊 Response size: ${JSON.stringify(data).length} bytes`);
+
+  return [data];
+}
+
+2. Data Transformation Function
+
+// Add this function to transform CASHEA data
+function transformCasheaData(rawData: any[]): any[] {
+  if (!rawData || rawData.length === 0) return [];
+  
+  const casheaEntry = rawData[0];
+  if (!casheaEntry || !casheaEntry.__retoolWrappedQuery__ || !casheaEntry.queryData) {
+    return rawData; // Return as-is if not CASHEA format
+  }
+  
+  const queryData = casheaEntry.queryData;
+  const ordenes = queryData['# Orden'] || [];
+  const nombres = queryData.Nombre || [];
+  const cedulas = queryData.Cédula || [];
+  const telefonos = queryData.Teléfono || [];
+  const emails = queryData.Email || [];
+  const totalesUSD = queryData['Total (USD)'] || [];
+  const fechas = queryData.Fecha || [];
+  const canales = queryData.Canal || [];
+  const pagosIniciales = queryData['Pago Inicial (USD)'] || [];
+  const referencias = queryData['# Referencia'] || [];
+  const montosBs = queryData['Monto en Bs'] || [];
+  const estadosEntrega = queryData['Estado de Entrega'] || [];
+  const productos = queryData.Product || [];
+  
+  // Convert arrays into individual records
+  const records: any[] = [];
+  const maxLength = Math.max(
+    ordenes.length, nombres.length, cedulas.length, telefonos.length,
+    emails.length, totalesUSD.length, fechas.length, canales.length,
+    pagosIniciales.length, referencias.length, montosBs.length,
+    estadosEntrega.length, productos.length
+  );
+  
+  for (let i = 0; i < maxLength; i++) {
+    records.push({
+      id: i + 1,
+      orden: ordenes[i] || 0,
+      nombre: nombres[i] || 'Unknown Customer',
+      cedula: cedulas[i] || '',
+      telefono: telefonos[i] || '',
+      email: emails[i] || '',
+      totalUSD: parseFloat(totalesUSD[i]) || 0,
+      fecha: fechas[i] ? new Date(fechas[i]).toLocaleDateString() : new Date().toLocaleDateString(),
+      canal: canales[i] || '',
+      pagoInicialUSD: parseFloat(pagosIniciales[i]) || 0,
+      referencia: referencias[i] || '',
+      montoBs: parseFloat(montosBs[i]) || 0,
+      estadoEntrega: estadosEntrega[i] || 'Unknown',
+      producto: productos[i] || 'CASHEA Product',
+    });
+  }
+  
+  return records;
+}
+
+3. API Endpoint
+
+// Add this endpoint to your existing routes
+app.post("/api/cashea/download", async (req, res) => {
+  try {
+    const { startDate, endDate } = req.body;
+
+    if (!startDate || !endDate) {
+      return res.status(400).json({ error: "Start date and end date are required" });
+    }
+
+    console.log(`📊 CASHEA download request: ${startDate} to ${endDate}`);
+
+    // Call CASHEA API
+    const casheaData = await callCasheaApi(startDate, endDate);
+    
+    // Transform the data
+    const transformedData = transformCasheaData(casheaData);
+    
+    console.log(`✅ Transformed ${transformedData.length} CASHEA records`);
+
+    res.json({
+      success: true,
+      data: transformedData,
+      message: `Downloaded ${transformedData.length} CASHEA records successfully`,
+      recordCount: transformedData.length
+    });
+
+  } catch (error) {
+    console.error("Error downloading CASHEA data:", error);
+    res.status(500).json({ 
+      error: "Failed to download CASHEA data",
+      details: error.message 
+    });
+  }
+});
+
+🎨 Frontend Code (Add to your React component)
+4. Download Function
+
+// Add this function to your existing component
+const downloadCasheaData = async (startDate, endDate) => {
+  try {
+    console.log(`Downloading CASHEA data for ${startDate} to ${endDate}`);
+    
+    const response = await fetch('/api/cashea/download', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        startDate,
+        endDate,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const result = await response.json();
+    
+    if (result.success) {
+      console.log(`✅ Downloaded ${result.recordCount} CASHEA records`);
+      // Add to your existing orders or handle as needed
+      return result.data;
+    } else {
+      throw new Error(result.error || 'Unknown error occurred');
+    }
+
+  } catch (error) {
+    console.error('CASHEA download error:', error);
+    throw error;
+  }
+};
+
+5. UI Button
+
+// Add this button to your existing UI
+<Button 
+  onClick={() => downloadCasheaData('2025-09-01', '2025-09-30')}
+  disabled={isLoading}
+>
+  {isLoading ? 'Downloading...' : 'Download CASHEA Data'}
+</Button>
+
+⚙️ Environment Variables
+
+Add these to your .env or Replit secrets:
+
+CASHEA_EMAIL=marketplace@boxisleep.com
+CASHEA_PASSWORD=boxisleep1234
+
+📋 CASHEA Data Structure
+
+Each CASHEA record will have these 13 fields:
+
+    orden, nombre, cedula, telefono, email, totalUSD, fecha, canal, pagoInicialUSD, referencia, montoBs, estadoEntrega, producto
