@@ -1062,7 +1062,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         tienda: null,
         fecha,
         canal: 'cashea',
-        estado: 'pendiente',
+        estado: 'confirmado',
         estadoEntrega: 'En Proceso', // All CASHEA orders start as "En Proceso"
         estadoPagoInicial: null,
         pagoInicialUsd: null,
