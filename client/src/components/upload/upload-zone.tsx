@@ -365,11 +365,11 @@ export default function UploadZone({ recentUploads, showOnlyCashea = false }: Up
         </div>
       )}
 
-      <div className="flex space-x-3">
+      <div className="space-y-3">
         <Button 
           onClick={downloadCasheaData}
           disabled={!startDate || !endDate || isDownloadingCashea}
-          className="flex-1"
+          className="w-full"
           data-testid="cashea-download-button"
         >
           {isDownloadingCashea ? "Descargando..." : "Descargar Datos CASHEA"}
@@ -378,6 +378,7 @@ export default function UploadZone({ recentUploads, showOnlyCashea = false }: Up
           variant="outline" 
           onClick={resetCashea}
           disabled={isDownloadingCashea}
+          className="w-full"
           data-testid="reset-cashea-button"
         >
           Limpiar
