@@ -29,6 +29,7 @@ interface SalesTableProps {
   hidePagination?: boolean;
   showEditActions?: boolean;
   showDeliveryDateColumn?: boolean;
+  showCuotasButton?: boolean;
   filters?: any;
   onFilterChange?: (filters: any) => void;
   onPageChange?: (offset: number) => void;
@@ -46,6 +47,7 @@ export default function SalesTable({
   hidePagination = false,
   showEditActions = false,
   showDeliveryDateColumn = false,
+  showCuotasButton = false,
   filters: parentFilters,
   onFilterChange,
   onPageChange,
@@ -702,19 +704,21 @@ export default function SalesTable({
                     </td>
                     <td className="p-2 min-w-[200px]">
                       <div className="flex gap-1">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            setSelectedSaleForInstallments(sale);
-                            setInstallmentsModalOpen(true);
-                          }}
-                          data-testid={`button-cuotas-${sale.id}`}
-                          className="h-7 text-xs"
-                        >
-                          <CreditCard className="h-3 w-3 mr-1" />
-                          Cuotas
-                        </Button>
+                        {showCuotasButton && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedSaleForInstallments(sale);
+                              setInstallmentsModalOpen(true);
+                            }}
+                            data-testid={`button-cuotas-${sale.id}`}
+                            className="h-7 text-xs"
+                          >
+                            <CreditCard className="h-3 w-3 mr-1" />
+                            Cuotas
+                          </Button>
+                        )}
                         <Button
                           variant="outline"
                           size="sm"
