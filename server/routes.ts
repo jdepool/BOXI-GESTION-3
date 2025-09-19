@@ -1010,15 +1010,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const data = await response.json();
     console.log(`🎉 CASHEA API SUCCESS! Status: ${response.status}`);
     console.log(`📊 Response size: ${JSON.stringify(data).length} bytes`);
+    console.log(`🔍 Raw CASHEA data structure:`, JSON.stringify(data, null, 2));
 
     return [data];
   }
 
   function transformCasheaData(rawData: any[]): any[] {
-    if (!rawData || rawData.length === 0) return [];
+    console.log(`🔧 Transform CASHEA data starting - input length: ${rawData?.length || 0}`);
+    if (!rawData || rawData.length === 0) {
+      console.log(`❌ No raw data to transform`);
+      return [];
+    }
     
     const casheaEntry = rawData[0];
+    console.log(`🔍 CASHEA entry structure:`, Object.keys(casheaEntry || {}));
+    
     if (!casheaEntry || !casheaEntry.__retoolWrappedQuery__ || !casheaEntry.queryData) {
+      console.log(`❌ Not CASHEA format - returning raw data`);
       return rawData; // Return as-is if not CASHEA format
     }
     
@@ -1097,6 +1105,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
     }
     
+    console.log(`✅ Transform CASHEA data complete - output length: ${records.length}`);
+    if (records.length > 0) {
+      console.log(`🔍 Sample transformed record:`, JSON.stringify(records[0], null, 2));
+    }
+    
     return records;
   }
 
@@ -1116,6 +1129,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Transform the data
       const transformedData = transformCasheaData(casheaData);
+      console.log(`📋 Transformed data ready for validation - ${transformedData.length} records`);
       
       // Validate each row (same as file upload)
       const validatedSales = [];
@@ -1126,12 +1140,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const validatedSale = insertSaleSchema.parse(transformedData[i]);
           validatedSales.push(validatedSale);
         } catch (error) {
+          console.log(`❌ Validation error for row ${i + 1}:`, error instanceof z.ZodError ? error.errors : String(error));
           errors.push({
             row: i + 1,
             error: error instanceof z.ZodError ? error.errors : String(error)
           });
         }
       }
+      
+      console.log(`📊 Validation complete: ${validatedSales.length} valid, ${errors.length} errors`);
 
       if (errors.length > 0) {
         await storage.createUploadHistory({
