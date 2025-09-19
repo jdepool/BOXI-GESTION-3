@@ -319,10 +319,10 @@ export default function UploadZone({ recentUploads }: UploadZoneProps) {
       <div className="bg-card p-6 rounded-lg border border-border">
         <h3 className="text-lg font-semibold mb-4 text-foreground">Cargar Datos</h3>
         
-        <Tabs defaultValue="file" className="w-full">
+        <Tabs defaultValue="cashea" className="w-full">
           <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="file">Cargar Archivo</TabsTrigger>
             <TabsTrigger value="cashea">Descargar CASHEA</TabsTrigger>
+            <TabsTrigger value="file">Cargar Archivo</TabsTrigger>
           </TabsList>
           
           <TabsContent value="file" className="space-y-4 mt-6">
