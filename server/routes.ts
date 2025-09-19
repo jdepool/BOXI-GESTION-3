@@ -1092,7 +1092,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         montoFleteVes: null,
         bancoReceptorFlete: null,
         statusFlete: null,
-        fleteGratis: 'false',
+        fleteGratis: false,
         notas: null,
         fechaAtencion: null,
         product: productos[i] ? String(productos[i]) : 'CASHEA Product',
