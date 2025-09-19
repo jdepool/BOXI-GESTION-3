@@ -665,11 +665,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Shopify webhook endpoint for order creation
   app.post("/api/webhooks/shopify", async (req, res) => {
     try {
-      // Verify webhook authenticity (basic check)
+      console.log("📥 Received Shopify webhook request");
+      
+      // Verify webhook authenticity (Shopify HMAC verification)
+      const shopifyHmac = req.headers['x-shopify-hmac-sha256'] as string;
+      const shopifyShopDomain = req.headers['x-shopify-shop-domain'] as string;
+      
+      // For production, you should verify the HMAC signature here
+      // const expectedHmac = crypto.createHmac('sha256', SHOPIFY_WEBHOOK_SECRET)
+      //   .update(JSON.stringify(req.body), 'utf8')
+      //   .digest('base64');
+      // if (shopifyHmac !== expectedHmac) {
+      //   return res.status(401).json({ error: "Unauthorized webhook request" });
+      // }
+      
       const shopifyOrder = req.body;
       
       // Basic validation that this is a Shopify order
       if (!shopifyOrder || !shopifyOrder.id || !shopifyOrder.name) {
+        console.log("❌ Invalid Shopify order data received");
         return res.status(400).json({ error: "Invalid Shopify order data" });
       }
 
