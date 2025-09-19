@@ -664,76 +664,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Middleware to capture raw body for HMAC verification
-  app.use('/api/webhooks/shopify', (req, res, next) => {
-    let data = '';
-    req.setEncoding('utf8');
-    req.on('data', (chunk) => {
-      data += chunk;
-    });
-    req.on('end', () => {
-      (req as any).rawBody = data;
-      next();
-    });
-  });
-
-  // Shopify webhook endpoint for order creation  
+  // Shopify webhook endpoint for order creation
   app.post("/api/webhooks/shopify", async (req, res) => {
     try {
       console.log("📥 Received Shopify webhook request");
+      console.log("📦 Webhook payload:", JSON.stringify(req.body, null, 2));
       
       const shopifyOrder = req.body;
-      
-      // Verify webhook authenticity (Shopify HMAC verification)
-      const shopifyHmac = req.headers['x-shopify-hmac-sha256'] as string;
-      const shopifyShopDomain = req.headers['x-shopify-shop-domain'] as string;
-      
-      // HMAC verification for production security
-      const webhookSecret = process.env.SHOPIFY_WEBHOOK_SECRET;
-      const allowedShopDomain = process.env.SHOPIFY_ALLOWED_SHOP_DOMAIN || 'boxisleep-test.myshopify.com';
-      
-      // In production, HMAC verification is mandatory
-      if (process.env.NODE_ENV === 'production') {
-        if (!webhookSecret) {
-          console.log("❌ SHOPIFY_WEBHOOK_SECRET not configured in production");
-          return res.status(401).json({ error: "Webhook authentication not configured" });
-        }
-        if (!shopifyHmac) {
-          console.log("❌ Missing X-Shopify-Hmac-Sha256 header in production");
-          return res.status(401).json({ error: "Missing webhook signature" });
-        }
-      }
-      
-      // Verify shop domain allowlist
-      if (shopifyShopDomain && !shopifyShopDomain.endsWith(allowedShopDomain)) {
-        console.log(`❌ Unauthorized shop domain: ${shopifyShopDomain}`);
-        return res.status(403).json({ error: "Unauthorized shop domain" });
-      }
-      
-      // HMAC verification when secret and signature are present
-      if (webhookSecret && shopifyHmac) {
-        const rawBody = (req as any).rawBody || JSON.stringify(req.body);
-        const expectedHmac = crypto.createHmac('sha256', webhookSecret)
-          .update(rawBody, 'utf8')
-          .digest('base64');
-        
-        const receivedHmacBuffer = Buffer.from(shopifyHmac);
-        const expectedHmacBuffer = Buffer.from(expectedHmac);
-        
-        // Check buffer lengths before constant-time comparison to prevent throwing
-        if (receivedHmacBuffer.length !== expectedHmacBuffer.length) {
-          console.log("❌ HMAC length mismatch for webhook");
-          return res.status(401).json({ error: "Invalid webhook signature" });
-        }
-        
-        // Constant-time comparison to prevent timing attacks
-        if (!crypto.timingSafeEqual(receivedHmacBuffer, expectedHmacBuffer)) {
-          console.log("❌ HMAC verification failed for webhook");
-          return res.status(401).json({ error: "Invalid webhook signature" });
-        }
-        
-        console.log("✅ HMAC verification successful");
-      }
       
       // Basic validation that this is a Shopify order
       if (!shopifyOrder || !shopifyOrder.id || !shopifyOrder.name) {
