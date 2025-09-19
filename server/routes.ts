@@ -1,4 +1,5 @@
 import type { Express } from "express";
+import express from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { 
@@ -13,6 +14,7 @@ import { parse as parseCSV } from "csv-parse/sync";
 import { nanoid } from "nanoid";
 import session from "express-session";
 import MemoryStore from "memorystore";
+import crypto from "crypto";
 
 // Configure multer for file uploads
 const upload = multer({
@@ -662,24 +664,76 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Shopify webhook endpoint for order creation
+  // Middleware to capture raw body for HMAC verification
+  app.use('/api/webhooks/shopify', (req, res, next) => {
+    let data = '';
+    req.setEncoding('utf8');
+    req.on('data', (chunk) => {
+      data += chunk;
+    });
+    req.on('end', () => {
+      (req as any).rawBody = data;
+      next();
+    });
+  });
+
+  // Shopify webhook endpoint for order creation  
   app.post("/api/webhooks/shopify", async (req, res) => {
     try {
       console.log("📥 Received Shopify webhook request");
+      
+      const shopifyOrder = req.body;
       
       // Verify webhook authenticity (Shopify HMAC verification)
       const shopifyHmac = req.headers['x-shopify-hmac-sha256'] as string;
       const shopifyShopDomain = req.headers['x-shopify-shop-domain'] as string;
       
-      // For production, you should verify the HMAC signature here
-      // const expectedHmac = crypto.createHmac('sha256', SHOPIFY_WEBHOOK_SECRET)
-      //   .update(JSON.stringify(req.body), 'utf8')
-      //   .digest('base64');
-      // if (shopifyHmac !== expectedHmac) {
-      //   return res.status(401).json({ error: "Unauthorized webhook request" });
-      // }
+      // HMAC verification for production security
+      const webhookSecret = process.env.SHOPIFY_WEBHOOK_SECRET;
+      const allowedShopDomain = process.env.SHOPIFY_ALLOWED_SHOP_DOMAIN || 'boxisleep-test.myshopify.com';
       
-      const shopifyOrder = req.body;
+      // In production, HMAC verification is mandatory
+      if (process.env.NODE_ENV === 'production') {
+        if (!webhookSecret) {
+          console.log("❌ SHOPIFY_WEBHOOK_SECRET not configured in production");
+          return res.status(401).json({ error: "Webhook authentication not configured" });
+        }
+        if (!shopifyHmac) {
+          console.log("❌ Missing X-Shopify-Hmac-Sha256 header in production");
+          return res.status(401).json({ error: "Missing webhook signature" });
+        }
+      }
+      
+      // Verify shop domain allowlist
+      if (shopifyShopDomain && !shopifyShopDomain.endsWith(allowedShopDomain)) {
+        console.log(`❌ Unauthorized shop domain: ${shopifyShopDomain}`);
+        return res.status(403).json({ error: "Unauthorized shop domain" });
+      }
+      
+      // HMAC verification when secret and signature are present
+      if (webhookSecret && shopifyHmac) {
+        const rawBody = (req as any).rawBody || JSON.stringify(req.body);
+        const expectedHmac = crypto.createHmac('sha256', webhookSecret)
+          .update(rawBody, 'utf8')
+          .digest('base64');
+        
+        const receivedHmacBuffer = Buffer.from(shopifyHmac);
+        const expectedHmacBuffer = Buffer.from(expectedHmac);
+        
+        // Check buffer lengths before constant-time comparison to prevent throwing
+        if (receivedHmacBuffer.length !== expectedHmacBuffer.length) {
+          console.log("❌ HMAC length mismatch for webhook");
+          return res.status(401).json({ error: "Invalid webhook signature" });
+        }
+        
+        // Constant-time comparison to prevent timing attacks
+        if (!crypto.timingSafeEqual(receivedHmacBuffer, expectedHmacBuffer)) {
+          console.log("❌ HMAC verification failed for webhook");
+          return res.status(401).json({ error: "Invalid webhook signature" });
+        }
+        
+        console.log("✅ HMAC verification successful");
+      }
       
       // Basic validation that this is a Shopify order
       if (!shopifyOrder || !shopifyOrder.id || !shopifyOrder.name) {
@@ -687,7 +741,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Invalid Shopify order data" });
       }
 
-      console.log(`📦 Received Shopify webhook for order: ${shopifyOrder.name}`);
+      console.log(`📦 Received Shopify webhook for order: ${shopifyOrder.name} (ID: ${shopifyOrder.id})`);
+      
+      // Check for existing order to prevent duplicates (idempotency)
+      const existingWebhookOrders = await storage.getExistingOrderNumbers([shopifyOrder.name]);
+      if (existingWebhookOrders.includes(shopifyOrder.name)) {
+        console.log(`⚠️ Order ${shopifyOrder.name} already exists - webhook retry detected`);
+        return res.status(200).json({ 
+          message: "Order already processed",
+          duplicate: true,
+          orderId: shopifyOrder.name
+        });
+      }
 
       // Transform Shopify webhook data to CSV format for existing mapping logic
       const csvFormatData = transformShopifyWebhookToCSV(shopifyOrder);
