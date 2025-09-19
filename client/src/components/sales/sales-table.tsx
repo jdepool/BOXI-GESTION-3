@@ -733,17 +733,6 @@ export default function SalesTable({
                             <Button
                               variant="default"
                               size="sm"
-                              onClick={() => onEditSale?.(sale)}
-                              data-testid={`manual-edit-sale-${sale.id}`}
-                              className="h-7 px-2 text-xs bg-blue-600 hover:bg-blue-700 text-white"
-                              title="Editar venta manual"
-                            >
-                              <i className="fas fa-edit text-xs mr-1"></i>
-                              Manual
-                            </Button>
-                            <Button
-                              variant="default"
-                              size="sm"
                               onClick={() => onVerifyPayment?.(sale)}
                               data-testid={`verify-payment-${sale.id}`}
                               className="h-7 px-2 text-xs bg-green-600 hover:bg-green-700 text-white"
