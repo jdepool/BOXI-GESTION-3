@@ -636,6 +636,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
         'Referencia': sale.referencia,
         'Monto Bs': sale.montoBs,
         'Asesor': sale.asesorId,
+        
+        // Billing Address
+        'País (Facturación)': sale.direccionFacturacionPais || '',
+        'Estado (Facturación)': sale.direccionFacturacionEstado || '',
+        'Ciudad (Facturación)': sale.direccionFacturacionCiudad || '',
+        'Dirección (Facturación)': sale.direccionFacturacionDireccion || '',
+        'Urbanización (Facturación)': sale.direccionFacturacionUrbanizacion || '',
+        'Referencia (Facturación)': sale.direccionFacturacionReferencia || '',
+        
+        // Shipping Address
+        'Despacho Igual a Facturación': sale.direccionDespachoIgualFacturacion === "true" ? 'Sí' : 'No',
+        'País (Despacho)': sale.direccionDespachoIgualFacturacion === "true" 
+          ? sale.direccionFacturacionPais || '' 
+          : sale.direccionDespachoPais || '',
+        'Estado (Despacho)': sale.direccionDespachoIgualFacturacion === "true" 
+          ? sale.direccionFacturacionEstado || '' 
+          : sale.direccionDespachoEstado || '',
+        'Ciudad (Despacho)': sale.direccionDespachoIgualFacturacion === "true" 
+          ? sale.direccionFacturacionCiudad || '' 
+          : sale.direccionDespachoCiudad || '',
+        'Dirección (Despacho)': sale.direccionDespachoIgualFacturacion === "true" 
+          ? sale.direccionFacturacionDireccion || '' 
+          : sale.direccionDespachoDireccion || '',
+        'Urbanización (Despacho)': sale.direccionDespachoIgualFacturacion === "true" 
+          ? sale.direccionFacturacionUrbanizacion || '' 
+          : sale.direccionDespachoUrbanizacion || '',
+        'Referencia (Despacho)': sale.direccionDespachoIgualFacturacion === "true" 
+          ? sale.direccionFacturacionReferencia || '' 
+          : sale.direccionDespachoReferencia || '',
+        
+        // Flete fields
+        'Monto Flete USD': sale.montoFleteUsd || '',
+        'Fecha Flete': sale.fechaFlete ? new Date(sale.fechaFlete).toLocaleDateString('es-ES') : '',
+        'Referencia Flete': sale.referenciaFlete || '',
+        'Monto Flete Bs': sale.montoFleteVes || '',
+        'Banco Receptor Flete': sale.bancoReceptorFlete || '',
+        'Status Flete': sale.statusFlete || '',
+        'Flete Gratis': sale.fleteGratis ? 'Sí' : 'No',
+        
         'Notas': sale.notas || '',
       })));
 
