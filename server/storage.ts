@@ -343,7 +343,49 @@ export class DatabaseStorage implements IStorage {
     const withLimit = filters?.limit ? withOrder.limit(filters.limit) : withOrder;
     const finalQuery = filters?.offset ? withLimit.offset(filters.offset) : withLimit;
     
-    return await finalQuery;
+    const salesData = await finalQuery;
+
+    // Production-ready SKU enrichment with exact matching only
+    // Avoids collision-prone fuzzy matching issues - exact matches are reliable and fast
+    // Priority: sales.sku (existing) > exact match > null
+    
+    // Fetch productos once per request for exact matching
+    const allProductos = await db
+      .select({ nombre: productos.nombre, sku: productos.sku })
+      .from(productos)  
+      .where(and(isNotNull(productos.sku), isNotNull(productos.nombre)));
+
+    // Build exact match lookup for O(1) performance
+    const skuMap = new Map<string, string>();
+    for (const producto of allProductos) {
+      if (producto.nombre && producto.sku) {
+        // Normalize for case-insensitive exact matching
+        const normalized = producto.nombre.toLowerCase().trim();
+        skuMap.set(normalized, producto.sku);
+      }
+    }
+
+    // Apply exact SKU matching - reliable and collision-free
+    const salesWithSku = salesData.map((sale) => {
+      // Priority 1: If sale already has SKU (manual/Shopify), keep it
+      if (sale.sku) {
+        return { ...sale, sku: sale.sku };
+      }
+
+      // Priority 2: Try exact match with productos
+      if (sale.product) {
+        const normalized = sale.product.toLowerCase().trim();
+        const matchedSku = skuMap.get(normalized);
+        if (matchedSku) {
+          return { ...sale, sku: matchedSku };
+        }
+      }
+
+      // Priority 3: No match - return null (fuzzy matching can be added later)
+      return { ...sale, sku: null };
+    });
+
+    return salesWithSku;
   }
 
   async getSalesWithInstallments(filters?: {
