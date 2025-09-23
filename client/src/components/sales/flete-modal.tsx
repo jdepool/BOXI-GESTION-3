@@ -7,8 +7,6 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Truck, DollarSign, CalendarIcon, FileText, User, Phone, Mail, Building2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -90,7 +88,7 @@ export default function FleteModal({ open, onOpenChange, sale }: FleteModalProps
     if (sale && open) {
       setFleteData({
         montoFleteUsd: sale.montoFleteUsd ? sale.montoFleteUsd.toString() : "",
-        fechaFlete: sale.fechaFlete ? format(new Date(sale.fechaFlete), 'yyyy-MM-dd') : "",
+        fechaFlete: sale.fechaFlete ? format(new Date(sale.fechaFlete), 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd'),
         referenciaFlete: sale.referenciaFlete || "",
         montoFleteVes: sale.montoFleteVes ? sale.montoFleteVes.toString() : "",
         bancoReceptorFlete: sale.bancoReceptorFlete || "",
@@ -124,6 +122,39 @@ export default function FleteModal({ open, onOpenChange, sale }: FleteModalProps
       ...prev,
       fleteGratis: checked
     }));
+  };
+
+  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const input = e.target.value;
+    
+    // Only accept complete dates in DD/MM/YYYY format
+    const dateRegex = /^\d{2}\/\d{2}\/\d{4}$/;
+    
+    if (input === "") {
+      // Allow clearing the field
+      setFleteData(prev => ({ ...prev, fechaFlete: "" }));
+      return;
+    }
+    
+    if (!dateRegex.test(input)) {
+      // Reject partial or malformed dates immediately
+      return;
+    }
+    
+    // Parse and validate actual date
+    const [day, month, year] = input.split('/').map(Number);
+    const date = new Date(year, month - 1, day);
+    
+    // Strict validation: ensure the date is valid and matches input
+    if (date.getDate() === day && 
+        date.getMonth() === month - 1 && 
+        date.getFullYear() === year) {
+      setFleteData(prev => ({
+        ...prev,
+        fechaFlete: format(date, 'yyyy-MM-dd')
+      }));
+    }
+    // If invalid date, input is rejected (no state update)
   };
 
   const handleSave = () => {
@@ -205,42 +236,14 @@ export default function FleteModal({ open, onOpenChange, sale }: FleteModalProps
 
               <div className="space-y-2">
                 <Label htmlFor="fechaFlete">Fecha</Label>
-                <div className="relative">
-                  <Input
-                    id="fechaFlete"
-                    type="text"
-                    value={fleteData.fechaFlete ? format(new Date(fleteData.fechaFlete), "dd/MM/yyyy") : ""}
-                    placeholder="Seleccionar fecha"
-                    readOnly
-                    className="pr-10 cursor-default"
-                    data-testid="input-fecha-flete"
-                  />
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="absolute right-1 top-1 h-8 w-8 p-0 hover:bg-muted"
-                        data-testid="button-calendar-trigger"
-                      >
-                        <CalendarIcon className="h-4 w-4" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="end" side="bottom">
-                      <Calendar
-                        mode="single"
-                        selected={fleteData.fechaFlete ? new Date(fleteData.fechaFlete) : undefined}
-                        onSelect={(date) => {
-                          setFleteData((prev) => ({
-                            ...prev,
-                            fechaFlete: date ? format(date, 'yyyy-MM-dd') : ""
-                          }));
-                        }}
-                        initialFocus
-                      />
-                    </PopoverContent>
-                  </Popover>
-                </div>
+                <Input
+                  id="fechaFlete"
+                  type="text"
+                  value={fleteData.fechaFlete ? format(new Date(fleteData.fechaFlete), "dd/MM/yyyy") : ""}
+                  placeholder="DD/MM/YYYY"
+                  onChange={handleDateChange}
+                  data-testid="input-fecha-flete"
+                />
               </div>
 
               <div className="space-y-2">
