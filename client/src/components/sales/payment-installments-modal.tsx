@@ -372,7 +372,7 @@ export default function PaymentInstallmentsModal({ sale, open, onOpenChange }: P
                                   data-testid="input-installment-fecha"
                                 >
                                   {field.value ? (
-                                    format(field.value, "PPP")
+                                    format(field.value, "dd/MM/yyyy")
                                   ) : (
                                     <span>Seleccionar fecha</span>
                                   )}
@@ -386,7 +386,7 @@ export default function PaymentInstallmentsModal({ sale, open, onOpenChange }: P
                                 selected={field.value}
                                 onSelect={field.onChange}
                                 disabled={(date) =>
-                                  date > new Date() || date < new Date("1900-01-01")
+                                  date < new Date("1900-01-01")
                                 }
                                 initialFocus
                               />

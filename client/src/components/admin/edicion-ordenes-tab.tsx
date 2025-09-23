@@ -1,5 +1,13 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { format, parse } from "date-fns";
+import { cn } from "@/lib/utils";
+
+// Helper function to safely parse YYYY-MM-DD as local date
+const parseLocalDate = (dateString: string) => {
+  if (!dateString) return undefined;
+  return parse(dateString, 'yyyy-MM-dd', new Date());
+};
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,7 +19,9 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Edit, Package, Calendar, DollarSign, Trash2, User, MapPin, Package2 } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import { Edit, Package, Calendar, DollarSign, Trash2, User, MapPin, Package2, CalendarIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import type { Sale, Banco, MetodoPago, Producto } from "@shared/schema";
@@ -561,13 +571,33 @@ export function EdicionOrdenesTab() {
                       </div>
                       <div>
                         <Label htmlFor="fecha">Fecha *</Label>
-                        <Input
-                          id="fecha"
-                          type="date"
-                          value={formData.fecha}
-                          onChange={(e) => setFormData({ ...formData, fecha: e.target.value })}
-                          data-testid="input-fecha"
-                        />
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="outline"
+                              className={cn(
+                                "w-full justify-start text-left font-normal",
+                                !formData.fecha && "text-muted-foreground"
+                              )}
+                              data-testid="input-fecha"
+                            >
+                              <CalendarIcon className="mr-2 h-4 w-4" />
+                              {formData.fecha ? format(parseLocalDate(formData.fecha) || new Date(), "dd/MM/yyyy") : "Seleccionar fecha"}
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <CalendarComponent
+                              mode="single"
+                              selected={parseLocalDate(formData.fecha)}
+                              onSelect={(date) => {
+                                if (date) {
+                                  setFormData({ ...formData, fecha: format(date, "yyyy-MM-dd") });
+                                }
+                              }}
+                              initialFocus
+                            />
+                          </PopoverContent>
+                        </Popover>
                       </div>
                       <div>
                         <Label htmlFor="product">Producto *</Label>

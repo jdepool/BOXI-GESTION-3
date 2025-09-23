@@ -2,6 +2,14 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useQuery } from "@tanstack/react-query";
+import { format, parse } from "date-fns";
+import { cn } from "@/lib/utils";
+
+// Helper function to safely parse YYYY-MM-DD as local date
+const parseLocalDate = (dateString: string) => {
+  if (!dateString) return undefined;
+  return parse(dateString, 'yyyy-MM-dd', new Date());
+};
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -9,37 +17,41 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
 import { Save, User, CreditCard, MapPin, Package, CalendarIcon } from "lucide-react";
 import { insertSaleSchema } from "@shared/schema";
 
-const manualSaleSchema = insertSaleSchema.extend({
-  cantidad: z.number().min(1),
+const manualSaleSchema = z.object({
+  nombre: z.string().min(1, "Nombre es requerido"),
+  cedula: z.string().optional(),
+  telefono: z.string().min(1, "Teléfono es requerido"),
+  email: z.string().email("Email inválido").optional(),
   totalUsd: z.string().min(1, "Total USD es requerido"),
   fecha: z.string().min(1, "Fecha es requerida"),
+  product: z.string().min(1, "Producto es requerido"),
+  sku: z.string().optional(),
+  cantidad: z.number().min(1),
   metodoPagoId: z.string().optional(),
   bancoId: z.string().optional(),
   montoUsd: z.string().optional(),
   montoBs: z.string().optional(),
+  referencia: z.string().optional(),
   direccionDespachoIgualFacturacion: z.boolean().default(true),
-  // Make address fields required for manual entry
   direccionFacturacionPais: z.string().min(1, "País es requerido"),
   direccionFacturacionEstado: z.string().min(1, "Estado es requerido"),
   direccionFacturacionCiudad: z.string().min(1, "Ciudad es requerida"),
   direccionFacturacionDireccion: z.string().min(1, "Dirección es requerida"),
-}).extend({
+  direccionFacturacionUrbanizacion: z.string().optional(),
+  direccionFacturacionReferencia: z.string().optional(),
+  direccionDespachoPais: z.string().optional(),
+  direccionDespachoEstado: z.string().optional(),
+  direccionDespachoCiudad: z.string().optional(),
+  direccionDespachoDireccion: z.string().optional(),
+  direccionDespachoUrbanizacion: z.string().optional(),
+  direccionDespachoReferencia: z.string().optional(),
   canal: z.string().min(1, "Canal es requerido"),
-}).omit({
-  id: true,
-  createdAt: true,
-  updatedAt: true,
-  orden: true, // Will be auto-generated
-  estado: true, // Will be set to default
-  estadoEntrega: true, // Will be set to "pendiente"
-  estadoPagoInicial: true, // Will be set to default
-  sucursal: true,
-  tienda: true,
-  factura: true,
-  pagoInicialUsd: true,
+  asesorId: z.string().optional(),
 });
 
 type ManualSaleFormData = z.infer<typeof manualSaleSchema>;
@@ -85,19 +97,19 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
   const watchDespachoIgual = form.watch("direccionDespachoIgualFacturacion");
 
   // Get products, payment methods and banks for dropdowns
-  const { data: products = [] } = useQuery({
+  const { data: products = [] } = useQuery<any[]>({
     queryKey: ["/api/admin/productos"],
   });
 
-  const { data: paymentMethods = [] } = useQuery({
+  const { data: paymentMethods = [] } = useQuery<any[]>({
     queryKey: ["/api/admin/metodos-pago"],
   });
 
-  const { data: banks = [] } = useQuery({
+  const { data: banks = [] } = useQuery<any[]>({
     queryKey: ["/api/admin/bancos"],
   });
 
-  const { data: canales = [] } = useQuery({
+  const { data: canales = [] } = useQuery<any[]>({
     queryKey: ["/api/admin/canales"],
   });
 
@@ -274,31 +286,35 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Fecha *</FormLabel>
-                  <FormControl>
-                    <div className="relative">
-                      <Input 
-                        type="date" 
-                        {...field} 
-                        className="cursor-pointer [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-0 pr-10" 
-                        id="fecha-input"
-                      />
-                      <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                        <CalendarIcon className="h-5 w-5 text-blue-500 animate-pulse" />
-                      </div>
-                      <div 
-                        className="absolute right-0 top-0 w-10 h-full cursor-pointer z-10"
-                        onClick={() => {
-                          const input = document.getElementById('fecha-input') as HTMLInputElement;
-                          if (input) {
-                            input.focus();
-                            // Simulate clicking on the calendar picker area
-                            const event = new MouseEvent('mousedown', { bubbles: true });
-                            input.dispatchEvent(event);
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <FormControl>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-full justify-start text-left font-normal",
+                            !field.value && "text-muted-foreground"
+                          )}
+                          data-testid="input-fecha"
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {field.value ? format(parseLocalDate(field.value) || new Date(), "dd/MM/yyyy") : "Seleccionar fecha"}
+                        </Button>
+                      </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={parseLocalDate(field.value)}
+                        onSelect={(date) => {
+                          if (date) {
+                            field.onChange(format(date, "yyyy-MM-dd"));
                           }
                         }}
+                        initialFocus
                       />
-                    </div>
-                  </FormControl>
+                    </PopoverContent>
+                  </Popover>
                   <FormMessage />
                 </FormItem>
               )}

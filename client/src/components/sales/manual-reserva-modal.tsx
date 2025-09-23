@@ -263,7 +263,7 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
                             mode="single"
                             selected={field.value}
                             onSelect={field.onChange}
-                            disabled={(date) => date < new Date(new Date().setHours(0,0,0,0))}
+                            disabled={(date) => date < new Date(new Date().setHours(0,0,0,0) - 24*60*60*1000)}
                             initialFocus
                           />
                         </PopoverContent>
