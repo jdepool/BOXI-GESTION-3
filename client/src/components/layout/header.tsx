@@ -27,12 +27,6 @@ export default function Header({ title, description }: HeaderProps) {
         >
           <i className="fas fa-bell"></i>
         </button>
-        <Link href="/upload">
-          <Button data-testid="upload-button">
-            <i className="fas fa-plus mr-2"></i>
-            Cargar Datos
-          </Button>
-        </Link>
         
         {user && (
           <div className="flex items-center space-x-3 ml-4 pl-4 border-l border-border">
