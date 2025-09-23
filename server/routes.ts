@@ -263,7 +263,7 @@ function parseProductosFile(buffer: Buffer, filename: string, validCategorias: s
         // Handle different possible column names (case insensitive)
         const nombre = row['Producto'] || row['producto'] || row['Nombre'] || row['nombre'];
         const sku = row['SKU'] || row['sku'] || row['Sku'];
-        const categoria = row['Categoria'] || row['categoria'] || row['Category'] || row['category'];
+        const categoria = row['Categoría'] || row['Categoria'] || row['categoria'] || row['Category'] || row['category'];
 
         // Collect validation errors for this row
         const rowErrors = [];
