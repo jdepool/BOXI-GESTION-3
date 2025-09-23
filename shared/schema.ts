@@ -28,6 +28,7 @@ export const tiposEgresos = pgTable("tipos_egresos", {
 export const productos = pgTable("productos", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   nombre: text("nombre").notNull().unique(),
+  sku: text("sku").unique(),
   categoria: text("categoria").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),

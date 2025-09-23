@@ -54,7 +54,7 @@ const categorias = ["Colchón", "Seat", "Pillow", "Topper", "Bed"];
 export function ProductosTab() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingProducto, setEditingProducto] = useState<Producto | null>(null);
-  const [formData, setFormData] = useState({ nombre: "", categoria: "" });
+  const [formData, setFormData] = useState({ nombre: "", sku: "", categoria: "" });
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -63,12 +63,12 @@ export function ProductosTab() {
   });
 
   const createMutation = useMutation({
-    mutationFn: (data: { nombre: string; categoria: string }) =>
+    mutationFn: (data: { nombre: string; sku?: string; categoria: string }) =>
       apiRequest("POST", "/api/admin/productos", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/productos"] });
       setIsDialogOpen(false);
-      setFormData({ nombre: "", categoria: "" });
+      setFormData({ nombre: "", sku: "", categoria: "" });
       toast({ title: "Producto creado exitosamente" });
     },
     onError: () => {
@@ -77,13 +77,13 @@ export function ProductosTab() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: { nombre: string; categoria: string } }) =>
+    mutationFn: ({ id, data }: { id: string; data: { nombre: string; sku?: string; categoria: string } }) =>
       apiRequest("PUT", `/api/admin/productos/${id}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/productos"] });
       setIsDialogOpen(false);
       setEditingProducto(null);
-      setFormData({ nombre: "", categoria: "" });
+      setFormData({ nombre: "", sku: "", categoria: "" });
       toast({ title: "Producto actualizado exitosamente" });
     },
     onError: () => {
@@ -121,22 +121,29 @@ export function ProductosTab() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Normalize SKU - convert empty string to undefined to maintain database NULL semantics
+    const normalizedData = {
+      ...formData,
+      sku: formData.sku.trim() || undefined
+    };
+    
     if (editingProducto) {
-      updateMutation.mutate({ id: editingProducto.id, data: formData });
+      updateMutation.mutate({ id: editingProducto.id, data: normalizedData });
     } else {
-      createMutation.mutate(formData);
+      createMutation.mutate(normalizedData);
     }
   };
 
   const openEditDialog = (producto: Producto) => {
     setEditingProducto(producto);
-    setFormData({ nombre: producto.nombre, categoria: producto.categoria });
+    setFormData({ nombre: producto.nombre, sku: producto.sku || "", categoria: producto.categoria });
     setIsDialogOpen(true);
   };
 
   const openCreateDialog = () => {
     setEditingProducto(null);
-    setFormData({ nombre: "", categoria: "" });
+    setFormData({ nombre: "", sku: "", categoria: "" });
     setIsDialogOpen(true);
   };
 
@@ -195,6 +202,16 @@ export function ProductosTab() {
                   />
                 </div>
                 <div>
+                  <Label htmlFor="sku">SKU</Label>
+                  <Input
+                    id="sku"
+                    value={formData.sku}
+                    onChange={(e) => setFormData({ ...formData, sku: e.target.value })}
+                    placeholder="Ej: BOX-EVO-140190"
+                    data-testid="input-producto-sku"
+                  />
+                </div>
+                <div>
                   <Label htmlFor="categoria">Categoría</Label>
                   <Select 
                     value={formData.categoria} 
@@ -239,6 +256,7 @@ export function ProductosTab() {
           <TableHeader>
             <TableRow>
               <TableHead>Producto</TableHead>
+              <TableHead>SKU</TableHead>
               <TableHead>Categoría</TableHead>
               <TableHead className="w-24">Acciones</TableHead>
             </TableRow>
@@ -246,13 +264,13 @@ export function ProductosTab() {
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={3} className="text-center py-8">
+                <TableCell colSpan={4} className="text-center py-8">
                   Cargando...
                 </TableCell>
               </TableRow>
             ) : (productos as Producto[]).length === 0 ? (
               <TableRow>
-                <TableCell colSpan={3} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
                   No hay productos registrados. Usa "Cargar Predefinidos" para agregar el catálogo completo.
                 </TableCell>
               </TableRow>
@@ -260,6 +278,7 @@ export function ProductosTab() {
               (productos as Producto[]).map((producto: Producto) => (
                 <TableRow key={producto.id} data-testid={`producto-row-${producto.id}`}>
                   <TableCell className="font-medium">{producto.nombre}</TableCell>
+                  <TableCell className="font-mono text-sm">{producto.sku || <span className="text-muted-foreground">Sin SKU</span>}</TableCell>
                   <TableCell>
                     <Badge variant="outline" className={getCategoriaColor(producto.categoria)}>
                       {producto.categoria}
