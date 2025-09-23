@@ -39,6 +39,9 @@ export default function FleteModal({ open, onOpenChange, sale }: FleteModalProps
     fleteGratis: false
   });
 
+  // Local state for date input to allow free typing
+  const [localDateInput, setLocalDateInput] = useState("");
+
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -86,14 +89,17 @@ export default function FleteModal({ open, onOpenChange, sale }: FleteModalProps
   // Initialize form when sale changes
   useEffect(() => {
     if (sale && open) {
+      const fechaValue = sale.fechaFlete ? format(new Date(sale.fechaFlete), 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd');
       setFleteData({
         montoFleteUsd: sale.montoFleteUsd ? sale.montoFleteUsd.toString() : "",
-        fechaFlete: sale.fechaFlete ? format(new Date(sale.fechaFlete), 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd'),
+        fechaFlete: fechaValue,
         referenciaFlete: sale.referenciaFlete || "",
         montoFleteVes: sale.montoFleteVes ? sale.montoFleteVes.toString() : "",
         bancoReceptorFlete: sale.bancoReceptorFlete || "",
         fleteGratis: sale.fleteGratis || false
       });
+      // Set local input to display format
+      setLocalDateInput(fechaValue ? format(new Date(fechaValue), "dd/MM/yyyy") : "");
     }
   }, [sale, open]);
 
@@ -106,6 +112,7 @@ export default function FleteModal({ open, onOpenChange, sale }: FleteModalProps
       bancoReceptorFlete: "",
       fleteGratis: false
     });
+    setLocalDateInput("");
   };
 
   const handleInputChange = (field: keyof FleteData) => (
@@ -127,34 +134,51 @@ export default function FleteModal({ open, onOpenChange, sale }: FleteModalProps
   const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const input = e.target.value;
     
-    // Only accept complete dates in DD/MM/YYYY format
+    // Always update local state to allow free typing
+    setLocalDateInput(input);
+    
+    // Only validate and update main state if input is complete and valid
     const dateRegex = /^\d{2}\/\d{2}\/\d{4}$/;
     
     if (input === "") {
-      // Allow clearing the field
+      // Clear the stored date when input is empty
       setFleteData(prev => ({ ...prev, fechaFlete: "" }));
       return;
     }
     
-    if (!dateRegex.test(input)) {
-      // Reject partial or malformed dates immediately
-      return;
+    if (dateRegex.test(input)) {
+      // Parse and validate actual date
+      const [day, month, year] = input.split('/').map(Number);
+      const date = new Date(year, month - 1, day);
+      
+      // Strict validation: ensure the date is valid and matches input
+      if (date.getDate() === day && 
+          date.getMonth() === month - 1 && 
+          date.getFullYear() === year) {
+        // Valid date - update main state
+        setFleteData(prev => ({
+          ...prev,
+          fechaFlete: format(date, 'yyyy-MM-dd')
+        }));
+      }
     }
+    // For incomplete or invalid input, we don't update the main state
+    // but we still allow the user to keep typing
+  };
+
+  // Check if current input is valid for visual feedback
+  const isDateValid = () => {
+    if (localDateInput === "") return true; // Empty is valid
     
-    // Parse and validate actual date
-    const [day, month, year] = input.split('/').map(Number);
+    const dateRegex = /^\d{2}\/\d{2}\/\d{4}$/;
+    if (!dateRegex.test(localDateInput)) return false;
+    
+    const [day, month, year] = localDateInput.split('/').map(Number);
     const date = new Date(year, month - 1, day);
     
-    // Strict validation: ensure the date is valid and matches input
-    if (date.getDate() === day && 
-        date.getMonth() === month - 1 && 
-        date.getFullYear() === year) {
-      setFleteData(prev => ({
-        ...prev,
-        fechaFlete: format(date, 'yyyy-MM-dd')
-      }));
-    }
-    // If invalid date, input is rejected (no state update)
+    return date.getDate() === day && 
+           date.getMonth() === month - 1 && 
+           date.getFullYear() === year;
   };
 
   const handleSave = () => {
@@ -239,11 +263,20 @@ export default function FleteModal({ open, onOpenChange, sale }: FleteModalProps
                 <Input
                   id="fechaFlete"
                   type="text"
-                  value={fleteData.fechaFlete ? format(new Date(fleteData.fechaFlete), "dd/MM/yyyy") : ""}
+                  value={localDateInput}
                   placeholder="DD/MM/YYYY"
                   onChange={handleDateChange}
+                  className={cn(
+                    "transition-colors",
+                    !isDateValid() && localDateInput !== "" && "border-red-500 focus:border-red-500"
+                  )}
                   data-testid="input-fecha-flete"
                 />
+                {!isDateValid() && localDateInput !== "" && (
+                  <p className="text-sm text-red-500">
+                    Formato inválido. Use DD/MM/YYYY (ej: 25/12/2024)
+                  </p>
+                )}
               </div>
 
               <div className="space-y-2">
