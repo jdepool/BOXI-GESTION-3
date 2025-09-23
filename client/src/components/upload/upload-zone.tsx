@@ -5,12 +5,22 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { CalendarIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
+import { format, parse } from "date-fns";
+import { cn } from "@/lib/utils";
 import * as XLSX from 'xlsx';
+
+// Helper function to safely parse YYYY-MM-DD as local date
+const parseLocalDate = (dateString: string) => {
+  if (!dateString) return undefined;
+  return parse(dateString, 'yyyy-MM-dd', new Date());
+};
 
 interface UploadZoneProps {
   recentUploads?: any[];
@@ -320,24 +330,64 @@ export default function UploadZone({ recentUploads, showOnlyCashea = false }: Up
     <div className="space-y-4 mt-6">
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <Label htmlFor="start-date">Fecha de Inicio</Label>
-          <Input
-            id="start-date"
-            type="date"
-            value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
-            data-testid="start-date-input"
-          />
+          <Label>Fecha de Inicio</Label>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className={cn(
+                  "w-full justify-start text-left font-normal",
+                  !startDate && "text-muted-foreground"
+                )}
+                data-testid="start-date-input"
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {startDate ? format(parseLocalDate(startDate) || new Date(), "dd/MM/yyyy") : "Seleccionar fecha"}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={parseLocalDate(startDate)}
+                onSelect={(date) => {
+                  if (date) {
+                    setStartDate(format(date, "yyyy-MM-dd"));
+                  }
+                }}
+                initialFocus
+              />
+            </PopoverContent>
+          </Popover>
         </div>
         <div>
-          <Label htmlFor="end-date">Fecha de Fin</Label>
-          <Input
-            id="end-date"
-            type="date"
-            value={endDate}
-            onChange={(e) => setEndDate(e.target.value)}
-            data-testid="end-date-input"
-          />
+          <Label>Fecha de Fin</Label>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                className={cn(
+                  "w-full justify-start text-left font-normal",
+                  !endDate && "text-muted-foreground"
+                )}
+                data-testid="end-date-input"
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {endDate ? format(parseLocalDate(endDate) || new Date(), "dd/MM/yyyy") : "Seleccionar fecha"}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={parseLocalDate(endDate)}
+                onSelect={(date) => {
+                  if (date) {
+                    setEndDate(format(date, "yyyy-MM-dd"));
+                  }
+                }}
+                initialFocus
+              />
+            </PopoverContent>
+          </Popover>
         </div>
       </div>
 
