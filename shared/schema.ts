@@ -95,6 +95,7 @@ export const sales = pgTable("sales", {
   montoUsd: decimal("monto_usd", { precision: 15, scale: 2 }),
   estadoEntrega: text("estado_entrega").notNull(),
   product: text("product").notNull(),
+  sku: text("sku"), // Manual override SKU or SKU from Shopify orders
   cantidad: integer("cantidad").notNull(),
   // Direcciones
   direccionFacturacionPais: text("direccion_facturacion_pais"),
