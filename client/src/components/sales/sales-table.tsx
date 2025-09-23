@@ -424,7 +424,7 @@ export default function SalesTable({
 
       <div className="overflow-x-auto bg-background">
         <div className="min-w-max">
-          <table className="w-full min-w-[2460px] relative">
+          <table className="w-full min-w-[2560px] relative">
             <thead className="bg-muted sticky top-0 z-10">
               <tr>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[100px] sticky left-0 bg-muted z-20 border-r border-border shadow-[2px_0_5px_rgba(0,0,0,0.1)]">Orden</th>
@@ -446,6 +446,7 @@ export default function SalesTable({
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[110px]">Monto Bs</th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[120px]">Estado Entrega</th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[140px]">Producto</th>
+                <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[100px]">SKU</th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[80px]">Cantidad</th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[120px]">Direcciones</th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[120px]">Flete</th>
@@ -456,7 +457,7 @@ export default function SalesTable({
             <tbody>
               {data.length === 0 ? (
                 <tr>
-                  <td colSpan={20} className="text-center p-8 text-muted-foreground">
+                  <td colSpan={21} className="text-center p-8 text-muted-foreground">
                     No hay datos disponibles
                   </td>
                 </tr>
@@ -624,6 +625,9 @@ export default function SalesTable({
                     </td>
                     <td className="p-2 min-w-[140px] text-xs font-medium text-foreground truncate" title={sale.product}>
                       {sale.product}
+                    </td>
+                    <td className="p-2 min-w-[100px] text-xs text-muted-foreground truncate" title={sale.sku || undefined} data-testid={`sku-${sale.id}`}>
+                      {sale.sku || 'N/A'}
                     </td>
                     <td className="p-2 min-w-[80px] text-xs text-center font-medium text-foreground">
                       {sale.cantidad}
