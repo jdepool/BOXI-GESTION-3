@@ -68,6 +68,21 @@ export interface IStorage {
     excludeADespachar?: boolean;
   }): Promise<number>;
   getExistingOrderNumbers(orders: string[]): Promise<string[]>;
+  getSalesWithInstallments(filters?: {
+    canal?: string;
+    estadoEntrega?: string;
+    estado?: string;
+    orden?: string;
+    startDate?: Date;
+    endDate?: Date;
+    tipo?: string;
+    asesorId?: string;
+    excludePendingManual?: boolean;
+    excludeReservas?: boolean;
+    excludeADespachar?: boolean;
+    limit?: number;
+    offset?: number;
+  }): Promise<Array<Sale & { installments: PaymentInstallment[] }>>;
   
   // Analytics methods
   getSalesMetrics(): Promise<{
@@ -329,6 +344,35 @@ export class DatabaseStorage implements IStorage {
     const finalQuery = filters?.offset ? withLimit.offset(filters.offset) : withLimit;
     
     return await finalQuery;
+  }
+
+  async getSalesWithInstallments(filters?: {
+    canal?: string;
+    estadoEntrega?: string;
+    estado?: string;
+    orden?: string;
+    startDate?: Date;
+    endDate?: Date;
+    tipo?: string;
+    asesorId?: string;
+    excludePendingManual?: boolean;
+    excludeReservas?: boolean;
+    excludeADespachar?: boolean;
+    limit?: number;
+    offset?: number;
+  }): Promise<Array<Sale & { installments: PaymentInstallment[] }>> {
+    // First get the sales with the same filtering logic as getSales
+    const salesData = await this.getSales(filters);
+    
+    // Then get installments for each sale
+    const salesWithInstallments = await Promise.all(
+      salesData.map(async (sale) => {
+        const installments = await this.getInstallmentsBySale(sale.id);
+        return { ...sale, installments };
+      })
+    );
+    
+    return salesWithInstallments;
   }
 
   async getSaleById(id: string): Promise<Sale | undefined> {
