@@ -7,8 +7,10 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Truck, DollarSign, FileText, User, Phone, Mail, Building2 } from "lucide-react";
+import { Truck, DollarSign, CalendarIcon, FileText, User, Phone, Mail, Building2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -203,40 +205,42 @@ export default function FleteModal({ open, onOpenChange, sale }: FleteModalProps
 
               <div className="space-y-2">
                 <Label htmlFor="fechaFlete">Fecha</Label>
-                <Input
-                  id="fechaFlete"
-                  type="text"
-                  value={fleteData.fechaFlete ? format(new Date(fleteData.fechaFlete), "dd/MM/yyyy") : format(new Date(), "dd/MM/yyyy")}
-                  placeholder="dd/mm/yyyy"
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    // Allow typing in dd/MM/yyyy format
-                    if (value.match(/^\d{1,2}\/\d{1,2}\/\d{4}$/) || value === "") {
-                      try {
-                        if (value === "") {
+                <div className="relative">
+                  <Input
+                    id="fechaFlete"
+                    type="text"
+                    value={fleteData.fechaFlete ? format(new Date(fleteData.fechaFlete), "dd/MM/yyyy") : ""}
+                    placeholder="Seleccionar fecha"
+                    readOnly
+                    className="pr-10 cursor-default"
+                    data-testid="input-fecha-flete"
+                  />
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="absolute right-1 top-1 h-8 w-8 p-0 hover:bg-muted"
+                        data-testid="button-calendar-trigger"
+                      >
+                        <CalendarIcon className="h-4 w-4" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="end" side="bottom">
+                      <Calendar
+                        mode="single"
+                        selected={fleteData.fechaFlete ? new Date(fleteData.fechaFlete) : undefined}
+                        onSelect={(date) => {
                           setFleteData((prev) => ({
                             ...prev,
-                            fechaFlete: ""
+                            fechaFlete: date ? format(date, 'yyyy-MM-dd') : ""
                           }));
-                        } else {
-                          // Parse dd/MM/yyyy to yyyy-MM-dd
-                          const [day, month, year] = value.split('/');
-                          const isoDate = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
-                          const date = new Date(isoDate);
-                          if (!isNaN(date.getTime())) {
-                            setFleteData((prev) => ({
-                              ...prev,
-                              fechaFlete: isoDate
-                            }));
-                          }
-                        }
-                      } catch (error) {
-                        // Invalid date, don't update
-                      }
-                    }
-                  }}
-                  data-testid="input-fecha-flete"
-                />
+                        }}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
               </div>
 
               <div className="space-y-2">
