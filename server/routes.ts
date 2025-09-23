@@ -585,6 +585,75 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Export sales data to Excel
+  app.get("/api/sales/export", async (req, res) => {
+    try {
+      const query = getSalesQuerySchema.parse(req.query);
+      
+      // Normalize asesorId filter values
+      let normalizedAsesorId = query.asesorId;
+      if (query.asesorId === 'all') {
+        normalizedAsesorId = undefined; // Don't filter by asesor
+      } else if (query.asesorId === 'none') {
+        normalizedAsesorId = 'null'; // Special value to indicate null filter
+      }
+      
+      const filters = {
+        canal: query.canal,
+        estadoEntrega: query.estadoEntrega,
+        estado: query.estado,
+        orden: query.orden,
+        startDate: query.startDate ? new Date(query.startDate) : undefined,
+        endDate: query.endDate ? new Date(query.endDate) : undefined,
+        tipo: query.tipo,
+        asesorId: normalizedAsesorId,
+        excludePendingManual: query.excludePendingManual,
+        excludeReservas: query.excludeReservas,
+        excludeADespachar: query.excludeADespachar,
+        // For export, get all data without pagination
+        limit: 10000,
+        offset: 0,
+      };
+
+      const salesData = await storage.getSales(filters);
+
+      // Convert to Excel format
+      const worksheet = XLSX.utils.json_to_sheet(salesData.map(sale => ({
+        'Número de Orden': sale.orden,
+        'Nombre': sale.nombre,
+        'Cédula': sale.cedula,
+        'Teléfono': sale.telefono,
+        'Correo': sale.email,
+        'Producto': sale.product,
+        'Cantidad': sale.cantidad,
+        'Canal': sale.canal,
+        'Estado': sale.estado,
+        'Estado de Entrega': sale.estadoEntrega,
+        'Tipo': sale.tipo,
+        'Fecha': new Date(sale.fecha).toLocaleDateString('es-ES'),
+        'Total USD': sale.totalUsd,
+        'Pago Inicial USD': sale.pagoInicialUsd,
+        'Referencia': sale.referencia,
+        'Monto Bs': sale.montoBs,
+        'Asesor': sale.asesorId,
+        'Notas': sale.notas || '',
+      })));
+
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Ventas');
+
+      const buffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' });
+
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+      res.setHeader('Content-Disposition', `attachment; filename="ventas_boxisleep_${new Date().toISOString().split('T')[0]}.xlsx"`);
+      res.send(buffer);
+
+    } catch (error) {
+      console.error("Error exporting sales:", error);
+      res.status(500).json({ error: "Failed to export sales data" });
+    }
+  });
+
   // Export dispatch orders to Excel
   app.get("/api/sales/dispatch/export", async (req, res) => {
     try {
