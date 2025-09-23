@@ -23,12 +23,18 @@ const upload = multer({
     fileSize: 10 * 1024 * 1024, // 10MB limit
   },
   fileFilter: (req, file, cb) => {
-    if (file.mimetype === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ||
-        file.mimetype === 'application/vnd.ms-excel' ||
-        file.mimetype === 'text/csv') {
+    const allowedMimeTypes = [
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // .xlsx
+      'application/vnd.ms-excel', // .xls
+      'text/csv', // .csv (standard)
+      'application/csv', // .csv (alternative)
+      'application/octet-stream' // .csv (generic binary)
+    ];
+    
+    if (allowedMimeTypes.includes(file.mimetype)) {
       cb(null, true);
     } else {
-      cb(new Error('Only Excel and CSV files are allowed'));
+      cb(new Error('Only Excel (.xlsx, .xls) and CSV (.csv) files are allowed'));
     }
   },
 });
@@ -221,6 +227,83 @@ function parseFile(buffer: Buffer, canal: string, filename: string) {
     return salesData;
   } catch (error) {
     throw new Error(`Error parsing file: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+}
+
+function parseProductosFile(buffer: Buffer, filename: string, validCategorias: string[]) {
+  try {
+    let data: any[];
+    
+    // Determine file type and parse accordingly
+    if (filename.endsWith('.csv')) {
+      // Parse CSV file
+      const csvString = buffer.toString('utf-8');
+      data = parseCSV(csvString, {
+        columns: true, // Use first row as column headers
+        skip_empty_lines: true,
+        trim: true
+      });
+    } else {
+      // Parse Excel file
+      const workbook = XLSX.read(buffer, { type: 'buffer' });
+      const sheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[sheetName];
+      data = XLSX.utils.sheet_to_json(worksheet);
+    }
+
+    // Note: validCategorias should be passed as parameter instead of fetched here
+
+    // Map the Excel/CSV data to producto format with row-level error handling
+    const productosData = data.map((row: any, index: number) => {
+      const rowNumber = index + 2; // +2 because Excel is 1-indexed and first row is header
+      
+      try {
+        // Handle different possible column names (case insensitive)
+        const nombre = row['Producto'] || row['producto'] || row['Nombre'] || row['nombre'];
+        const sku = row['SKU'] || row['sku'] || row['Sku'];
+        const categoria = row['Categoria'] || row['categoria'] || row['Category'] || row['category'];
+
+        // Collect validation errors for this row
+        const rowErrors = [];
+        
+        if (!nombre || String(nombre).trim() === '') {
+          rowErrors.push('Missing required field: Producto/Nombre');
+        }
+        if (!categoria || String(categoria).trim() === '') {
+          rowErrors.push('Missing required field: Categoria');
+        } else if (!validCategorias.includes(String(categoria).trim())) {
+          rowErrors.push(`Invalid categoria: "${categoria}". Must be one of: ${validCategorias.join(', ')}`);
+        }
+
+        if (rowErrors.length > 0) {
+          return {
+            row: rowNumber, // Use 'row' to match frontend expectations
+            error: rowErrors.join('; '),
+            data: null
+          };
+        }
+
+        return {
+          row: rowNumber, // Use 'row' to match frontend expectations
+          error: null,
+          data: {
+            nombre: String(nombre).trim(),
+            sku: sku ? String(sku).trim() || undefined : undefined, // Convert empty strings to undefined
+            categoria: String(categoria).trim()
+          }
+        };
+      } catch (error) {
+        return {
+          row: rowNumber, // Use 'row' to match frontend expectations
+          error: `Error processing row: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          data: null
+        };
+      }
+    });
+
+    return productosData;
+  } catch (error) {
+    throw new Error(`Error parsing productos file: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 }
 
@@ -1970,6 +2053,154 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Delete producto error:", error);
       res.status(500).json({ error: "Failed to delete producto" });
+    }
+  });
+
+  app.post("/api/admin/productos/upload-excel", upload.single('file'), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: "No file uploaded" });
+      }
+
+      // Get valid categorias from database (or fallback to hardcoded if no table exists)
+      let validCategorias = ["Colchón", "Seat", "Pillow", "Topper", "Bed"];
+      try {
+        const existingCategorias = await storage.getCategorias();
+        if (existingCategorias && existingCategorias.length > 0) {
+          validCategorias = existingCategorias.map(cat => cat.nombre);
+        }
+      } catch (error) {
+        // Fallback to hardcoded list if categorias table doesn't exist or isn't accessible
+        console.log("Using fallback categorias list");
+      }
+
+      // Parse file with row-level error handling
+      const parsedRows = parseProductosFile(req.file.buffer, req.file.originalname, validCategorias);
+      
+      // Separate valid rows from invalid rows
+      const validRows = parsedRows.filter(row => !row.error && row.data);
+      const invalidRows = parsedRows.filter(row => row.error);
+      
+      if (validRows.length === 0) {
+        return res.status(400).json({
+          error: "No valid rows found",
+          details: invalidRows.slice(0, 10).map(row => ({ row: row.rowNumber, error: row.error })),
+          totalErrors: invalidRows.length
+        });
+      }
+
+      // Check for duplicates within file and against database
+      const existingProducts = await storage.getProductos();
+      const existingNombres = new Set(existingProducts.map(p => p.nombre.toLowerCase()));
+      const existingSKUs = new Set(existingProducts.map(p => p.sku).filter(Boolean));
+      
+      const nombresInFile = new Set<string>();
+      const skusInFile = new Set<string>();
+      const additionalErrors = [];
+      const validProductos = [];
+      
+      for (const row of validRows) {
+        const { data } = row;
+        if (!data) continue;
+        
+        let hasError = false;
+        
+        // Check for duplicate nombres within file
+        if (nombresInFile.has(data.nombre.toLowerCase())) {
+          additionalErrors.push({
+            row: row.row,
+            error: `Duplicate product name "${data.nombre}" found in file`
+          });
+          hasError = true;
+        } else {
+          nombresInFile.add(data.nombre.toLowerCase());
+        }
+        
+        // Check for duplicate nombres against database
+        if (existingNombres.has(data.nombre.toLowerCase())) {
+          additionalErrors.push({
+            row: row.row,
+            error: `Product name "${data.nombre}" already exists in database`
+          });
+          hasError = true;
+        }
+        
+        // Check for duplicate SKUs within file
+        if (data.sku && skusInFile.has(data.sku)) {
+          additionalErrors.push({
+            row: row.row,
+            error: `Duplicate SKU "${data.sku}" found in file`
+          });
+          hasError = true;
+        } else if (data.sku) {
+          skusInFile.add(data.sku);
+        }
+        
+        // Check for duplicate SKUs against database
+        if (data.sku && existingSKUs.has(data.sku)) {
+          additionalErrors.push({
+            row: row.row,
+            error: `SKU "${data.sku}" already exists in database`
+          });
+          hasError = true;
+        }
+        
+        if (!hasError) {
+          try {
+            const validatedProducto = insertProductoSchema.parse(data);
+            validProductos.push(validatedProducto);
+          } catch (error) {
+            additionalErrors.push({
+              row: row.row,
+              error: error instanceof z.ZodError ? error.errors.map(e => e.message).join(', ') : String(error)
+            });
+          }
+        }
+      }
+
+      // Combine all errors (standardize to 'row' property)
+      const allErrors = [
+        ...invalidRows.map(row => ({ row: row.row, error: row.error })),
+        ...additionalErrors
+      ];
+
+      // Import valid produtos
+      const createdProductos = [];
+      const creationErrors = [];
+      
+      for (const producto of validProductos) {
+        try {
+          const created = await storage.createProducto(producto);
+          createdProductos.push(created);
+        } catch (error) {
+          creationErrors.push({
+            row: 'unknown', // We've lost the original row mapping at this point
+            error: `Database error: ${error instanceof Error ? error.message : 'Unknown error'}`
+          });
+        }
+      }
+
+      // Return results with detailed statistics
+      res.json({
+        success: true,
+        created: createdProductos.length,
+        total: parsedRows.length,
+        errors: allErrors.length + creationErrors.length,
+        details: {
+          validRows: validRows.length,
+          invalidRows: invalidRows.length,
+          duplicates: additionalErrors.length,
+          creationErrors: creationErrors.length,
+          errorList: [...allErrors, ...creationErrors].slice(0, 20) // Show first 20 errors
+        }
+      });
+
+    } catch (error) {
+      console.error("Upload productos error:", error);
+      res.status(500).json({ 
+        error: "Failed to process upload",
+        message: error instanceof Error ? error.message : 'Unknown error'
+      });
     }
   });
 

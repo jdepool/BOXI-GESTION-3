@@ -6,8 +6,9 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Edit, Trash2 } from "lucide-react";
+import { Plus, Edit, Trash2, Upload } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import type { Producto } from "@shared/schema";
@@ -55,6 +56,12 @@ export function ProductosTab() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingProducto, setEditingProducto] = useState<Producto | null>(null);
   const [formData, setFormData] = useState({ nombre: "", sku: "", categoria: "" });
+  
+  // Excel upload state
+  const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -119,6 +126,108 @@ export function ProductosTab() {
     },
   });
 
+  const uploadExcelMutation = useMutation({
+    mutationFn: async (file: File) => {
+      setIsUploading(true);
+      setUploadProgress(10);
+      
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      setUploadProgress(30);
+
+      const response = await fetch('/api/admin/productos/upload-excel', {
+        method: 'POST',
+        body: formData,
+      });
+      
+      setUploadProgress(70);
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw error; // Throw the full error object to preserve details
+      }
+      
+      setUploadProgress(100);
+      return response.json();
+    },
+    onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/productos"] });
+      setIsUploadDialogOpen(false);
+      setSelectedFile(null);
+      setUploadProgress(0);
+      setIsUploading(false);
+      
+      const { created, total, errors, details } = result;
+      let message = `${created} productos creados de ${total} filas`;
+      
+      if (errors > 0) {
+        message += `, ${errors} errores encontrados`;
+        if (details?.duplicates > 0) {
+          message += ` (incluye ${details.duplicates} duplicados)`;
+        }
+      }
+      
+      toast({ 
+        title: created > 0 ? "Excel procesado" : "Excel procesado con errores",
+        description: message,
+        variant: created > 0 ? "default" : "destructive"
+      });
+      
+      // Show detailed errors if any
+      if (errors > 0 && details?.errorList && details.errorList.length > 0) {
+        console.log("Upload errors:", details.errorList);
+        const errorSummary = details.errorList.slice(0, 5).map(
+          (err: any) => `Fila ${err.row}: ${err.error}`
+        ).join('\n');
+        
+        toast({
+          title: "Errores detallados (primeros 5)",
+          description: errorSummary,
+          variant: "destructive",
+          duration: 10000 // Longer duration for error details
+        });
+      }
+    },
+    onError: (error: any) => {
+      setIsUploading(false);
+      setUploadProgress(0);
+      
+      // Handle detailed error information from server response
+      let errorMessage = error.error || error.message || 'Unknown error';
+      
+      // Standardize error detail structure - handle both nested and array formats
+      const errorList = Array.isArray(error.details) ? error.details : error.details?.errorList;
+      
+      if (Array.isArray(errorList) && errorList.length > 0) {
+        const errorSummary = errorList.slice(0, 5).map(
+          (err: any) => `Fila ${err.row}: ${err.error}`
+        ).join('\n');
+        
+        toast({ 
+          title: "Error al cargar Excel", 
+          description: errorMessage,
+          variant: "destructive"
+        });
+        
+        // Show detailed errors in a separate toast
+        toast({
+          title: "Errores detallados (primeros 5)",
+          description: errorSummary,
+          variant: "destructive",
+          duration: 15000 // Longer duration for error details
+        });
+      } else {
+        toast({ 
+          title: "Error al cargar Excel", 
+          description: errorMessage,
+          variant: "destructive",
+          duration: 10000
+        });
+      }
+    },
+  });
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -158,6 +267,27 @@ export function ProductosTab() {
     }
   };
 
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      if (!file.name.endsWith('.xlsx') && !file.name.endsWith('.xls') && !file.name.endsWith('.csv')) {
+        toast({
+          title: "Archivo inválido",
+          description: "Solo se aceptan archivos Excel (.xlsx, .xls) y CSV (.csv)",
+          variant: "destructive",
+        });
+        return;
+      }
+      setSelectedFile(file);
+    }
+  };
+
+  const handleUploadConfirm = () => {
+    if (selectedFile) {
+      uploadExcelMutation.mutate(selectedFile);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -176,6 +306,78 @@ export function ProductosTab() {
           >
             Cargar Predefinidos
           </Button>
+          <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
+            <DialogTrigger asChild>
+              <Button 
+                variant="outline"
+                data-testid="upload-excel-productos"
+              >
+                <Upload className="h-4 w-4 mr-2" />
+                Subir Excel
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Subir Productos desde Excel</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div>
+                  <Label>Archivo Excel</Label>
+                  <Input
+                    type="file"
+                    accept=".xlsx,.xls,.csv"
+                    onChange={handleFileSelect}
+                    data-testid="file-input-productos"
+                  />
+                  {selectedFile && (
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Archivo seleccionado: {selectedFile.name}
+                    </p>
+                  )}
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  <p className="font-semibold mb-2">Formato esperado del Excel:</p>
+                  <div className="bg-muted p-3 rounded-md">
+                    <div className="font-mono text-xs">
+                      <div className="grid grid-cols-3 gap-4 mb-1">
+                        <div>Producto</div>
+                        <div>SKU</div>
+                        <div>Categoria</div>
+                      </div>
+                      <div className="grid grid-cols-3 gap-4 text-muted-foreground">
+                        <div>Evolve 140x190</div>
+                        <div>EVO-140-190</div>
+                        <div>Colchón</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                {isUploading && (
+                  <div className="space-y-2">
+                    <Label>Progreso de carga</Label>
+                    <Progress value={uploadProgress} />
+                  </div>
+                )}
+                <div className="flex justify-end space-x-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setIsUploadDialogOpen(false)}
+                    disabled={isUploading}
+                  >
+                    Cancelar
+                  </Button>
+                  <Button
+                    onClick={handleUploadConfirm}
+                    disabled={!selectedFile || isUploading}
+                    data-testid="confirm-upload-productos"
+                  >
+                    {isUploading ? "Subiendo..." : "Subir Excel"}
+                  </Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
               <Button onClick={openCreateDialog} data-testid="add-producto-button">
