@@ -2084,7 +2084,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (validRows.length === 0) {
         return res.status(400).json({
           error: "No valid rows found",
-          details: invalidRows.slice(0, 10).map(row => ({ row: row.rowNumber, error: row.error })),
+          details: invalidRows.slice(0, 10).map(row => ({ row: row.row, error: row.error })),
           totalErrors: invalidRows.length
         });
       }
