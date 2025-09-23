@@ -20,12 +20,22 @@ interface SalesResponse {
 export default function ManualSalesEntry() {
   const [showForm, setShowForm] = useState(false);
   const [editSale, setEditSale] = useState<Sale | null>(null);
+  const [filters, setFilters] = useState({
+    canal: "",
+    estadoEntrega: "",
+    asesorId: "",
+    orden: "",
+    startDate: "",
+    endDate: "",
+    limit: 20,
+    offset: 0,
+  });
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
   // Get sales that need to be completed (manual and Shopify orders) - exclude Reserva orders
   const { data: incompleteSales, isLoading } = useQuery<SalesResponse>({
-    queryKey: ["/api/sales", { estado: "pendiente", excludeReservas: true }], // Include both manual and Shopify orders but exclude Reserva orders
+    queryKey: ["/api/sales", { ...filters, estado: "pendiente", excludeReservas: true }], // Include both manual and Shopify orders but exclude Reserva orders
   });
 
   const createManualSaleMutation = useMutation({
@@ -75,6 +85,14 @@ export default function ManualSalesEntry() {
     verifyPaymentMutation.mutate(sale.id);
   };
 
+  const handleFilterChange = (newFilters: Partial<typeof filters>) => {
+    setFilters(prev => ({ ...prev, ...newFilters, offset: 0 }));
+  };
+
+  const handlePageChange = (newOffset: number) => {
+    setFilters(prev => ({ ...prev, offset: newOffset }));
+  };
+
   if (showForm) {
     return (
       <div className="h-full">
@@ -106,36 +124,35 @@ export default function ManualSalesEntry() {
 
   return (
     <div className="h-full">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h2 className="text-lg font-semibold text-foreground">Ventas Manuales</h2>
-          <p className="text-sm text-muted-foreground">
-            Todas las ventas ingresadas manualmente - puedes editarlas aquí
-          </p>
+      <div className="bg-card rounded-lg border border-border h-full flex flex-col">
+        <div className="p-4 border-b border-border flex justify-end">
+          <Button 
+            onClick={() => setShowForm(true)}
+            className="flex items-center gap-2"
+            data-testid="add-manual-sale"
+          >
+            <Plus className="h-4 w-4" />
+            Nueva Venta Manual
+          </Button>
         </div>
-        <Button 
-          onClick={() => setShowForm(true)}
-          className="flex items-center gap-2"
-          data-testid="add-manual-sale"
-        >
-          <Plus className="h-4 w-4" />
-          Nueva Venta Manual
-        </Button>
-      </div>
-
-      <div className="bg-card rounded-lg border border-border">
-        <SalesTable 
-          data={incompleteSales?.data || []} 
-          total={incompleteSales?.total || 0}
-          limit={20}
-          offset={0}
-          isLoading={isLoading}
-          hideFilters={true}
-          hidePagination={incompleteSales?.data ? incompleteSales.data.length <= 20 : true}
-          showEditActions={true}
-          onEditSale={(sale) => setEditSale(sale)}
-          onVerifyPayment={handleVerifyPayment}
-        />
+        <div className="flex-1">
+          <SalesTable 
+            data={incompleteSales?.data || []} 
+            total={incompleteSales?.total || 0}
+            limit={filters.limit}
+            offset={filters.offset}
+            isLoading={isLoading}
+            hideFilters={false}
+            hidePagination={false}
+            showEditActions={true}
+            filters={filters}
+            extraExportParams={{ estado: "pendiente", excludeReservas: true }}
+            onFilterChange={handleFilterChange}
+            onPageChange={handlePageChange}
+            onEditSale={(sale) => setEditSale(sale)}
+            onVerifyPayment={handleVerifyPayment}
+          />
+        </div>
       </div>
 
       <EditSaleModal

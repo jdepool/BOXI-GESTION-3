@@ -31,6 +31,7 @@ interface SalesTableProps {
   showDeliveryDateColumn?: boolean;
   showCuotasButton?: boolean;
   filters?: any;
+  extraExportParams?: Record<string, any>;
   onFilterChange?: (filters: any) => void;
   onPageChange?: (offset: number) => void;
   onEditSale?: (sale: Sale) => void;
@@ -49,6 +50,7 @@ export default function SalesTable({
   showDeliveryDateColumn = false,
   showCuotasButton = false,
   filters: parentFilters,
+  extraExportParams = {},
   onFilterChange,
   onPageChange,
   onEditSale,
@@ -253,8 +255,22 @@ export default function SalesTable({
   const handleExport = async () => {
     try {
       const queryParams = new URLSearchParams();
-      Object.entries(filters).forEach(([key, value]) => {
-        if (value) queryParams.append(key, value);
+      
+      // Use parentFilters (API-ready) instead of UI-mapped filters
+      if (parentFilters && typeof parentFilters === 'object') {
+        Object.entries(parentFilters).forEach(([key, value]) => {
+          // Skip pagination and empty values
+          if (value && typeof value === 'string' && key !== 'limit' && key !== 'offset') {
+            queryParams.append(key, value);
+          }
+        });
+      }
+      
+      // Add extra export parameters (for specific tab constraints)
+      Object.entries(extraExportParams).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== '') {
+          queryParams.append(key, value);
+        }
       });
 
       const response = await fetch(`/api/sales/export?${queryParams}`);
