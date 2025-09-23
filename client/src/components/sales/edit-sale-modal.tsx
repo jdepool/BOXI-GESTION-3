@@ -24,6 +24,7 @@ const editSaleSchema = z.object({
   totalUsd: z.string().min(1, "Total USD es requerido"),
   fecha: z.string().min(1, "Fecha es requerida"),
   product: z.string().min(1, "Producto es requerido"),
+  sku: z.string().optional(),
   cantidad: z.number().min(1),
   metodoPagoId: z.string().optional(),
   bancoId: z.string().optional(),
@@ -68,6 +69,7 @@ export default function EditSaleModal({ open, onOpenChange, sale }: EditSaleModa
       totalUsd: "",
       fecha: "",
       product: "",
+      sku: "",
       cantidad: 1,
       referencia: "",
       montoUsd: "",
@@ -115,6 +117,7 @@ export default function EditSaleModal({ open, onOpenChange, sale }: EditSaleModa
         totalUsd: sale.totalUsd?.toString() || "",
         fecha: sale.fecha ? new Date(sale.fecha).toISOString().split('T')[0] : "",
         product: sale.product || "",
+        sku: sale.sku || "",
         cantidad: sale.cantidad || 1,
         metodoPagoId: sale.metodoPagoId || "",
         bancoId: sale.bancoId || "",
@@ -278,6 +281,20 @@ export default function EditSaleModal({ open, onOpenChange, sale }: EditSaleModa
                           ))}
                         </SelectContent>
                       </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="sku"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>SKU</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Código SKU" {...field} data-testid="input-sku" />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
