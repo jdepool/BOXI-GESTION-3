@@ -13,11 +13,17 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Plus, Upload, Edit, Trash2, Filter, Download, Check, CalendarIcon } from "lucide-react";
 import { Link } from "wouter";
-import { format } from "date-fns";
+import { format, parse } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import type { Egreso, Banco, TipoEgreso, MetodoPago, Moneda, EgresoPorAprobar } from "@shared/schema";
+
+// Helper function to safely parse YYYY-MM-DD as local date
+const parseLocalDate = (dateString: string) => {
+  if (!dateString) return undefined;
+  return parse(dateString, 'yyyy-MM-dd', new Date());
+};
 
 export default function Egresos() {
   const [activeTab, setActiveTab] = useState("egresos");
@@ -359,7 +365,7 @@ export default function Egresos() {
   const openEditDialog = (egreso: Egreso) => {
     setEditingEgreso(egreso);
     setFormData({
-      fecha: egreso.fecha ? format(new Date(egreso.fecha), "yyyy-MM-dd") : "",
+      fecha: egreso.fecha ? egreso.fecha.toString().substring(0, 10) : "",
       descripcion: egreso.descripcion,
       monto: egreso.monto,
       monedaId: egreso.monedaId,
@@ -376,7 +382,7 @@ export default function Egresos() {
   const openEditDialogPorAprobar = (egreso: EgresoPorAprobar) => {
     setEditingEgresoPorAprobar(egreso);
     setFormDataPorAprobar({
-      fecha: egreso.fecha ? format(new Date(egreso.fecha), "yyyy-MM-dd") : "",
+      fecha: egreso.fecha ? egreso.fecha.toString().substring(0, 10) : "",
       descripcion: egreso.descripcion,
       monto: egreso.monto,
       tipoEgresoId: egreso.tipoEgresoId,
@@ -549,13 +555,13 @@ export default function Egresos() {
                             data-testid="date-picker-fecha"
                           >
                             <CalendarIcon className="mr-2 h-4 w-4" />
-                            {formData.fecha ? format(new Date(formData.fecha), "dd/MM/yyyy") : "Seleccionar fecha"}
+                            {formData.fecha ? format(parseLocalDate(formData.fecha) || new Date(), "dd/MM/yyyy") : "Seleccionar fecha"}
                           </Button>
                         </PopoverTrigger>
                         <PopoverContent className="w-auto p-0">
                           <Calendar
                             mode="single"
-                            selected={formData.fecha ? new Date(formData.fecha) : undefined}
+                            selected={parseLocalDate(formData.fecha)}
                             onSelect={(date) => {
                               if (date) {
                                 setFormData({ ...formData, fecha: format(date, "yyyy-MM-dd") });
@@ -815,13 +821,13 @@ export default function Egresos() {
                     )}
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {filters.startDate ? format(new Date(filters.startDate), "dd/MM/yyyy") : <span>Fecha inicio</span>}
+                    {filters.startDate ? format(parseLocalDate(filters.startDate) || new Date(), "dd/MM/yyyy") : <span>Fecha inicio</span>}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0">
                   <Calendar
                     mode="single"
-                    selected={filters.startDate ? new Date(filters.startDate) : undefined}
+                    selected={parseLocalDate(filters.startDate)}
                     onSelect={(date) => setFilters({ ...filters, startDate: date ? format(date, "yyyy-MM-dd") : "" })}
                     initialFocus
                   />
@@ -840,13 +846,13 @@ export default function Egresos() {
                     )}
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {filters.endDate ? format(new Date(filters.endDate), "dd/MM/yyyy") : <span>Fecha fin</span>}
+                    {filters.endDate ? format(parseLocalDate(filters.endDate) || new Date(), "dd/MM/yyyy") : <span>Fecha fin</span>}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0">
                   <Calendar
                     mode="single"
-                    selected={filters.endDate ? new Date(filters.endDate) : undefined}
+                    selected={parseLocalDate(filters.endDate)}
                     onSelect={(date) => setFilters({ ...filters, endDate: date ? format(date, "yyyy-MM-dd") : "" })}
                     initialFocus
                   />
@@ -903,7 +909,7 @@ export default function Egresos() {
                       className={egreso.pendienteInfo ? "bg-orange-50 dark:bg-orange-950/20 border-orange-200 dark:border-orange-800" : ""}
                     >
                       <TableCell>
-                        {egreso.fecha ? format(new Date(egreso.fecha), "dd/MM/yyyy") : "-"}
+                        {egreso.fecha ? format(parseLocalDate(egreso.fecha.toString().substring(0, 10)) || new Date(), "dd/MM/yyyy") : "-"}
                       </TableCell>
                       <TableCell className="font-medium">{egreso.descripcion}</TableCell>
                       <TableCell>{egreso.monto}</TableCell>
@@ -1015,13 +1021,13 @@ export default function Egresos() {
                               data-testid="date-picker-fecha-por-aprobar"
                             >
                               <CalendarIcon className="mr-2 h-4 w-4" />
-                              {formDataPorAprobar.fecha ? format(new Date(formDataPorAprobar.fecha), "dd/MM/yyyy") : <span>Seleccionar fecha</span>}
+                              {formDataPorAprobar.fecha ? format(parseLocalDate(formDataPorAprobar.fecha) || new Date(), "dd/MM/yyyy") : <span>Seleccionar fecha</span>}
                             </Button>
                           </PopoverTrigger>
                           <PopoverContent className="w-auto p-0">
                             <Calendar
                               mode="single"
-                              selected={formDataPorAprobar.fecha ? new Date(formDataPorAprobar.fecha) : undefined}
+                              selected={parseLocalDate(formDataPorAprobar.fecha)}
                               onSelect={(date) => setFormDataPorAprobar({ ...formDataPorAprobar, fecha: date ? format(date, "yyyy-MM-dd") : "" })}
                               initialFocus
                             />
@@ -1155,7 +1161,7 @@ export default function Egresos() {
                       egresosPorAprobar.map((egreso: EgresoPorAprobar) => (
                         <TableRow key={egreso.id} data-testid={`egreso-por-aprobar-row-${egreso.id}`}>
                           <TableCell>
-                            {egreso.fecha ? format(new Date(egreso.fecha), "dd/MM/yyyy") : "-"}
+                            {egreso.fecha ? format(parseLocalDate(egreso.fecha.toString().substring(0, 10)) || new Date(), "dd/MM/yyyy") : "-"}
                           </TableCell>
                           <TableCell>{egreso.monto}</TableCell>
                           <TableCell>
