@@ -49,6 +49,33 @@ The system implements a basic user management structure with username/password a
 
 # Recent Changes
 
+## September 2025 - SKU Management System
+
+### Comprehensive SKU Implementation for Productos
+Added complete SKU (Stock Keeping Unit) management functionality to the Productos administration system:
+
+**Database Schema Updates:**
+- Added `sku text unique` column to productos table with nullable constraint
+- Unique constraint allows multiple NULL values while enforcing uniqueness for non-NULL SKUs
+- Supports inventory tracking across all sales channels
+
+**Frontend Administration UI:**
+- Added SKU input field to the producto creation/editing form with proper validation
+- Updated productos display table to include SKU column with "Sin SKU" placeholder for empty values
+- Implemented proper form state management including SKU field in all CRUD operations
+- Fixed critical unique constraint handling by normalizing empty strings to undefined
+
+**Backend API Integration:**
+- SKU field automatically included in validation schemas via `createInsertSchema(productos)`
+- Existing CRUD endpoints transparently handle SKU field through schema-driven approach
+- Proper type safety with optional SKU field support in TypeScript interfaces
+
+**Technical Implementation:**
+- Frontend normalizes empty SKU inputs (`formData.sku.trim() || undefined`) to maintain database NULL semantics
+- Updated mutation type signatures to make SKU optional (`sku?: string`)
+- Ensures multiple products can be created without SKUs while enforcing uniqueness for assigned SKUs
+- Maintains compatibility with existing bulk product loading functionality
+
 ## December 2025 - Shopify Data Integration
 
 ### Shopify CSV/Excel Mapping Implementation
