@@ -87,6 +87,7 @@ function transformShopifyWebhookToCSV(shopifyOrder: any) {
     // Product info (first line item)
     'Lineitem name': lineItem.name || lineItem.title,
     'Lineitem quantity': lineItem.quantity || 1,
+    'Lineitem sku': lineItem.sku || null, // Add SKU mapping from Shopify line item
   };
 }
 
@@ -161,6 +162,7 @@ function parseFile(buffer: Buffer, canal: string, filename: string) {
           montoUsd: String(row['Outstanding Balance'] || '0'),
           estadoEntrega: 'En Proceso', // Route Shopify orders to "Ventas por Completar"
           product: String(row['Lineitem name'] || ''),
+          sku: row['Lineitem sku'] ? String(row['Lineitem sku']) : null, // Map SKU from Shopify
           cantidad: Number(row['Lineitem quantity'] || 1),
           // Billing address mapping
           direccionFacturacionPais: row['Billing Country'] ? String(row['Billing Country']) : null,
