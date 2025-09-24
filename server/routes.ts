@@ -15,6 +15,7 @@ import { nanoid } from "nanoid";
 import session from "express-session";
 import MemoryStore from "memorystore";
 import crypto from "crypto";
+import fetch from "node-fetch";
 
 // Configure multer for file uploads
 const upload = multer({
@@ -38,6 +39,47 @@ const upload = multer({
     }
   },
 });
+
+// Webhook function to send data to Zapier
+async function sendWebhookToZapier(data: any, canal: string): Promise<void> {
+  const webhookUrl = process.env.ZAPIER_WEBHOOK_URL;
+  
+  if (!webhookUrl) {
+    console.log('No Zapier webhook URL configured, skipping webhook notification');
+    return;
+  }
+
+  try {
+    const webhookData = {
+      canal,
+      timestamp: new Date().toISOString(),
+      recordsProcessed: data.recordsProcessed,
+      duplicatesIgnored: data.duplicatesIgnored,
+      filename: data.filename,
+      salesData: data.salesData.slice(0, 10), // Send first 10 records as sample
+      totalRecords: data.salesData.length,
+      uploadedAt: new Date().toISOString()
+    };
+
+    console.log(`📨 Sending ${canal} data to Zapier webhook...`);
+    
+    const response = await fetch(webhookUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(webhookData),
+    });
+
+    if (response.ok) {
+      console.log(`✅ Successfully sent ${canal} data to Zapier webhook`);
+    } else {
+      console.error(`❌ Failed to send ${canal} data to Zapier webhook:`, response.status, response.statusText);
+    }
+  } catch (error) {
+    console.error(`❌ Error sending ${canal} data to Zapier webhook:`, error);
+  }
+}
 
 const getSalesQuerySchema = z.object({
   canal: z.string().optional(),
@@ -1251,6 +1293,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         errorMessage: duplicatesCount > 0 ? `${duplicatesCount} duplicate order(s) ignored` : undefined,
       });
 
+      // Send webhook notification for Cashea uploads
+      if (canal.toLowerCase() === 'cashea' && newSales.length > 0) {
+        try {
+          await sendWebhookToZapier({
+            recordsProcessed: newSales.length,
+            duplicatesIgnored: duplicatesCount,
+            filename: req.file.originalname,
+            salesData: newSales
+          }, canal);
+        } catch (webhookError) {
+          console.error('Webhook notification failed, but upload was successful:', webhookError);
+          // Don't fail the upload if webhook fails
+        }
+      }
+
       res.json({
         success: true,
         recordsProcessed: newSales.length,
@@ -1527,6 +1584,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         status: 'success',
         errorMessage: duplicatesCount > 0 ? `${duplicatesCount} duplicate order(s) ignored` : undefined,
       });
+
+      // Send webhook notification for Cashea downloads
+      if (newSales.length > 0) {
+        try {
+          await sendWebhookToZapier({
+            recordsProcessed: newSales.length,
+            duplicatesIgnored: duplicatesCount,
+            filename: `cashea_download_${startDate}_to_${endDate}`,
+            salesData: newSales
+          }, 'cashea');
+        } catch (webhookError) {
+          console.error('Webhook notification failed, but download was successful:', webhookError);
+          // Don't fail the download if webhook fails
+        }
+      }
 
       console.log(`✅ Transformed ${transformedData.length} CASHEA records`);
 
