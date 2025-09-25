@@ -61,7 +61,8 @@ export default function SalesTable({
   // Email sending mutation
   const sendEmailMutation = useMutation({
     mutationFn: async (saleId: string) => {
-      return apiRequest('POST', `/api/sales/${saleId}/send-email`);
+      const response = await apiRequest('POST', `/api/sales/${saleId}/send-email`);
+      return await response.json();
     },
     onSuccess: (data: any) => {
       toast({
