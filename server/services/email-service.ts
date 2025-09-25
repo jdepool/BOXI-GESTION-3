@@ -79,7 +79,7 @@ export function generateOrderConfirmationHTML(data: OrderEmailData): string {
             padding: 20px;
         }
         .header {
-            background-color: #4F46E5;
+            background-color: #1DB5A6;
             color: white;
             padding: 20px;
             text-align: center;
@@ -95,7 +95,7 @@ export function generateOrderConfirmationHTML(data: OrderEmailData): string {
             padding: 20px;
             border-radius: 8px;
             margin: 20px 0;
-            border-left: 4px solid #4F46E5;
+            border-left: 4px solid #1DB5A6;
         }
         .detail-row {
             display: flex;
@@ -109,7 +109,7 @@ export function generateOrderConfirmationHTML(data: OrderEmailData): string {
             color: #555;
         }
         .total {
-            background-color: #4F46E5;
+            background-color: #1DB5A6;
             color: white;
             padding: 15px;
             border-radius: 8px;
