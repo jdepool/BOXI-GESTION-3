@@ -437,9 +437,6 @@ export default function SalesTable({
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[80px]">Canal</th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[90px]">Tipo</th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[120px]">Asesor</th>
-                {showDeliveryDateColumn && (
-                  <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[130px]">Fecha Entrega</th>
-                )}
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[110px]">Pago Inicial USD</th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[120px]">Referencia</th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[100px]">Banco</th>
@@ -448,6 +445,9 @@ export default function SalesTable({
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[140px]">Producto</th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[100px]">SKU</th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[80px]">Cantidad</th>
+                {showDeliveryDateColumn && (
+                  <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[130px]">Fecha Entrega</th>
+                )}
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[120px]">Direcciones</th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[120px]">Flete</th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[150px]">Notas</th>
@@ -532,6 +532,51 @@ export default function SalesTable({
                         </SelectContent>
                       </Select>
                     </td>
+                    <td className="p-2 min-w-[110px] text-xs text-muted-foreground">
+                      {sale.pagoInicialUsd ? `$${Number(sale.pagoInicialUsd).toLocaleString()}` : 'N/A'}
+                    </td>
+                    <td className="p-2 min-w-[120px] text-xs font-mono text-muted-foreground truncate" title={sale.referencia || undefined}>
+                      {sale.referencia || 'N/A'}
+                    </td>
+                    <td className="p-2 min-w-[100px] text-xs text-muted-foreground truncate">
+                      {(() => {
+                        if (!sale.bancoId) return 'N/A';
+                        if (sale.bancoId === 'otro') return 'Otro($)';
+                        const bank = (banks as any[]).find((b: any) => b.id === sale.bancoId);
+                        return bank ? bank.banco : 'N/A';
+                      })()}
+                    </td>
+                    <td className="p-2 min-w-[110px] text-xs text-muted-foreground">
+                      {sale.montoBs ? `Bs ${Number(sale.montoBs).toLocaleString()}` : 'N/A'}
+                    </td>
+                    <td className="p-2 min-w-[140px]">
+                      <Select
+                        value={sale.estadoEntrega}
+                        onValueChange={(newStatus) => handleStatusChange(sale.id, newStatus)}
+                        disabled={updateDeliveryStatusMutation.isPending}
+                      >
+                        <SelectTrigger className="w-32 h-8 text-xs">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Pendiente">Pendiente</SelectItem>
+                          <SelectItem value="En Proceso">En Proceso</SelectItem>
+                          <SelectItem value="A Despachar">A despachar</SelectItem>
+                          <SelectItem value="Despachado">Despachado</SelectItem>
+                          <SelectItem value="Cancelado">Cancelado</SelectItem>
+                          <SelectItem value="Pospuesto">Pospuesto</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </td>
+                    <td className="p-2 min-w-[140px] text-xs font-medium text-foreground truncate" title={sale.product}>
+                      {sale.product}
+                    </td>
+                    <td className="p-2 min-w-[100px] text-xs text-muted-foreground truncate" title={sale.sku || undefined} data-testid={`sku-${sale.id}`}>
+                      {sale.sku || 'N/A'}
+                    </td>
+                    <td className="p-2 min-w-[80px] text-xs text-center font-medium text-foreground">
+                      {sale.cantidad}
+                    </td>
                     {showDeliveryDateColumn && (
                       <td className="p-2 min-w-[130px]">
                         <div className="relative">
@@ -587,51 +632,6 @@ export default function SalesTable({
                         </div>
                       </td>
                     )}
-                    <td className="p-2 min-w-[110px] text-xs text-muted-foreground">
-                      {sale.pagoInicialUsd ? `$${Number(sale.pagoInicialUsd).toLocaleString()}` : 'N/A'}
-                    </td>
-                    <td className="p-2 min-w-[120px] text-xs font-mono text-muted-foreground truncate" title={sale.referencia || undefined}>
-                      {sale.referencia || 'N/A'}
-                    </td>
-                    <td className="p-2 min-w-[100px] text-xs text-muted-foreground truncate">
-                      {(() => {
-                        if (!sale.bancoId) return 'N/A';
-                        if (sale.bancoId === 'otro') return 'Otro($)';
-                        const bank = (banks as any[]).find((b: any) => b.id === sale.bancoId);
-                        return bank ? bank.banco : 'N/A';
-                      })()}
-                    </td>
-                    <td className="p-2 min-w-[110px] text-xs text-muted-foreground">
-                      {sale.montoBs ? `Bs ${Number(sale.montoBs).toLocaleString()}` : 'N/A'}
-                    </td>
-                    <td className="p-2 min-w-[140px]">
-                      <Select
-                        value={sale.estadoEntrega}
-                        onValueChange={(newStatus) => handleStatusChange(sale.id, newStatus)}
-                        disabled={updateDeliveryStatusMutation.isPending}
-                      >
-                        <SelectTrigger className="w-32 h-8 text-xs">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Pendiente">Pendiente</SelectItem>
-                          <SelectItem value="En Proceso">En Proceso</SelectItem>
-                          <SelectItem value="A Despachar">A despachar</SelectItem>
-                          <SelectItem value="Despachado">Despachado</SelectItem>
-                          <SelectItem value="Cancelado">Cancelado</SelectItem>
-                          <SelectItem value="Pospuesto">Pospuesto</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </td>
-                    <td className="p-2 min-w-[140px] text-xs font-medium text-foreground truncate" title={sale.product}>
-                      {sale.product}
-                    </td>
-                    <td className="p-2 min-w-[100px] text-xs text-muted-foreground truncate" title={sale.sku || undefined} data-testid={`sku-${sale.id}`}>
-                      {sale.sku || 'N/A'}
-                    </td>
-                    <td className="p-2 min-w-[80px] text-xs text-center font-medium text-foreground">
-                      {sale.cantidad}
-                    </td>
                     <td className="p-2 min-w-[120px]">
                       <Button
                         variant="outline"
