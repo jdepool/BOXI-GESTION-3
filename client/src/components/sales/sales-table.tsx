@@ -12,7 +12,7 @@ import AddressModal from "@/components/addresses/address-modal";
 import FleteModal from "./flete-modal";
 import EditSaleModal from "./edit-sale-modal";
 import PaymentInstallmentsModal from "./payment-installments-modal";
-import { MapPin, Truck, Edit, CalendarIcon, CreditCard } from "lucide-react";
+import { MapPin, Truck, Edit, CalendarIcon, CreditCard, Mail } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";

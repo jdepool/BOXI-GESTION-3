@@ -16,6 +16,7 @@ import session from "express-session";
 import MemoryStore from "memorystore";
 import crypto from "crypto";
 import fetch from "node-fetch";
+import { sendOrderConfirmationEmail, type OrderEmailData } from "./services/email-service";
 
 // Configure multer for file uploads
 const upload = multer({
@@ -3268,6 +3269,85 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Delete installment error:", error);
       res.status(500).json({ error: "Failed to delete installment" });
+    }
+  });
+
+  // POST /api/sales/:id/send-email - Send order confirmation email
+  app.post("/api/sales/:id/send-email", async (req, res) => {
+    try {
+      const { id } = req.params;
+      
+      // Get the sale details
+      const sale = await storage.getSaleById(id);
+      if (!sale) {
+        return res.status(404).json({ error: "Sale not found" });
+      }
+
+      // Validate that the sale has the required information for email
+      if (!sale.email) {
+        return res.status(400).json({ error: "Sale must have a customer email address" });
+      }
+
+      if (!sale.nombre) {
+        return res.status(400).json({ error: "Sale must have a customer name" });
+      }
+
+      // Get asesor name if available
+      let asesorName = undefined;
+      if (sale.asesorId) {
+        const asesor = await storage.getAsesorById(sale.asesorId);
+        asesorName = asesor?.nombre;
+      }
+
+      // Prepare email data
+      const emailData: OrderEmailData = {
+        customerName: sale.nombre,
+        customerEmail: sale.email,
+        orderNumber: sale.orden || `ORD-${sale.id.slice(-8).toUpperCase()}`,
+        product: sale.product || 'Producto BoxiSleep',
+        quantity: sale.cantidad || 1,
+        totalUsd: parseFloat(sale.totalUsd?.toString() || '0'),
+        fecha: sale.fecha.toISOString(),
+        sku: sale.sku || undefined,
+        asesorName
+      };
+
+      // Send the email
+      await sendOrderConfirmationEmail(emailData);
+
+      res.json({ 
+        success: true, 
+        message: `Order confirmation email sent successfully to ${sale.email}`,
+        emailData: {
+          to: emailData.customerEmail,
+          orderNumber: emailData.orderNumber,
+          sentAt: new Date().toISOString()
+        }
+      });
+
+    } catch (error) {
+      console.error("Send email error:", error);
+      
+      // Provide more specific error messages based on the error type
+      if (error instanceof Error) {
+        if (error.message.includes('Outlook not connected')) {
+          return res.status(500).json({ 
+            error: "Email service not configured", 
+            details: "Outlook connection is not properly set up" 
+          });
+        }
+        if (error.message.includes('X_REPLIT_TOKEN')) {
+          return res.status(500).json({ 
+            error: "Authentication error", 
+            details: "Unable to authenticate with email service" 
+          });
+        }
+      }
+      
+      res.status(500).json({ 
+        error: "Failed to send email", 
+        details: error instanceof Error ? error.message : "Unknown error occurred" 
+      });
     }
   });
 
