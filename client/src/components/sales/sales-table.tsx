@@ -57,6 +57,29 @@ export default function SalesTable({
   onVerifyPayment
 }: SalesTableProps) {
   const { toast } = useToast();
+  
+  // Email sending mutation
+  const sendEmailMutation = useMutation({
+    mutationFn: async (saleId: string) => {
+      return apiRequest('POST', `/api/sales/${saleId}/send-email`);
+    },
+    onSuccess: (data: any) => {
+      toast({
+        title: "¡Email enviado!",
+        description: `Confirmación de pedido enviada a ${data.emailData.to}`,
+        className: "bg-green-50 border-green-200 text-green-800",
+      });
+    },
+    onError: (error: any) => {
+      console.error("Error sending email:", error);
+      toast({
+        title: "Error al enviar email",
+        description: error.details || error.message || "Error desconocido al enviar el email",
+        variant: "destructive",
+      });
+    },
+  });
+
   const [selectedSale, setSelectedSale] = useState<Sale | null>(null);
   const [addressModalOpen, setAddressModalOpen] = useState(false);
   const [selectedSaleForAddress, setSelectedSaleForAddress] = useState<Sale | null>(null);
@@ -737,6 +760,20 @@ export default function SalesTable({
                           >
                             <CreditCard className="h-3 w-3 mr-1" />
                             Cuotas
+                          </Button>
+                        )}
+                        {sale.canal?.toLowerCase() === "manual" && sale.email && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => sendEmailMutation.mutate(sale.id)}
+                            disabled={sendEmailMutation.isPending}
+                            data-testid={`email-sale-${sale.id}`}
+                            className="h-7 text-xs"
+                            title={`Enviar confirmación a ${sale.email}`}
+                          >
+                            <Mail className="h-3 w-3 mr-1" />
+                            {sendEmailMutation.isPending ? "Enviando..." : "Email"}
                           </Button>
                         )}
                         <Button
