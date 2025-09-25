@@ -384,30 +384,6 @@ export default function EditSaleModal({ open, onOpenChange, sale }: EditSaleModa
                   )}
                 />
 
-                <FormField
-                  control={form.control}
-                  name="metodoPagoId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Método de Pago</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value || ""}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Seleccionar método" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {(paymentMethods as any[]).map((method: any) => (
-                            <SelectItem key={method.id} value={method.id}>
-                              {method.nombre}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
 
                 <FormField
                   control={form.control}
