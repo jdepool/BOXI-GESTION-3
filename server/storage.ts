@@ -68,6 +68,7 @@ export interface IStorage {
     excludeADespachar?: boolean;
   }): Promise<number>;
   getExistingOrderNumbers(orders: string[]): Promise<string[]>;
+  getOrdersByOrderNumber(orderNumber: string): Promise<{orden: string; product: string}[]>;
   getSalesWithInstallments(filters?: {
     canal?: string;
     estadoEntrega?: string;
@@ -548,6 +549,25 @@ export class DatabaseStorage implements IStorage {
       );
     
     return existingOrders.map(row => row.orden).filter(Boolean) as string[];
+  }
+
+  async getOrdersByOrderNumber(orderNumber: string): Promise<{orden: string; product: string}[]> {
+    if (!orderNumber) return [];
+    
+    const orders = await db
+      .select({ 
+        orden: sales.orden,
+        product: sales.product 
+      })
+      .from(sales)
+      .where(
+        and(
+          isNotNull(sales.orden),
+          eq(sales.orden, orderNumber)
+        )
+      );
+    
+    return orders.filter(order => order.orden && order.product) as {orden: string; product: string}[];
   }
 
   async updateSaleAddresses(saleId: string, addresses: {
