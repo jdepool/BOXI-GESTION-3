@@ -1079,6 +1079,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // This now returns an array of records, one per line item
       const csvFormatData = transformShopifyWebhookToCSV(shopifyOrder);
       
+      
       if (csvFormatData.length === 0) {
         console.log(`⚠️ No line items found in Shopify order ${shopifyOrder.name}`);
         return res.status(400).json({ error: "No line items found in order" });
