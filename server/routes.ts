@@ -99,18 +99,19 @@ const getSalesQuerySchema = z.object({
 });
 
 // Transform Shopify webhook order data to CSV format for existing mapping logic
+// Returns an array of CSV-like objects, one for each line item in the order
 function transformShopifyWebhookToCSV(shopifyOrder: any) {
-  // Extract line item data (for multiple products, we'll use the first one)
-  const lineItem = shopifyOrder.line_items?.[0] || {};
+  const lineItems = shopifyOrder.line_items || [];
   
-  return {
-    // Order info
+  // Create one record per line item (product) in the order
+  return lineItems.map((lineItem: any) => ({
+    // Order info (same for all line items)
     'Created at': shopifyOrder.created_at,
     'Name': shopifyOrder.name, // Order number like #1001
     'Email': shopifyOrder.email,
     'Outstanding Balance': shopifyOrder.current_total_price || shopifyOrder.total_price,
     
-    // Customer billing info
+    // Customer billing info (same for all line items)
     'Billing Name': shopifyOrder.billing_address?.name || 
                    `${shopifyOrder.billing_address?.first_name || ''} ${shopifyOrder.billing_address?.last_name || ''}`.trim(),
     'Billing Phone': shopifyOrder.billing_address?.phone,
@@ -120,18 +121,18 @@ function transformShopifyWebhookToCSV(shopifyOrder: any) {
     'Billing Address1': shopifyOrder.billing_address?.address1,
     'Billing Address2': shopifyOrder.billing_address?.address2,
     
-    // Shipping info  
+    // Shipping info (same for all line items)
     'Shipping Country': shopifyOrder.shipping_address?.country,
     'Shipping Province name': shopifyOrder.shipping_address?.province,
     'Shipping City': shopifyOrder.shipping_address?.city,
     'Shipping Address1': shopifyOrder.shipping_address?.address1,
     'Shipping Address2': shopifyOrder.shipping_address?.address2,
     
-    // Product info (first line item)
+    // Product info (specific to this line item)
     'Lineitem name': lineItem.name || lineItem.title,
     'Lineitem quantity': lineItem.quantity || 1,
     'Lineitem sku': lineItem.sku || null, // Add SKU mapping from Shopify line item
-  };
+  }));
 }
 
 function parseFile(buffer: Buffer, canal: string, filename: string) {
@@ -1072,36 +1073,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Invalid Shopify order data" });
       }
 
-      console.log(`📦 Received Shopify webhook for order: ${shopifyOrder.name} (ID: ${shopifyOrder.id})`);
+      console.log(`📦 Received Shopify webhook for order: ${shopifyOrder.name} (ID: ${shopifyOrder.id}) with ${shopifyOrder.line_items?.length || 0} line items`);
       
-      // Smart deduplication: check if order with same order number AND same product exists
-      const orderNumber = shopifyOrder.name;
-      const productName = shopifyOrder.line_items?.[0]?.name || '';
+      // Transform Shopify webhook data to CSV format for existing mapping logic
+      // This now returns an array of records, one per line item
+      const csvFormatData = transformShopifyWebhookToCSV(shopifyOrder);
       
-      if (orderNumber && productName) {
-        const existingOrdersWithSameNumber = await storage.getOrdersByOrderNumber(orderNumber);
-        const hasMatchingProduct = existingOrdersWithSameNumber.some(existing => 
-          existing.product?.toLowerCase().trim() === productName.toLowerCase().trim()
-        );
-        
-        if (hasMatchingProduct) {
-          console.log(`⚠️ Order ${orderNumber} with product "${productName}" already exists - duplicate detected`);
-          return res.status(200).json({ 
-            message: "Order with same product already processed",
-            duplicate: true,
-            orderId: orderNumber,
-            product: productName
-          });
-        } else if (existingOrdersWithSameNumber.length > 0) {
-          console.log(`ℹ️ Order ${orderNumber} exists but with different product(s) - allowing new product: "${productName}"`);
-        }
+      if (csvFormatData.length === 0) {
+        console.log(`⚠️ No line items found in Shopify order ${shopifyOrder.name}`);
+        return res.status(400).json({ error: "No line items found in order" });
       }
 
-      // Transform Shopify webhook data to CSV format for existing mapping logic
-      const csvFormatData = transformShopifyWebhookToCSV(shopifyOrder);
-
-      // Use existing parseFile logic to process the transformed data
-      const salesData = [csvFormatData].map((row: any) => {
+      // Process each line item (product) in the order
+      const salesData = csvFormatData.map((row: any) => {
         // Parse date based on channel
         let fecha = new Date();
         
@@ -1187,20 +1171,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // Check for existing order numbers to avoid duplicates
-      const orderNumbers = validatedSales.map(sale => sale.orden).filter(Boolean) as string[];
-      const existingOrders = await storage.getExistingOrderNumbers(orderNumbers);
+      // Smart deduplication for Shopify webhooks: check order number + product combination
+      const newSales = [];
+      let duplicatesSkipped = 0;
       
-      // Filter out sales with existing order numbers
-      const newSales = validatedSales.filter(sale => 
-        !sale.orden || !existingOrders.includes(sale.orden)
-      );
+      for (const sale of validatedSales) {
+        if (!sale.orden || !sale.product) {
+          // If no order number or product, include it (shouldn't happen with good data)
+          newSales.push(sale);
+          continue;
+        }
+        
+        // Get all existing orders with the same order number
+        const existingOrdersWithSameNumber = await storage.getOrdersByOrderNumber(sale.orden);
+        
+        // Check if any existing order has the same product (case-insensitive comparison)
+        const hasMatchingProduct = existingOrdersWithSameNumber.some(existing => 
+          existing.product?.toLowerCase().trim() === sale.product?.toLowerCase().trim()
+        );
+        
+        if (!hasMatchingProduct) {
+          // No existing order with same order number + product combination, so include it
+          newSales.push(sale);
+          console.log(`✅ Processing line item: ${sale.orden} - ${sale.product}`);
+        } else {
+          // Skip this sale (it's a duplicate)
+          duplicatesSkipped++;
+          console.log(`⚠️ Skipping duplicate: ${sale.orden} - ${sale.product}`);
+        }
+      }
       
       if (newSales.length === 0) {
-        console.log(`⚠️ Shopify order ${shopifyOrder.name} already exists in database`);
+        console.log(`⚠️ All line items in Shopify order ${shopifyOrder.name} already exist - ${duplicatesSkipped} duplicates skipped`);
         return res.status(200).json({ 
-          message: "Order already exists",
-          duplicate: true 
+          message: "All products in order already exist",
+          duplicate: true,
+          duplicatesSkipped: duplicatesSkipped
         });
       }
 
