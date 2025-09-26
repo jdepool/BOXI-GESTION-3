@@ -1099,7 +1099,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           cedula: null, // Shopify doesn't have cedula field
           telefono: row['Billing Phone'] ? String(row['Billing Phone']) : null,
           email: row.Email ? String(row.Email) : null,
-          totalUsd: String(row['Outstanding Balance'] || '0'),
+          totalUsd: String(row['Lineitem price'] || '0'),
           sucursal: null, // Shopify doesn't have sucursal
           tienda: null, // Shopify doesn't have tienda  
           fecha,
@@ -1113,7 +1113,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           factura: null,
           referencia: null,
           montoBs: null,
-          montoUsd: String(row['Outstanding Balance'] || '0'),
+          montoUsd: String(row['Lineitem price'] || '0'),
           estadoEntrega: 'En Proceso', // Route Shopify orders to "Ventas por Completar"
           product: String(row['Lineitem name'] || ''),
           cantidad: Number(row['Lineitem quantity'] || 1),
