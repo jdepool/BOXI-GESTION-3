@@ -1074,15 +1074,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log(`📦 Received Shopify webhook for order: ${shopifyOrder.name} (ID: ${shopifyOrder.id})`);
       
-      // Check for existing order to prevent duplicates (idempotency)
-      const existingWebhookOrders = await storage.getExistingOrderNumbers([shopifyOrder.name]);
-      if (existingWebhookOrders.includes(shopifyOrder.name)) {
-        console.log(`⚠️ Order ${shopifyOrder.name} already exists - webhook retry detected`);
-        return res.status(200).json({ 
-          message: "Order already processed",
-          duplicate: true,
-          orderId: shopifyOrder.name
-        });
+      // Smart deduplication: check if order with same order number AND same product exists
+      const orderNumber = shopifyOrder.name;
+      const productName = shopifyOrder.line_items?.[0]?.name || '';
+      
+      if (orderNumber && productName) {
+        const existingOrdersWithSameNumber = await storage.getOrdersByOrderNumber(orderNumber);
+        const hasMatchingProduct = existingOrdersWithSameNumber.some(existing => 
+          existing.product?.toLowerCase().trim() === productName.toLowerCase().trim()
+        );
+        
+        if (hasMatchingProduct) {
+          console.log(`⚠️ Order ${orderNumber} with product "${productName}" already exists - duplicate detected`);
+          return res.status(200).json({ 
+            message: "Order with same product already processed",
+            duplicate: true,
+            orderId: orderNumber,
+            product: productName
+          });
+        } else if (existingOrdersWithSameNumber.length > 0) {
+          console.log(`ℹ️ Order ${orderNumber} exists but with different product(s) - allowing new product: "${productName}"`);
+        }
       }
 
       // Transform Shopify webhook data to CSV format for existing mapping logic
@@ -1270,13 +1282,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Check for existing order numbers to avoid duplicates
-      const orderNumbers = validatedSales.map(sale => sale.orden).filter(Boolean) as string[];
-      const existingOrders = await storage.getExistingOrderNumbers(orderNumbers);
+      let newSales = validatedSales;
       
-      // Filter out sales with existing order numbers
-      const newSales = validatedSales.filter(sale => 
-        !sale.orden || !existingOrders.includes(sale.orden)
-      );
+      if (canal.toLowerCase() === 'shopify') {
+        // Smart deduplication for Shopify: check order number + product combination
+        const salesAfterDeduplication = [];
+        
+        for (const sale of validatedSales) {
+          if (!sale.orden || !sale.product) {
+            // If no order number or product, include it (shouldn't happen with good data)
+            salesAfterDeduplication.push(sale);
+            continue;
+          }
+          
+          // Get all existing orders with the same order number
+          const existingOrdersWithSameNumber = await storage.getOrdersByOrderNumber(sale.orden);
+          
+          // Check if any existing order has the same product (case-insensitive comparison)
+          const hasMatchingProduct = existingOrdersWithSameNumber.some(existing => 
+            existing.product?.toLowerCase().trim() === sale.product?.toLowerCase().trim()
+          );
+          
+          if (!hasMatchingProduct) {
+            // No existing order with same order number + product combination, so include it
+            salesAfterDeduplication.push(sale);
+          }
+          // If hasMatchingProduct is true, skip this sale (it's a duplicate)
+        }
+        
+        newSales = salesAfterDeduplication;
+      } else {
+        // Standard deduplication for non-Shopify: check order numbers only
+        const orderNumbers = validatedSales.map(sale => sale.orden).filter(Boolean) as string[];
+        const existingOrders = await storage.getExistingOrderNumbers(orderNumbers);
+        
+        newSales = validatedSales.filter(sale => 
+          !sale.orden || !existingOrders.includes(sale.orden)
+        );
+      }
       
       const duplicatesCount = validatedSales.length - newSales.length;
 
