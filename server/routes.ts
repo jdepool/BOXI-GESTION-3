@@ -109,7 +109,7 @@ function transformShopifyWebhookToCSV(shopifyOrder: any) {
     'Created at': shopifyOrder.created_at,
     'Name': shopifyOrder.name, // Order number like #1001
     'Email': shopifyOrder.email,
-    'Outstanding Balance': shopifyOrder.current_total_price || shopifyOrder.total_price,
+    'Lineitem price': lineItem.price, // Individual line item price
     
     // Customer billing info (same for all line items)
     'Billing Name': shopifyOrder.billing_address?.name || 
@@ -189,7 +189,7 @@ function parseFile(buffer: Buffer, canal: string, filename: string) {
           cedula: null, // Shopify doesn't have cedula field
           telefono: row['Billing Phone'] ? String(row['Billing Phone']) : null,
           email: row.Email ? String(row.Email) : null,
-          totalUsd: String(row['Outstanding Balance'] || '0'),
+          totalUsd: String(row['Lineitem price'] || '0'), // Use individual line item price
           sucursal: null, // Shopify doesn't have sucursal
           tienda: null, // Shopify doesn't have tienda  
           fecha,
@@ -203,7 +203,7 @@ function parseFile(buffer: Buffer, canal: string, filename: string) {
           factura: null,
           referencia: null,
           montoBs: null,
-          montoUsd: String(row['Outstanding Balance'] || '0'),
+          montoUsd: String(row['Lineitem price'] || '0'), // Use individual line item price
           estadoEntrega: 'En Proceso', // Route Shopify orders to "Ventas por Completar"
           product: String(row['Lineitem name'] || ''),
           sku: row['Lineitem sku'] ? String(row['Lineitem sku']) : null, // Map SKU from Shopify
