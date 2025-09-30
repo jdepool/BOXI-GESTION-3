@@ -41,6 +41,17 @@ const manualReservaSchema = insertSaleSchema.extend({
   referencia: z.string().optional(),
   bancoId: z.string().optional(),
   notas: z.string().optional(),
+  hasMedidaEspecial: z.boolean().default(false),
+  medidaEspecial: z.string().max(10, "Máximo 10 caracteres").optional(),
+}).refine(data => {
+  // If hasMedidaEspecial is true, medidaEspecial must be provided and non-empty
+  if (data.hasMedidaEspecial) {
+    return data.medidaEspecial && data.medidaEspecial.trim().length > 0;
+  }
+  return true;
+}, {
+  message: "Debe especificar la medida cuando está marcada",
+  path: ["medidaEspecial"],
 });
 
 type ManualReservaFormData = z.infer<typeof manualReservaSchema>;
