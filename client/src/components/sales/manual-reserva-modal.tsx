@@ -12,7 +12,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, Package } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -635,6 +635,56 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
                   </FormItem>
                 )}
               />
+            </div>
+
+            {/* Medida Especial */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-semibold flex items-center gap-2">
+                <Package className="h-5 w-5" />
+                Medida Especial
+              </h3>
+              <FormField
+                control={form.control}
+                name="hasMedidaEspecial"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                        data-testid="checkbox-medida-especial"
+                      />
+                    </FormControl>
+                    <div className="space-y-1 leading-none">
+                      <FormLabel>
+                        Esta venta requiere medida especial
+                      </FormLabel>
+                    </div>
+                  </FormItem>
+                )}
+              />
+
+              {watchHasMedidaEspecial && (
+                <FormField
+                  control={form.control}
+                  name="medidaEspecial"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Especificar Medida</FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="Ingrese medida (máx. 10 caracteres)" 
+                          maxLength={10}
+                          {...field}
+                          value={field.value || ""}
+                          data-testid="input-medida-especial"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
             </div>
 
             {/* Actions */}
