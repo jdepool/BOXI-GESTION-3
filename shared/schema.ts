@@ -124,6 +124,8 @@ export const sales = pgTable("sales", {
   fechaEntrega: timestamp("fecha_entrega"),
   // Notas adicionales
   notas: text("notas"),
+  // Medida especial (custom measurement for manual sales)
+  medidaEspecial: varchar("medida_especial", { length: 10 }),
   // Asesor asignado
   asesorId: varchar("asesor_id"),
   createdAt: timestamp("created_at").defaultNow(),
