@@ -91,8 +91,12 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
       direccionDespachoUrbanizacion: "",
       notas: "",
       fechaEntrega: undefined,
+      hasMedidaEspecial: false,
+      medidaEspecial: "",
     },
   });
+
+  const watchHasMedidaEspecial = form.watch("hasMedidaEspecial");
 
   // Fetch banks data
   const { data: banks = [] } = useQuery({
