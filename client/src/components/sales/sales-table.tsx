@@ -763,6 +763,19 @@ export default function SalesTable({
                             Cuotas
                           </Button>
                         )}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setSelectedSaleForEdit(sale);
+                            setEditSaleModalOpen(true);
+                          }}
+                          data-testid={`edit-sale-${sale.id}`}
+                          className="h-7 text-xs"
+                        >
+                          <Edit className="h-3 w-3 mr-1" />
+                          Editar
+                        </Button>
                         {sale.canal?.toLowerCase() === "manual" && sale.email && (
                           <Button
                             variant="outline"
@@ -777,19 +790,6 @@ export default function SalesTable({
                             {sendEmailMutation.isPending ? "Enviando..." : "Email"}
                           </Button>
                         )}
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            setSelectedSaleForEdit(sale);
-                            setEditSaleModalOpen(true);
-                          }}
-                          data-testid={`edit-sale-${sale.id}`}
-                          className="h-7 text-xs"
-                        >
-                          <Edit className="h-3 w-3 mr-1" />
-                          Editar
-                        </Button>
                         {showEditActions && (
                           <>
                             <Button
