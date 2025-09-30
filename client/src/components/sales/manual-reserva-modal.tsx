@@ -135,6 +135,8 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
         direccionDespachoCiudad: data.direccionDespachoCiudad || null,
         direccionDespachoDireccion: data.direccionDespachoDireccion || null,
         direccionDespachoUrbanizacion: data.direccionDespachoUrbanizacion || null,
+        // Handle medida especial
+        medidaEspecial: data.hasMedidaEspecial && data.medidaEspecial ? data.medidaEspecial : null,
       };
       return apiRequest("POST", "/api/sales/manual", formattedData);
     },
