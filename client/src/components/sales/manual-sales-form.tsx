@@ -52,6 +52,17 @@ const manualSaleSchema = z.object({
   direccionDespachoReferencia: z.string().optional(),
   canal: z.string().min(1, "Canal es requerido"),
   asesorId: z.string().optional(),
+  hasMedidaEspecial: z.boolean().default(false),
+  medidaEspecial: z.string().max(10, "Máximo 10 caracteres").optional(),
+}).refine(data => {
+  // If hasMedidaEspecial is true, medidaEspecial must be provided and non-empty
+  if (data.hasMedidaEspecial) {
+    return data.medidaEspecial && data.medidaEspecial.trim().length > 0;
+  }
+  return true;
+}, {
+  message: "Debe especificar la medida cuando está marcada",
+  path: ["medidaEspecial"],
 });
 
 type ManualSaleFormData = z.infer<typeof manualSaleSchema>;
@@ -91,10 +102,13 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
       direccionDespachoUrbanizacion: "",
       direccionDespachoReferencia: "",
       canal: "Manual",
+      hasMedidaEspecial: false,
+      medidaEspecial: "",
     },
   });
 
   const watchDespachoIgual = form.watch("direccionDespachoIgualFacturacion");
+  const watchHasMedidaEspecial = form.watch("hasMedidaEspecial");
 
   // Get products, payment methods and banks for dropdowns
   const { data: products = [] } = useQuery<any[]>({
@@ -625,6 +639,59 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
                   )}
                 />
               </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Medida Especial */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Package className="h-5 w-5" />
+              Medida Especial
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <FormField
+              control={form.control}
+              name="hasMedidaEspecial"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                      data-testid="checkbox-medida-especial"
+                    />
+                  </FormControl>
+                  <div className="space-y-1 leading-none">
+                    <FormLabel>
+                      Esta venta requiere medida especial
+                    </FormLabel>
+                  </div>
+                </FormItem>
+              )}
+            />
+
+            {watchHasMedidaEspecial && (
+              <FormField
+                control={form.control}
+                name="medidaEspecial"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Especificar Medida</FormLabel>
+                    <FormControl>
+                      <Input 
+                        placeholder="Ingrese medida (máx. 10 caracteres)" 
+                        maxLength={10}
+                        {...field}
+                        data-testid="input-medida-especial"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             )}
           </CardContent>
         </Card>

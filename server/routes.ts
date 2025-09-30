@@ -3035,6 +3035,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // New fields for sales system overhaul
         tipo: body.tipo || 'Inmediato', // Default to Inmediato if not provided
         fechaEntrega: body.fechaEntrega ? new Date(body.fechaEntrega) : undefined,
+        
+        // Medida especial
+        medidaEspecial: body.hasMedidaEspecial && body.medidaEspecial && body.medidaEspecial.trim() 
+          ? body.medidaEspecial.trim() 
+          : null,
       };
 
       const newSale = await storage.createSale(saleData);
