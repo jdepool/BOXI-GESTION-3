@@ -40,7 +40,6 @@ const manualReservaSchema = insertSaleSchema.extend({
   telefono: z.string().optional(),
   referencia: z.string().optional(),
   bancoId: z.string().optional(),
-  notas: z.string().optional(),
   hasMedidaEspecial: z.boolean().default(false),
   medidaEspecial: z.string().max(10, "Máximo 10 caracteres").optional(),
 }).refine(data => {
@@ -89,7 +88,6 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
       direccionDespachoCiudad: "",
       direccionDespachoDireccion: "",
       direccionDespachoUrbanizacion: "",
-      notas: "",
       fechaEntrega: undefined,
       hasMedidaEspecial: false,
       medidaEspecial: "",
@@ -124,7 +122,6 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
         email: data.email || null,
         referencia: data.referencia || null,
         bancoId: data.bancoId || null,
-        notas: data.notas || null,
         direccionFacturacionPais: data.direccionFacturacionPais || null,
         direccionFacturacionEstado: data.direccionFacturacionEstado || null,
         direccionFacturacionCiudad: data.direccionFacturacionCiudad || null,
@@ -612,29 +609,6 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
                   )}
                 />
               </div>
-            </div>
-
-            {/* Notes */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Notas</h3>
-              <FormField
-                control={form.control}
-                name="notas"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Notas adicionales</FormLabel>
-                    <FormControl>
-                      <Textarea 
-                        {...field} 
-                        value={field.value || ""}
-                        rows={3}
-                        data-testid="input-notas" 
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
             </div>
 
             {/* Medida Especial */}
