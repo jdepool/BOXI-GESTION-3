@@ -3400,13 +3400,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Update the sale with email sent timestamp
       const emailSentTimestamp = new Date();
-      console.log(`[EMAIL] Updating sale ${id} with emailSentAt:`, emailSentTimestamp);
-      
-      const updatedSale = await storage.updateSale(id, {
+      await storage.updateSale(id, {
         emailSentAt: emailSentTimestamp
       });
-      
-      console.log(`[EMAIL] Sale updated, emailSentAt in returned record:`, updatedSale?.emailSentAt);
 
       res.json({ 
         success: true, 
