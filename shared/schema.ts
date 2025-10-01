@@ -211,6 +211,7 @@ export const insertSaleSchema = createInsertSchema(sales).omit({
 }).extend({
   fecha: z.union([z.date(), z.string().transform((val) => new Date(val))]),
   fechaEntrega: z.union([z.date(), z.string().transform((val) => new Date(val))]).optional(),
+  emailSentAt: z.union([z.date(), z.string().transform((val) => new Date(val))]).optional(),
   tipo: z.enum(["Inmediato", "Reserva"]).default("Inmediato"),
 });
 
