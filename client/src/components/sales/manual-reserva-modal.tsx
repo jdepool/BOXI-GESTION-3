@@ -40,6 +40,7 @@ const manualReservaSchema = insertSaleSchema.extend({
   telefono: z.string().optional(),
   referencia: z.string().optional(),
   bancoId: z.string().optional(),
+  direccionDespachoIgualFacturacion: z.boolean().default(true),
   hasMedidaEspecial: z.boolean().default(false),
   medidaEspecial: z.string().max(10, "Máximo 10 caracteres").optional(),
 }).refine(data => {
@@ -57,7 +58,6 @@ type ManualReservaFormData = z.infer<typeof manualReservaSchema>;
 
 export default function ManualReservaModal({ isOpen, onClose, onSuccess }: ManualReservaModalProps) {
   const { toast } = useToast();
-  const [sameAddress, setSameAddress] = useState(false);
 
   const form = useForm<ManualReservaFormData>({
     resolver: zodResolver(manualReservaSchema),
@@ -83,6 +83,7 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
       direccionFacturacionCiudad: "",
       direccionFacturacionDireccion: "",
       direccionFacturacionUrbanizacion: "",
+      direccionDespachoIgualFacturacion: true,
       direccionDespachoPais: "",
       direccionDespachoEstado: "",
       direccionDespachoCiudad: "",
@@ -94,6 +95,7 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
     },
   });
 
+  const watchDespachoIgual = form.watch("direccionDespachoIgualFacturacion");
   const watchHasMedidaEspecial = form.watch("hasMedidaEspecial");
 
   // Fetch banks data
@@ -127,11 +129,12 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
         direccionFacturacionCiudad: data.direccionFacturacionCiudad || null,
         direccionFacturacionDireccion: data.direccionFacturacionDireccion || null,
         direccionFacturacionUrbanizacion: data.direccionFacturacionUrbanizacion || null,
-        direccionDespachoPais: data.direccionDespachoPais || null,
-        direccionDespachoEstado: data.direccionDespachoEstado || null,
-        direccionDespachoCiudad: data.direccionDespachoCiudad || null,
-        direccionDespachoDireccion: data.direccionDespachoDireccion || null,
-        direccionDespachoUrbanizacion: data.direccionDespachoUrbanizacion || null,
+        // If direccionDespachoIgualFacturacion is true, copy billing address to shipping
+        direccionDespachoPais: data.direccionDespachoIgualFacturacion ? data.direccionFacturacionPais : (data.direccionDespachoPais || null),
+        direccionDespachoEstado: data.direccionDespachoIgualFacturacion ? data.direccionFacturacionEstado : (data.direccionDespachoEstado || null),
+        direccionDespachoCiudad: data.direccionDespachoIgualFacturacion ? data.direccionFacturacionCiudad : (data.direccionDespachoCiudad || null),
+        direccionDespachoDireccion: data.direccionDespachoIgualFacturacion ? data.direccionFacturacionDireccion : (data.direccionDespachoDireccion || null),
+        direccionDespachoUrbanizacion: data.direccionDespachoIgualFacturacion ? data.direccionFacturacionUrbanizacion : (data.direccionDespachoUrbanizacion || null),
         // Handle medida especial
         medidaEspecial: data.hasMedidaEspecial && data.medidaEspecial ? data.medidaEspecial : null,
       };
@@ -162,22 +165,8 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
     createReservaMutation.mutate(data);
   };
 
-  const handleSameAddressChange = (checked: boolean) => {
-    setSameAddress(checked);
-    if (checked) {
-      // Copy billing address to shipping address
-      const billingValues = form.getValues();
-      form.setValue('direccionDespachoPais', billingValues.direccionFacturacionPais);
-      form.setValue('direccionDespachoEstado', billingValues.direccionFacturacionEstado);
-      form.setValue('direccionDespachoCiudad', billingValues.direccionFacturacionCiudad);
-      form.setValue('direccionDespachoDireccion', billingValues.direccionFacturacionDireccion);
-      form.setValue('direccionDespachoUrbanizacion', billingValues.direccionFacturacionUrbanizacion);
-    }
-  };
-
   const handleClose = () => {
     form.reset();
-    setSameAddress(false);
     onClose();
   };
 
@@ -522,23 +511,30 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
                 />
               </div>
 
-              <div className="flex items-center space-x-2 py-4">
-                <Checkbox 
-                  id="same-address"
-                  checked={sameAddress}
-                  onCheckedChange={handleSameAddressChange}
-                  data-testid="checkbox-same-address"
-                />
-                <Label 
-                  htmlFor="same-address" 
-                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                >
-                  La dirección de despacho es la misma que la dirección de facturación
-                </Label>
-              </div>
-
               <h3 className="text-lg font-semibold">Dirección de Despacho</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="direccionDespachoIgualFacturacion"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                        data-testid="checkbox-same-address"
+                      />
+                    </FormControl>
+                    <div className="space-y-1 leading-none">
+                      <FormLabel>
+                        La dirección de despacho es igual a la de facturación
+                      </FormLabel>
+                    </div>
+                  </FormItem>
+                )}
+              />
+
+              {!watchDespachoIgual && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
                 <FormField
                   control={form.control}
                   name="direccionDespachoPais"
@@ -609,6 +605,7 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
                   )}
                 />
               </div>
+              )}
             </div>
 
             {/* Medida Especial */}
