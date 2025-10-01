@@ -1531,7 +1531,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         factura: null,
         referencia: referencias[i] ? String(referencias[i]) : null,
         montoBs: montosBs[i] ? String(montosBs[i]) : null,
-        montoUsd: String(totalesUSD[i] || '0'),
+        montoUsd: null,
         direccionFacturacionPais: null,
         direccionFacturacionEstado: null,
         direccionFacturacionCiudad: null,
