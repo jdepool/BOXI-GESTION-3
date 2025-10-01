@@ -115,10 +115,6 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
     queryKey: ["/api/admin/productos"],
   });
 
-  const { data: paymentMethods = [] } = useQuery<any[]>({
-    queryKey: ["/api/admin/metodos-pago"],
-  });
-
   const { data: banks = [] } = useQuery<any[]>({
     queryKey: ["/api/admin/bancos"],
   });
@@ -329,31 +325,6 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
                       />
                     </PopoverContent>
                   </Popover>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="metodoPagoId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Método de Pago</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value || ""}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Seleccionar método" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {paymentMethods.map((method: any) => (
-                        <SelectItem key={method.id} value={method.id}>
-                          {method.nombre}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
                   <FormMessage />
                 </FormItem>
               )}
