@@ -119,7 +119,7 @@ export default function AddressForm() {
         direccionFacturacionDireccion: order.direccionFacturacionDireccion || "",
         direccionFacturacionUrbanizacion: order.direccionFacturacionUrbanizacion || "",
         direccionFacturacionReferencia: order.direccionFacturacionReferencia || "",
-        direccionDespachoIgualFacturacion: order.direccionDespachoIgualFacturacion === "true",
+        direccionDespachoIgualFacturacion: order.direccionDespachoIgualFacturacion === "false" ? false : true,
         direccionDespachoPais: order.direccionDespachoPais || "Venezuela",
         direccionDespachoEstado: order.direccionDespachoEstado || "",
         direccionDespachoCiudad: order.direccionDespachoCiudad || "",
@@ -127,7 +127,7 @@ export default function AddressForm() {
         direccionDespachoUrbanizacion: order.direccionDespachoUrbanizacion || "",
         direccionDespachoReferencia: order.direccionDespachoReferencia || ""
       });
-      setShowShippingForm(order.direccionDespachoIgualFacturacion !== "true");
+      setShowShippingForm(order.direccionDespachoIgualFacturacion === "false");
     }
   };
 
