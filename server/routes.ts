@@ -3338,6 +3338,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Sale not found" });
       }
 
+      // Check if email was already sent
+      if (sale.emailSentAt) {
+        return res.status(200).json({ 
+          success: true, 
+          message: "Email was already sent for this order",
+          emailData: {
+            to: sale.email,
+            orderNumber: sale.orden || `ORD-${sale.id.slice(-8).toUpperCase()}`,
+            sentAt: sale.emailSentAt.toISOString(),
+            alreadySent: true
+          }
+        });
+      }
+
       // Validate that the sale has the required information for email
       if (!sale.email) {
         return res.status(400).json({ error: "Sale must have a customer email address" });
@@ -3383,6 +3397,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Send the email
       await sendOrderConfirmationEmail(emailData);
+
+      // Update the sale with email sent timestamp
+      await storage.updateSale(id, {
+        emailSentAt: new Date()
+      });
 
       res.json({ 
         success: true, 

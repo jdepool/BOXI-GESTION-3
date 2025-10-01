@@ -128,6 +128,8 @@ export const sales = pgTable("sales", {
   medidaEspecial: varchar("medida_especial", { length: 10 }),
   // Asesor asignado
   asesorId: varchar("asesor_id"),
+  // Email tracking
+  emailSentAt: timestamp("email_sent_at"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => ({

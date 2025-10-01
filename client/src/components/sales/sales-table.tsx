@@ -70,6 +70,8 @@ export default function SalesTable({
         description: `Confirmación de pedido enviada a ${data.emailData.to}`,
         className: "bg-green-50 border-green-200 text-green-800",
       });
+      // Refresh sales data to show green icon
+      queryClient.invalidateQueries({ queryKey: ["/api/sales"] });
     },
     onError: (error: any) => {
       console.error("Error sending email:", error);
@@ -777,12 +779,12 @@ export default function SalesTable({
                             variant="outline"
                             size="sm"
                             onClick={() => sendEmailMutation.mutate(sale.id)}
-                            disabled={sendEmailMutation.isPending}
+                            disabled={sendEmailMutation.isPending || !!sale.emailSentAt}
                             data-testid={`email-sale-${sale.id}`}
                             className="h-7 text-xs"
-                            title={`Enviar confirmación a ${sale.email}`}
+                            title={sale.emailSentAt ? `Email ya enviado` : `Enviar confirmación a ${sale.email}`}
                           >
-                            <Mail className="h-3 w-3 mr-1" />
+                            <Mail className={cn("h-3 w-3 mr-1", sale.emailSentAt && "text-green-600")} />
                             {sendEmailMutation.isPending ? "Enviando..." : "Email"}
                           </Button>
                         )}
