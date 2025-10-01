@@ -92,7 +92,7 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
       direccionDespachoCiudad: "",
       direccionDespachoDireccion: "",
       direccionDespachoUrbanizacion: "",
-      fechaEntrega: new Date(),
+      fechaEntrega: undefined,
       hasMedidaEspecial: false,
       medidaEspecial: "",
     },
