@@ -3354,6 +3354,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         asesorName = asesor?.nombre;
       }
 
+      // Build shipping address string if available
+      let shippingAddress = undefined;
+      if (sale.direccionDespachoDireccion) {
+        const addressParts = [
+          sale.direccionDespachoDireccion,
+          sale.direccionDespachoUrbanizacion,
+          sale.direccionDespachoCiudad,
+          sale.direccionDespachoEstado,
+          sale.direccionDespachoPais
+        ].filter(Boolean);
+        shippingAddress = addressParts.join(', ');
+      }
+
       // Prepare email data
       const emailData: OrderEmailData = {
         customerName: sale.nombre,
@@ -3364,7 +3377,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         totalUsd: parseFloat(sale.totalUsd?.toString() || '0'),
         fecha: sale.fecha.toISOString(),
         sku: sale.sku || undefined,
-        asesorName
+        asesorName,
+        shippingAddress
       };
 
       // Send the email

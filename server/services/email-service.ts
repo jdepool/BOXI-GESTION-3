@@ -59,6 +59,7 @@ export interface OrderEmailData {
   fecha: string;
   sku?: string;
   asesorName?: string;
+  shippingAddress?: string;
 }
 
 export function generateOrderConfirmationHTML(data: OrderEmailData): string {
@@ -143,7 +144,7 @@ export function generateOrderConfirmationHTML(data: OrderEmailData): string {
     <div class="content">
         <p>Estimado/a <strong>${data.customerName}</strong>,</p>
         
-        <p>¡Gracias por tu pedido! Hemos recibido correctamente tu solicitud y queremos confirmar los detalles de tu compra:</p>
+        <p>¡Gracias por tu pedido! Hemos recibido correctamente tu solicitud. Te mantendremos informado sobre el estado de tu compra.</p>
         
         <div class="order-details">
             <h3>📋 Detalles del Pedido</h3>
@@ -179,6 +180,13 @@ export function generateOrderConfirmationHTML(data: OrderEmailData): string {
                 <span>${data.quantity} unidad${data.quantity > 1 ? 'es' : ''}</span>
             </div>
             
+            ${data.shippingAddress ? `
+            <div class="detail-row">
+                <span class="detail-label">Dirección de Despacho:</span>
+                <span>${data.shippingAddress}</span>
+            </div>
+            ` : ''}
+            
             ${data.asesorName ? `
             <div class="detail-row">
                 <span class="detail-label">Asesor Asignado:</span>
@@ -190,15 +198,10 @@ export function generateOrderConfirmationHTML(data: OrderEmailData): string {
         <div class="total">
             💰 Total: $${data.totalUsd.toLocaleString()} USD
         </div>
-        
-        <p>Nuestro equipo procesará tu pedido y te mantendremos informado sobre el estado de tu compra. Si tienes alguna pregunta o necesitas modificar algo de tu pedido, no dudes en contactarnos.</p>
-        
-        <p>¡Gracias por confiar en BoxiSleep para tu descanso perfecto! 😴</p>
     </div>
     
     <div class="footer">
-        <p>Este es un email automático, por favor no respondas a este mensaje.</p>
-        <p><strong>BoxiSleep</strong> - Tu tranquilidad es nuestro compromiso</p>
+        <p>Si tienes alguna pregunta, responde este correo electrónico o contáctanos a través de hola.vzla@boxisleep.com.co</p>
     </div>
 </body>
 </html>
