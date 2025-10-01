@@ -446,7 +446,7 @@ export default function SalesTable({
         </div>
       )}
 
-      <div className="overflow-x-auto bg-background">
+      <div className="overflow-x-auto overflow-y-auto max-h-[calc(100vh-280px)] bg-background">
         <div className="min-w-max">
           <table className="w-full min-w-[2560px] relative">
             <thead className="bg-muted sticky top-0 z-10">
