@@ -1472,6 +1472,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const data = await response.json();
     console.log(`🎉 CASHEA API SUCCESS! Status: ${response.status}`);
     console.log(`📊 Response size: ${JSON.stringify(data).length} bytes`);
+    console.log(`🔍 CASHEA API Response Structure:`, JSON.stringify(data, null, 2));
 
     return [data];
   }
