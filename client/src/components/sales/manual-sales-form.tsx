@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -19,8 +20,10 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { Save, User, CreditCard, MapPin, Package, CalendarIcon } from "lucide-react";
+import { Save, User, CreditCard, MapPin, Package, CalendarIcon, Plus, Trash2 } from "lucide-react";
 import { insertSaleSchema } from "@shared/schema";
+import ProductDialog, { ProductFormData } from "./product-dialog";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 const manualSaleSchema = z.object({
   nombre: z.string().min(1, "Nombre es requerido"),
@@ -29,9 +32,6 @@ const manualSaleSchema = z.object({
   email: z.string().email("Email inválido").optional(),
   totalUsd: z.string().min(1, "Total USD es requerido"),
   fecha: z.string().min(1, "Fecha es requerida"),
-  product: z.string().min(1, "Producto es requerido"),
-  sku: z.string().optional(),
-  cantidad: z.number().min(1),
   metodoPagoId: z.string().optional(),
   bancoId: z.string().optional(),
   montoUsd: z.string().optional(),
@@ -65,7 +65,9 @@ const manualSaleSchema = z.object({
   path: ["medidaEspecial"],
 });
 
-type ManualSaleFormData = z.infer<typeof manualSaleSchema>;
+type ManualSaleFormData = z.infer<typeof manualSaleSchema> & {
+  products: ProductFormData[];
+};
 
 interface ManualSalesFormProps {
   onSubmit: (data: ManualSaleFormData) => void;
@@ -74,6 +76,9 @@ interface ManualSalesFormProps {
 }
 
 export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = false }: ManualSalesFormProps) {
+  const [products, setProducts] = useState<ProductFormData[]>([]);
+  const [isProductDialogOpen, setIsProductDialogOpen] = useState(false);
+
   const form = useForm<ManualSaleFormData>({
     resolver: zodResolver(manualSaleSchema),
     defaultValues: {
@@ -83,8 +88,6 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
       email: "",
       totalUsd: "",
       fecha: new Date().toISOString().split('T')[0],
-      product: "",
-      cantidad: 1,
       referencia: "",
       montoUsd: "",
       montoBs: "",
@@ -104,14 +107,23 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
       canal: "Manual",
       hasMedidaEspecial: false,
       medidaEspecial: "",
+      products: [],
     },
   });
 
   const watchDespachoIgual = form.watch("direccionDespachoIgualFacturacion");
   const watchHasMedidaEspecial = form.watch("hasMedidaEspecial");
 
+  const handleAddProduct = (product: ProductFormData) => {
+    setProducts([...products, product]);
+  };
+
+  const handleRemoveProduct = (index: number) => {
+    setProducts(products.filter((_, i) => i !== index));
+  };
+
   // Get products, payment methods and banks for dropdowns
-  const { data: products = [] } = useQuery<any[]>({
+  const { data: productosList = [] } = useQuery<any[]>({
     queryKey: ["/api/admin/productos"],
   });
 
@@ -124,7 +136,7 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
   });
 
   const handleSubmit = (data: ManualSaleFormData) => {
-    onSubmit(data);
+    onSubmit({ ...data, products });
   };
 
   return (
@@ -197,12 +209,74 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
           </CardContent>
         </Card>
 
-        {/* Product and Payment Information */}
+        {/* Products List */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2 justify-between">
+              <div className="flex items-center gap-2">
+                <Package className="h-4 w-4" />
+                Productos
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setIsProductDialogOpen(true)}
+                data-testid="button-add-product"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Agregar Producto
+              </Button>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {products.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-4">
+                No hay productos agregados. Haz clic en "Agregar Producto" para comenzar.
+              </p>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Producto</TableHead>
+                    <TableHead>SKU</TableHead>
+                    <TableHead>Cantidad</TableHead>
+                    <TableHead>Total US$</TableHead>
+                    <TableHead className="w-[100px]">Acciones</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {products.map((product, index) => (
+                    <TableRow key={index} data-testid={`product-row-${index}`}>
+                      <TableCell>{product.producto}</TableCell>
+                      <TableCell>{product.sku || "N/A"}</TableCell>
+                      <TableCell>{product.cantidad}</TableCell>
+                      <TableCell>${product.totalUsd.toFixed(2)}</TableCell>
+                      <TableCell>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleRemoveProduct(index)}
+                          data-testid={`button-remove-product-${index}`}
+                        >
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Payment Information */}
         <Card>
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
-              <Package className="h-4 w-4" />
-              Información del Producto y Pago
+              <CreditCard className="h-4 w-4" />
+              Información de Pago
             </CardTitle>
           </CardHeader>
           <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -226,51 +300,6 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
                       ))}
                     </SelectContent>
                   </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="product"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Producto *</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value || ""}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Seleccionar producto" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {products.map((producto: any) => (
-                        <SelectItem key={producto.id} value={producto.nombre}>
-                          {producto.nombre}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="cantidad"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Cantidad *</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      min="1"
-                      placeholder="1"
-                      {...field}
-                      onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
-                    />
-                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
@@ -672,12 +701,22 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
           <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
             Cancelar
           </Button>
-          <Button type="submit" disabled={isSubmitting} data-testid="submit-manual-sale">
+          <Button 
+            type="submit" 
+            disabled={isSubmitting || products.length === 0} 
+            data-testid="submit-manual-sale"
+          >
             <Save className="h-4 w-4 mr-2" />
             {isSubmitting ? "Guardando..." : "Guardar Venta"}
           </Button>
         </div>
       </form>
+
+      <ProductDialog
+        isOpen={isProductDialogOpen}
+        onClose={() => setIsProductDialogOpen(false)}
+        onAdd={handleAddProduct}
+      />
     </Form>
   );
 }
