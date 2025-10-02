@@ -1118,6 +1118,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           montoUsd: String(row['Lineitem price'] || '0'),
           estadoEntrega: 'En Proceso', // Route Shopify orders to "Ventas por Completar"
           product: String(row['Lineitem name'] || ''),
+          sku: row['Lineitem sku'] || row['Lineitem SKU'] || row['lineitem sku'] || row['SKU'] ? 
+               String(row['Lineitem sku'] || row['Lineitem SKU'] || row['lineitem sku'] || row['SKU']) : null,
           cantidad: Number(row['Lineitem quantity'] || 1),
           // Billing address mapping
           direccionFacturacionPais: row['Billing Country'] ? String(row['Billing Country']) : null,
