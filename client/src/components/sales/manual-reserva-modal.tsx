@@ -152,6 +152,12 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
         direccionDespachoUrbanizacion: data.direccionDespachoIgualFacturacion ? data.direccionFacturacionUrbanizacion : (data.direccionDespachoUrbanizacion || null),
         // Handle medida especial
         medidaEspecial: data.hasMedidaEspecial && data.medidaEspecial ? data.medidaEspecial : null,
+        // Include products array for multi-product support
+        products: data.products,
+        // Add reserva-specific flags
+        estado: "Reserva",
+        estadoEntrega: "Por Entregar",
+        tipo: "Por Entregar",
       };
       return apiRequest("POST", "/api/sales/manual", formattedData);
     },
