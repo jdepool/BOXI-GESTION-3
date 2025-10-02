@@ -1547,7 +1547,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         direccionFacturacionDireccion: null,
         direccionFacturacionUrbanizacion: null,
         direccionFacturacionReferencia: null,
-        direccionDespachoIgualFacturacion: 'false',
+        direccionDespachoIgualFacturacion: 'true',
         direccionDespachoPais: null,
         direccionDespachoEstado: null,
         direccionDespachoCiudad: null,
