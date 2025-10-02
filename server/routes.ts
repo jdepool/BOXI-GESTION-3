@@ -1524,7 +1524,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         estado: 'confirmado',
         estadoEntrega: 'En Proceso', // All CASHEA orders start as "En Proceso"
         estadoPagoInicial: null,
-        pagoInicialUsd: null,
+        pagoInicialUsd: pagosIniciales[i] ? String(pagosIniciales[i]) : null,
         metodoPagoId: null,
         bancoId: null,
         orden: ordenes[i] ? String(ordenes[i]) : null,
