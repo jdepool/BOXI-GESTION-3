@@ -1416,8 +1416,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     console.log(`📧 Using credentials: ${casheaEmail}`);
 
     // Convert user input dates to ISO format for CASHEA API
+    // Start date: beginning of the day (4 AM UTC = midnight Venezuela time UTC-4)
     const startDateISO = new Date(startDate + "T04:00:00.000Z").toISOString();
-    const endDateISO = new Date(endDate + "T04:00:00.000Z").toISOString();
+    // End date: add 24 hours to capture the full day (next day at 4 AM UTC)
+    const endDateObj = new Date(endDate + "T04:00:00.000Z");
+    endDateObj.setDate(endDateObj.getDate() + 1);
+    const endDateISO = endDateObj.toISOString();
 
     console.log(`📅 Date conversion: ${startDate} -> ${startDateISO}`);
     console.log(`📅 Date conversion: ${endDate} -> ${endDateISO}`);
