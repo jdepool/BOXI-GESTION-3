@@ -3004,8 +3004,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         email: body.email || null,
         
         // Order information
-        totalUsd: body.totalUsd.toString(),
-        fecha: new Date(body.fecha),
+        totalUsd: body.totalUsd ? body.totalUsd.toString() : "0",
+        fecha: body.fecha ? new Date(body.fecha) : new Date(),
         canal: "manual",
         estado: body.estado || "pendiente", // Manual sales start as pending, Reservas can override this
         estadoEntrega: body.estadoEntrega || "En Proceso",
