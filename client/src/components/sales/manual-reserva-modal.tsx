@@ -35,7 +35,7 @@ const manualReservaSchema = z.object({
   cedula: z.string().optional(),
   telefono: z.string().min(1, "Teléfono es requerido"),
   email: z.string().email().optional().or(z.literal("")),
-  totalUsd: z.coerce.number().min(0.01, "Total USD debe ser mayor a 0"),
+  totalUsd: z.coerce.number().optional(),
   pagoInicialUsd: z.coerce.number().optional(),
   montoBs: z.coerce.number().optional(),
   referencia: z.string().optional(),
@@ -183,9 +183,6 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
   });
 
   const handleSubmit = (data: ManualReservaFormData) => {
-    console.log("Form submitted with data:", data);
-    console.log("Products:", products);
-    console.log("Form errors:", form.formState.errors);
     createReservaMutation.mutate({ ...data, products });
   };
 
@@ -700,12 +697,6 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
               <Button 
                 type="submit" 
                 disabled={createReservaMutation.isPending || products.length === 0}
-                onClick={() => {
-                  console.log("Button clicked!");
-                  console.log("Form errors:", form.formState.errors);
-                  console.log("Form values:", form.getValues());
-                  console.log("Products:", products);
-                }}
                 data-testid="button-create-reserva"
               >
                 {createReservaMutation.isPending ? "Creando..." : "Crear Reserva"}
