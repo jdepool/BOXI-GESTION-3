@@ -1501,6 +1501,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const montosBs = queryData['Monto en Bs'] || [];
     const estadosEntrega = queryData['Estado de Entrega'] || [];
     const productos = queryData.Product || [];
+    const cantidades = queryData.Cantidad || [];
     
     // Convert arrays into individual records
     const records: any[] = [];
@@ -1508,7 +1509,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       ordenes.length, nombres.length, cedulas.length, telefonos.length,
       emails.length, totalesUSD.length, fechas.length, canales.length,
       pagosIniciales.length, referencias.length, montosBs.length,
-      estadosEntrega.length, productos.length
+      estadosEntrega.length, productos.length, cantidades.length
     );
     
     for (let i = 0; i < maxLength; i++) {
@@ -1558,7 +1559,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         notas: null,
         fechaAtencion: null,
         product: productos[i] ? String(productos[i]) : 'CASHEA Product',
-        cantidad: 1
+        cantidad: Number(cantidades[i] || 1)
       });
     }
     
