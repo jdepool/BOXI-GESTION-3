@@ -2969,7 +2969,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Create manual sale
+  // Create manual sale (supports multiple products)
   app.post("/api/sales/manual", async (req, res) => {
     try {
       // Parse and validate the request body
@@ -2990,27 +2990,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const newOrderNumber = (maxOrderNumber + 1).toString();
 
-      // Prepare sale data with defaults for manual entries
-      const saleData = {
-        // Required fields
+      // Check if products array is provided for multi-product support
+      const products = body.products && Array.isArray(body.products) && body.products.length > 0
+        ? body.products
+        : null;
+
+      // Prepare base sale data shared by all products
+      const baseSaleData = {
+        // Customer information
         nombre: body.nombre,
-        totalUsd: body.totalUsd.toString(),
-        fecha: new Date(body.fecha),
-        canal: "manual",
-        estado: "pendiente", // Manual sales start as pending until payment is verified
-        estadoEntrega: "En Proceso",
-        product: body.product,
-        cantidad: parseInt(body.cantidad) || 1,
-        
-        // Optional fields
         cedula: body.cedula || null,
         telefono: body.telefono || null,
         email: body.email || null,
+        
+        // Order information
+        totalUsd: body.totalUsd.toString(),
+        fecha: new Date(body.fecha),
+        canal: "manual",
+        estado: body.estado || "pendiente", // Manual sales start as pending, Reservas can override this
+        estadoEntrega: body.estadoEntrega || "En Proceso",
+        orden: newOrderNumber,
+        
+        // Payment fields
         sucursal: null,
         tienda: null,
-        estadoPagoInicial: "pendiente",
+        estadoPagoInicial: body.estadoPagoInicial || "pendiente",
         pagoInicialUsd: (body.pagoInicialUsd !== undefined && body.pagoInicialUsd !== null) ? String(body.pagoInicialUsd) : null,
-        orden: newOrderNumber,
         factura: null,
         referencia: body.referencia || null,
         montoBs: body.montoBs || null,
@@ -3041,8 +3046,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         direccionDespachoReferencia: body.direccionDespachoIgualFacturacion ? 
           body.direccionFacturacionReferencia : body.direccionDespachoReferencia,
         
-        // New fields for sales system overhaul
-        tipo: body.tipo || 'Inmediato', // Default to Inmediato if not provided
+        // Tipo and fecha de entrega
+        tipo: body.tipo || 'Inmediato',
         fechaEntrega: body.fechaEntrega ? new Date(body.fechaEntrega) : undefined,
         
         // Medida especial
@@ -3051,8 +3056,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
           : null,
       };
 
-      const newSale = await storage.createSale(saleData);
-      res.status(201).json(newSale);
+      if (products) {
+        // Multi-product mode: create one sale record per product with same order number
+        const createdSales = [];
+        for (const product of products) {
+          const saleData = {
+            ...baseSaleData,
+            product: product.producto,
+            sku: product.sku || null,
+            cantidad: parseInt(product.cantidad) || 1,
+            // Override totalUsd with product-specific amount
+            totalUsd: String(product.totalUsd),
+            montoUsd: String(product.totalUsd),
+          };
+          const newSale = await storage.createSale(saleData);
+          createdSales.push(newSale);
+        }
+        res.status(201).json({ 
+          success: true, 
+          orden: newOrderNumber,
+          salesCreated: createdSales.length,
+          sales: createdSales 
+        });
+      } else {
+        // Legacy single-product mode (backwards compatibility)
+        const saleData = {
+          ...baseSaleData,
+          product: body.product,
+          sku: body.sku || null,
+          cantidad: parseInt(body.cantidad) || 1,
+        };
+        const newSale = await storage.createSale(saleData);
+        res.status(201).json(newSale);
+      }
     } catch (error) {
       console.error("Error creating manual sale:", error);
       res.status(500).json({ error: "Failed to create manual sale" });
