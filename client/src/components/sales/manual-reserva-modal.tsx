@@ -183,6 +183,9 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
   });
 
   const handleSubmit = (data: ManualReservaFormData) => {
+    console.log("Form submitted with data:", data);
+    console.log("Products:", products);
+    console.log("Form errors:", form.formState.errors);
     createReservaMutation.mutate({ ...data, products });
   };
 
