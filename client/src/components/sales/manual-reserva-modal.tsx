@@ -157,7 +157,7 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
         // Add reserva-specific flags
         estado: "Reserva",
         estadoEntrega: "Por Entregar",
-        tipo: "Por Entregar",
+        tipo: "Reserva",
       };
       return apiRequest("POST", "/api/sales/manual", formattedData);
     },
