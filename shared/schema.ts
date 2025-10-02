@@ -104,7 +104,7 @@ export const sales = pgTable("sales", {
   direccionFacturacionDireccion: text("direccion_facturacion_direccion"),
   direccionFacturacionUrbanizacion: text("direccion_facturacion_urbanizacion"),
   direccionFacturacionReferencia: text("direccion_facturacion_referencia"),
-  direccionDespachoIgualFacturacion: text("direccion_despacho_igual_facturacion").default("false"),
+  direccionDespachoIgualFacturacion: text("direccion_despacho_igual_facturacion").default("true"),
   direccionDespachoPais: text("direccion_despacho_pais"),
   direccionDespachoEstado: text("direccion_despacho_estado"),
   direccionDespachoCiudad: text("direccion_despacho_ciudad"),
