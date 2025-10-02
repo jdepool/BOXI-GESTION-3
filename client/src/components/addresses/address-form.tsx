@@ -110,7 +110,13 @@ export default function AddressForm() {
 
   const handleOrderSelect = (order: Sale) => {
     setSelectedOrder(order);
-    // Always set address data, pre-filling with existing data if available
+    // For orders without addresses, default checkbox to checked (same address)
+    // For orders with addresses, respect the saved value
+    const hasAddresses = !!order.direccionFacturacionPais;
+    const sameAddressDefault = hasAddresses 
+      ? (order.direccionDespachoIgualFacturacion === "true") 
+      : true; // Default to true (checked) for new orders
+    
     setAddressData({
       direccionFacturacionPais: order.direccionFacturacionPais || "Venezuela",
       direccionFacturacionEstado: order.direccionFacturacionEstado || "",
@@ -118,7 +124,7 @@ export default function AddressForm() {
       direccionFacturacionDireccion: order.direccionFacturacionDireccion || "",
       direccionFacturacionUrbanizacion: order.direccionFacturacionUrbanizacion || "",
       direccionFacturacionReferencia: order.direccionFacturacionReferencia || "",
-      direccionDespachoIgualFacturacion: order.direccionDespachoIgualFacturacion === "false" ? false : true,
+      direccionDespachoIgualFacturacion: sameAddressDefault,
       direccionDespachoPais: order.direccionDespachoPais || "Venezuela",
       direccionDespachoEstado: order.direccionDespachoEstado || "",
       direccionDespachoCiudad: order.direccionDespachoCiudad || "",
@@ -126,7 +132,7 @@ export default function AddressForm() {
       direccionDespachoUrbanizacion: order.direccionDespachoUrbanizacion || "",
       direccionDespachoReferencia: order.direccionDespachoReferencia || ""
     });
-    setShowShippingForm(order.direccionDespachoIgualFacturacion === "false");
+    setShowShippingForm(!sameAddressDefault);
   };
 
   const handleAddressChange = (field: keyof AddressData, value: string | boolean) => {
