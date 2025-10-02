@@ -206,7 +206,8 @@ function parseFile(buffer: Buffer, canal: string, filename: string) {
           montoUsd: String(row['Lineitem price'] || '0'), // Use individual line item price
           estadoEntrega: 'En Proceso', // Route Shopify orders to "Ventas por Completar"
           product: String(row['Lineitem name'] || ''),
-          sku: row['Lineitem sku'] ? String(row['Lineitem sku']) : null, // Map SKU from Shopify
+          sku: row['Lineitem sku'] || row['Lineitem SKU'] || row['lineitem sku'] || row['SKU'] ? 
+               String(row['Lineitem sku'] || row['Lineitem SKU'] || row['lineitem sku'] || row['SKU']) : null, // Map SKU from Shopify with fallbacks
           cantidad: Number(row['Lineitem quantity'] || 1),
           // Billing address mapping
           direccionFacturacionPais: row['Billing Country'] ? String(row['Billing Country']) : null,
