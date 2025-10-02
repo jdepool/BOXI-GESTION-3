@@ -700,6 +700,12 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
               <Button 
                 type="submit" 
                 disabled={createReservaMutation.isPending || products.length === 0}
+                onClick={() => {
+                  console.log("Button clicked!");
+                  console.log("Form errors:", form.formState.errors);
+                  console.log("Form values:", form.getValues());
+                  console.log("Products:", products);
+                }}
                 data-testid="button-create-reserva"
               >
                 {createReservaMutation.isPending ? "Creando..." : "Crear Reserva"}
