@@ -110,25 +110,23 @@ export default function AddressForm() {
 
   const handleOrderSelect = (order: Sale) => {
     setSelectedOrder(order);
-    // Pre-fill with existing address data if available
-    if (order.direccionFacturacionPais) {
-      setAddressData({
-        direccionFacturacionPais: order.direccionFacturacionPais || "Venezuela",
-        direccionFacturacionEstado: order.direccionFacturacionEstado || "",
-        direccionFacturacionCiudad: order.direccionFacturacionCiudad || "",
-        direccionFacturacionDireccion: order.direccionFacturacionDireccion || "",
-        direccionFacturacionUrbanizacion: order.direccionFacturacionUrbanizacion || "",
-        direccionFacturacionReferencia: order.direccionFacturacionReferencia || "",
-        direccionDespachoIgualFacturacion: order.direccionDespachoIgualFacturacion === "false" ? false : true,
-        direccionDespachoPais: order.direccionDespachoPais || "Venezuela",
-        direccionDespachoEstado: order.direccionDespachoEstado || "",
-        direccionDespachoCiudad: order.direccionDespachoCiudad || "",
-        direccionDespachoDireccion: order.direccionDespachoDireccion || "",
-        direccionDespachoUrbanizacion: order.direccionDespachoUrbanizacion || "",
-        direccionDespachoReferencia: order.direccionDespachoReferencia || ""
-      });
-      setShowShippingForm(order.direccionDespachoIgualFacturacion === "false");
-    }
+    // Always set address data, pre-filling with existing data if available
+    setAddressData({
+      direccionFacturacionPais: order.direccionFacturacionPais || "Venezuela",
+      direccionFacturacionEstado: order.direccionFacturacionEstado || "",
+      direccionFacturacionCiudad: order.direccionFacturacionCiudad || "",
+      direccionFacturacionDireccion: order.direccionFacturacionDireccion || "",
+      direccionFacturacionUrbanizacion: order.direccionFacturacionUrbanizacion || "",
+      direccionFacturacionReferencia: order.direccionFacturacionReferencia || "",
+      direccionDespachoIgualFacturacion: order.direccionDespachoIgualFacturacion === "false" ? false : true,
+      direccionDespachoPais: order.direccionDespachoPais || "Venezuela",
+      direccionDespachoEstado: order.direccionDespachoEstado || "",
+      direccionDespachoCiudad: order.direccionDespachoCiudad || "",
+      direccionDespachoDireccion: order.direccionDespachoDireccion || "",
+      direccionDespachoUrbanizacion: order.direccionDespachoUrbanizacion || "",
+      direccionDespachoReferencia: order.direccionDespachoReferencia || ""
+    });
+    setShowShippingForm(order.direccionDespachoIgualFacturacion === "false");
   };
 
   const handleAddressChange = (field: keyof AddressData, value: string | boolean) => {
