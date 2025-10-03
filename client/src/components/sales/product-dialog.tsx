@@ -109,24 +109,6 @@ export default function ProductDialog({ isOpen, onClose, onAdd }: ProductDialogP
 
             <FormField
               control={form.control}
-              name="sku"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>SKU (Opcional)</FormLabel>
-                  <FormControl>
-                    <Input 
-                      placeholder="Ej: COL-KING-200X200" 
-                      {...field} 
-                      data-testid="input-sku"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
               name="cantidad"
               render={({ field }) => (
                 <FormItem>
