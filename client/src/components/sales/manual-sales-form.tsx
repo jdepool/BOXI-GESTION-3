@@ -242,6 +242,7 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
                     <TableHead>SKU</TableHead>
                     <TableHead>Cantidad</TableHead>
                     <TableHead>Total US$</TableHead>
+                    <TableHead>Medida Especial</TableHead>
                     <TableHead className="w-[100px]">Acciones</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -252,6 +253,7 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
                       <TableCell>{product.sku || "N/A"}</TableCell>
                       <TableCell>{product.cantidad}</TableCell>
                       <TableCell>${product.totalUsd.toFixed(2)}</TableCell>
+                      <TableCell>{product.medidaEspecial || "N/A"}</TableCell>
                       <TableCell>
                         <Button
                           type="button"
