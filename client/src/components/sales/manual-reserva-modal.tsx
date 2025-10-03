@@ -53,17 +53,6 @@ const manualReservaSchema = z.object({
   direccionDespachoCiudad: z.string().optional(),
   direccionDespachoDireccion: z.string().optional(),
   direccionDespachoUrbanizacion: z.string().optional(),
-  hasMedidaEspecial: z.boolean().default(false),
-  medidaEspecial: z.string().max(10, "Máximo 10 caracteres").optional(),
-}).refine(data => {
-  // If hasMedidaEspecial is true, medidaEspecial must be provided and non-empty
-  if (data.hasMedidaEspecial) {
-    return data.medidaEspecial && data.medidaEspecial.trim().length > 0;
-  }
-  return true;
-}, {
-  message: "Debe especificar la medida cuando está marcada",
-  path: ["medidaEspecial"],
 });
 
 type ManualReservaFormData = z.infer<typeof manualReservaSchema> & {
@@ -100,14 +89,11 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
       direccionDespachoDireccion: "",
       direccionDespachoUrbanizacion: "",
       fechaEntrega: undefined,
-      hasMedidaEspecial: false,
-      medidaEspecial: "",
       products: [],
     },
   });
 
   const watchDespachoIgual = form.watch("direccionDespachoIgualFacturacion");
-  const watchHasMedidaEspecial = form.watch("hasMedidaEspecial");
 
   const handleAddProduct = (product: ProductFormData) => {
     setProducts([...products, product]);
@@ -150,8 +136,6 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
         direccionDespachoCiudad: data.direccionDespachoIgualFacturacion ? data.direccionFacturacionCiudad : (data.direccionDespachoCiudad || null),
         direccionDespachoDireccion: data.direccionDespachoIgualFacturacion ? data.direccionFacturacionDireccion : (data.direccionDespachoDireccion || null),
         direccionDespachoUrbanizacion: data.direccionDespachoIgualFacturacion ? data.direccionFacturacionUrbanizacion : (data.direccionDespachoUrbanizacion || null),
-        // Handle medida especial
-        medidaEspecial: data.hasMedidaEspecial && data.medidaEspecial ? data.medidaEspecial : null,
         // Include products array for multi-product support
         products: data.products,
         // Add reserva-specific flags
@@ -333,6 +317,7 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
                         <TableHead>SKU</TableHead>
                         <TableHead>Cantidad</TableHead>
                         <TableHead>Total US$</TableHead>
+                        <TableHead>Medida Especial</TableHead>
                         <TableHead className="w-[100px]">Acciones</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -343,6 +328,7 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
                           <TableCell>{product.sku || "N/A"}</TableCell>
                           <TableCell>{product.cantidad}</TableCell>
                           <TableCell>${product.totalUsd.toFixed(2)}</TableCell>
+                          <TableCell>{product.medidaEspecial || "N/A"}</TableCell>
                           <TableCell>
                             <Button
                               type="button"
@@ -631,56 +617,6 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
                   )}
                 />
               </div>
-              )}
-            </div>
-
-            {/* Medida Especial */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold flex items-center gap-2">
-                <Package className="h-5 w-5" />
-                Medida Especial
-              </h3>
-              <FormField
-                control={form.control}
-                name="hasMedidaEspecial"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                    <FormControl>
-                      <Checkbox
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                        data-testid="checkbox-medida-especial"
-                      />
-                    </FormControl>
-                    <div className="space-y-1 leading-none">
-                      <FormLabel>
-                        Esta venta requiere medida especial
-                      </FormLabel>
-                    </div>
-                  </FormItem>
-                )}
-              />
-
-              {watchHasMedidaEspecial && (
-                <FormField
-                  control={form.control}
-                  name="medidaEspecial"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Especificar Medida</FormLabel>
-                      <FormControl>
-                        <Input 
-                          placeholder="Ingrese medida (máx. 10 caracteres)" 
-                          maxLength={10}
-                          {...field}
-                          value={field.value || ""}
-                          data-testid="input-medida-especial"
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
               )}
             </div>
 
