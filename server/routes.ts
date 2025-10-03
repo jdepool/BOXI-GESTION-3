@@ -3055,11 +3055,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Tipo and fecha de entrega
         tipo: body.tipo || 'Inmediato',
         fechaEntrega: body.fechaEntrega ? new Date(body.fechaEntrega) : undefined,
-        
-        // Medida especial
-        medidaEspecial: body.hasMedidaEspecial && body.medidaEspecial && body.medidaEspecial.trim() 
-          ? body.medidaEspecial.trim() 
-          : null,
       };
 
       if (products) {
@@ -3074,6 +3069,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
             // Override totalUsd with product-specific amount
             totalUsd: String(product.totalUsd),
             montoUsd: String(product.totalUsd),
+            // Product-specific medida especial
+            medidaEspecial: product.hasMedidaEspecial && product.medidaEspecial && product.medidaEspecial.trim()
+              ? product.medidaEspecial.trim()
+              : null,
           };
           const newSale = await storage.createSale(saleData);
           createdSales.push(newSale);
