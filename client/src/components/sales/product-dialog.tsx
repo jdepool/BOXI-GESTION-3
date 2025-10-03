@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Package } from "lucide-react";
 
 const productFormSchema = z.object({
@@ -14,6 +15,16 @@ const productFormSchema = z.object({
   sku: z.string().optional(),
   cantidad: z.coerce.number().int().min(1, "Cantidad debe ser al menos 1"),
   totalUsd: z.coerce.number().min(0.01, "Total US$ debe ser mayor a 0"),
+  hasMedidaEspecial: z.boolean().default(false),
+  medidaEspecial: z.string().max(10, "Máximo 10 caracteres").optional(),
+}).refine(data => {
+  if (data.hasMedidaEspecial) {
+    return data.medidaEspecial && data.medidaEspecial.trim().length > 0;
+  }
+  return true;
+}, {
+  message: "Debe especificar la medida cuando está marcada",
+  path: ["medidaEspecial"],
 });
 
 export type ProductFormData = z.infer<typeof productFormSchema>;
@@ -32,6 +43,8 @@ export default function ProductDialog({ isOpen, onClose, onAdd }: ProductDialogP
       sku: "",
       cantidad: 1,
       totalUsd: 0,
+      hasMedidaEspecial: false,
+      medidaEspecial: "",
     },
   });
 
@@ -39,6 +52,8 @@ export default function ProductDialog({ isOpen, onClose, onAdd }: ProductDialogP
   const { data: products = [] } = useQuery<any[]>({
     queryKey: ["/api/admin/productos"],
   });
+
+  const watchHasMedidaEspecial = form.watch("hasMedidaEspecial");
 
   const handleSubmit = (data: ProductFormData) => {
     onAdd(data);
@@ -149,6 +164,48 @@ export default function ProductDialog({ isOpen, onClose, onAdd }: ProductDialogP
                 </FormItem>
               )}
             />
+
+            <FormField
+              control={form.control}
+              name="hasMedidaEspecial"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                      data-testid="checkbox-medida-especial-producto"
+                    />
+                  </FormControl>
+                  <div className="space-y-1 leading-none">
+                    <FormLabel>
+                      Este producto requiere medida especial
+                    </FormLabel>
+                  </div>
+                </FormItem>
+              )}
+            />
+
+            {watchHasMedidaEspecial && (
+              <FormField
+                control={form.control}
+                name="medidaEspecial"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Especificar Medida</FormLabel>
+                    <FormControl>
+                      <Input 
+                        placeholder="Ingrese medida (máx. 10 caracteres)" 
+                        maxLength={10}
+                        {...field} 
+                        data-testid="input-medida-especial-producto"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
 
             <DialogFooter className="gap-2">
               <Button 
