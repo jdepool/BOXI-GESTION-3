@@ -172,7 +172,7 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
                 <FormItem>
                   <FormLabel>Teléfono</FormLabel>
                   <FormControl>
-                    <Input placeholder="0414-1234567" {...field} />
+                    <Input placeholder="04141234567" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
