@@ -99,9 +99,6 @@ export default function ManualSalesEntry() {
         <div className="flex items-center justify-between mb-6">
           <div>
             <h2 className="text-lg font-semibold text-foreground">Nueva Venta Manual</h2>
-            <p className="text-sm text-muted-foreground">
-              Completa toda la información de la venta
-            </p>
           </div>
           <Button
             variant="outline"
