@@ -12,7 +12,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { CalendarIcon, Package, Plus, Trash2, User } from "lucide-react";
+import { CalendarIcon, MapPin, Package, Plus, Trash2, User } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -453,10 +453,15 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
               </div>
             </div>
 
-            {/* Address Information */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Dirección de Facturación</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Billing Address */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base flex items-center gap-2">
+                  <MapPin className="h-4 w-4" />
+                  Dirección de Facturación
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
                   name="direccionFacturacionPais"
@@ -526,9 +531,18 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
                     </FormItem>
                   )}
                 />
-              </div>
+              </CardContent>
+            </Card>
 
-              <h3 className="text-lg font-semibold">Dirección de Despacho</h3>
+            {/* Shipping Address */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base flex items-center gap-2">
+                  <MapPin className="h-4 w-4" />
+                  Dirección de Despacho
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
               <FormField
                 control={form.control}
                 name="direccionDespachoIgualFacturacion"
@@ -623,7 +637,8 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
                 />
               </div>
               )}
-            </div>
+              </CardContent>
+            </Card>
 
             {/* Actions */}
             <div className="flex justify-end gap-3">
