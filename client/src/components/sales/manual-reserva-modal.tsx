@@ -48,6 +48,7 @@ const manualReservaSchema = z.object({
   direccionFacturacionCiudad: z.string().optional(),
   direccionFacturacionDireccion: z.string().optional(),
   direccionFacturacionUrbanizacion: z.string().optional(),
+  direccionFacturacionReferencia: z.string().optional(),
   direccionDespachoPais: z.string().optional(),
   direccionDespachoEstado: z.string().optional(),
   direccionDespachoCiudad: z.string().optional(),
@@ -82,6 +83,7 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
       direccionFacturacionCiudad: "",
       direccionFacturacionDireccion: "",
       direccionFacturacionUrbanizacion: "",
+      direccionFacturacionReferencia: "",
       direccionDespachoIgualFacturacion: true,
       direccionDespachoPais: "",
       direccionDespachoEstado: "",
@@ -130,6 +132,7 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
         direccionFacturacionCiudad: data.direccionFacturacionCiudad || null,
         direccionFacturacionDireccion: data.direccionFacturacionDireccion || null,
         direccionFacturacionUrbanizacion: data.direccionFacturacionUrbanizacion || null,
+        direccionFacturacionReferencia: data.direccionFacturacionReferencia || null,
         // If direccionDespachoIgualFacturacion is true, copy billing address to shipping
         direccionDespachoPais: data.direccionDespachoIgualFacturacion ? data.direccionFacturacionPais : (data.direccionDespachoPais || null),
         direccionDespachoEstado: data.direccionDespachoIgualFacturacion ? data.direccionFacturacionEstado : (data.direccionDespachoEstado || null),
@@ -461,15 +464,15 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
                   Dirección de Facturación
                 </CardTitle>
               </CardHeader>
-              <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <FormField
                   control={form.control}
                   name="direccionFacturacionPais"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>País</FormLabel>
+                      <FormLabel>País *</FormLabel>
                       <FormControl>
-                        <Input {...field} value={field.value || ""} data-testid="input-facturacion-pais" />
+                        <Input placeholder="Venezuela" {...field} data-testid="input-facturacion-pais" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -481,9 +484,9 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
                   name="direccionFacturacionEstado"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Estado</FormLabel>
+                      <FormLabel>Estado *</FormLabel>
                       <FormControl>
-                        <Input {...field} value={field.value || ""} data-testid="input-facturacion-estado" />
+                        <Input placeholder="Distrito Capital" {...field} data-testid="input-facturacion-estado" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -495,9 +498,9 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
                   name="direccionFacturacionCiudad"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Ciudad</FormLabel>
+                      <FormLabel>Ciudad *</FormLabel>
                       <FormControl>
-                        <Input {...field} value={field.value || ""} data-testid="input-facturacion-ciudad" />
+                        <Input placeholder="Caracas" {...field} data-testid="input-facturacion-ciudad" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -508,10 +511,10 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
                   control={form.control}
                   name="direccionFacturacionDireccion"
                   render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Dirección</FormLabel>
+                    <FormItem className="md:col-span-2 lg:col-span-3">
+                      <FormLabel>Dirección *</FormLabel>
                       <FormControl>
-                        <Input {...field} value={field.value || ""} data-testid="input-facturacion-direccion" />
+                        <Input placeholder="Calle, número, apartamento, etc." {...field} data-testid="input-facturacion-direccion" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -525,7 +528,21 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
                     <FormItem>
                       <FormLabel>Urbanización</FormLabel>
                       <FormControl>
-                        <Input {...field} value={field.value || ""} data-testid="input-facturacion-urbanizacion" />
+                        <Input placeholder="Nombre de la urbanización" {...field} data-testid="input-facturacion-urbanizacion" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="direccionFacturacionReferencia"
+                  render={({ field }) => (
+                    <FormItem className="md:col-span-2">
+                      <FormLabel>Referencia</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Punto de referencia" {...field} data-testid="input-facturacion-referencia" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
