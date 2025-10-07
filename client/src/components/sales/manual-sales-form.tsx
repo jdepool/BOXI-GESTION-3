@@ -158,7 +158,7 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
                 <FormItem>
                   <FormLabel>Cédula</FormLabel>
                   <FormControl>
-                    <Input placeholder="V-12345678" {...field} />
+                    <Input placeholder="12345678" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
