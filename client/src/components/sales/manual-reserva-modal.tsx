@@ -54,6 +54,7 @@ const manualReservaSchema = z.object({
   direccionDespachoCiudad: z.string().optional(),
   direccionDespachoDireccion: z.string().optional(),
   direccionDespachoUrbanizacion: z.string().optional(),
+  direccionDespachoReferencia: z.string().optional(),
 });
 
 type ManualReservaFormData = z.infer<typeof manualReservaSchema> & {
@@ -90,6 +91,7 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
       direccionDespachoCiudad: "",
       direccionDespachoDireccion: "",
       direccionDespachoUrbanizacion: "",
+      direccionDespachoReferencia: "",
       fechaEntrega: undefined,
       products: [],
     },
@@ -139,6 +141,7 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
         direccionDespachoCiudad: data.direccionDespachoIgualFacturacion ? data.direccionFacturacionCiudad : (data.direccionDespachoCiudad || null),
         direccionDespachoDireccion: data.direccionDespachoIgualFacturacion ? data.direccionFacturacionDireccion : (data.direccionDespachoDireccion || null),
         direccionDespachoUrbanizacion: data.direccionDespachoIgualFacturacion ? data.direccionFacturacionUrbanizacion : (data.direccionDespachoUrbanizacion || null),
+        direccionDespachoReferencia: data.direccionDespachoIgualFacturacion ? data.direccionFacturacionReferencia : (data.direccionDespachoReferencia || null),
         // Include products array for multi-product support
         products: data.products,
         // Add reserva-specific flags
@@ -582,7 +585,7 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
               />
 
               {!watchDespachoIgual && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pt-4">
                 <FormField
                   control={form.control}
                   name="direccionDespachoPais"
@@ -590,7 +593,7 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
                     <FormItem>
                       <FormLabel>País</FormLabel>
                       <FormControl>
-                        <Input {...field} value={field.value || ""} data-testid="input-despacho-pais" />
+                        <Input placeholder="Venezuela" {...field} data-testid="input-despacho-pais" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -604,7 +607,7 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
                     <FormItem>
                       <FormLabel>Estado</FormLabel>
                       <FormControl>
-                        <Input {...field} value={field.value || ""} data-testid="input-despacho-estado" />
+                        <Input placeholder="Distrito Capital" {...field} data-testid="input-despacho-estado" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -618,7 +621,7 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
                     <FormItem>
                       <FormLabel>Ciudad</FormLabel>
                       <FormControl>
-                        <Input {...field} value={field.value || ""} data-testid="input-despacho-ciudad" />
+                        <Input placeholder="Caracas" {...field} data-testid="input-despacho-ciudad" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -629,10 +632,10 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
                   control={form.control}
                   name="direccionDespachoDireccion"
                   render={({ field }) => (
-                    <FormItem>
+                    <FormItem className="md:col-span-2 lg:col-span-3">
                       <FormLabel>Dirección</FormLabel>
                       <FormControl>
-                        <Input {...field} value={field.value || ""} data-testid="input-despacho-direccion" />
+                        <Input placeholder="Calle, número, apartamento, etc." {...field} data-testid="input-despacho-direccion" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -646,7 +649,21 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
                     <FormItem>
                       <FormLabel>Urbanización</FormLabel>
                       <FormControl>
-                        <Input {...field} value={field.value || ""} data-testid="input-despacho-urbanizacion" />
+                        <Input placeholder="Nombre de la urbanización" {...field} data-testid="input-despacho-urbanizacion" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="direccionDespachoReferencia"
+                  render={({ field }) => (
+                    <FormItem className="md:col-span-2">
+                      <FormLabel>Referencia</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Punto de referencia cercano" {...field} data-testid="input-despacho-referencia" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
