@@ -32,9 +32,9 @@ interface ManualReservaModalProps {
 // Form schema based on insertSaleSchema with proper numeric coercion
 const manualReservaSchema = z.object({
   nombre: z.string().min(1, "Nombre es requerido"),
-  cedula: z.string().regex(/^\d*$/, "La cédula debe contener solo números").optional(),
+  cedula: z.string().min(1, "Cédula es requerida").regex(/^\d{6,8}$/, "La cédula debe tener entre 6 y 8 dígitos"),
   telefono: z.string().min(1, "Teléfono es requerido").regex(/^\d+$/, "El teléfono debe contener solo números"),
-  email: z.string().email().optional().or(z.literal("")),
+  email: z.string().email("Email inválido").optional().or(z.literal("")),
   totalUsd: z.coerce.number().optional(),
   pagoInicialUsd: z.coerce.number().optional(),
   montoBs: z.coerce.number().optional(),
@@ -194,9 +194,9 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
                   name="nombre"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Nombre del Cliente *</FormLabel>
+                      <FormLabel>Nombre *</FormLabel>
                       <FormControl>
-                        <Input {...field} data-testid="input-nombre" required />
+                        <Input placeholder="Nombre y Apellido" {...field} data-testid="input-nombre" required />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -208,9 +208,9 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
                   name="cedula"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Cédula</FormLabel>
+                      <FormLabel>Cédula *</FormLabel>
                       <FormControl>
-                        <Input {...field} value={field.value || ""} data-testid="input-cedula" />
+                        <Input placeholder="12345678" {...field} value={field.value || ""} data-testid="input-cedula" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -224,7 +224,7 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
                     <FormItem>
                       <FormLabel>Teléfono *</FormLabel>
                       <FormControl>
-                        <Input {...field} value={field.value || ""} data-testid="input-telefono" />
+                        <Input placeholder="04141234567" {...field} value={field.value || ""} data-testid="input-telefono" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -238,7 +238,7 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
                     <FormItem>
                       <FormLabel>Email</FormLabel>
                       <FormControl>
-                        <Input {...field} value={field.value || ""} type="email" data-testid="input-email" />
+                        <Input placeholder="cliente@email.com" {...field} value={field.value || ""} type="email" data-testid="input-email" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
