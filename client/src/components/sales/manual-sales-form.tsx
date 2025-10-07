@@ -27,8 +27,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 
 const manualSaleSchema = z.object({
   nombre: z.string().min(1, "Nombre es requerido"),
-  cedula: z.string().optional(),
-  telefono: z.string().min(1, "Teléfono es requerido"),
+  cedula: z.string().regex(/^\d*$/, "La cédula debe contener solo números").optional(),
+  telefono: z.string().min(1, "Teléfono es requerido").regex(/^\d+$/, "El teléfono debe contener solo números"),
   email: z.string().email("Email inválido").optional(),
   totalUsd: z.string().min(1, "Total USD es requerido"),
   fecha: z.string().min(1, "Fecha es requerida"),

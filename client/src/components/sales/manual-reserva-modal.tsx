@@ -32,8 +32,8 @@ interface ManualReservaModalProps {
 // Form schema based on insertSaleSchema with proper numeric coercion
 const manualReservaSchema = z.object({
   nombre: z.string().min(1, "Nombre es requerido"),
-  cedula: z.string().optional(),
-  telefono: z.string().min(1, "Teléfono es requerido"),
+  cedula: z.string().regex(/^\d*$/, "La cédula debe contener solo números").optional(),
+  telefono: z.string().min(1, "Teléfono es requerido").regex(/^\d+$/, "El teléfono debe contener solo números"),
   email: z.string().email().optional().or(z.literal("")),
   totalUsd: z.coerce.number().optional(),
   pagoInicialUsd: z.coerce.number().optional(),
