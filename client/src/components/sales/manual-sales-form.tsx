@@ -27,7 +27,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 
 const manualSaleSchema = z.object({
   nombre: z.string().min(1, "Nombre es requerido"),
-  cedula: z.string().regex(/^\d*$/, "La cédula debe contener solo números").optional(),
+  cedula: z.string().min(1, "Cédula es requerida").regex(/^\d{6,8}$/, "La cédula debe tener entre 6 y 8 dígitos"),
   telefono: z.string().min(1, "Teléfono es requerido").regex(/^\d+$/, "El teléfono debe contener solo números"),
   email: z.string().email("Email inválido").optional(),
   totalUsd: z.string().min(1, "Total USD es requerido"),
@@ -156,7 +156,7 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
               name="cedula"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Cédula</FormLabel>
+                  <FormLabel>Cédula *</FormLabel>
                   <FormControl>
                     <Input placeholder="12345678" {...field} />
                   </FormControl>
@@ -170,7 +170,7 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
               name="telefono"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Teléfono</FormLabel>
+                  <FormLabel>Teléfono *</FormLabel>
                   <FormControl>
                     <Input placeholder="04141234567" {...field} />
                   </FormControl>
