@@ -144,7 +144,7 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
                 <FormItem>
                   <FormLabel>Nombre *</FormLabel>
                   <FormControl>
-                    <Input placeholder="Nombre completo" {...field} />
+                    <Input placeholder="Nombre y Apellido" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
