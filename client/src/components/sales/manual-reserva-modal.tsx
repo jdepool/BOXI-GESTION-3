@@ -78,7 +78,7 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
       bancoId: "",
       montoBs: 0,
       montoUsd: "",
-      direccionFacturacionPais: "",
+      direccionFacturacionPais: "Venezuela",
       direccionFacturacionEstado: "",
       direccionFacturacionCiudad: "",
       direccionFacturacionDireccion: "",
