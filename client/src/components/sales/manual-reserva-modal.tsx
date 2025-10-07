@@ -187,7 +187,7 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
           <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
             {/* Basic Information */}
             <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Información Básica</h3>
+              <h3 className="text-lg font-semibold">Información del Cliente</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
