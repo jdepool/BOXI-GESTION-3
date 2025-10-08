@@ -211,7 +211,7 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
               </Button>
             </CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-4">
             {products.length === 0 ? (
               <p className="text-sm text-muted-foreground text-center py-4">
                 No hay productos agregados. Haz clic en "Agregar Producto" para comenzar.
@@ -252,6 +252,20 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
                 </TableBody>
               </Table>
             )}
+            
+            <FormField
+              control={form.control}
+              name="totalUsd"
+              render={({ field }) => (
+                <FormItem className="max-w-xs">
+                  <FormLabel>Total USD *</FormLabel>
+                  <FormControl>
+                    <Input placeholder="0.00" {...field} data-testid="input-total-usd" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
           </CardContent>
         </Card>
 
@@ -264,20 +278,6 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
             </CardTitle>
           </CardHeader>
           <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <FormField
-              control={form.control}
-              name="totalUsd"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Total USD *</FormLabel>
-                  <FormControl>
-                    <Input placeholder="0.00" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
             <FormField
               control={form.control}
               name="fecha"
