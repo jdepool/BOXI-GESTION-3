@@ -3009,8 +3009,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         telefono: body.telefono || null,
         email: body.email || null,
         
-        // Order information
-        totalUsd: body.totalUsd ? body.totalUsd.toString() : "0",
+        // Order information - totalUsd will be set per product, totalOrderUsd is the overall order total
+        totalOrderUsd: body.totalUsd ? body.totalUsd.toString() : null, // Store the total order amount from main form
         fecha: body.fecha ? new Date(body.fecha) : new Date(),
         canal: "manual",
         estado: body.estado || "pendiente", // Manual sales start as pending, Reservas can override this
@@ -3090,6 +3090,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           product: body.product,
           sku: body.sku || null,
           cantidad: parseInt(body.cantidad) || 1,
+          totalUsd: body.totalUsd ? body.totalUsd.toString() : "0",
         };
         const newSale = await storage.createSale(saleData);
         res.status(201).json(newSale);

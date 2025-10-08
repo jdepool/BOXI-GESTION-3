@@ -79,6 +79,7 @@ export const sales = pgTable("sales", {
   telefono: text("telefono"),
   email: text("email"),
   totalUsd: decimal("total_usd", { precision: 10, scale: 2 }).notNull(),
+  totalOrderUsd: decimal("total_order_usd", { precision: 10, scale: 2 }),
   sucursal: text("sucursal"),
   tienda: text("tienda"),
   fecha: timestamp("fecha").notNull(),
