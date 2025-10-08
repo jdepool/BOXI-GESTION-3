@@ -154,3 +154,33 @@ Updated the system so manual sales automatically move from "Ventas por Completar
 - **Payment Info Filled**: When installment is created with payment amount > 0, `estado` changes to "activo" and `estadoEntrega` remains "En Proceso"
 - **Automatic Movement**: Sale automatically moves from "Ventas por Completar" to "Lista de Ventas"
 - **Payment Verification**: Remains independent - `verificado` flag can be toggled separately without affecting tab placement
+
+## October 2025 - Multi-Product Order Enhancement
+
+### Total Order USD Field Implementation
+Added separation between overall order total and individual product prices for manual sales with multiple products:
+
+**Database Schema Updates:**
+- Added `totalOrderUsd` nullable decimal(10,2) column to sales table
+- Stores the overall order total from the main manual sales form
+- Separate from `totalUsd` which stores individual product prices
+
+**Data Model:**
+- `totalOrderUsd`: Overall order total from main form's "Total Orden USD" field (shared across all products in same order)
+- `totalUsd`: Individual product price from "Agregar Producto" dialog (unique per product)
+- Both fields stored in each sale record for flexibility in future reporting
+
+**Backend Implementation:**
+- Manual sales route (`POST /api/sales/manual`) stores form's total USD in `totalOrderUsd` for all product records
+- Each product record gets its own `totalUsd` from the product dialog
+- Legacy single-product mode maintains backward compatibility
+
+**Frontend Updates:**
+- Main form field renamed from "Total USD" to "Total Orden USD" for clarity
+- Product dialog maintains "Total USD" for individual product pricing
+- Table displays individual product totals in "Total USD" column
+
+**Use Case:**
+- Enables tracking both order-level totals (for billing/invoicing) and product-level totals (for inventory/reporting)
+- Supports future views that aggregate by order using `totalOrderUsd`
+- Maintains product-level detail in "Ventas por Completar" table using `totalUsd`
