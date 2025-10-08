@@ -493,7 +493,6 @@ export default function Egresos() {
           </div>
         </div>
       </div>
-
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="egresos">Egresos</TabsTrigger>
@@ -543,7 +542,7 @@ export default function Egresos() {
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <Label htmlFor="fecha">Fecha *</Label>
+                      <Label htmlFor="fecha">Fecha Registro *</Label>
                       <Popover>
                         <PopoverTrigger asChild>
                           <Button
@@ -573,7 +572,7 @@ export default function Egresos() {
                       </Popover>
                     </div>
                     <div>
-                      <Label htmlFor="monto">Monto *</Label>
+                      <Label htmlFor="monto">Monto en USD *</Label>
                       <Input
                         id="monto"
                         type="number"
@@ -1224,8 +1223,6 @@ export default function Egresos() {
           </Card>
         </TabsContent>
       </Tabs>
-
-
       {/* Complete Payment Info Dialog */}
       <Dialog open={completePagoDialogOpen} onOpenChange={setCompletePagoDialogOpen}>
         <DialogContent className="max-w-xl">
