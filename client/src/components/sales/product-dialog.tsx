@@ -131,7 +131,7 @@ export default function ProductDialog({ isOpen, onClose, onAdd }: ProductDialogP
               name="totalUsd"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Total US$ *</FormLabel>
+                  <FormLabel>Total USD *</FormLabel>
                   <FormControl>
                     <Input 
                       type="number" 
