@@ -50,7 +50,7 @@ const manualSaleSchema = z.object({
   direccionDespachoDireccion: z.string().optional(),
   direccionDespachoUrbanizacion: z.string().optional(),
   direccionDespachoReferencia: z.string().optional(),
-  canal: z.string().min(1, "Canal es requerido"),
+  canal: z.string().optional(),
   asesorId: z.string().optional(),
 });
 
@@ -115,10 +115,6 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
 
   const { data: banks = [] } = useQuery<any[]>({
     queryKey: ["/api/admin/bancos"],
-  });
-
-  const { data: canales = [] } = useQuery<any[]>({
-    queryKey: ["/api/admin/canales"],
   });
 
   const handleSubmit = (data: ManualSaleFormData) => {
@@ -268,31 +264,6 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
             </CardTitle>
           </CardHeader>
           <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <FormField
-              control={form.control}
-              name="canal"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Canal *</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value || ""}>
-                    <FormControl>
-                      <SelectTrigger data-testid="select-canal">
-                        <SelectValue placeholder="Seleccionar canal" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {canales.map((canal: any) => (
-                        <SelectItem key={canal.id} value={canal.nombre}>
-                          {canal.nombre}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
             <FormField
               control={form.control}
               name="totalUsd"
