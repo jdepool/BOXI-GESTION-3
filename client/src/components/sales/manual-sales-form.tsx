@@ -258,7 +258,7 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
               name="totalUsd"
               render={({ field }) => (
                 <FormItem className="max-w-xs">
-                  <FormLabel>Total USD *</FormLabel>
+                  <FormLabel>Total Order USD *</FormLabel>
                   <FormControl>
                     <Input placeholder="0.00" {...field} data-testid="input-total-usd" />
                   </FormControl>
@@ -617,7 +617,6 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
           </Button>
         </div>
       </form>
-
       <ProductDialog
         isOpen={isProductDialogOpen}
         onClose={() => setIsProductDialogOpen(false)}
