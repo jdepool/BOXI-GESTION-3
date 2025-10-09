@@ -41,12 +41,10 @@ export default function ManualSalesEntry() {
   const createManualSaleMutation = useMutation({
     mutationFn: (data: any) => apiRequest("POST", "/api/sales/manual", data),
     onSuccess: (response) => {
-      console.log('[Manual Sales] Mutation success, invalidating queries');
       // Invalidate all sales queries using predicate to ensure all variants are invalidated
       queryClient.invalidateQueries({ 
         predicate: (query) => Array.isArray(query.queryKey) && typeof query.queryKey[0] === 'string' && query.queryKey[0].startsWith('/api/sales')
       });
-      console.log('[Manual Sales] Queries invalidated');
       toast({
         title: "Venta creada",
         description: "La venta ha sido registrada exitosamente.",

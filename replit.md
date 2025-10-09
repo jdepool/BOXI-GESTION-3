@@ -184,3 +184,28 @@ Added separation between overall order total and individual product prices for m
 - Enables tracking both order-level totals (for billing/invoicing) and product-level totals (for inventory/reporting)
 - Supports future views that aggregate by order using `totalOrderUsd`
 - Maintains product-level detail in "Ventas por Completar" table using `totalUsd`
+
+### React Query Cache Invalidation Fix
+Fixed critical bug where multi-product orders would not display all rows immediately after creation due to stale React Query cache:
+
+**Root Cause:**
+- React Query uses `staleTime: Infinity` for sales queries
+- Original cache invalidation used `queryClient.invalidateQueries({ queryKey: ["/api/sales"] })`
+- Actual query keys include filters: `["/api/sales", { ...filters, estado: "pendiente", excludeReservas: true }]`
+- Simple key matching wasn't reliably invalidating all query variants
+
+**Solution:**
+- Updated to predicate-based invalidation in `createManualSaleMutation`:
+  ```typescript
+  queryClient.invalidateQueries({ 
+    predicate: (query) => Array.isArray(query.queryKey) && 
+                         typeof query.queryKey[0] === 'string' && 
+                         query.queryKey[0].startsWith('/api/sales')
+  });
+  ```
+- This ensures ALL sales queries are invalidated regardless of filter parameters
+- New multi-product orders now immediately display all product rows in the table
+
+**Impact:**
+- Users can now see all products from a multi-product order as separate rows immediately after creation
+- No browser refresh required to see newly created order data
