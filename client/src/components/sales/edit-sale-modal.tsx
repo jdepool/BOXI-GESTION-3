@@ -112,7 +112,7 @@ export default function EditSaleModal({ open, onOpenChange, sale }: EditSaleModa
         orden: sale.orden,
       };
 
-      return apiRequest("PUT", `/api/sales/order/${encodeURIComponent(sale.orden)}`, updateData);
+      return apiRequest("PUT", `/api/sales/order/${encodeURIComponent(sale.orden || '')}`, updateData);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ 
