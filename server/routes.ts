@@ -1132,6 +1132,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get orders for payments tab (grouped by order number, filtered by estado)
+  app.get("/api/sales/orders", async (req, res) => {
+    try {
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 20;
+      const offset = req.query.offset ? parseInt(req.query.offset as string) : 0;
+
+      const result = await storage.getOrdersForPayments({ limit, offset });
+      res.json(result);
+    } catch (error) {
+      console.error("Error fetching orders for payments:", error);
+      res.status(500).json({ error: "Failed to fetch orders" });
+    }
+  });
+
   // Get specific sale by ID (MUST BE AFTER specific routes)
   app.get("/api/sales/:id", async (req, res) => {
     try {

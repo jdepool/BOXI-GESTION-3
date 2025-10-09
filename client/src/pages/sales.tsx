@@ -7,6 +7,7 @@ import Header from "@/components/layout/header";
 import SalesTable from "@/components/sales/sales-table";
 import ManualSalesEntry from "@/components/sales/manual-sales-entry";
 import ManualReservaModal from "@/components/sales/manual-reserva-modal";
+import PagosTable from "@/components/sales/pagos-table";
 
 export default function Sales() {
   const [filters, setFilters] = useState({
@@ -15,6 +16,11 @@ export default function Sales() {
     orden: "",
     startDate: "",
     endDate: "",
+    limit: 20,
+    offset: 0,
+  });
+
+  const [pagosFilters, setPagosFilters] = useState({
     limit: 20,
     offset: 0,
   });
@@ -40,12 +46,33 @@ export default function Sales() {
     queryKey: ["/api/sales", { tipo: "Reserva", excludeADespachar: true }],
   });
 
+  // Query for Pagos tab - orders grouped by order number with estado Pendiente or En Proceso
+  const { data: pagosData, isLoading: pagosLoading } = useQuery<{
+    data: Array<{
+      orden: string;
+      nombre: string;
+      fecha: Date;
+      canal: string | null;
+      tipo: string | null;
+      estadoEntrega: string | null;
+      totalOrderUsd: number | null;
+      productCount: number;
+    }>;
+    total: number;
+  }>({
+    queryKey: ["/api/sales/orders", pagosFilters],
+  });
+
   const handleFilterChange = (newFilters: Partial<typeof filters>) => {
     setFilters(prev => ({ ...prev, ...newFilters, offset: 0 }));
   };
 
   const handlePageChange = (newOffset: number) => {
     setFilters(prev => ({ ...prev, offset: newOffset }));
+  };
+
+  const handlePagosPageChange = (newOffset: number) => {
+    setPagosFilters(prev => ({ ...prev, offset: newOffset }));
   };
 
   return (
@@ -64,6 +91,7 @@ export default function Sales() {
               <TabsTrigger value="lista" data-testid="tab-sales-list">Lista de Ventas</TabsTrigger>
               <TabsTrigger value="manual" data-testid="tab-manual-entry">Ventas por completar</TabsTrigger>
               <TabsTrigger value="reservas" data-testid="tab-reservas">Reservas</TabsTrigger>
+              <TabsTrigger value="pagos" data-testid="tab-pagos">Pagos</TabsTrigger>
             </TabsList>
             
             <TabsContent value="lista" className="h-full">
@@ -110,6 +138,19 @@ export default function Sales() {
                     showCuotasButton={true}
                   />
                 </div>
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="pagos" className="h-full">
+              <div className="bg-card rounded-lg border border-border h-full">
+                <PagosTable 
+                  data={pagosData?.data || []} 
+                  total={pagosData?.total || 0}
+                  limit={pagosFilters.limit}
+                  offset={pagosFilters.offset}
+                  isLoading={pagosLoading}
+                  onPageChange={handlePagosPageChange}
+                />
               </div>
             </TabsContent>
           </Tabs>

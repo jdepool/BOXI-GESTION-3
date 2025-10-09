@@ -86,6 +86,22 @@ export interface IStorage {
     limit?: number;
     offset?: number;
   }): Promise<Array<Sale & { installments: PaymentInstallment[] }>>;
+  getOrdersForPayments(filters?: {
+    limit?: number;
+    offset?: number;
+  }): Promise<{
+    data: Array<{
+      orden: string;
+      nombre: string;
+      fecha: Date;
+      canal: string | null;
+      tipo: string | null;
+      estadoEntrega: string | null;
+      totalOrderUsd: number | null;
+      productCount: number;
+    }>;
+    total: number;
+  }>;
   
   // Analytics methods
   getSalesMetrics(): Promise<{
@@ -418,6 +434,73 @@ export class DatabaseStorage implements IStorage {
     );
     
     return salesWithInstallments;
+  }
+
+  async getOrdersForPayments(filters?: {
+    limit?: number;
+    offset?: number;
+  }): Promise<{
+    data: Array<{
+      orden: string;
+      nombre: string;
+      fecha: Date;
+      canal: string | null;
+      tipo: string | null;
+      estadoEntrega: string | null;
+      totalOrderUsd: number | null;
+      productCount: number;
+    }>;
+    total: number;
+  }> {
+    // Filter for orders with estado "pendiente" or "en proceso" (case-insensitive) and non-null order numbers
+    const estadoCondition = and(
+      or(
+        sql`LOWER(${sales.estado}) = 'pendiente'`,
+        sql`LOWER(${sales.estado}) = 'en proceso'`
+      ),
+      isNotNull(sales.orden)
+    );
+
+    // Get grouped orders with aggregated data
+    const ordersData = await db
+      .select({
+        orden: sales.orden,
+        nombre: sql<string>`MAX(${sales.nombre})`.as('nombre'),
+        fecha: sql<Date>`MAX(${sales.fecha})`.as('fecha'),
+        canal: sql<string | null>`MAX(${sales.canal})`.as('canal'),
+        tipo: sql<string | null>`MAX(${sales.tipo})`.as('tipo'),
+        estadoEntrega: sql<string | null>`MAX(${sales.estadoEntrega})`.as('estadoEntrega'),
+        totalOrderUsd: sql<number | null>`MAX(${sales.totalOrderUsd})`.as('totalOrderUsd'),
+        productCount: sql<number>`COUNT(*)`.as('productCount'),
+      })
+      .from(sales)
+      .where(estadoCondition)
+      .groupBy(sales.orden)
+      .orderBy(desc(sql`MAX(${sales.fecha})`))
+      .limit(filters?.limit || 20)
+      .offset(filters?.offset || 0);
+
+    // Get total count of unique orders with same filter
+    const [{ totalCount }] = await db
+      .select({
+        totalCount: sql<number>`COUNT(DISTINCT ${sales.orden})`.as('totalCount'),
+      })
+      .from(sales)
+      .where(estadoCondition);
+
+    return {
+      data: ordersData.map(order => ({
+        orden: order.orden,
+        nombre: order.nombre,
+        fecha: order.fecha,
+        canal: order.canal,
+        tipo: order.tipo,
+        estadoEntrega: order.estadoEntrega,
+        totalOrderUsd: order.totalOrderUsd,
+        productCount: Number(order.productCount),
+      })),
+      total: Number(totalCount),
+    };
   }
 
   async getSaleById(id: string): Promise<Sale | undefined> {
