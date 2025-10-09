@@ -35,7 +35,7 @@ const manualReservaSchema = z.object({
   cedula: z.string().min(1, "Cédula es requerida").regex(/^\d{6,8}$/, "La cédula debe tener entre 6 y 8 dígitos"),
   telefono: z.string().min(1, "Teléfono es requerido").regex(/^\d+$/, "El teléfono debe contener solo números"),
   email: z.string().email("Email inválido").optional().or(z.literal("")),
-  totalUsd: z.string().optional(),
+  totalUsd: z.string().min(1, "Total Orden USD es requerido"),
   pagoInicialUsd: z.coerce.number().optional(),
   montoBs: z.coerce.number().optional(),
   referencia: z.string().optional(),
@@ -362,7 +362,7 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
                   name="totalUsd"
                   render={({ field }) => (
                     <FormItem className="max-w-xs">
-                      <FormLabel>Total Orden USD</FormLabel>
+                      <FormLabel>Total Orden USD *</FormLabel>
                       <FormControl>
                         <Input placeholder="0.00" {...field} data-testid="input-total-orden-usd" />
                       </FormControl>
