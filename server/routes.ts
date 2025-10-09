@@ -109,6 +109,7 @@ function transformShopifyWebhookToCSV(shopifyOrder: any) {
     'Name': shopifyOrder.name, // Order number like #1001
     'Email': shopifyOrder.email,
     'Lineitem price': lineItem.price, // Individual line item price
+    'Total': shopifyOrder.total_price || shopifyOrder.current_total_price, // Full order total
     
     // Customer billing info (same for all line items)
     'Billing Name': shopifyOrder.billing_address?.name || 
@@ -189,6 +190,7 @@ function parseFile(buffer: Buffer, canal: string, filename: string) {
           telefono: row['Billing Phone'] ? String(row['Billing Phone']) : null,
           email: row.Email ? String(row.Email) : null,
           totalUsd: String(row['Lineitem price'] || '0'), // Use individual line item price
+          totalOrderUsd: row['Total'] ? String(row['Total']) : null, // Full order total from Shopify
           sucursal: null, // Shopify doesn't have sucursal
           tienda: null, // Shopify doesn't have tienda  
           fecha,
@@ -1193,6 +1195,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           telefono: row['Billing Phone'] ? String(row['Billing Phone']) : null,
           email: row.Email ? String(row.Email) : null,
           totalUsd: String(row['Lineitem price'] || '0'),
+          totalOrderUsd: row['Total'] ? String(row['Total']) : null, // Full order total from Shopify
           sucursal: null, // Shopify doesn't have sucursal
           tienda: null, // Shopify doesn't have tienda  
           fecha,
