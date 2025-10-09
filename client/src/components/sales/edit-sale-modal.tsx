@@ -257,10 +257,10 @@ export default function EditSaleModal({ open, onOpenChange, sale }: EditSaleModa
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="Manual">Manual</SelectItem>
-                            <SelectItem value="Cashea">Cashea</SelectItem>
-                            <SelectItem value="Shopify">Shopify</SelectItem>
-                            <SelectItem value="Treble">Treble</SelectItem>
+                            <SelectItem value="manual">Manual</SelectItem>
+                            <SelectItem value="cashea">Cashea</SelectItem>
+                            <SelectItem value="shopify">Shopify</SelectItem>
+                            <SelectItem value="treble">Treble</SelectItem>
                           </SelectContent>
                         </Select>
                         <FormMessage />
