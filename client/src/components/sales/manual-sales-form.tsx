@@ -193,7 +193,7 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
                       placeholder="04141234567" 
                       {...field} 
                       ref={(el) => { field.ref(el); el?.setAttribute('readonly', 'true'); }}
-                      autoComplete="off" 
+                      autoComplete="nope-phone" 
                       onFocus={(e) => { e.target.removeAttribute('readonly'); }}
                       onBlur={(e) => { e.target.setAttribute('readonly', 'true'); }}
                     />
@@ -508,7 +508,7 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
                       placeholder="Venezuela" 
                       {...field} 
                       ref={(el) => { field.ref(el); el?.setAttribute('readonly', 'true'); }}
-                      autoComplete="off" 
+                      autoComplete="nope-country-billing" 
                       onFocus={(e) => { e.target.removeAttribute('readonly'); }}
                       onBlur={(e) => { e.target.setAttribute('readonly', 'true'); }}
                     />
@@ -529,7 +529,7 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
                       placeholder="Distrito Capital" 
                       {...field} 
                       ref={(el) => { field.ref(el); el?.setAttribute('readonly', 'true'); }}
-                      autoComplete="off" 
+                      autoComplete="nope-state-billing" 
                       onFocus={(e) => { e.target.removeAttribute('readonly'); }}
                       onBlur={(e) => { e.target.setAttribute('readonly', 'true'); }}
                     />
@@ -550,7 +550,7 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
                       placeholder="Caracas" 
                       {...field} 
                       ref={(el) => { field.ref(el); el?.setAttribute('readonly', 'true'); }}
-                      autoComplete="off" 
+                      autoComplete="nope-city-billing" 
                       onFocus={(e) => { e.target.removeAttribute('readonly'); }}
                       onBlur={(e) => { e.target.setAttribute('readonly', 'true'); }}
                     />
@@ -571,7 +571,7 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
                       placeholder="Calle, número, apartamento, etc." 
                       {...field} 
                       ref={(el) => { field.ref(el); el?.setAttribute('readonly', 'true'); }}
-                      autoComplete="off" 
+                      autoComplete="nope-address-billing" 
                       onFocus={(e) => { e.target.removeAttribute('readonly'); }}
                       onBlur={(e) => { e.target.setAttribute('readonly', 'true'); }}
                     />
@@ -592,7 +592,7 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
                       placeholder="Nombre de la urbanización" 
                       {...field} 
                       ref={(el) => { field.ref(el); el?.setAttribute('readonly', 'true'); }}
-                      autoComplete="off" 
+                      autoComplete="nope-neighborhood-billing" 
                       onFocus={(e) => { e.target.removeAttribute('readonly'); }}
                       onBlur={(e) => { e.target.setAttribute('readonly', 'true'); }}
                     />
@@ -613,7 +613,7 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
                       placeholder="Punto de referencia cercano" 
                       {...field} 
                       ref={(el) => { field.ref(el); el?.setAttribute('readonly', 'true'); }}
-                      autoComplete="off" 
+                      autoComplete="nope-reference-billing" 
                       onFocus={(e) => { e.target.removeAttribute('readonly'); }}
                       onBlur={(e) => { e.target.setAttribute('readonly', 'true'); }}
                     />
@@ -666,9 +666,10 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
                         <Input 
                           placeholder="Venezuela" 
                           {...field} 
-                          autoComplete="off" 
-                          readOnly 
-                          onFocus={(e) => e.currentTarget.removeAttribute('readonly')}
+                          ref={(el) => { field.ref(el); el?.setAttribute('readonly', 'true'); }}
+                          autoComplete="nope-country-shipping" 
+                          onFocus={(e) => { e.target.removeAttribute('readonly'); }}
+                          onBlur={(e) => { e.target.setAttribute('readonly', 'true'); }}
                         />
                       </FormControl>
                       <FormMessage />
@@ -686,9 +687,10 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
                         <Input 
                           placeholder="Distrito Capital" 
                           {...field} 
-                          autoComplete="off" 
-                          readOnly 
-                          onFocus={(e) => e.currentTarget.removeAttribute('readonly')}
+                          ref={(el) => { field.ref(el); el?.setAttribute('readonly', 'true'); }}
+                          autoComplete="nope-state-shipping" 
+                          onFocus={(e) => { e.target.removeAttribute('readonly'); }}
+                          onBlur={(e) => { e.target.setAttribute('readonly', 'true'); }}
                         />
                       </FormControl>
                       <FormMessage />
@@ -706,9 +708,10 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
                         <Input 
                           placeholder="Caracas" 
                           {...field} 
-                          autoComplete="off" 
-                          readOnly 
-                          onFocus={(e) => e.currentTarget.removeAttribute('readonly')}
+                          ref={(el) => { field.ref(el); el?.setAttribute('readonly', 'true'); }}
+                          autoComplete="nope-city-shipping" 
+                          onFocus={(e) => { e.target.removeAttribute('readonly'); }}
+                          onBlur={(e) => { e.target.setAttribute('readonly', 'true'); }}
                         />
                       </FormControl>
                       <FormMessage />
@@ -726,9 +729,10 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
                         <Input 
                           placeholder="Calle, número, apartamento, etc." 
                           {...field} 
-                          autoComplete="off" 
-                          readOnly 
-                          onFocus={(e) => e.currentTarget.removeAttribute('readonly')}
+                          ref={(el) => { field.ref(el); el?.setAttribute('readonly', 'true'); }}
+                          autoComplete="nope-address-shipping" 
+                          onFocus={(e) => { e.target.removeAttribute('readonly'); }}
+                          onBlur={(e) => { e.target.setAttribute('readonly', 'true'); }}
                         />
                       </FormControl>
                       <FormMessage />
@@ -746,9 +750,10 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
                         <Input 
                           placeholder="Nombre de la urbanización" 
                           {...field} 
-                          autoComplete="off" 
-                          readOnly 
-                          onFocus={(e) => e.currentTarget.removeAttribute('readonly')}
+                          ref={(el) => { field.ref(el); el?.setAttribute('readonly', 'true'); }}
+                          autoComplete="nope-neighborhood-shipping" 
+                          onFocus={(e) => { e.target.removeAttribute('readonly'); }}
+                          onBlur={(e) => { e.target.setAttribute('readonly', 'true'); }}
                         />
                       </FormControl>
                       <FormMessage />
@@ -766,9 +771,10 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
                         <Input 
                           placeholder="Punto de referencia cercano" 
                           {...field} 
-                          autoComplete="off" 
-                          readOnly 
-                          onFocus={(e) => e.currentTarget.removeAttribute('readonly')}
+                          ref={(el) => { field.ref(el); el?.setAttribute('readonly', 'true'); }}
+                          autoComplete="nope-reference-shipping" 
+                          onFocus={(e) => { e.target.removeAttribute('readonly'); }}
+                          onBlur={(e) => { e.target.setAttribute('readonly', 'true'); }}
                         />
                       </FormControl>
                       <FormMessage />

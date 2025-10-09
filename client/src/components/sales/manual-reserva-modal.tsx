@@ -266,7 +266,7 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
                           value={field.value || ""} 
                           data-testid="input-telefono" 
                           ref={(el) => { field.ref(el); el?.setAttribute('readonly', 'true'); }}
-                          autoComplete="off" 
+                          autoComplete="nope-phone" 
                           onFocus={(e) => { e.target.removeAttribute('readonly'); }}
                           onBlur={(e) => { e.target.setAttribute('readonly', 'true'); }}
                         />
@@ -565,7 +565,7 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
                           {...field} 
                           data-testid="input-facturacion-pais" 
                           ref={(el) => { field.ref(el); el?.setAttribute('readonly', 'true'); }}
-                          autoComplete="off" 
+                          autoComplete="nope-country-billing" 
                           onFocus={(e) => { e.target.removeAttribute('readonly'); }}
                           onBlur={(e) => { e.target.setAttribute('readonly', 'true'); }}
                         />
@@ -587,7 +587,7 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
                           {...field} 
                           data-testid="input-facturacion-estado" 
                           ref={(el) => { field.ref(el); el?.setAttribute('readonly', 'true'); }}
-                          autoComplete="off" 
+                          autoComplete="nope-state-billing" 
                           onFocus={(e) => { e.target.removeAttribute('readonly'); }}
                           onBlur={(e) => { e.target.setAttribute('readonly', 'true'); }}
                         />
@@ -609,7 +609,7 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
                           {...field} 
                           data-testid="input-facturacion-ciudad" 
                           ref={(el) => { field.ref(el); el?.setAttribute('readonly', 'true'); }}
-                          autoComplete="off" 
+                          autoComplete="nope-city-billing" 
                           onFocus={(e) => { e.target.removeAttribute('readonly'); }}
                           onBlur={(e) => { e.target.setAttribute('readonly', 'true'); }}
                         />
@@ -631,7 +631,7 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
                           {...field} 
                           data-testid="input-facturacion-direccion" 
                           ref={(el) => { field.ref(el); el?.setAttribute('readonly', 'true'); }}
-                          autoComplete="off" 
+                          autoComplete="nope-address-billing" 
                           onFocus={(e) => { e.target.removeAttribute('readonly'); }}
                           onBlur={(e) => { e.target.setAttribute('readonly', 'true'); }}
                         />
@@ -653,7 +653,7 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
                           {...field} 
                           data-testid="input-facturacion-urbanizacion" 
                           ref={(el) => { field.ref(el); el?.setAttribute('readonly', 'true'); }}
-                          autoComplete="off" 
+                          autoComplete="nope-neighborhood-billing" 
                           onFocus={(e) => { e.target.removeAttribute('readonly'); }}
                           onBlur={(e) => { e.target.setAttribute('readonly', 'true'); }}
                         />
@@ -675,7 +675,7 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
                           {...field} 
                           data-testid="input-facturacion-referencia" 
                           ref={(el) => { field.ref(el); el?.setAttribute('readonly', 'true'); }}
-                          autoComplete="off" 
+                          autoComplete="nope-reference-billing" 
                           onFocus={(e) => { e.target.removeAttribute('readonly'); }}
                           onBlur={(e) => { e.target.setAttribute('readonly', 'true'); }}
                         />
@@ -731,7 +731,7 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
                           {...field} 
                           data-testid="input-despacho-pais" 
                           ref={(el) => { field.ref(el); el?.setAttribute('readonly', 'true'); }}
-                          autoComplete="off" 
+                          autoComplete="nope-country-shipping" 
                           onFocus={(e) => { e.target.removeAttribute('readonly'); }}
                           onBlur={(e) => { e.target.setAttribute('readonly', 'true'); }}
                         />
@@ -753,7 +753,7 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
                           {...field} 
                           data-testid="input-despacho-estado" 
                           ref={(el) => { field.ref(el); el?.setAttribute('readonly', 'true'); }}
-                          autoComplete="off" 
+                          autoComplete="nope-state-shipping" 
                           onFocus={(e) => { e.target.removeAttribute('readonly'); }}
                           onBlur={(e) => { e.target.setAttribute('readonly', 'true'); }}
                         />
@@ -775,7 +775,7 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
                           {...field} 
                           data-testid="input-despacho-ciudad" 
                           ref={(el) => { field.ref(el); el?.setAttribute('readonly', 'true'); }}
-                          autoComplete="off" 
+                          autoComplete="nope-city-shipping" 
                           onFocus={(e) => { e.target.removeAttribute('readonly'); }}
                           onBlur={(e) => { e.target.setAttribute('readonly', 'true'); }}
                         />
@@ -797,7 +797,7 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
                           {...field} 
                           data-testid="input-despacho-direccion" 
                           ref={(el) => { field.ref(el); el?.setAttribute('readonly', 'true'); }}
-                          autoComplete="off" 
+                          autoComplete="nope-address-shipping" 
                           onFocus={(e) => { e.target.removeAttribute('readonly'); }}
                           onBlur={(e) => { e.target.setAttribute('readonly', 'true'); }}
                         />
@@ -819,7 +819,7 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
                           {...field} 
                           data-testid="input-despacho-urbanizacion" 
                           ref={(el) => { field.ref(el); el?.setAttribute('readonly', 'true'); }}
-                          autoComplete="off" 
+                          autoComplete="nope-neighborhood-shipping" 
                           onFocus={(e) => { e.target.removeAttribute('readonly'); }}
                           onBlur={(e) => { e.target.setAttribute('readonly', 'true'); }}
                         />
@@ -841,7 +841,7 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
                           {...field} 
                           data-testid="input-despacho-referencia" 
                           ref={(el) => { field.ref(el); el?.setAttribute('readonly', 'true'); }}
-                          autoComplete="off" 
+                          autoComplete="nope-reference-shipping" 
                           onFocus={(e) => { e.target.removeAttribute('readonly'); }}
                           onBlur={(e) => { e.target.setAttribute('readonly', 'true'); }}
                         />
