@@ -484,7 +484,7 @@ export default function SalesTable({
             <tbody>
               {data.length === 0 ? (
                 <tr>
-                  <td colSpan={21} className="text-center p-8 text-muted-foreground">
+                  <td colSpan={22} className="text-center p-8 text-muted-foreground">
                     No hay datos disponibles
                   </td>
                 </tr>
