@@ -33,12 +33,12 @@ export default function PagosTable({
   const currentPage = Math.floor(offset / limit) + 1;
 
   const formatCurrency = (value: number | null) => {
-    if (value === null || value === undefined) return "$0.00";
+    if (value === null || value === undefined) return "$0";
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
     }).format(value);
   };
 
