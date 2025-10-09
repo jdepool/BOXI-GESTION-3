@@ -262,8 +262,8 @@ function parseFile(buffer: Buffer, canal: string, filename: string) {
           montoBs: row['Monto en bs'] ? String(row['Monto en bs']) : null,
           montoUsd: null,
           estadoEntrega: canal.toLowerCase() === 'cashea' ? 
-            'En Proceso' : // All Cashea orders start with "En Proceso"
-            String(row['Estado de entrega'] || 'En Proceso'),
+            'En proceso' : // All Cashea orders start with "En proceso"
+            String(row['Estado de entrega'] || 'En proceso'),
           product: String(row.Product || ''),
           cantidad: Number(row.Cantidad || 1),
           // New fields for sales system overhaul
@@ -1790,7 +1790,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { status } = req.body;
 
       // Validate status
-      const validStatuses = ['En Proceso', 'A Despachar', 'Despachado', 'Cancelado', 'Pospuesto'];
+      const validStatuses = ['Pendiente', 'Perdida', 'En proceso', 'A despachar', 'En tránsito', 'Entregado', 'A devolver', 'Devuelto', 'Cancelada'];
       if (!status || !validStatuses.includes(status)) {
         return res.status(400).json({ 
           error: "Invalid status. Must be one of: " + validStatuses.join(', ')
@@ -1873,7 +1873,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { status } = req.body;
 
       // Validate status
-      const validStatuses = ['Pendiente', 'En Proceso', 'A Despacho'];
+      const validStatuses = ['Pendiente', 'Perdida', 'En proceso', 'A despachar', 'En tránsito', 'Entregado', 'A devolver', 'Devuelto', 'Cancelada'];
       if (!status || !validStatuses.includes(status)) {
         return res.status(400).json({ 
           error: "Invalid status. Must be one of: " + validStatuses.join(', ')
@@ -3250,7 +3250,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       for (const match of matches) {
         if (match.confidence >= 80) {
           try {
-            await storage.updateSaleDeliveryStatus(match.sale.id, 'A Despachar');
+            await storage.updateSaleDeliveryStatus(match.sale.id, 'A despachar');
             verifiedCount++;
           } catch (error) {
             console.error(`Error updating sale ${match.sale.id}:`, error);
@@ -3278,7 +3278,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.json({
         updated: updatedCount,
-        message: `Successfully updated ${updatedCount} Cashea orders from A Despachar to En Proceso`
+        message: `Successfully updated ${updatedCount} Cashea orders from A despachar to En proceso`
       });
     } catch (error) {
       console.error('Cashea status update error:', error);
@@ -3369,7 +3369,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Check if Reserva order is now fully paid and verified - move to Lista de Ventas
       if (sale.tipo === "Reserva" && await storage.isPaymentFullyVerified(saleId)) {
         // Use proper delivery status update to handle freight initialization and business logic
-        await storage.updateSaleDeliveryStatus(saleId, "A Despachar");
+        await storage.updateSaleDeliveryStatus(saleId, "A despachar");
       }
       
       res.status(201).json(installment);

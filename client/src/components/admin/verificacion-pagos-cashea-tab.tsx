@@ -50,7 +50,7 @@ export function VerificacionPagosCasheaTab() {
       queryClient.invalidateQueries({ queryKey: ["/api/sales"] });
       toast({ 
         title: "Pagos verificados automáticamente", 
-        description: `Se verificaron ${data?.verified || 0} pagos y se actualizaron a A Despachar.` 
+        description: `Se verificaron ${data?.verified || 0} pagos y se actualizaron a A despachar.` 
       });
       // NO limpiar los matches automáticamente - mantener hasta reset manual
     },

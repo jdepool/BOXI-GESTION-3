@@ -93,10 +93,15 @@ export default function DispatchTable({
 
   const getStatusBadgeVariant = (status: string) => {
     switch (status) {
-      case 'Despachado': return 'default';
-      case 'Cancelado': return 'destructive';
-      case 'Pospuesto': return 'secondary';
-      case 'A Despachar': return 'outline';
+      case 'Entregado': return 'default';
+      case 'Cancelada': return 'destructive';
+      case 'Perdida': return 'destructive';
+      case 'En tránsito': return 'secondary';
+      case 'A despachar': return 'outline';
+      case 'En proceso': return 'outline';
+      case 'Pendiente': return 'outline';
+      case 'A devolver': return 'secondary';
+      case 'Devuelto': return 'secondary';
       default: return 'outline';
     }
   };

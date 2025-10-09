@@ -93,7 +93,7 @@ export default function Flete() {
     if (!hasCompleteFleteInfo) return false;
     
     // Exclude orders ready for Despachos (universal rule for all canals)
-    if (sale.estadoEntrega === 'A Despachar' && 
+    if (sale.estadoEntrega === 'A despachar' && 
         (sale.statusFlete === 'A Despacho' || sale.fleteGratis)) {
       return false;
     }

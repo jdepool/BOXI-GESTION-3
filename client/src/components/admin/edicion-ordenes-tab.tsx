@@ -81,7 +81,7 @@ export function EdicionOrdenesTab() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Fetch ALL orders (not just A Despachar)
+  // Fetch ALL orders
   const { data: orders = [], isLoading } = useQuery({
     queryKey: ["/api/sales"],
     queryFn: async () => {
@@ -359,12 +359,24 @@ export function EdicionOrdenesTab() {
 
   const getStatusBadgeVariant = (status: string) => {
     switch (status) {
-      case "A Despachar":
+      case "Entregado":
         return "default";
-      case "DELIVERED":
-        return "secondary";
-      case "CANCELLED":
+      case "Cancelada":
         return "destructive";
+      case "Perdida":
+        return "destructive";
+      case "En tránsito":
+        return "secondary";
+      case "A despachar":
+        return "outline";
+      case "En proceso":
+        return "outline";
+      case "Pendiente":
+        return "outline";
+      case "A devolver":
+        return "secondary";
+      case "Devuelto":
+        return "secondary";
       default:
         return "outline";
     }

@@ -361,9 +361,9 @@ export class DatabaseStorage implements IStorage {
       );
     }
     if (filters?.excludeADespachar) {
-      // Exclude orders with estadoEntrega "A Despachar" - for Reservas tab to only show pending reservas
+      // Exclude orders with estadoEntrega "A despachar" - for Reservas tab to only show pending reservas
       conditions.push(
-        ne(sales.estadoEntrega, "A Despachar")
+        ne(sales.estadoEntrega, "A despachar")
       );
     }
     
@@ -549,9 +549,9 @@ export class DatabaseStorage implements IStorage {
 
   async getOrdersWithAddresses(limit: number = 20, offset: number = 0): Promise<{ data: Sale[]; total: number }> {
     // Get orders that are ready for dispatch:
-    // Estado Entrega = A Despachar AND (Flete Status = A Despacho OR fleteGratis = true)
+    // Estado Entrega = A despachar AND (Flete Status = A Despacho OR fleteGratis = true)
     const dispatchCondition = and(
-      eq(sales.estadoEntrega, 'A Despachar'),
+      eq(sales.estadoEntrega, 'A despachar'),
       or(
         eq(sales.statusFlete, 'A Despacho'),
         eq(sales.fleteGratis, true)
@@ -590,8 +590,8 @@ export class DatabaseStorage implements IStorage {
       updatedAt: new Date()
     };
 
-    // If moving to A Despachar and no freight info exists, initialize freight processing
-    if (newStatus === 'A Despachar' && !existingSale.montoFleteUsd && !existingSale.fleteGratis) {
+    // If moving to A despachar and no freight info exists, initialize freight processing
+    if (newStatus === 'A despachar' && !existingSale.montoFleteUsd && !existingSale.fleteGratis) {
       // Initialize freight as pending - this will make the order appear in Flete page
       updateData.montoFleteUsd = '0.01'; // Minimal amount to trigger freight processing
       updateData.statusFlete = 'Pendiente';
@@ -900,9 +900,9 @@ export class DatabaseStorage implements IStorage {
       );
     }
     if (filters?.excludeADespachar) {
-      // Exclude orders with estadoEntrega "A Despachar" - for Reservas tab to only show pending reservas
+      // Exclude orders with estadoEntrega "A despachar" - for Reservas tab to only show pending reservas
       conditions.push(
-        ne(sales.estadoEntrega, "A Despachar")
+        ne(sales.estadoEntrega, "A despachar")
       );
     }
     
@@ -952,7 +952,12 @@ export class DatabaseStorage implements IStorage {
     
     const completedOrders = deliveryStatusCounts.find(s => s.status === 'Entregado')?.count || 0;
     const pendingOrders = deliveryStatusCounts.find(s => s.status === 'Pendiente')?.count || 0;
-    const activeReservations = deliveryStatusCounts.find(s => s.status === 'Reservado')?.count || 0;
+    // Count reservations by tipo, not by estadoEntrega (since "Reservado" is not a valid status)
+    const [reservationsResult] = await db
+      .select({ count: count() })
+      .from(sales)
+      .where(eq(sales.tipo, 'Reserva'));
+    const activeReservations = reservationsResult?.count || 0;
     
     return {
       totalSales: Number(totalSalesResult.total) || 0,
@@ -1507,7 +1512,7 @@ export class DatabaseStorage implements IStorage {
     const result = await db
       .update(sales)
       .set({
-        estadoEntrega: 'PROCESSING',
+        estadoEntrega: 'En proceso',
         updatedAt: new Date(),
       })
       .where(
@@ -1516,7 +1521,7 @@ export class DatabaseStorage implements IStorage {
             eq(sales.canal, 'Cashea'),
             eq(sales.canal, 'cashea')
           ),
-          eq(sales.estadoEntrega, 'A Despachar')
+          eq(sales.estadoEntrega, 'A despachar')
         )
       )
       .returning();

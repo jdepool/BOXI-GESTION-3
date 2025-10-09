@@ -398,7 +398,7 @@ export default function UploadZone({ recentUploads, showOnlyCashea = false }: Up
         </div>
         <p className="text-sm text-muted-foreground">
           Selecciona un rango de fechas para descargar órdenes desde CASHEA. 
-          Los datos se integrarán automáticamente en tu Lista de Ventas con estado "En Proceso".
+          Los datos se integrarán automáticamente en tu Lista de Ventas con estado "En proceso".
           Se evitarán duplicados basados en número de orden.
         </p>
       </div>
