@@ -44,10 +44,9 @@ export default function PagosTable({
 
   return (
     <div className="h-full flex flex-col">
-      <div className="flex-1 overflow-auto">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm border-collapse">
-            <thead className="sticky top-0 z-10 bg-muted">
+      <div className="flex-1 overflow-auto relative">
+        <table className="w-full text-sm border-collapse">
+          <thead className="sticky top-0 z-10 bg-muted">
               <tr className="border-b border-border">
                 <th className="p-3 text-left font-semibold text-foreground min-w-[120px] sticky left-0 z-20 bg-muted">
                   Orden
@@ -144,7 +143,6 @@ export default function PagosTable({
               )}
             </tbody>
           </table>
-        </div>
       </div>
 
       {total > 0 && (
