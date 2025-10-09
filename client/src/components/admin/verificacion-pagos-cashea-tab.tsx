@@ -34,11 +34,11 @@ export function VerificacionPagosCasheaTab() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Get Cashea orders that are in En Proceso status
+  // Get Cashea orders that are in En proceso status
   const { data: casheaOrders = [], isLoading } = useQuery({
-    queryKey: ["/api/sales", { canal: "cashea", estadoEntrega: "En Proceso" }],
+    queryKey: ["/api/sales", { canal: "cashea", estadoEntrega: "En proceso" }],
     queryFn: () => 
-      fetch("/api/sales?canal=cashea&estadoEntrega=En Proceso")
+      fetch("/api/sales?canal=cashea&estadoEntrega=En proceso")
         .then(res => res.json())
         .then(data => data.data || []),
   });

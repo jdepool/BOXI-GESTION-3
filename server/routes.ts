@@ -85,7 +85,6 @@ async function sendWebhookToZapier(data: any, canal: string): Promise<void> {
 const getSalesQuerySchema = z.object({
   canal: z.string().optional(),
   estadoEntrega: z.string().optional(),
-  estado: z.string().optional(),
   orden: z.string().optional(),
   startDate: z.string().optional(),
   endDate: z.string().optional(),
@@ -194,7 +193,6 @@ function parseFile(buffer: Buffer, canal: string, filename: string) {
           tienda: null, // Shopify doesn't have tienda  
           fecha,
           canal: canal,
-          estado: 'pendiente', // Shopify orders start as pending for completion
           estadoPagoInicial: null,
           pagoInicialUsd: null,
           metodoPagoId: null,
@@ -204,7 +202,7 @@ function parseFile(buffer: Buffer, canal: string, filename: string) {
           referencia: null,
           montoBs: null,
           montoUsd: String(row['Lineitem price'] || '0'), // Use individual line item price
-          estadoEntrega: 'En Proceso', // Route Shopify orders to "Ventas por Completar"
+          estadoEntrega: 'En proceso', // Route Shopify orders to "Ventas por Completar"
           product: String(row['Lineitem name'] || ''),
           sku: row['Lineitem sku'] || row['Lineitem SKU'] || row['lineitem sku'] || row['SKU'] ? 
                String(row['Lineitem sku'] || row['Lineitem SKU'] || row['lineitem sku'] || row['SKU']) : null, // Map SKU from Shopify with fallbacks
@@ -254,7 +252,6 @@ function parseFile(buffer: Buffer, canal: string, filename: string) {
           tienda: row.Tienda ? String(row.Tienda) : null,
           fecha,
           canal: canal, // Use the provided canal parameter
-          estado: String(row.Estado || ''),
           estadoPagoInicial: row['Estado pago inicial'] ? String(row['Estado pago inicial']) : null,
           pagoInicialUsd: row['Pago inicial usd'] ? String(row['Pago inicial usd']) : null,
           metodoPagoId: null,
@@ -667,7 +664,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const filters = {
         canal: query.canal,
         estadoEntrega: query.estadoEntrega,
-        estado: query.estado,
         orden: query.orden,
         startDate: query.startDate ? new Date(query.startDate) : undefined,
         endDate: query.endDate ? new Date(query.endDate) : undefined,
@@ -736,7 +732,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const filters = {
         canal: query.canal,
         estadoEntrega: query.estadoEntrega,
-        estado: query.estado,
         orden: query.orden,
         startDate: query.startDate ? new Date(query.startDate) : undefined,
         endDate: query.endDate ? new Date(query.endDate) : undefined,
@@ -772,7 +767,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
               'Producto': sale.product,
               'Cantidad': sale.cantidad,
               'Canal': sale.canal,
-              'Estado': sale.estado,
               'Estado de Entrega': sale.estadoEntrega,
               'Tipo': sale.tipo,
               'Fecha': new Date(sale.fecha).toLocaleDateString('es-ES'),
@@ -843,7 +837,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
               'Producto': sale.product,
               'Cantidad': sale.cantidad,
               'Canal': sale.canal,
-              'Estado': sale.estado,
               'Estado de Entrega': sale.estadoEntrega,
               'Tipo': sale.tipo,
               'Fecha': new Date(sale.fecha).toLocaleDateString('es-ES'),
@@ -917,7 +910,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         'Producto': sale.product,
         'Cantidad': sale.cantidad,
         'Canal': sale.canal,
-        'Estado': sale.estado,
         'Estado de Entrega': sale.estadoEntrega,
         'Tipo': sale.tipo,
         'Fecha': new Date(sale.fecha).toLocaleDateString('es-ES'),
@@ -1098,7 +1090,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         cantidad: product.cantidad || 1,
         medidaEspecial: product.medidaEspecial || null,
         fecha: existingSales[0].fecha,
-        estado: existingSales[0].estado,
         estadoEntrega: existingSales[0].estadoEntrega,
         tipo: existingSales[0].tipo,
         // Preserve addresses
@@ -1132,7 +1123,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get orders for payments tab (grouped by order number, filtered by estado)
+  // Get orders for payments tab (grouped by order number)
   app.get("/api/sales/orders", async (req, res) => {
     try {
       const limit = req.query.limit ? parseInt(req.query.limit as string) : 20;
@@ -1206,7 +1197,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
           tienda: null, // Shopify doesn't have tienda  
           fecha,
           canal: 'shopify',
-          estado: 'pendiente', // Shopify orders start as pending for completion
           estadoPagoInicial: null,
           pagoInicialUsd: null,
           metodoPagoId: null,
@@ -1216,7 +1206,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           referencia: null,
           montoBs: null,
           montoUsd: String(row['Lineitem price'] || '0'),
-          estadoEntrega: 'En Proceso', // Route Shopify orders to "Ventas por Completar"
+          estadoEntrega: 'Pendiente', // Route Shopify orders to "Ventas por Completar"
           product: String(row['Lineitem name'] || ''),
           sku: row['Lineitem sku'] || row['Lineitem SKU'] || row['lineitem sku'] || row['SKU'] ? 
                String(row['Lineitem sku'] || row['Lineitem SKU'] || row['lineitem sku'] || row['SKU']) : null,
@@ -1632,8 +1622,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         tienda: null,
         fecha,
         canal: 'cashea',
-        estado: 'confirmado',
-        estadoEntrega: 'En Proceso', // All CASHEA orders start as "En Proceso"
+        estadoEntrega: 'En proceso', // All CASHEA orders start as "En proceso"
         estadoPagoInicial: null,
         pagoInicialUsd: pagosIniciales[i] ? String(pagosIniciales[i]) : null,
         metodoPagoId: null,
@@ -1995,14 +1984,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const isFullyVerified = await storage.isPaymentFullyVerified(saleId);
         
         if (isFullyVerified) {
-          // Route to Lista de Ventas - set estado to completed
-          updates.estado = 'completado';
+          // Route to Lista de Ventas - already verified, keep current status
+          updates.estadoEntrega = existingSale.estadoEntrega || 'En proceso';
         } else {
-          // Route to Ventas por Completar - set estado to pending
-          updates.estado = 'pendiente';
+          // Route to Ventas por Completar - set to Pendiente
+          updates.estadoEntrega = 'Pendiente';
         }
       }
-      // For Inmediato to Reserva, no additional estado changes needed - will route to Reservas tab automatically
+      // For Inmediato to Reserva, no additional changes needed - will route to Reservas tab automatically
 
       // Update the sale with all necessary changes
       const updatedSale = await storage.updateSale(saleId, updates);
@@ -3028,7 +3017,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Check if we need to update sale status when payment info is filled up
-      if (existingSale.estado === "pendiente" && existingSale.canal?.toLowerCase() === "manual") {
+      if (existingSale.estadoEntrega === "Pendiente" && existingSale.canal?.toLowerCase() === "manual") {
         // Check if any payment information is being provided
         const hasPaymentInfo = !!(
           saleData.referencia || 
@@ -3039,10 +3028,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         );
         
         if (hasPaymentInfo) {
-          // Update estado to move from Ventas por Completar to Lista de Ventas
+          // Update estadoEntrega to move from Ventas por Completar to Lista de Ventas
           const finalUpdatedSale = await storage.updateSale(id, {
-            estado: "activo",
-            estadoEntrega: "En Proceso"
+            estadoEntrega: "En proceso"
           });
           res.json(finalUpdatedSale || updatedSale);
         } else {
@@ -3062,11 +3050,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { id } = req.params;
       
-      // Update the sale status from "pendiente" to "completado" to move it from Ventas por Completar to Lista de Ventas
-      // Keep estadoEntrega as "En Proceso" as requested by the user
+      // Update the sale status from "Pendiente" to "En proceso" to move it from Ventas por Completar to Lista de Ventas
       const updatedSale = await storage.updateSale(id, { 
-        estado: "completado",
-        estadoEntrega: "En Proceso"
+        estadoEntrega: "En proceso"
       });
       
       if (!updatedSale) {
@@ -3141,8 +3127,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         totalOrderUsd: body.totalUsd ? body.totalUsd.toString() : null, // Store the total order amount from main form
         fecha: body.fecha ? new Date(body.fecha) : new Date(),
         canal: "manual",
-        estado: body.estado || "pendiente", // Manual sales start as pending, Reservas can override this
-        estadoEntrega: body.estadoEntrega || "En Proceso",
+        estadoEntrega: body.estadoEntrega || "Pendiente", // Manual sales start as Pendiente
         orden: newOrderNumber,
         
         // Payment fields
@@ -3374,19 +3359,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const installment = await storage.createInstallment(saleId, validatedData);
       
       // If this is the first payment info for a pending manual sale, move it to Lista de Ventas
-      if (sale.estado === "pendiente" && sale.canal?.toLowerCase() === "manual" && 
+      if (sale.estadoEntrega === "Pendiente" && sale.canal?.toLowerCase() === "manual" && 
           validatedData.cuotaAmount && parseFloat(validatedData.cuotaAmount) > 0) {
         await storage.updateSale(saleId, {
-          estado: "activo",
-          estadoEntrega: "En Proceso"
+          estadoEntrega: "En proceso"
         });
       }
       
       // Check if Reserva order is now fully paid and verified - move to Lista de Ventas
       if (sale.tipo === "Reserva" && await storage.isPaymentFullyVerified(saleId)) {
-        // First, set estado to completado so it appears in Lista de Ventas
-        await storage.updateSale(saleId, { estado: "completado" });
-        // Then, use proper delivery status update to handle freight initialization and business logic
+        // Use proper delivery status update to handle freight initialization and business logic
         await storage.updateSaleDeliveryStatus(saleId, "A Despachar");
       }
       
@@ -3463,19 +3445,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Check if we need to update sale status when payment info is filled up
       const sale = await storage.getSaleById(currentInstallment.saleId);
-      if (sale && sale.estado === "pendiente" && sale.canal?.toLowerCase() === "manual" && 
+      if (sale && sale.estadoEntrega === "Pendiente" && sale.canal?.toLowerCase() === "manual" && 
           validatedData.cuotaAmount && parseFloat(validatedData.cuotaAmount) > 0) {
         await storage.updateSale(currentInstallment.saleId, {
-          estado: "activo", 
-          estadoEntrega: "En Proceso"
+          estadoEntrega: "En proceso"
         });
       }
       
       // Check if Reserva order is now fully paid and verified - move to Lista de Ventas
       if (sale && sale.tipo === "Reserva" && await storage.isPaymentFullyVerified(currentInstallment.saleId)) {
-        // First, set estado to completado so it appears in Lista de Ventas
-        await storage.updateSale(currentInstallment.saleId, { estado: "completado" });
-        // Then, use proper delivery status update to handle freight initialization and business logic
+        // Use proper delivery status update to handle freight initialization and business logic
         await storage.updateSaleDeliveryStatus(currentInstallment.saleId, "A Despachar");
       }
       

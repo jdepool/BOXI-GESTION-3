@@ -67,7 +67,7 @@ export default function SimpleSalesList({
   });
 
   const getStatusColor = (status: string) => {
-    switch (status) {
+    switch (status?.toLowerCase()) {
       case "entregado": return "bg-green-100 text-green-800";
       case "pendiente": return "bg-yellow-100 text-yellow-800";
       case "reservado": return "bg-blue-100 text-blue-800";
@@ -149,9 +149,9 @@ export default function SimpleSalesList({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todos los estados</SelectItem>
-                  <SelectItem value="entregado">Entregado</SelectItem>
-                  <SelectItem value="pendiente">Pendiente</SelectItem>
-                  <SelectItem value="reservado">Reservado</SelectItem>
+                  <SelectItem value="Entregado">Entregado</SelectItem>
+                  <SelectItem value="Pendiente">Pendiente</SelectItem>
+                  <SelectItem value="Reservado">Reservado</SelectItem>
                 </SelectContent>
               </Select>
 
@@ -245,9 +245,9 @@ export default function SimpleSalesList({
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="pendiente">Pendiente</SelectItem>
-                      <SelectItem value="reservado">Reservado</SelectItem>
-                      <SelectItem value="entregado">Entregado</SelectItem>
+                      <SelectItem value="Pendiente">Pendiente</SelectItem>
+                      <SelectItem value="Reservado">Reservado</SelectItem>
+                      <SelectItem value="Entregado">Entregado</SelectItem>
                     </SelectContent>
                   </Select>
 

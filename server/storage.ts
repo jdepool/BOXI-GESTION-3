@@ -24,7 +24,6 @@ export interface IStorage {
   getSales(filters?: {
     canal?: string;
     estadoEntrega?: string;
-    estado?: string;
     orden?: string;
     startDate?: Date;
     endDate?: Date;
@@ -60,7 +59,6 @@ export interface IStorage {
   getTotalSalesCount(filters?: {
     canal?: string;
     estadoEntrega?: string;
-    estado?: string;
     startDate?: Date;
     endDate?: Date;
     tipo?: string;
@@ -74,7 +72,6 @@ export interface IStorage {
   getSalesWithInstallments(filters?: {
     canal?: string;
     estadoEntrega?: string;
-    estado?: string;
     orden?: string;
     startDate?: Date;
     endDate?: Date;
@@ -311,7 +308,6 @@ export class DatabaseStorage implements IStorage {
   async getSales(filters?: {
     canal?: string;
     estadoEntrega?: string;
-    estado?: string;
     orden?: string;
     startDate?: Date;
     endDate?: Date;
@@ -329,9 +325,6 @@ export class DatabaseStorage implements IStorage {
     }
     if (filters?.estadoEntrega) {
       conditions.push(eq(sales.estadoEntrega, filters.estadoEntrega));
-    }
-    if (filters?.estado) {
-      conditions.push(eq(sales.estado, filters.estado));
     }
     if (filters?.orden) {
       conditions.push(like(sales.orden, `%${filters.orden}%`));
@@ -355,10 +348,10 @@ export class DatabaseStorage implements IStorage {
       }
     }
     if (filters?.excludePendingManual) {
-      // Exclude sales with estado "pendiente" - this separates completed sales from pending manual sales
+      // Exclude sales with estadoEntrega "Pendiente" - this separates completed sales from pending manual sales
       // This ensures Lista de Ventas only shows sales that have completed payment verification
       conditions.push(
-        ne(sales.estado, "pendiente")
+        ne(sales.estadoEntrega, "Pendiente")
       );
     }
     if (filters?.excludeReservas) {
@@ -431,7 +424,6 @@ export class DatabaseStorage implements IStorage {
   async getSalesWithInstallments(filters?: {
     canal?: string;
     estadoEntrega?: string;
-    estado?: string;
     orden?: string;
     startDate?: Date;
     endDate?: Date;
@@ -473,11 +465,11 @@ export class DatabaseStorage implements IStorage {
     }>;
     total: number;
   }> {
-    // Filter for orders with estado "pendiente" or "en proceso" (case-insensitive) and non-null order numbers
+    // Filter for orders with estadoEntrega "Pendiente" or "En proceso" and non-null order numbers
     const estadoCondition = and(
       or(
-        sql`LOWER(${sales.estado}) = 'pendiente'`,
-        sql`LOWER(${sales.estado}) = 'en proceso'`
+        eq(sales.estadoEntrega, "Pendiente"),
+        eq(sales.estadoEntrega, "En proceso")
       ),
       isNotNull(sales.orden)
     );
@@ -511,7 +503,7 @@ export class DatabaseStorage implements IStorage {
 
     return {
       data: ordersData.map(order => ({
-        orden: order.orden,
+        orden: order.orden!, // Non-null assertion safe because we filter isNotNull(sales.orden)
         nombre: order.nombre,
         fecha: order.fecha,
         canal: order.canal,
@@ -857,7 +849,6 @@ export class DatabaseStorage implements IStorage {
   async getTotalSalesCount(filters?: {
     canal?: string;
     estadoEntrega?: string;
-    estado?: string;
     orden?: string;
     startDate?: Date;
     endDate?: Date;
@@ -873,9 +864,6 @@ export class DatabaseStorage implements IStorage {
     }
     if (filters?.estadoEntrega) {
       conditions.push(eq(sales.estadoEntrega, filters.estadoEntrega));
-    }
-    if (filters?.estado) {
-      conditions.push(eq(sales.estado, filters.estado));
     }
     if (filters?.orden) {
       conditions.push(like(sales.orden, `%${filters.orden}%`));
@@ -899,10 +887,10 @@ export class DatabaseStorage implements IStorage {
       }
     }
     if (filters?.excludePendingManual) {
-      // Exclude sales with estado "pendiente" - this separates completed sales from pending manual sales
+      // Exclude sales with estadoEntrega "Pendiente" - this separates completed sales from pending manual sales
       // This ensures Lista de Ventas only shows sales that have completed payment verification
       conditions.push(
-        ne(sales.estado, "pendiente")
+        ne(sales.estadoEntrega, "Pendiente")
       );
     }
     if (filters?.excludeReservas) {
@@ -962,9 +950,9 @@ export class DatabaseStorage implements IStorage {
       .where(ne(sales.estadoEntrega, "CANCELLED"))
       .groupBy(sales.canal);
     
-    const completedOrders = deliveryStatusCounts.find(s => s.status === 'entregado')?.count || 0;
-    const pendingOrders = deliveryStatusCounts.find(s => s.status === 'pendiente')?.count || 0;
-    const activeReservations = deliveryStatusCounts.find(s => s.status === 'reservado')?.count || 0;
+    const completedOrders = deliveryStatusCounts.find(s => s.status === 'Entregado')?.count || 0;
+    const pendingOrders = deliveryStatusCounts.find(s => s.status === 'Pendiente')?.count || 0;
+    const activeReservations = deliveryStatusCounts.find(s => s.status === 'Reservado')?.count || 0;
     
     return {
       totalSales: Number(totalSalesResult.total) || 0,

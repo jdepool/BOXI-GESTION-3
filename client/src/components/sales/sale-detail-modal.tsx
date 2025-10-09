@@ -21,7 +21,7 @@ export default function SaleDetailModal({ sale, onClose }: SaleDetailModalProps)
   };
 
   const getStatusBadgeClass = (status: string) => {
-    switch (status) {
+    switch (status?.toLowerCase()) {
       case 'entregado': return 'status-badge-completed';
       case 'pendiente': return 'status-badge-pending';
       case 'reservado': return 'status-badge-reserved';
@@ -83,12 +83,8 @@ export default function SaleDetailModal({ sale, onClose }: SaleDetailModalProps)
               <div>
                 <p className="text-muted-foreground text-sm mb-1">Estado de Entrega</p>
                 <Badge className={`${getStatusBadgeClass(sale.estadoEntrega)} text-white`}>
-                  {sale.estadoEntrega.charAt(0).toUpperCase() + sale.estadoEntrega.slice(1)}
+                  {sale.estadoEntrega}
                 </Badge>
-              </div>
-              <div>
-                <p className="text-muted-foreground text-sm mb-1">Estado General</p>
-                <Badge variant="outline">{sale.estado}</Badge>
               </div>
               {sale.estadoPagoInicial && (
                 <div>

@@ -46,7 +46,7 @@ export default function Sales() {
     queryKey: ["/api/sales", { tipo: "Reserva", excludeADespachar: true }],
   });
 
-  // Query for Pagos tab - orders grouped by order number with estado Pendiente or En Proceso
+  // Query for Pagos tab - orders grouped by order number with estadoEntrega Pendiente or En Proceso
   const { data: pagosData, isLoading: pagosLoading } = useQuery<{
     data: Array<{
       orden: string;

@@ -38,7 +38,6 @@ export function EdicionOrdenesTab() {
     totalUsd: "",
     fecha: "",
     canal: "",
-    estado: "",
     estadoEntrega: "",
     product: "",
     cantidad: "",
@@ -183,7 +182,6 @@ export function EdicionOrdenesTab() {
       totalUsd: "",
       fecha: "",
       canal: "",
-      estado: "",
       estadoEntrega: "",
       product: "",
       cantidad: "",
@@ -237,7 +235,6 @@ export function EdicionOrdenesTab() {
       totalUsd: order.totalUsd || "",
       fecha: order.fecha ? new Date(order.fecha).toISOString().split('T')[0] : "",
       canal: order.canal || "",
-      estado: order.estado || "",
       estadoEntrega: order.estadoEntrega || "",
       product: order.product || "",
       cantidad: order.cantidad?.toString() || "",
@@ -294,7 +291,6 @@ export function EdicionOrdenesTab() {
       totalUsd: formData.totalUsd,
       fecha: formData.fecha,
       canal: formData.canal,
-      estado: formData.estado,
       estadoEntrega: formData.estadoEntrega,
       product: formData.product,
       cantidad: parseInt(formData.cantidad) || 1,
@@ -648,45 +644,30 @@ export function EdicionOrdenesTab() {
                     </div>
                   </div>
 
-                  {/* Estados */}
+                  {/* Estado de Entrega */}
                   <div className="border rounded-lg p-4">
-                    <h3 className="text-lg font-semibold mb-4">Estados</h3>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <Label htmlFor="estado">Estado</Label>
-                        <Select
-                          value={formData.estado}
-                          onValueChange={(value) => setFormData({ ...formData, estado: value })}
-                        >
-                          <SelectTrigger data-testid="select-estado">
-                            <SelectValue placeholder="Seleccionar estado" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="pendiente">Pendiente</SelectItem>
-                            <SelectItem value="activo">Activo</SelectItem>
-                            <SelectItem value="cancelado">Cancelado</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div>
-                        <Label htmlFor="estadoEntrega">Estado de Entrega</Label>
-                        <Select
-                          value={formData.estadoEntrega}
-                          onValueChange={(value) => setFormData({ ...formData, estadoEntrega: value })}
-                        >
-                          <SelectTrigger data-testid="select-estado-entrega">
-                            <SelectValue placeholder="Seleccionar estado" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="En Proceso">En Proceso</SelectItem>
-                            <SelectItem value="A Despachar">A Despachar</SelectItem>
-                            <SelectItem value="DELIVERED">DELIVERED</SelectItem>
-                            <SelectItem value="CANCELLED">CANCELLED</SelectItem>
-                            <SelectItem value="IN TRANSIT">IN TRANSIT</SelectItem>
-                            <SelectItem value="PROCESSING">PROCESSING</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
+                    <h3 className="text-lg font-semibold mb-4">Estado de Entrega</h3>
+                    <div>
+                      <Label htmlFor="estadoEntrega">Estado de Entrega</Label>
+                      <Select
+                        value={formData.estadoEntrega}
+                        onValueChange={(value) => setFormData({ ...formData, estadoEntrega: value })}
+                      >
+                        <SelectTrigger data-testid="select-estado-entrega">
+                          <SelectValue placeholder="Seleccionar estado" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Pendiente">Pendiente</SelectItem>
+                          <SelectItem value="Perdida">Perdida</SelectItem>
+                          <SelectItem value="En proceso">En proceso</SelectItem>
+                          <SelectItem value="A despachar">A despachar</SelectItem>
+                          <SelectItem value="En tránsito">En tránsito</SelectItem>
+                          <SelectItem value="Entregado">Entregado</SelectItem>
+                          <SelectItem value="A devolver">A devolver</SelectItem>
+                          <SelectItem value="Devuelto">Devuelto</SelectItem>
+                          <SelectItem value="Cancelada">Cancelada</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                   </div>
 

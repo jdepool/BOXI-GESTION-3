@@ -318,7 +318,7 @@ export default function SalesTable({
   };
 
   const getStatusBadgeClass = (status: string) => {
-    switch (status) {
+    switch (status?.toLowerCase()) {
       case 'entregado': return 'status-badge-completed';
       case 'pendiente': return 'status-badge-pending';
       case 'reservado': return 'status-badge-reserved';

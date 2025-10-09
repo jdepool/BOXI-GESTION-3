@@ -84,7 +84,6 @@ export const sales = pgTable("sales", {
   tienda: text("tienda"),
   fecha: timestamp("fecha").notNull(),
   canal: text("canal").notNull(), // cashea, shopify, treble
-  estado: text("estado").notNull(),
   estadoPagoInicial: text("estado_pago_inicial"),
   pagoInicialUsd: decimal("pago_inicial_usd", { precision: 10, scale: 2 }),
   metodoPagoId: varchar("metodo_pago_id"),
@@ -94,7 +93,7 @@ export const sales = pgTable("sales", {
   referencia: text("referencia"),
   montoBs: decimal("monto_bs", { precision: 15, scale: 2 }),
   montoUsd: decimal("monto_usd", { precision: 15, scale: 2 }),
-  estadoEntrega: text("estado_entrega").notNull(),
+  estadoEntrega: text("estado_entrega").notNull().default("Pendiente"), // Pendiente, Perdida, En proceso, A despachar, En tránsito, Entregado, A devolver, Devuelto, Cancelada
   product: text("product").notNull(),
   sku: text("sku"), // Manual override SKU or SKU from Shopify orders
   cantidad: integer("cantidad").notNull(),
@@ -136,6 +135,8 @@ export const sales = pgTable("sales", {
 }, (table) => ({
   // Check constraint to enforce tipo values
   tipoCheck: check("tipo_check", sql`${table.tipo} IN ('Inmediato', 'Reserva')`),
+  // Check constraint to enforce estadoEntrega values
+  estadoEntregaCheck: check("estado_entrega_check", sql`${table.estadoEntrega} IN ('Pendiente', 'Perdida', 'En proceso', 'A despachar', 'En tránsito', 'Entregado', 'A devolver', 'Devuelto', 'Cancelada')`),
   // Index for performance on asesor queries
   asesorIdIdx: index("sales_asesor_id_idx").on(table.asesorId),
 }));
