@@ -188,6 +188,30 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
                 </FormItem>
               )}
             />
+
+            <FormField
+              control={form.control}
+              name="canal"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Canal</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value} data-testid="select-canal">
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Seleccionar canal" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="Manual">Manual</SelectItem>
+                      <SelectItem value="Cashea">Cashea</SelectItem>
+                      <SelectItem value="Shopify">Shopify</SelectItem>
+                      <SelectItem value="Treble">Treble</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
           </CardContent>
         </Card>
 

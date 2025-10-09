@@ -55,6 +55,7 @@ const manualReservaSchema = z.object({
   direccionDespachoDireccion: z.string().optional(),
   direccionDespachoUrbanizacion: z.string().optional(),
   direccionDespachoReferencia: z.string().optional(),
+  canal: z.string().optional(),
 });
 
 type ManualReservaFormData = z.infer<typeof manualReservaSchema> & {
@@ -93,6 +94,7 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
       direccionDespachoUrbanizacion: "",
       direccionDespachoReferencia: "",
       fechaEntrega: undefined,
+      canal: "Manual",
       products: [],
     },
   });
@@ -251,6 +253,30 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
                       <FormControl>
                         <Input placeholder="cliente@email.com" {...field} value={field.value || ""} type="email" data-testid="input-email" />
                       </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="canal"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Canal</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value} data-testid="select-canal-reserva">
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Seleccionar canal" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="Manual">Manual</SelectItem>
+                          <SelectItem value="Cashea">Cashea</SelectItem>
+                          <SelectItem value="Shopify">Shopify</SelectItem>
+                          <SelectItem value="Treble">Treble</SelectItem>
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}
