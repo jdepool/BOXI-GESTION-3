@@ -36,11 +36,6 @@ const manualReservaSchema = z.object({
   telefono: z.string().min(1, "Teléfono es requerido").regex(/^\d+$/, "El teléfono debe contener solo números"),
   email: z.string().email("Email inválido").optional().or(z.literal("")),
   totalUsd: z.string().min(1, "Total Orden USD es requerido"),
-  pagoInicialUsd: z.coerce.number().optional(),
-  montoBs: z.coerce.number().optional(),
-  referencia: z.string().optional(),
-  bancoId: z.string().optional(),
-  montoUsd: z.string().optional(),
   fechaEntrega: z.date({ required_error: "Fecha de entrega es requerida" }),
   direccionDespachoIgualFacturacion: z.boolean().default(true),
   direccionFacturacionPais: z.string().optional(),
@@ -75,11 +70,6 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
       telefono: "",
       email: "",
       totalUsd: "",
-      pagoInicialUsd: 0,
-      referencia: "",
-      bancoId: "",
-      montoBs: 0,
-      montoUsd: "",
       direccionFacturacionPais: "Venezuela",
       direccionFacturacionEstado: "",
       direccionFacturacionCiudad: "",
@@ -109,11 +99,6 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
     setProducts(products.filter((_, i) => i !== index));
   };
 
-  // Fetch banks data
-  const { data: banks = [] } = useQuery({
-    queryKey: ["/api/admin/bancos"],
-  });
-
   // Fetch canales data
   const { data: canales = [] } = useQuery<Array<{ id: string; nombre: string; activo: string }>>({
     queryKey: ["/api/admin/canales"],
@@ -125,18 +110,12 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
       // Convert form data to proper API format
       const formattedData = {
         ...data,
-        // Handle optional numeric fields
-        pagoInicialUsd: data.pagoInicialUsd || undefined,
-        montoBs: data.montoBs || undefined,
         // Convert fechaEntrega to ISO string if provided
         fechaEntrega: data.fechaEntrega?.toISOString() || undefined,
         // Ensure empty string fields are converted to null for API
         cedula: data.cedula || null,
         telefono: data.telefono || null,
         email: data.email || null,
-        referencia: data.referencia || null,
-        bancoId: data.bancoId || null,
-        montoUsd: data.montoUsd || null,
         direccionFacturacionPais: data.direccionFacturacionPais || null,
         direccionFacturacionEstado: data.direccionFacturacionEstado || null,
         direccionFacturacionCiudad: data.direccionFacturacionCiudad || null,
@@ -440,106 +419,6 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
                 />
               </CardContent>
             </Card>
-
-            {/* Payment Information */}
-            <div className="space-y-4">
-              <h3 className="text-lg font-semibold">Información de Pago</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="pagoInicialUsd"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Pago Inicial USD</FormLabel>
-                      <FormControl>
-                        <Input 
-                          {...field} 
-                          type="number" 
-                          step="0.01"
-                          min="0"
-                          data-testid="input-pago-inicial" 
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="referencia"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Referencia</FormLabel>
-                      <FormControl>
-                        <Input {...field} value={field.value || ""} data-testid="input-referencia" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="bancoId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Banco</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl>
-                          <SelectTrigger data-testid="select-banco">
-                            <SelectValue placeholder="Seleccionar banco" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="otro">Otro ($)</SelectItem>
-                          {(banks as any[]).map((bank: any) => (
-                            <SelectItem key={bank.id} value={bank.id}>
-                              {bank.banco}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="montoBs"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Monto Bs</FormLabel>
-                      <FormControl>
-                        <Input 
-                          {...field} 
-                          type="number" 
-                          step="0.01"
-                          min="0"
-                          data-testid="input-monto-bs" 
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="montoUsd"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Monto en USD (Opcional)</FormLabel>
-                      <FormControl>
-                        <Input placeholder="0.00" {...field} data-testid="input-monto-usd" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-            </div>
 
             {/* Billing Address */}
             <Card>

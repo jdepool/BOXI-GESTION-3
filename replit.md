@@ -4,6 +4,20 @@ BoxiSleep is a comprehensive sales management dashboard for a sleep products com
 
 # Recent Changes (October 2025)
 
+## Payment Fields Reorganization (October 9, 2025)
+- **Removed**: Payment information section from "Nueva Reserva Manual" form
+- **Reason**: Payment fields already exist in the "Pago Inicial/Total" modal accessible from the Pagos tab
+- **Workflow**: Users now create reservations with customer/product details, then add payment info via Pagos tab
+- **Fields Removed** from Nueva Reserva Manual:
+  - Pago Inicial USD
+  - Referencia
+  - Banco
+  - Monto Bs
+  - Monto en USD
+- **Complete Payment Form** available in Pagos tab includes all above fields plus:
+  - Fecha (date picker)
+  - Estado de Pago (Pendiente/En Proceso/Completado)
+
 ## Chrome Autocomplete Suppression Fix (October 9, 2025)
 - **Problem**: Chrome browser was ignoring `autoComplete="off"` and showing unwanted autofill suggestions on phone and address fields
 - **Solution**: Implemented unique autocomplete values that break Chrome's pattern recognition
