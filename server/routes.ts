@@ -1528,13 +1528,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     
     for (let i = 0; i < maxLength; i++) {
       const fecha = fechas[i] ? new Date(fechas[i]) : new Date();
+      const totalUsdValue = String(totalesUSD[i] || '0');
       
       records.push({
         nombre: String(nombres[i] || 'Unknown Customer'),
         cedula: String(cedulas[i] || ''),
         telefono: telefonos[i] ? String(telefonos[i]) : null,
         email: emails[i] ? String(emails[i]) : null,
-        totalUsd: String(totalesUSD[i] || '0'),
+        totalUsd: totalUsdValue,
+        totalOrderUsd: totalUsdValue, // For Cashea, set totalOrderUsd equal to totalUsd for each product
         sucursal: null,
         tienda: null,
         fecha,
