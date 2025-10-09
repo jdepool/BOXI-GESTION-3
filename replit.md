@@ -4,6 +4,17 @@ BoxiSleep is a comprehensive sales management dashboard for a sleep products com
 
 # Recent Changes (October 2025)
 
+## Chrome Autocomplete Suppression Fix (October 9, 2025)
+- **Problem**: Chrome browser was ignoring `autoComplete="off"` and showing unwanted autofill suggestions on phone and address fields
+- **Solution**: Implemented unique autocomplete values that break Chrome's pattern recognition
+  - Teléfono: `autoComplete="nope-phone"`
+  - Address fields use unique values like `nope-country-billing`, `nope-state-shipping`, etc.
+- **Dual Strategy**: Combined with ref-based readonly trick for maximum suppression
+  1. Fields start readonly (blocks initial autofill popup)
+  2. Unique autocomplete values prevent Chrome pattern matching
+  3. Focus/blur handlers enable normal typing while maintaining protection
+- **Scope**: Applied to all customer info and address fields in both Nueva Venta Manual and Nueva Reserva Manual forms
+
 ## Field Order Consistency in Manual Entry Forms (October 9, 2025)
 - **Nueva Venta Manual**: Added mandatory "Fecha de Entrega" field
 - **Nueva Reserva Manual**: Reordered fields to match Nueva Venta Manual layout
