@@ -198,6 +198,43 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
 
             <FormField
               control={form.control}
+              name="fechaEntrega"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Fecha de Entrega *</FormLabel>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <FormControl>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-full justify-start text-left font-normal",
+                            !field.value && "text-muted-foreground"
+                          )}
+                          data-testid="input-fecha-entrega-venta"
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {field.value ? format(field.value, "dd/MM/yyyy") : "Seleccionar fecha"}
+                        </Button>
+                      </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={field.value}
+                        onSelect={field.onChange}
+                        disabled={(date) => date < new Date(new Date().setHours(0,0,0,0) - 24*60*60*1000)}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
               name="canal"
               render={({ field }) => (
                 <FormItem>
