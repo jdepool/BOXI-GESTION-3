@@ -245,6 +245,7 @@ function parseFile(buffer: Buffer, canal: string, filename: string) {
           telefono: row.Telefono ? String(row.Telefono) : null,
           email: row.Email ? String(row.Email) : null,
           totalUsd: String(row['Total usd'] || '0'),
+          totalOrderUsd: canal.toLowerCase() === 'cashea' ? String(row['Total usd'] || '0') : null,
           sucursal: row.Sucursal ? String(row.Sucursal) : null,
           tienda: row.Tienda ? String(row.Tienda) : null,
           fecha,
