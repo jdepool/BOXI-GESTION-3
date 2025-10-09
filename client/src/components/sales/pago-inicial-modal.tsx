@@ -48,7 +48,7 @@ export default function PagoInicialModal({ sale, open, onOpenChange }: PagoInici
   const [pagoData, setPagoData] = useState({
     fecha: null as Date | null,
     pagoInicialUsd: "",
-    bancoId: "",
+    bancoId: "none",
     referencia: "",
     montoBs: "",
     montoUsd: "",
@@ -66,7 +66,7 @@ export default function PagoInicialModal({ sale, open, onOpenChange }: PagoInici
       setPagoData({
         fecha: null,
         pagoInicialUsd: sale.pagoInicialUsd?.toString() || "",
-        bancoId: sale.bancoId || "",
+        bancoId: sale.bancoId || "none",
         referencia: sale.referencia || "",
         montoBs: sale.montoBs?.toString() || "",
         montoUsd: sale.montoUsd?.toString() || "",
@@ -82,7 +82,7 @@ export default function PagoInicialModal({ sale, open, onOpenChange }: PagoInici
       const payload = {
         fecha: data.fecha?.toISOString() || null,
         pagoInicialUsd: data.pagoInicialUsd ? parseFloat(data.pagoInicialUsd) : null,
-        bancoId: data.bancoId || null,
+        bancoId: data.bancoId && data.bancoId !== "none" ? data.bancoId : null,
         referencia: data.referencia || null,
         montoBs: data.montoBs ? parseFloat(data.montoBs) : null,
         montoUsd: data.montoUsd ? parseFloat(data.montoUsd) : null,
@@ -247,7 +247,7 @@ export default function PagoInicialModal({ sale, open, onOpenChange }: PagoInici
                     <SelectValue placeholder="Seleccionar banco" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Sin banco</SelectItem>
+                    <SelectItem value="none">Sin banco</SelectItem>
                     {banks.map((bank) => (
                       <SelectItem key={bank.id} value={bank.id}>
                         {bank.banco}
