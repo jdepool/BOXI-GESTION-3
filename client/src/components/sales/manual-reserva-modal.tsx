@@ -153,7 +153,7 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
         // Include products array for multi-product support
         products: data.products,
         // Add reserva-specific flags
-        estado: "Reserva",
+        estado: "pendiente",
         estadoEntrega: "Por Entregar",
         tipo: "Reserva",
       };
