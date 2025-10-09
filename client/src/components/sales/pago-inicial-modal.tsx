@@ -177,7 +177,7 @@ export default function PagoInicialModal({ sale, open, onOpenChange }: PagoInici
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="fecha">Fecha</Label>
+                <Label htmlFor="fecha">Fecha Pago Inicial</Label>
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button
