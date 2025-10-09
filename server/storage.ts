@@ -236,6 +236,27 @@ export interface IStorage {
     saldoPendiente: number;
   }>;
   isPaymentFullyVerified(saleId: string): Promise<boolean>;
+  
+  // Sale update methods
+  updateSaleFlete(saleId: string, flete: {
+    montoFleteUsd?: string;
+    fechaFlete?: string;
+    referenciaFlete?: string;
+    montoFleteVes?: string;
+    bancoReceptorFlete?: string;
+    fleteGratis?: boolean;
+  }): Promise<Sale | undefined>;
+  updateFleteStatus(saleId: string, newStatus: string): Promise<Sale | undefined>;
+  updateSaleNotes(id: string, notas: string | null): Promise<Sale | undefined>;
+  updateOrderPagoInicial(orderNumber: string, pagoData: {
+    fecha?: string | null;
+    pagoInicialUsd?: number | null;
+    bancoId?: string | null;
+    referencia?: string | null;
+    montoBs?: number | null;
+    montoUsd?: number | null;
+    estadoPagoInicial?: string;
+  }): Promise<Sale[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -783,6 +804,54 @@ export class DatabaseStorage implements IStorage {
       .returning();
 
     return updatedSale || undefined;
+  }
+
+  async updateOrderPagoInicial(orderNumber: string, pagoData: {
+    fecha?: string | null;
+    pagoInicialUsd?: number | null;
+    bancoId?: string | null;
+    referencia?: string | null;
+    montoBs?: number | null;
+    montoUsd?: number | null;
+    estadoPagoInicial?: string;
+  }): Promise<Sale[]> {
+    const updateData: any = {};
+    
+    // Add all pago inicial fields to update data
+    if (pagoData.fecha !== undefined) {
+      const dateValue = pagoData.fecha && pagoData.fecha !== "" ? new Date(pagoData.fecha) : null;
+      updateData.fecha = dateValue;
+    }
+    if (pagoData.pagoInicialUsd !== undefined) {
+      updateData.pagoInicialUsd = pagoData.pagoInicialUsd;
+    }
+    if (pagoData.bancoId !== undefined) {
+      updateData.bancoId = pagoData.bancoId === "" ? null : pagoData.bancoId;
+    }
+    if (pagoData.referencia !== undefined) {
+      updateData.referencia = pagoData.referencia === "" ? null : pagoData.referencia;
+    }
+    if (pagoData.montoBs !== undefined) {
+      updateData.montoBs = pagoData.montoBs;
+    }
+    if (pagoData.montoUsd !== undefined) {
+      updateData.montoUsd = pagoData.montoUsd;
+    }
+    if (pagoData.estadoPagoInicial !== undefined) {
+      updateData.estadoPagoInicial = pagoData.estadoPagoInicial;
+    }
+
+    // Add updated timestamp
+    updateData.updatedAt = new Date();
+
+    // Update all sales rows with this order number
+    const updatedSales = await db
+      .update(sales)
+      .set(updateData)
+      .where(eq(sales.orden, orderNumber))
+      .returning();
+
+    return updatedSales;
   }
 
   async getTotalSalesCount(filters?: {

@@ -135,7 +135,6 @@ export default function Sales() {
                     hideFilters={false}
                     hidePagination={false}
                     showDeliveryDateColumn={true}
-                    showCuotasButton={true}
                   />
                 </div>
               </div>

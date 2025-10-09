@@ -9,10 +9,8 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import SaleDetailModal from "./sale-detail-modal";
 import AddressModal from "@/components/addresses/address-modal";
-import FleteModal from "./flete-modal";
 import EditSaleModal from "./edit-sale-modal";
-import PaymentInstallmentsModal from "./payment-installments-modal";
-import { MapPin, Truck, Edit, CalendarIcon, CreditCard, Mail } from "lucide-react";
+import { MapPin, Edit, CalendarIcon, Mail } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
@@ -29,7 +27,6 @@ interface SalesTableProps {
   hidePagination?: boolean;
   showEditActions?: boolean;
   showDeliveryDateColumn?: boolean;
-  showCuotasButton?: boolean;
   filters?: any;
   extraExportParams?: Record<string, any>;
   onFilterChange?: (filters: any) => void;
@@ -48,7 +45,6 @@ export default function SalesTable({
   hidePagination = false,
   showEditActions = false,
   showDeliveryDateColumn = false,
-  showCuotasButton = false,
   filters: parentFilters,
   extraExportParams = {},
   onFilterChange,
@@ -86,12 +82,8 @@ export default function SalesTable({
   const [selectedSale, setSelectedSale] = useState<Sale | null>(null);
   const [addressModalOpen, setAddressModalOpen] = useState(false);
   const [selectedSaleForAddress, setSelectedSaleForAddress] = useState<Sale | null>(null);
-  const [fleteModalOpen, setFleteModalOpen] = useState(false);
-  const [selectedSaleForFlete, setSelectedSaleForFlete] = useState<Sale | null>(null);
   const [editSaleModalOpen, setEditSaleModalOpen] = useState(false);
   const [selectedSaleForEdit, setSelectedSaleForEdit] = useState<Sale | null>(null);
-  const [installmentsModalOpen, setInstallmentsModalOpen] = useState(false);
-  const [selectedSaleForInstallments, setSelectedSaleForInstallments] = useState<Sale | null>(null);
   const [editingNotesId, setEditingNotesId] = useState<string | null>(null);
   const [notesValue, setNotesValue] = useState<string>("");
   const filters = {
@@ -475,7 +467,6 @@ export default function SalesTable({
                   <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[130px]">Fecha Entrega</th>
                 )}
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[120px]">Direcciones</th>
-                <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[120px]">Flete</th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[120px]">Asesor</th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[150px]">Notas</th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[200px]">Acciones</th>
@@ -484,7 +475,7 @@ export default function SalesTable({
             <tbody>
               {data.length === 0 ? (
                 <tr>
-                  <td colSpan={showDeliveryDateColumn ? 24 : 23} className="text-center p-8 text-muted-foreground">
+                  <td colSpan={showDeliveryDateColumn ? 23 : 22} className="text-center p-8 text-muted-foreground">
                     No hay datos disponibles
                   </td>
                 </tr>
@@ -655,57 +646,6 @@ export default function SalesTable({
                       </Button>
                     </td>
                     <td className="p-2 min-w-[120px]">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          setSelectedSaleForFlete(sale);
-                          setFleteModalOpen(true);
-                        }}
-                        data-testid={`add-flete-${sale.id}`}
-                        className={`h-7 text-xs ${
-                          (() => {
-                            // Helper to safely convert values to numbers
-                            const toNum = (v: any): number => {
-                              if (typeof v === 'number') return v;
-                              if (typeof v === 'string') {
-                                const cleaned = v.replace(/[^0-9.-]/g, '');
-                                return parseFloat(cleaned) || 0;
-                              }
-                              return 0;
-                            };
-                            
-                            // Helper to check if freight is complete
-                            const hasPrice = toNum(sale.montoFleteUsd) > 0;
-                            const isComplete = Boolean(sale.fechaFlete) && 
-                                             !!(sale.referenciaFlete?.trim()) && 
-                                             toNum(sale.montoFleteVes) > 0 && 
-                                             !!String(sale.bancoReceptorFlete ?? '').trim();
-                            
-                            if (hasPrice && !isComplete) {
-                              return 'bg-orange-500 hover:bg-orange-600 text-white border-orange-500';
-                            }
-                            // Si está vacío o completo: blanco (outline default)
-                            return '';
-                          })()
-                        }`}
-                      >
-                        <Truck className={`h-3 w-3 mr-1 ${
-                          (() => {
-                            // Si tiene status manual, usar ese status
-                            if (sale.statusFlete) {
-                              return sale.statusFlete === 'Pendiente' ? 'text-orange-500' : '';
-                            }
-                            // Lógica automática: solo naranja si tiene USD pero no está completo
-                            return sale.montoFleteUsd && (!sale.fechaFlete || !sale.referenciaFlete || !sale.montoFleteVes || !sale.bancoReceptorFlete) 
-                              ? 'text-orange-500' 
-                              : '';
-                          })()
-                        }`} />
-                        {sale.montoFleteUsd || sale.fechaFlete || sale.referenciaFlete || sale.montoFleteVes || sale.bancoReceptorFlete || sale.fleteGratis ? 'Editar' : 'Agregar'}
-                      </Button>
-                    </td>
-                    <td className="p-2 min-w-[120px]">
                       <Select
                         value={sale.asesorId || "none"}
                         onValueChange={(asesorId) => updateAsesorMutation.mutate({ saleId: sale.id, asesorId: asesorId === "none" ? null : asesorId })}
@@ -750,21 +690,6 @@ export default function SalesTable({
                     </td>
                     <td className="p-2 min-w-[200px]">
                       <div className="flex gap-1">
-                        {showCuotasButton && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              setSelectedSaleForInstallments(sale);
-                              setInstallmentsModalOpen(true);
-                            }}
-                            data-testid={`button-cuotas-${sale.id}`}
-                            className="h-7 text-xs"
-                          >
-                            <CreditCard className="h-3 w-3 mr-1" />
-                            Cuotas
-                          </Button>
-                        )}
                         <Button
                           variant="outline"
                           size="sm"
@@ -880,17 +805,6 @@ export default function SalesTable({
         sale={selectedSaleForAddress}
       />
 
-      <FleteModal
-        open={fleteModalOpen}
-        onOpenChange={(open) => {
-          setFleteModalOpen(open);
-          if (!open) {
-            setSelectedSaleForFlete(null);
-          }
-        }}
-        sale={selectedSaleForFlete}
-      />
-
       <EditSaleModal
         open={editSaleModalOpen}
         onOpenChange={(open) => {
@@ -900,17 +814,6 @@ export default function SalesTable({
           }
         }}
         sale={selectedSaleForEdit}
-      />
-
-      <PaymentInstallmentsModal
-        open={installmentsModalOpen}
-        onOpenChange={(open) => {
-          setInstallmentsModalOpen(open);
-          if (!open) {
-            setSelectedSaleForInstallments(null);
-          }
-        }}
-        sale={selectedSaleForInstallments}
       />
     </>
   );

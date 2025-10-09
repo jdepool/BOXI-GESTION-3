@@ -1,6 +1,12 @@
+import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
+import { CreditCard, Truck, Banknote } from "lucide-react";
+import PagoInicialModal from "./pago-inicial-modal";
+import FleteModal from "./flete-modal";
+import PaymentInstallmentsModal from "./payment-installments-modal";
+import { useQuery } from "@tanstack/react-query";
 
 interface Order {
   orden: string;
@@ -31,6 +37,12 @@ export default function PagosTable({
   onPageChange,
 }: PagosTableProps) {
   const currentPage = Math.floor(offset / limit) + 1;
+  
+  const [pagoInicialModalOpen, setPagoInicialModalOpen] = useState(false);
+  const [fleteModalOpen, setFleteModalOpen] = useState(false);
+  const [cuotasModalOpen, setCuotasModalOpen] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [selectedSale, setSelectedSale] = useState<any | null>(null);
 
   const formatCurrency = (value: number | null) => {
     if (value === null || value === undefined) return "$0";
@@ -69,18 +81,21 @@ export default function PagosTable({
                 <th className="p-3 text-left font-semibold text-foreground min-w-[140px]">
                   Total Orden USD
                 </th>
+                <th className="p-3 text-left font-semibold text-foreground min-w-[300px]">
+                  Acciones
+                </th>
               </tr>
             </thead>
             <tbody>
               {isLoading ? (
                 <tr>
-                  <td colSpan={7} className="p-4 text-center text-muted-foreground">
+                  <td colSpan={8} className="p-4 text-center text-muted-foreground">
                     Cargando...
                   </td>
                 </tr>
               ) : data.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="p-4 text-center text-muted-foreground">
+                  <td colSpan={8} className="p-4 text-center text-muted-foreground">
                     No hay órdenes pendientes o en proceso
                   </td>
                 </tr>
@@ -138,6 +153,67 @@ export default function PagosTable({
                         </span>
                       )}
                     </td>
+                    <td className="p-2 min-w-[300px]">
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={async () => {
+                            // Fetch first sale from this order to get details
+                            const response = await fetch(`/api/sales?orden=${order.orden}&limit=1`);
+                            const salesData = await response.json();
+                            if (salesData.data && salesData.data.length > 0) {
+                              setSelectedSale({
+                                ...salesData.data[0],
+                                orden: order.orden
+                              });
+                              setPagoInicialModalOpen(true);
+                            }
+                          }}
+                          className="h-7 text-xs"
+                          data-testid={`button-pago-inicial-${order.orden}`}
+                        >
+                          <Banknote className="h-3 w-3 mr-1" />
+                          Pago Inicial/Total
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={async () => {
+                            // Fetch first sale from this order
+                            const response = await fetch(`/api/sales?orden=${order.orden}&limit=1`);
+                            const salesData = await response.json();
+                            if (salesData.data && salesData.data.length > 0) {
+                              setSelectedSale(salesData.data[0]);
+                              setFleteModalOpen(true);
+                            }
+                          }}
+                          className="h-7 text-xs"
+                          data-testid={`button-flete-${order.orden}`}
+                        >
+                          <Truck className="h-3 w-3 mr-1" />
+                          Flete
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={async () => {
+                            // Fetch first sale from this order
+                            const response = await fetch(`/api/sales?orden=${order.orden}&limit=1`);
+                            const salesData = await response.json();
+                            if (salesData.data && salesData.data.length > 0) {
+                              setSelectedSale(salesData.data[0]);
+                              setCuotasModalOpen(true);
+                            }
+                          }}
+                          className="h-7 text-xs"
+                          data-testid={`button-cuotas-${order.orden}`}
+                        >
+                          <CreditCard className="h-3 w-3 mr-1" />
+                          Cuotas
+                        </Button>
+                      </div>
+                    </td>
                   </tr>
                 ))
               )}
@@ -180,6 +256,23 @@ export default function PagosTable({
           </div>
         </div>
       )}
+
+      {/* Payment Modals */}
+      <PagoInicialModal
+        sale={selectedSale}
+        open={pagoInicialModalOpen}
+        onOpenChange={setPagoInicialModalOpen}
+      />
+      <FleteModal
+        sale={selectedSale}
+        open={fleteModalOpen}
+        onOpenChange={setFleteModalOpen}
+      />
+      <PaymentInstallmentsModal
+        sale={selectedSale}
+        open={cuotasModalOpen}
+        onOpenChange={setCuotasModalOpen}
+      />
     </div>
   );
 }
