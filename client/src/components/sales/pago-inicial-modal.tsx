@@ -22,6 +22,8 @@ interface Sale {
   fecha: Date;
   canal: string;
   totalUsd: string | number;
+  totalOrderUsd?: string | number | null;
+  tipo: string;
   estadoEntrega: string;
   pagoInicialUsd?: string | number | null;
   bancoId?: string | null;
@@ -52,7 +54,6 @@ export default function PagoInicialModal({ sale, open, onOpenChange }: PagoInici
     referencia: "",
     montoBs: "",
     montoUsd: "",
-    estadoPagoInicial: "Pendiente",
   });
 
   // Fetch banks for the dropdown
@@ -70,7 +71,6 @@ export default function PagoInicialModal({ sale, open, onOpenChange }: PagoInici
         referencia: sale.referencia || "",
         montoBs: sale.montoBs?.toString() || "",
         montoUsd: sale.montoUsd?.toString() || "",
-        estadoPagoInicial: sale.estadoPagoInicial || "Pendiente",
       });
     }
   }, [sale]);
@@ -86,7 +86,6 @@ export default function PagoInicialModal({ sale, open, onOpenChange }: PagoInici
         referencia: data.referencia || null,
         montoBs: data.montoBs ? parseFloat(data.montoBs) : null,
         montoUsd: data.montoUsd ? parseFloat(data.montoUsd) : null,
-        estadoPagoInicial: data.estadoPagoInicial,
       };
 
       return apiRequest("PATCH", `/api/sales/${sale.orden}/pago-inicial`, payload);
@@ -152,8 +151,8 @@ export default function PagoInicialModal({ sale, open, onOpenChange }: PagoInici
               </div>
               <div className="flex items-center gap-2">
                 <DollarSign className="h-4 w-4" />
-                <span className="font-medium">Total USD:</span>
-                <span>${sale.totalUsd}</span>
+                <span className="font-medium">Total Order USD:</span>
+                <span>${sale.totalOrderUsd || sale.totalUsd}</span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="font-medium">Orden:</span>
@@ -161,7 +160,7 @@ export default function PagoInicialModal({ sale, open, onOpenChange }: PagoInici
               </div>
               <div className="flex items-center gap-2">
                 <Badge variant="outline">{sale.canal}</Badge>
-                <Badge variant="secondary">{sale.estadoEntrega}</Badge>
+                <Badge variant="secondary">{sale.tipo}</Badge>
               </div>
             </div>
           </div>
@@ -201,23 +200,6 @@ export default function PagoInicialModal({ sale, open, onOpenChange }: PagoInici
                     />
                   </PopoverContent>
                 </Popover>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="estadoPagoInicial">Estado de Pago</Label>
-                <Select
-                  value={pagoData.estadoPagoInicial}
-                  onValueChange={handleSelectChange("estadoPagoInicial")}
-                >
-                  <SelectTrigger data-testid="select-estado-pago">
-                    <SelectValue placeholder="Seleccionar estado" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Pendiente">Pendiente</SelectItem>
-                    <SelectItem value="En Proceso">En Proceso</SelectItem>
-                    <SelectItem value="Completado">Completado</SelectItem>
-                  </SelectContent>
-                </Select>
               </div>
 
               <div className="space-y-2">
