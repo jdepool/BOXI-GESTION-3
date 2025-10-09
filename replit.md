@@ -2,6 +2,24 @@
 
 BoxiSleep is a comprehensive sales management dashboard for a sleep products company. It enables users to upload sales data from various channels (Cashea, Shopify, Treble), visualize key metrics through interactive dashboards, and manage sales records with filtering and export functionalities. The application provides real-time analytics on sales performance, delivery status, and channel-specific metrics to support informed business decisions.
 
+# Recent Changes (October 2025)
+
+## Status Field Consolidation
+- **Removed**: Duplicate "estado" field that was causing confusion
+- **Single Source of Truth**: All order/delivery status now tracked exclusively through `estadoEntrega` field
+- **Valid Status Values** (10 states, case-sensitive):
+  - `Pendiente` - New orders awaiting payment verification
+  - `Perdida` - Lost/abandoned orders
+  - `En proceso` - Orders with verified payment, ready for dispatch
+  - `A despachar` - Orders ready to ship
+  - `En tránsito` - Orders in delivery
+  - `Entregado` - Successfully delivered orders
+  - `A devolver` - Orders pending return
+  - `Devuelto` - Returned orders
+  - `Cancelada` - Cancelled orders
+- **Database Constraint**: Check constraint enforces exact value matching (case-sensitive)
+- **Default Status**: All new sales/reservations default to "Pendiente"
+
 # User Preferences
 
 Preferred communication style: Simple, everyday language.
