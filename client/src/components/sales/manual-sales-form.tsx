@@ -32,6 +32,7 @@ const manualSaleSchema = z.object({
   email: z.string().email("Email inválido").optional(),
   totalUsd: z.string().min(1, "Total USD es requerido"),
   fecha: z.string().min(1, "Fecha es requerida"),
+  fechaEntrega: z.date({ required_error: "Fecha de entrega es requerida" }),
   metodoPagoId: z.string().optional(),
   bancoId: z.string().optional(),
   montoUsd: z.string().optional(),
