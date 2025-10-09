@@ -1051,6 +1051,87 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get all products for an order by order number
+  app.get("/api/sales/order/:orderNumber", async (req, res) => {
+    try {
+      const { orderNumber } = req.params;
+      const sales = await storage.getSalesByOrderNumber(orderNumber);
+      if (!sales || sales.length === 0) {
+        return res.status(404).json({ error: "Order not found" });
+      }
+      res.json(sales);
+    } catch (error) {
+      console.error("Error fetching order:", error);
+      res.status(500).json({ error: "Failed to fetch order" });
+    }
+  });
+
+  // Update all products for an order by order number
+  app.put("/api/sales/order/:orderNumber", async (req, res) => {
+    try {
+      const { orderNumber } = req.params;
+      const { nombre, cedula, telefono, email, canal, totalUsd, products } = req.body;
+
+      // Check if order exists
+      const existingSales = await storage.getSalesByOrderNumber(orderNumber);
+      if (!existingSales || existingSales.length === 0) {
+        return res.status(404).json({ error: "Order not found" });
+      }
+
+      // Delete all existing sales for this order
+      for (const sale of existingSales) {
+        await storage.deleteSale(sale.id);
+      }
+
+      // Create new sales with updated information
+      const newSales = products.map((product: any) => ({
+        orden: orderNumber,
+        nombre,
+        cedula: cedula || null,
+        telefono: telefono || null,
+        email: email || null,
+        canal: canal || existingSales[0].canal,
+        totalUsd: product.totalUsd || 0,
+        totalOrderUsd: parseFloat(totalUsd) || null,
+        product: product.producto,
+        sku: product.sku || null,
+        cantidad: product.cantidad || 1,
+        medidaEspecial: product.medidaEspecial || null,
+        fecha: existingSales[0].fecha,
+        estado: existingSales[0].estado,
+        estadoEntrega: existingSales[0].estadoEntrega,
+        tipo: existingSales[0].tipo,
+        // Preserve addresses
+        direccionFacturacionPais: existingSales[0].direccionFacturacionPais,
+        direccionFacturacionEstado: existingSales[0].direccionFacturacionEstado,
+        direccionFacturacionCiudad: existingSales[0].direccionFacturacionCiudad,
+        direccionFacturacionDireccion: existingSales[0].direccionFacturacionDireccion,
+        direccionFacturacionUrbanizacion: existingSales[0].direccionFacturacionUrbanizacion,
+        direccionFacturacionReferencia: existingSales[0].direccionFacturacionReferencia,
+        direccionDespachoIgualFacturacion: existingSales[0].direccionDespachoIgualFacturacion,
+        direccionDespachoPais: existingSales[0].direccionDespachoPais,
+        direccionDespachoEstado: existingSales[0].direccionDespachoEstado,
+        direccionDespachoCiudad: existingSales[0].direccionDespachoCiudad,
+        direccionDespachoDireccion: existingSales[0].direccionDespachoDireccion,
+        direccionDespachoUrbanizacion: existingSales[0].direccionDespachoUrbanizacion,
+        direccionDespachoReferencia: existingSales[0].direccionDespachoReferencia,
+        // Preserve other fields
+        metodoPagoId: existingSales[0].metodoPagoId,
+        bancoId: existingSales[0].bancoId,
+        referencia: existingSales[0].referencia,
+        montoBs: existingSales[0].montoBs,
+        montoUsd: existingSales[0].montoUsd,
+        asesorId: existingSales[0].asesorId,
+      }));
+
+      const createdSales = await storage.createSales(newSales);
+      res.json(createdSales);
+    } catch (error) {
+      console.error("Error updating order:", error);
+      res.status(500).json({ error: "Failed to update order" });
+    }
+  });
+
   // Get specific sale by ID (MUST BE AFTER specific routes)
   app.get("/api/sales/:id", async (req, res) => {
     try {

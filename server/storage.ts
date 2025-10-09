@@ -19,6 +19,7 @@ export interface IStorage {
   createSale(sale: InsertSale): Promise<Sale>;
   createSales(salesData: InsertSale[]): Promise<Sale[]>;
   updateSale(id: string, sale: Partial<InsertSale>): Promise<Sale | undefined>;
+  updateSalesByOrderNumber(orderNumber: string, updates: Partial<InsertSale>): Promise<Sale[]>;
   deleteSale(id: string): Promise<boolean>;
   getSales(filters?: {
     canal?: string;
@@ -36,6 +37,7 @@ export interface IStorage {
     offset?: number;
   }): Promise<Sale[]>;
   getSaleById(id: string): Promise<Sale | undefined>;
+  getSalesByOrderNumber(orderNumber: string): Promise<Sale[]>;
   getCasheaOrders(limit?: number): Promise<Sale[]>;
   getOrdersWithAddresses(limit?: number, offset?: number): Promise<{ data: Sale[]; total: number }>;
   updateSaleDeliveryStatus(saleId: string, newStatus: string): Promise<Sale | undefined>;
@@ -421,6 +423,23 @@ export class DatabaseStorage implements IStorage {
   async getSaleById(id: string): Promise<Sale | undefined> {
     const [sale] = await db.select().from(sales).where(eq(sales.id, id));
     return sale || undefined;
+  }
+
+  async getSalesByOrderNumber(orderNumber: string): Promise<Sale[]> {
+    return await db
+      .select()
+      .from(sales)
+      .where(eq(sales.orden, orderNumber))
+      .orderBy(desc(sales.fecha));
+  }
+
+  async updateSalesByOrderNumber(orderNumber: string, updates: Partial<InsertSale>): Promise<Sale[]> {
+    const updatedSales = await db
+      .update(sales)
+      .set(updates)
+      .where(eq(sales.orden, orderNumber))
+      .returning();
+    return updatedSales;
   }
 
   async getCasheaOrders(limit: number = 50): Promise<Sale[]> {
