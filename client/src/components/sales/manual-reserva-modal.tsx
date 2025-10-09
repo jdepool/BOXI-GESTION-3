@@ -265,33 +265,6 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
 
                 <FormField
                   control={form.control}
-                  name="canal"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Canal</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value} data-testid="select-canal-reserva">
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Seleccionar canal" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {canales
-                            .filter(canal => canal.activo === "true")
-                            .map((canal) => (
-                              <SelectItem key={canal.id} value={canal.nombre}>
-                                {canal.nombre}
-                              </SelectItem>
-                            ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
                   name="fechaEntrega"
                   render={({ field }) => (
                     <FormItem>
@@ -322,6 +295,33 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
                           />
                         </PopoverContent>
                       </Popover>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="canal"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Canal</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value} data-testid="select-canal-reserva">
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Seleccionar canal" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {canales
+                            .filter(canal => canal.activo === "true")
+                            .map((canal) => (
+                              <SelectItem key={canal.id} value={canal.nombre}>
+                                {canal.nombre}
+                              </SelectItem>
+                            ))}
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}
