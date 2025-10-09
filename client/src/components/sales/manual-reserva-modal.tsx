@@ -356,6 +356,20 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
                     </TableBody>
                   </Table>
                 )}
+                
+                <FormField
+                  control={form.control}
+                  name="totalUsd"
+                  render={({ field }) => (
+                    <FormItem className="max-w-xs">
+                      <FormLabel>Total Orden USD</FormLabel>
+                      <FormControl>
+                        <Input placeholder="0.00" {...field} data-testid="input-total-orden-usd" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </CardContent>
             </Card>
 
