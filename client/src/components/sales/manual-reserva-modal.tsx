@@ -214,7 +214,16 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
                     <FormItem>
                       <FormLabel>Nombre *</FormLabel>
                       <FormControl>
-                        <Input placeholder="Nombre y Apellido" {...field} data-testid="input-nombre" required autoComplete="disable-nombre-res" />
+                        <Input 
+                          placeholder="Nombre y Apellido" 
+                          {...field} 
+                          data-testid="input-nombre" 
+                          required 
+                          ref={(el) => { field.ref(el); el?.setAttribute('readonly', 'true'); }}
+                          autoComplete="off" 
+                          onFocus={(e) => { e.target.removeAttribute('readonly'); }}
+                          onBlur={(e) => { e.target.setAttribute('readonly', 'true'); }}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -228,7 +237,16 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
                     <FormItem>
                       <FormLabel>Cédula *</FormLabel>
                       <FormControl>
-                        <Input placeholder="12345678" {...field} value={field.value || ""} data-testid="input-cedula" autoComplete="disable-cedula-res" />
+                        <Input 
+                          placeholder="12345678" 
+                          {...field} 
+                          value={field.value || ""} 
+                          data-testid="input-cedula" 
+                          ref={(el) => { field.ref(el); el?.setAttribute('readonly', 'true'); }}
+                          autoComplete="off" 
+                          onFocus={(e) => { e.target.removeAttribute('readonly'); }}
+                          onBlur={(e) => { e.target.setAttribute('readonly', 'true'); }}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -242,7 +260,16 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
                     <FormItem>
                       <FormLabel>Teléfono *</FormLabel>
                       <FormControl>
-                        <Input placeholder="04141234567" {...field} value={field.value || ""} data-testid="input-telefono" autoComplete="disable-telefono-res" />
+                        <Input 
+                          placeholder="04141234567" 
+                          {...field} 
+                          value={field.value || ""} 
+                          data-testid="input-telefono" 
+                          ref={(el) => { field.ref(el); el?.setAttribute('readonly', 'true'); }}
+                          autoComplete="off" 
+                          onFocus={(e) => { e.target.removeAttribute('readonly'); }}
+                          onBlur={(e) => { e.target.setAttribute('readonly', 'true'); }}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -256,7 +283,17 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
                     <FormItem>
                       <FormLabel>Email</FormLabel>
                       <FormControl>
-                        <Input placeholder="cliente@email.com" {...field} value={field.value || ""} type="email" data-testid="input-email" autoComplete="disable-email-res" />
+                        <Input 
+                          placeholder="cliente@email.com" 
+                          {...field} 
+                          value={field.value || ""} 
+                          type="email" 
+                          data-testid="input-email" 
+                          ref={(el) => { field.ref(el); el?.setAttribute('readonly', 'true'); }}
+                          autoComplete="off" 
+                          onFocus={(e) => { e.target.removeAttribute('readonly'); }}
+                          onBlur={(e) => { e.target.setAttribute('readonly', 'true'); }}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -523,7 +560,15 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
                     <FormItem>
                       <FormLabel>País *</FormLabel>
                       <FormControl>
-                        <Input placeholder="Venezuela" {...field} data-testid="input-facturacion-pais" autoComplete="disable-fact-pais-res" />
+                        <Input 
+                          placeholder="Venezuela" 
+                          {...field} 
+                          data-testid="input-facturacion-pais" 
+                          ref={(el) => { field.ref(el); el?.setAttribute('readonly', 'true'); }}
+                          autoComplete="off" 
+                          onFocus={(e) => { e.target.removeAttribute('readonly'); }}
+                          onBlur={(e) => { e.target.setAttribute('readonly', 'true'); }}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -537,7 +582,15 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
                     <FormItem>
                       <FormLabel>Estado *</FormLabel>
                       <FormControl>
-                        <Input placeholder="Distrito Capital" {...field} data-testid="input-facturacion-estado" autoComplete="disable-fact-estado-res" />
+                        <Input 
+                          placeholder="Distrito Capital" 
+                          {...field} 
+                          data-testid="input-facturacion-estado" 
+                          ref={(el) => { field.ref(el); el?.setAttribute('readonly', 'true'); }}
+                          autoComplete="off" 
+                          onFocus={(e) => { e.target.removeAttribute('readonly'); }}
+                          onBlur={(e) => { e.target.setAttribute('readonly', 'true'); }}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -551,7 +604,15 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
                     <FormItem>
                       <FormLabel>Ciudad *</FormLabel>
                       <FormControl>
-                        <Input placeholder="Caracas" {...field} data-testid="input-facturacion-ciudad" autoComplete="disable-fact-ciudad-res" />
+                        <Input 
+                          placeholder="Caracas" 
+                          {...field} 
+                          data-testid="input-facturacion-ciudad" 
+                          ref={(el) => { field.ref(el); el?.setAttribute('readonly', 'true'); }}
+                          autoComplete="off" 
+                          onFocus={(e) => { e.target.removeAttribute('readonly'); }}
+                          onBlur={(e) => { e.target.setAttribute('readonly', 'true'); }}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -565,7 +626,15 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
                     <FormItem className="md:col-span-2 lg:col-span-3">
                       <FormLabel>Dirección *</FormLabel>
                       <FormControl>
-                        <Input placeholder="Calle, número, apartamento, etc." {...field} data-testid="input-facturacion-direccion" autoComplete="disable-fact-direccion-res" />
+                        <Input 
+                          placeholder="Calle, número, apartamento, etc." 
+                          {...field} 
+                          data-testid="input-facturacion-direccion" 
+                          ref={(el) => { field.ref(el); el?.setAttribute('readonly', 'true'); }}
+                          autoComplete="off" 
+                          onFocus={(e) => { e.target.removeAttribute('readonly'); }}
+                          onBlur={(e) => { e.target.setAttribute('readonly', 'true'); }}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -579,7 +648,15 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
                     <FormItem>
                       <FormLabel>Urbanización</FormLabel>
                       <FormControl>
-                        <Input placeholder="Nombre de la urbanización" {...field} data-testid="input-facturacion-urbanizacion" autoComplete="disable-fact-urbanizacion-res" />
+                        <Input 
+                          placeholder="Nombre de la urbanización" 
+                          {...field} 
+                          data-testid="input-facturacion-urbanizacion" 
+                          ref={(el) => { field.ref(el); el?.setAttribute('readonly', 'true'); }}
+                          autoComplete="off" 
+                          onFocus={(e) => { e.target.removeAttribute('readonly'); }}
+                          onBlur={(e) => { e.target.setAttribute('readonly', 'true'); }}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -593,7 +670,15 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
                     <FormItem className="md:col-span-2">
                       <FormLabel>Referencia</FormLabel>
                       <FormControl>
-                        <Input placeholder="Punto de referencia" {...field} data-testid="input-facturacion-referencia" autoComplete="disable-fact-referencia-res" />
+                        <Input 
+                          placeholder="Punto de referencia" 
+                          {...field} 
+                          data-testid="input-facturacion-referencia" 
+                          ref={(el) => { field.ref(el); el?.setAttribute('readonly', 'true'); }}
+                          autoComplete="off" 
+                          onFocus={(e) => { e.target.removeAttribute('readonly'); }}
+                          onBlur={(e) => { e.target.setAttribute('readonly', 'true'); }}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -641,7 +726,15 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
                     <FormItem>
                       <FormLabel>País</FormLabel>
                       <FormControl>
-                        <Input placeholder="Venezuela" {...field} data-testid="input-despacho-pais" autoComplete="disable-desp-pais-res" />
+                        <Input 
+                          placeholder="Venezuela" 
+                          {...field} 
+                          data-testid="input-despacho-pais" 
+                          ref={(el) => { field.ref(el); el?.setAttribute('readonly', 'true'); }}
+                          autoComplete="off" 
+                          onFocus={(e) => { e.target.removeAttribute('readonly'); }}
+                          onBlur={(e) => { e.target.setAttribute('readonly', 'true'); }}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -655,7 +748,15 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
                     <FormItem>
                       <FormLabel>Estado</FormLabel>
                       <FormControl>
-                        <Input placeholder="Distrito Capital" {...field} data-testid="input-despacho-estado" autoComplete="disable-desp-estado-res" />
+                        <Input 
+                          placeholder="Distrito Capital" 
+                          {...field} 
+                          data-testid="input-despacho-estado" 
+                          ref={(el) => { field.ref(el); el?.setAttribute('readonly', 'true'); }}
+                          autoComplete="off" 
+                          onFocus={(e) => { e.target.removeAttribute('readonly'); }}
+                          onBlur={(e) => { e.target.setAttribute('readonly', 'true'); }}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -669,7 +770,15 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
                     <FormItem>
                       <FormLabel>Ciudad</FormLabel>
                       <FormControl>
-                        <Input placeholder="Caracas" {...field} data-testid="input-despacho-ciudad" autoComplete="disable-desp-ciudad-res" />
+                        <Input 
+                          placeholder="Caracas" 
+                          {...field} 
+                          data-testid="input-despacho-ciudad" 
+                          ref={(el) => { field.ref(el); el?.setAttribute('readonly', 'true'); }}
+                          autoComplete="off" 
+                          onFocus={(e) => { e.target.removeAttribute('readonly'); }}
+                          onBlur={(e) => { e.target.setAttribute('readonly', 'true'); }}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -683,7 +792,15 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
                     <FormItem className="md:col-span-2 lg:col-span-3">
                       <FormLabel>Dirección</FormLabel>
                       <FormControl>
-                        <Input placeholder="Calle, número, apartamento, etc." {...field} data-testid="input-despacho-direccion" autoComplete="disable-desp-direccion-res" />
+                        <Input 
+                          placeholder="Calle, número, apartamento, etc." 
+                          {...field} 
+                          data-testid="input-despacho-direccion" 
+                          ref={(el) => { field.ref(el); el?.setAttribute('readonly', 'true'); }}
+                          autoComplete="off" 
+                          onFocus={(e) => { e.target.removeAttribute('readonly'); }}
+                          onBlur={(e) => { e.target.setAttribute('readonly', 'true'); }}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -697,7 +814,15 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
                     <FormItem>
                       <FormLabel>Urbanización</FormLabel>
                       <FormControl>
-                        <Input placeholder="Nombre de la urbanización" {...field} data-testid="input-despacho-urbanizacion" autoComplete="disable-desp-urbanizacion-res" />
+                        <Input 
+                          placeholder="Nombre de la urbanización" 
+                          {...field} 
+                          data-testid="input-despacho-urbanizacion" 
+                          ref={(el) => { field.ref(el); el?.setAttribute('readonly', 'true'); }}
+                          autoComplete="off" 
+                          onFocus={(e) => { e.target.removeAttribute('readonly'); }}
+                          onBlur={(e) => { e.target.setAttribute('readonly', 'true'); }}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -711,7 +836,15 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
                     <FormItem className="md:col-span-2">
                       <FormLabel>Referencia</FormLabel>
                       <FormControl>
-                        <Input placeholder="Punto de referencia cercano" {...field} data-testid="input-despacho-referencia" autoComplete="disable-desp-referencia-res" />
+                        <Input 
+                          placeholder="Punto de referencia cercano" 
+                          {...field} 
+                          data-testid="input-despacho-referencia" 
+                          ref={(el) => { field.ref(el); el?.setAttribute('readonly', 'true'); }}
+                          autoComplete="off" 
+                          onFocus={(e) => { e.target.removeAttribute('readonly'); }}
+                          onBlur={(e) => { e.target.setAttribute('readonly', 'true'); }}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
