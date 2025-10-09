@@ -78,6 +78,7 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
       email: "",
       totalUsd: "",
       fecha: new Date().toISOString().split('T')[0],
+      fechaEntrega: undefined,
       referencia: "",
       montoUsd: "",
       montoBs: "",
