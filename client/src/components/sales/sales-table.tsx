@@ -455,28 +455,28 @@ export default function SalesTable({
               <tr>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[100px] sticky left-0 bg-muted z-20 border-r border-border shadow-[2px_0_5px_rgba(0,0,0,0.1)]">Orden</th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[180px] sticky left-[100px] bg-muted z-20 border-r border-border shadow-[2px_0_5px_rgba(0,0,0,0.1)]">Nombre</th>
-                <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[100px]">Cedula</th>
-                <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[120px]">Telefono</th>
-                <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[160px]">Email</th>
-                <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[100px]">Total USD</th>
-                <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[120px]">Total Orden USD</th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[90px]">Fecha</th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[80px]">Canal</th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[90px]">Tipo</th>
-                <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[120px]">Asesor</th>
+                <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[120px]">Estado Entrega</th>
+                <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[120px]">Total Orden USD</th>
+                <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[100px]">Total USD</th>
+                <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[140px]">Producto</th>
+                <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[100px]">SKU</th>
+                <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[80px]">Cantidad</th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[110px]">Pago Inicial USD</th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[120px]">Referencia</th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[100px]">Banco</th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[110px]">Monto Bs</th>
-                <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[120px]">Estado Entrega</th>
-                <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[140px]">Producto</th>
-                <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[100px]">SKU</th>
-                <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[80px]">Cantidad</th>
+                <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[100px]">Cedula</th>
+                <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[120px]">Telefono</th>
+                <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[160px]">Email</th>
                 {showDeliveryDateColumn && (
                   <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[130px]">Fecha Entrega</th>
                 )}
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[120px]">Direcciones</th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[120px]">Flete</th>
+                <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[120px]">Asesor</th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[150px]">Notas</th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[200px]">Acciones</th>
               </tr>
