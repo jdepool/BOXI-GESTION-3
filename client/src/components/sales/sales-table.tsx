@@ -484,7 +484,7 @@ export default function SalesTable({
             <tbody>
               {data.length === 0 ? (
                 <tr>
-                  <td colSpan={22} className="text-center p-8 text-muted-foreground">
+                  <td colSpan={showDeliveryDateColumn ? 24 : 23} className="text-center p-8 text-muted-foreground">
                     No hay datos disponibles
                   </td>
                 </tr>
@@ -514,7 +514,7 @@ export default function SalesTable({
                       ${Number(sale.totalUsd).toLocaleString()}
                     </td>
                     <td className="p-2 min-w-[120px] text-xs font-medium text-foreground">
-                      {sale.totalOrderUsd ? `$${Number(sale.totalOrderUsd).toLocaleString()}` : 'N/A'}
+                      {sale.totalOrderUsd != null ? `$${Number(sale.totalOrderUsd).toLocaleString()}` : 'N/A'}
                     </td>
                     <td className="p-2 min-w-[90px] text-xs text-muted-foreground">
                       {new Date(sale.fecha).toLocaleDateString('es-ES', { 
