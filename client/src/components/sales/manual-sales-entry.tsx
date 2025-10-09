@@ -145,7 +145,6 @@ export default function ManualSalesEntry() {
             hideFilters={false}
             hidePagination={false}
             showEditActions={true}
-            showCuotasButton={true}
             showDeliveryDateColumn={true}
             filters={filters}
             extraExportParams={{ estado: "pendiente", excludeReservas: true }}
