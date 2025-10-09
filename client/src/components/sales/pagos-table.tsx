@@ -49,10 +49,10 @@ export default function PagosTable({
           <table className="w-full text-sm border-collapse">
             <thead className="sticky top-0 z-10 bg-muted">
               <tr className="border-b border-border">
-                <th className="p-3 text-left font-semibold text-foreground min-w-[120px]">
+                <th className="p-3 text-left font-semibold text-foreground min-w-[120px] sticky left-0 z-20 bg-muted">
                   Orden
                 </th>
-                <th className="p-3 text-left font-semibold text-foreground min-w-[180px]">
+                <th className="p-3 text-left font-semibold text-foreground min-w-[180px] sticky left-[120px] z-20 bg-muted">
                   Nombre
                 </th>
                 <th className="p-3 text-left font-semibold text-foreground min-w-[100px]">
@@ -91,12 +91,12 @@ export default function PagosTable({
                     key={order.orden} 
                     className="border-b border-border hover:bg-muted/50"
                   >
-                    <td className="p-2 min-w-[120px]">
+                    <td className="p-2 min-w-[120px] sticky left-0 z-10 bg-background">
                       <span className="text-xs font-mono" data-testid={`order-${order.orden}`}>
                         {order.orden}
                       </span>
                     </td>
-                    <td className="p-2 min-w-[180px]">
+                    <td className="p-2 min-w-[180px] sticky left-[120px] z-10 bg-background">
                       <span className="text-xs" data-testid={`nombre-${order.orden}`}>
                         {order.nombre}
                       </span>
