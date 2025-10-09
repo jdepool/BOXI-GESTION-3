@@ -149,9 +149,15 @@ export default function SimpleSalesList({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todos los estados</SelectItem>
-                  <SelectItem value="Entregado">Entregado</SelectItem>
                   <SelectItem value="Pendiente">Pendiente</SelectItem>
-                  <SelectItem value="Reservado">Reservado</SelectItem>
+                  <SelectItem value="Perdida">Perdida</SelectItem>
+                  <SelectItem value="En proceso">En proceso</SelectItem>
+                  <SelectItem value="A despachar">A despachar</SelectItem>
+                  <SelectItem value="En tránsito">En tránsito</SelectItem>
+                  <SelectItem value="Entregado">Entregado</SelectItem>
+                  <SelectItem value="A devolver">A devolver</SelectItem>
+                  <SelectItem value="Devuelto">Devuelto</SelectItem>
+                  <SelectItem value="Cancelada">Cancelada</SelectItem>
                 </SelectContent>
               </Select>
 
@@ -246,8 +252,14 @@ export default function SimpleSalesList({
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="Pendiente">Pendiente</SelectItem>
-                      <SelectItem value="Reservado">Reservado</SelectItem>
+                      <SelectItem value="Perdida">Perdida</SelectItem>
+                      <SelectItem value="En proceso">En proceso</SelectItem>
+                      <SelectItem value="A despachar">A despachar</SelectItem>
+                      <SelectItem value="En tránsito">En tránsito</SelectItem>
                       <SelectItem value="Entregado">Entregado</SelectItem>
+                      <SelectItem value="A devolver">A devolver</SelectItem>
+                      <SelectItem value="Devuelto">Devuelto</SelectItem>
+                      <SelectItem value="Cancelada">Cancelada</SelectItem>
                     </SelectContent>
                   </Select>
 
