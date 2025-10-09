@@ -4,13 +4,18 @@ BoxiSleep is a comprehensive sales management dashboard for a sleep products com
 
 # Recent Changes (October 2025)
 
-## Fecha de Entrega in Nueva Venta Manual (October 9, 2025)
-- **Added**: Mandatory "Fecha de Entrega" (Delivery Date) field to Nueva Venta Manual form
-- **Location**: Positioned in "Información del Cliente" card between Email and Canal fields
-- **UI Component**: Calendar picker with date selection (format: dd/MM/yyyy)
+## Field Order Consistency in Manual Entry Forms (October 9, 2025)
+- **Nueva Venta Manual**: Added mandatory "Fecha de Entrega" field
+- **Nueva Reserva Manual**: Reordered fields to match Nueva Venta Manual layout
+- **Consistent Field Order** (both forms):
+  1. Nombre
+  2. Cédula
+  3. Teléfono
+  4. Email
+  5. Fecha de Entrega (calendar picker, dd/MM/yyyy format)
+  6. Canal (at the end)
 - **Validation**: Required field with error message if not provided
 - **Date Restriction**: Prevents selection of dates before yesterday
-- **Consistency**: Mirrors implementation in Nueva Reserva Manual form
 
 ## Status Field Consolidation
 - **Removed**: Duplicate "estado" field that was causing confusion
