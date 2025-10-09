@@ -459,6 +459,7 @@ export default function SalesTable({
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[120px]">Telefono</th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[160px]">Email</th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[100px]">Total USD</th>
+                <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[120px]">Total Orden USD</th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[90px]">Fecha</th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[80px]">Canal</th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[90px]">Tipo</th>
@@ -511,6 +512,9 @@ export default function SalesTable({
                     </td>
                     <td className="p-2 min-w-[100px] text-xs font-medium text-foreground">
                       ${Number(sale.totalUsd).toLocaleString()}
+                    </td>
+                    <td className="p-2 min-w-[120px] text-xs font-medium text-foreground">
+                      {sale.totalOrderUsd ? `$${Number(sale.totalOrderUsd).toLocaleString()}` : 'N/A'}
                     </td>
                     <td className="p-2 min-w-[90px] text-xs text-muted-foreground">
                       {new Date(sale.fecha).toLocaleDateString('es-ES', { 
