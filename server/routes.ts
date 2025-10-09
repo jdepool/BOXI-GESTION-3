@@ -243,8 +243,6 @@ function parseFile(buffer: Buffer, canal: string, filename: string) {
         const isCashea = canal.toLowerCase() === 'cashea';
         const totalOrderUsdValue = isCashea ? totalUsdValue : null;
         
-        console.log(`🔍 Parsing row - Canal: ${canal}, isCashea: ${isCashea}, totalUsd: ${totalUsdValue}, totalOrderUsd: ${totalOrderUsdValue}`);
-        
         return {
           nombre: String(row.Nombre || ''),
           cedula: row.Cedula ? String(row.Cedula) : null,
@@ -1272,10 +1270,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       for (let i = 0; i < salesData.length; i++) {
         try {
           const validatedSale = insertSaleSchema.parse(salesData[i]);
-          console.log(`✅ Validated row ${i} - totalOrderUsd: ${validatedSale.totalOrderUsd}`);
           validatedSales.push(validatedSale);
         } catch (error) {
-          console.log(`❌ Validation error row ${i}:`, error instanceof z.ZodError ? error.errors : String(error));
           errors.push({
             row: i + 2, // +2 because Excel is 1-indexed and first row is header
             error: error instanceof z.ZodError ? error.errors : String(error)
