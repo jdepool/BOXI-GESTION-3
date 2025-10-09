@@ -246,7 +246,7 @@ export interface IStorage {
   updateFleteStatus(saleId: string, newStatus: string): Promise<Sale | undefined>;
   updateSaleNotes(id: string, notas: string | null): Promise<Sale | undefined>;
   updateOrderPagoInicial(orderNumber: string, pagoData: {
-    fecha?: string | null;
+    fechaPagoInicial?: string | null;
     pagoInicialUsd?: number | null;
     bancoId?: string | null;
     referencia?: string | null;
@@ -799,7 +799,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateOrderPagoInicial(orderNumber: string, pagoData: {
-    fecha?: string | null;
+    fechaPagoInicial?: string | null;
     pagoInicialUsd?: number | null;
     bancoId?: string | null;
     referencia?: string | null;
@@ -810,9 +810,9 @@ export class DatabaseStorage implements IStorage {
     const updateData: any = {};
     
     // Add all pago inicial fields to update data
-    if (pagoData.fecha !== undefined) {
-      const dateValue = pagoData.fecha && pagoData.fecha !== "" ? new Date(pagoData.fecha) : null;
-      updateData.fecha = dateValue;
+    if (pagoData.fechaPagoInicial !== undefined) {
+      const dateValue = pagoData.fechaPagoInicial && pagoData.fechaPagoInicial !== "" ? new Date(pagoData.fechaPagoInicial) : null;
+      updateData.fechaPagoInicial = dateValue;
     }
     if (pagoData.pagoInicialUsd !== undefined) {
       updateData.pagoInicialUsd = pagoData.pagoInicialUsd;

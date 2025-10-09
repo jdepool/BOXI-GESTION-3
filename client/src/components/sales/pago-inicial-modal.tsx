@@ -26,6 +26,7 @@ interface Sale {
   tipo: string;
   estadoEntrega: string;
   pagoInicialUsd?: string | number | null;
+  fechaPagoInicial?: Date | string | null;
   bancoId?: string | null;
   referencia?: string | null;
   montoBs?: string | number | null;
@@ -48,7 +49,7 @@ export default function PagoInicialModal({ sale, open, onOpenChange }: PagoInici
   const { toast } = useToast();
   
   const [pagoData, setPagoData] = useState({
-    fecha: new Date() as Date | null,
+    fechaPagoInicial: new Date() as Date | null,
     pagoInicialUsd: "",
     bancoId: "none",
     referencia: "",
@@ -65,7 +66,7 @@ export default function PagoInicialModal({ sale, open, onOpenChange }: PagoInici
   useEffect(() => {
     if (sale) {
       setPagoData({
-        fecha: new Date(),
+        fechaPagoInicial: sale.fechaPagoInicial ? new Date(sale.fechaPagoInicial) : new Date(),
         pagoInicialUsd: sale.pagoInicialUsd?.toString() || "",
         bancoId: sale.bancoId || "none",
         referencia: sale.referencia || "",
@@ -80,7 +81,7 @@ export default function PagoInicialModal({ sale, open, onOpenChange }: PagoInici
       if (!sale?.id) throw new Error("Sale ID is required");
 
       const payload = {
-        fecha: data.fecha?.toISOString() || null,
+        fechaPagoInicial: data.fechaPagoInicial?.toISOString() || null,
         pagoInicialUsd: data.pagoInicialUsd ? parseFloat(data.pagoInicialUsd) : null,
         bancoId: data.bancoId && data.bancoId !== "none" ? data.bancoId : null,
         referencia: data.referencia || null,
@@ -118,7 +119,7 @@ export default function PagoInicialModal({ sale, open, onOpenChange }: PagoInici
   };
 
   const handleDateChange = (date: Date | undefined) => {
-    setPagoData((prev) => ({ ...prev, fecha: date || null }));
+    setPagoData((prev) => ({ ...prev, fechaPagoInicial: date || null }));
   };
 
   const handleSave = () => {
@@ -176,25 +177,25 @@ export default function PagoInicialModal({ sale, open, onOpenChange }: PagoInici
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="fecha">Fecha Pago Inicial</Label>
+                <Label htmlFor="fechaPagoInicial">Fecha Pago Inicial/Total</Label>
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button
                       variant="outline"
                       className={cn(
                         "w-full justify-start text-left font-normal",
-                        !pagoData.fecha && "text-muted-foreground"
+                        !pagoData.fechaPagoInicial && "text-muted-foreground"
                       )}
                       data-testid="input-fecha-pago"
                     >
                       <CalendarIcon className="mr-2 h-4 w-4" />
-                      {pagoData.fecha ? format(pagoData.fecha, "dd/MM/yyyy") : "Seleccionar fecha"}
+                      {pagoData.fechaPagoInicial ? format(pagoData.fechaPagoInicial, "dd/MM/yyyy") : "Seleccionar fecha"}
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-auto p-0" align="start">
                     <Calendar
                       mode="single"
-                      selected={pagoData.fecha || undefined}
+                      selected={pagoData.fechaPagoInicial || undefined}
                       onSelect={handleDateChange}
                       initialFocus
                     />

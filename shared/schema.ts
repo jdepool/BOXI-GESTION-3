@@ -86,6 +86,7 @@ export const sales = pgTable("sales", {
   canal: text("canal").notNull(), // cashea, shopify, treble
   estadoPagoInicial: text("estado_pago_inicial"),
   pagoInicialUsd: decimal("pago_inicial_usd", { precision: 10, scale: 2 }),
+  fechaPagoInicial: timestamp("fecha_pago_inicial"),
   metodoPagoId: varchar("metodo_pago_id"),
   bancoId: varchar("banco_id"),
   orden: text("orden"),

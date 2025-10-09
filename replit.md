@@ -4,6 +4,15 @@ BoxiSleep is a comprehensive sales management dashboard for a sleep products com
 
 # Recent Changes (October 2025)
 
+## Payment Date Field Addition (October 9, 2025)
+- **Added**: New `fechaPagoInicial` database field to track payment date separately from order creation date
+- **Database Field**: `fecha_pago_inicial` (timestamp) - stores the actual date when Pago Inicial/Total was received
+- **Form Label**: Updated from "Fecha Pago Inicial" to "Fecha Pago Inicial/Total" for clarity
+- **Purpose**: Enables separate tracking of:
+  - `fecha` = Order creation date
+  - `fechaPagoInicial` = Payment date (when Pago Inicial/Total was received)
+- **Default Behavior**: Defaults to today's date but remains fully editable
+
 ## Pago Inicial/Total Form Updates (October 9, 2025)
 - **Removed**: Estado de Pago field from form UI (kept in database for future functionality)
 - **Reason**: Payment state tracking will be managed through a different workflow to be defined later
@@ -11,7 +20,7 @@ BoxiSleep is a comprehensive sales management dashboard for a sleep products com
   - Changed "Total USD" to "Total Order USD" to display full order amount
   - Changed "Estado de Entrega" to "Tipo" to show order type (Inmediato/Reserva)
 - **Current Payment Form Fields**:
-  - Fecha (defaults to today's date, editable)
+  - Fecha Pago Inicial/Total (defaults to today's date, editable)
   - Pago Inicial/Total USD
   - Banco (with "Sin banco" and "Otro ($)" options)
   - Referencia
