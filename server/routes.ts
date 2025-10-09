@@ -239,13 +239,19 @@ function parseFile(buffer: Buffer, canal: string, filename: string) {
         };
       } else {
         // Expected columns from Cashea/other files: Nombre, Cedula, Telefono, Email, Total usd, Sucursal, Tienda, Fecha, Canal, Estado, Estado pago inicial, Pago inicial usd, Orden, Factura, Referencia, Monto en bs, Estado de entrega, Product, Cantidad
+        const totalUsdValue = String(row['Total usd'] || '0');
+        const isCashea = canal.toLowerCase() === 'cashea';
+        const totalOrderUsdValue = isCashea ? totalUsdValue : null;
+        
+        console.log(`🔍 Parsing row - Canal: ${canal}, isCashea: ${isCashea}, totalUsd: ${totalUsdValue}, totalOrderUsd: ${totalOrderUsdValue}`);
+        
         return {
           nombre: String(row.Nombre || ''),
           cedula: row.Cedula ? String(row.Cedula) : null,
           telefono: row.Telefono ? String(row.Telefono) : null,
           email: row.Email ? String(row.Email) : null,
-          totalUsd: String(row['Total usd'] || '0'),
-          totalOrderUsd: canal.toLowerCase() === 'cashea' ? String(row['Total usd'] || '0') : null,
+          totalUsd: totalUsdValue,
+          totalOrderUsd: totalOrderUsdValue,
           sucursal: row.Sucursal ? String(row.Sucursal) : null,
           tienda: row.Tienda ? String(row.Tienda) : null,
           fecha,
@@ -1266,8 +1272,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       for (let i = 0; i < salesData.length; i++) {
         try {
           const validatedSale = insertSaleSchema.parse(salesData[i]);
+          console.log(`✅ Validated row ${i} - totalOrderUsd: ${validatedSale.totalOrderUsd}`);
           validatedSales.push(validatedSale);
         } catch (error) {
+          console.log(`❌ Validation error row ${i}:`, error instanceof z.ZodError ? error.errors : String(error));
           errors.push({
             row: i + 2, // +2 because Excel is 1-indexed and first row is header
             error: error instanceof z.ZodError ? error.errors : String(error)
