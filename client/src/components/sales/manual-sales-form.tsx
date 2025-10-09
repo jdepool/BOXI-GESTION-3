@@ -147,7 +147,7 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
                 <FormItem>
                   <FormLabel>Nombre *</FormLabel>
                   <FormControl>
-                    <Input placeholder="Nombre y Apellido" {...field} autoComplete="off" />
+                    <Input placeholder="Nombre y Apellido" {...field} autoComplete="new-password" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -161,7 +161,7 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
                 <FormItem>
                   <FormLabel>Cédula *</FormLabel>
                   <FormControl>
-                    <Input placeholder="12345678" {...field} autoComplete="off" />
+                    <Input placeholder="12345678" {...field} autoComplete="new-password" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -175,7 +175,7 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
                 <FormItem>
                   <FormLabel>Teléfono *</FormLabel>
                   <FormControl>
-                    <Input placeholder="04141234567" {...field} autoComplete="off" />
+                    <Input placeholder="04141234567" {...field} autoComplete="new-password" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -189,7 +189,7 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
                 <FormItem>
                   <FormLabel>Email</FormLabel>
                   <FormControl>
-                    <Input placeholder="cliente@email.com" type="email" {...field} autoComplete="off" />
+                    <Input placeholder="cliente@email.com" type="email" {...field} autoComplete="new-password" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -475,7 +475,7 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
                 <FormItem>
                   <FormLabel>País *</FormLabel>
                   <FormControl>
-                    <Input placeholder="Venezuela" {...field} autoComplete="off" />
+                    <Input placeholder="Venezuela" {...field} autoComplete="new-password" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -489,7 +489,7 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
                 <FormItem>
                   <FormLabel>Estado *</FormLabel>
                   <FormControl>
-                    <Input placeholder="Distrito Capital" {...field} autoComplete="off" />
+                    <Input placeholder="Distrito Capital" {...field} autoComplete="new-password" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -503,7 +503,7 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
                 <FormItem>
                   <FormLabel>Ciudad *</FormLabel>
                   <FormControl>
-                    <Input placeholder="Caracas" {...field} autoComplete="off" />
+                    <Input placeholder="Caracas" {...field} autoComplete="new-password" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -517,7 +517,7 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
                 <FormItem className="md:col-span-2 lg:col-span-3">
                   <FormLabel>Dirección *</FormLabel>
                   <FormControl>
-                    <Input placeholder="Calle, número, apartamento, etc." {...field} autoComplete="off" />
+                    <Input placeholder="Calle, número, apartamento, etc." {...field} autoComplete="new-password" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -531,7 +531,7 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
                 <FormItem>
                   <FormLabel>Urbanización</FormLabel>
                   <FormControl>
-                    <Input placeholder="Nombre de la urbanización" {...field} autoComplete="off" />
+                    <Input placeholder="Nombre de la urbanización" {...field} autoComplete="new-password" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -545,7 +545,7 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
                 <FormItem className="md:col-span-2">
                   <FormLabel>Referencia</FormLabel>
                   <FormControl>
-                    <Input placeholder="Punto de referencia cercano" {...field} autoComplete="off" />
+                    <Input placeholder="Punto de referencia cercano" {...field} autoComplete="new-password" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -592,7 +592,7 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
                     <FormItem>
                       <FormLabel>País</FormLabel>
                       <FormControl>
-                        <Input placeholder="Venezuela" {...field} autoComplete="off" />
+                        <Input placeholder="Venezuela" {...field} autoComplete="new-password" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -606,7 +606,7 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
                     <FormItem>
                       <FormLabel>Estado</FormLabel>
                       <FormControl>
-                        <Input placeholder="Distrito Capital" {...field} autoComplete="off" />
+                        <Input placeholder="Distrito Capital" {...field} autoComplete="new-password" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -620,7 +620,7 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
                     <FormItem>
                       <FormLabel>Ciudad</FormLabel>
                       <FormControl>
-                        <Input placeholder="Caracas" {...field} autoComplete="off" />
+                        <Input placeholder="Caracas" {...field} autoComplete="new-password" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -634,7 +634,7 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
                     <FormItem className="md:col-span-2 lg:col-span-3">
                       <FormLabel>Dirección</FormLabel>
                       <FormControl>
-                        <Input placeholder="Calle, número, apartamento, etc." {...field} autoComplete="off" />
+                        <Input placeholder="Calle, número, apartamento, etc." {...field} autoComplete="new-password" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -648,7 +648,7 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
                     <FormItem>
                       <FormLabel>Urbanización</FormLabel>
                       <FormControl>
-                        <Input placeholder="Nombre de la urbanización" {...field} autoComplete="off" />
+                        <Input placeholder="Nombre de la urbanización" {...field} autoComplete="new-password" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -662,7 +662,7 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
                     <FormItem className="md:col-span-2">
                       <FormLabel>Referencia</FormLabel>
                       <FormControl>
-                        <Input placeholder="Punto de referencia cercano" {...field} autoComplete="off" />
+                        <Input placeholder="Punto de referencia cercano" {...field} autoComplete="new-password" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
