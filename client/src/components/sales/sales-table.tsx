@@ -501,21 +501,6 @@ export default function SalesTable({
                     <td className="p-2 min-w-[180px] text-xs font-medium text-foreground truncate sticky left-[100px] bg-background z-10 border-r border-border shadow-[2px_0_5px_rgba(0,0,0,0.1)]" title={sale.nombre}>
                       {sale.nombre}
                     </td>
-                    <td className="p-2 min-w-[100px] text-xs text-muted-foreground truncate">
-                      {sale.cedula || 'N/A'}
-                    </td>
-                    <td className="p-2 min-w-[120px] text-xs text-muted-foreground truncate">
-                      {sale.telefono || 'N/A'}
-                    </td>
-                    <td className="p-2 min-w-[160px] text-xs text-muted-foreground truncate" title={sale.email || undefined}>
-                      {sale.email || 'N/A'}
-                    </td>
-                    <td className="p-2 min-w-[100px] text-xs font-medium text-foreground">
-                      ${Number(sale.totalUsd).toLocaleString()}
-                    </td>
-                    <td className="p-2 min-w-[120px] text-xs font-medium text-foreground">
-                      {sale.totalOrderUsd != null ? `$${Number(sale.totalOrderUsd).toLocaleString()}` : 'N/A'}
-                    </td>
                     <td className="p-2 min-w-[90px] text-xs text-muted-foreground">
                       {new Date(sale.fecha).toLocaleDateString('es-ES', { 
                         day: '2-digit', 
@@ -545,22 +530,37 @@ export default function SalesTable({
                     </td>
                     <td className="p-2 min-w-[120px]">
                       <Select
-                        value={sale.asesorId || "none"}
-                        onValueChange={(asesorId) => updateAsesorMutation.mutate({ saleId: sale.id, asesorId: asesorId === "none" ? null : asesorId })}
-                        disabled={updateAsesorMutation.isPending}
+                        value={sale.estadoEntrega}
+                        onValueChange={(newStatus) => handleStatusChange(sale.id, newStatus)}
+                        disabled={updateDeliveryStatusMutation.isPending}
                       >
-                        <SelectTrigger className="w-28 h-8 text-xs" data-testid={`asesor-select-${sale.id}`}>
-                          <SelectValue placeholder="Sin asignar" />
+                        <SelectTrigger className="w-32 h-8 text-xs">
+                          <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="none">Sin asignar</SelectItem>
-                          {(asesores as any[]).map((asesor: any) => (
-                            <SelectItem key={asesor.id} value={asesor.id}>
-                              {asesor.nombre}
-                            </SelectItem>
-                          ))}
+                          <SelectItem value="Pendiente">Pendiente</SelectItem>
+                          <SelectItem value="En Proceso">En Proceso</SelectItem>
+                          <SelectItem value="A Despachar">A despachar</SelectItem>
+                          <SelectItem value="Despachado">Despachado</SelectItem>
+                          <SelectItem value="Cancelado">Cancelado</SelectItem>
+                          <SelectItem value="Pospuesto">Pospuesto</SelectItem>
                         </SelectContent>
                       </Select>
+                    </td>
+                    <td className="p-2 min-w-[120px] text-xs font-medium text-foreground">
+                      {sale.totalOrderUsd != null ? `$${Number(sale.totalOrderUsd).toLocaleString()}` : 'N/A'}
+                    </td>
+                    <td className="p-2 min-w-[100px] text-xs font-medium text-foreground">
+                      ${Number(sale.totalUsd).toLocaleString()}
+                    </td>
+                    <td className="p-2 min-w-[140px] text-xs font-medium text-foreground truncate" title={sale.product}>
+                      {sale.product}
+                    </td>
+                    <td className="p-2 min-w-[100px] text-xs text-muted-foreground truncate" title={sale.sku || undefined} data-testid={`sku-${sale.id}`}>
+                      {sale.sku || 'N/A'}
+                    </td>
+                    <td className="p-2 min-w-[80px] text-xs text-center font-medium text-foreground">
+                      {sale.cantidad}
                     </td>
                     <td className="p-2 min-w-[110px] text-xs text-muted-foreground">
                       {sale.pagoInicialUsd ? `$${Number(sale.pagoInicialUsd).toLocaleString()}` : 'N/A'}
@@ -579,33 +579,14 @@ export default function SalesTable({
                     <td className="p-2 min-w-[110px] text-xs text-muted-foreground">
                       {sale.montoBs ? `Bs ${Number(sale.montoBs).toLocaleString()}` : 'N/A'}
                     </td>
-                    <td className="p-2 min-w-[140px]">
-                      <Select
-                        value={sale.estadoEntrega}
-                        onValueChange={(newStatus) => handleStatusChange(sale.id, newStatus)}
-                        disabled={updateDeliveryStatusMutation.isPending}
-                      >
-                        <SelectTrigger className="w-32 h-8 text-xs">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Pendiente">Pendiente</SelectItem>
-                          <SelectItem value="En Proceso">En Proceso</SelectItem>
-                          <SelectItem value="A Despachar">A despachar</SelectItem>
-                          <SelectItem value="Despachado">Despachado</SelectItem>
-                          <SelectItem value="Cancelado">Cancelado</SelectItem>
-                          <SelectItem value="Pospuesto">Pospuesto</SelectItem>
-                        </SelectContent>
-                      </Select>
+                    <td className="p-2 min-w-[100px] text-xs text-muted-foreground truncate">
+                      {sale.cedula || 'N/A'}
                     </td>
-                    <td className="p-2 min-w-[140px] text-xs font-medium text-foreground truncate" title={sale.product}>
-                      {sale.product}
+                    <td className="p-2 min-w-[120px] text-xs text-muted-foreground truncate">
+                      {sale.telefono || 'N/A'}
                     </td>
-                    <td className="p-2 min-w-[100px] text-xs text-muted-foreground truncate" title={sale.sku || undefined} data-testid={`sku-${sale.id}`}>
-                      {sale.sku || 'N/A'}
-                    </td>
-                    <td className="p-2 min-w-[80px] text-xs text-center font-medium text-foreground">
-                      {sale.cantidad}
+                    <td className="p-2 min-w-[160px] text-xs text-muted-foreground truncate" title={sale.email || undefined}>
+                      {sale.email || 'N/A'}
                     </td>
                     {showDeliveryDateColumn && (
                       <td className="p-2 min-w-[130px]">
@@ -723,6 +704,25 @@ export default function SalesTable({
                         }`} />
                         {sale.montoFleteUsd || sale.fechaFlete || sale.referenciaFlete || sale.montoFleteVes || sale.bancoReceptorFlete || sale.fleteGratis ? 'Editar' : 'Agregar'}
                       </Button>
+                    </td>
+                    <td className="p-2 min-w-[120px]">
+                      <Select
+                        value={sale.asesorId || "none"}
+                        onValueChange={(asesorId) => updateAsesorMutation.mutate({ saleId: sale.id, asesorId: asesorId === "none" ? null : asesorId })}
+                        disabled={updateAsesorMutation.isPending}
+                      >
+                        <SelectTrigger className="w-28 h-8 text-xs" data-testid={`asesor-select-${sale.id}`}>
+                          <SelectValue placeholder="Sin asignar" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">Sin asignar</SelectItem>
+                          {(asesores as any[]).map((asesor: any) => (
+                            <SelectItem key={asesor.id} value={asesor.id}>
+                              {asesor.nombre}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </td>
                     <td className="p-2 min-w-[150px]">
                       {editingNotesId === sale.id ? (
