@@ -27,7 +27,7 @@ export default function Sales() {
     limit: number;
     offset: number;
   }>({
-    queryKey: ["/api/sales", { ...filters, excludePendingManual: true }],
+    queryKey: ["/api/sales", filters],
   });
 
   // Query for Reserva orders that are still pending (exclude those ready for dispatch)
