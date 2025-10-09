@@ -203,7 +203,7 @@ export default function PagoInicialModal({ sale, open, onOpenChange }: PagoInici
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="pagoInicialUsd">Pago Inicial USD</Label>
+                <Label htmlFor="pagoInicialUsd">Pago Inicial/Total USD</Label>
                 <div className="relative">
                   <DollarSign className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input

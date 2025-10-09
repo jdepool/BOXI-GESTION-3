@@ -94,7 +94,7 @@ export default function SaleDetailModal({ sale, onClose }: SaleDetailModalProps)
               )}
               {sale.pagoInicialUsd && (
                 <div>
-                  <p className="text-muted-foreground text-sm mb-1">Pago Inicial</p>
+                  <p className="text-muted-foreground text-sm mb-1">Pago Inicial/Total</p>
                   <p className="text-foreground">${Number(sale.pagoInicialUsd).toLocaleString()}</p>
                 </div>
               )}

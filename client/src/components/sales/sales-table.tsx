@@ -459,7 +459,7 @@ export default function SalesTable({
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[140px]">Producto</th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[100px]">SKU</th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[80px]">Cantidad</th>
-                <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[110px]">Pago Inicial USD</th>
+                <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[110px]">Pago Inicial/Total USD</th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[120px]">Referencia</th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[100px]">Banco</th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[110px]">Monto Bs</th>

@@ -12,7 +12,7 @@ BoxiSleep is a comprehensive sales management dashboard for a sleep products com
   - Changed "Estado de Entrega" to "Tipo" to show order type (Inmediato/Reserva)
 - **Current Payment Form Fields**:
   - Fecha (defaults to today's date, editable)
-  - Pago Inicial USD
+  - Pago Inicial/Total USD
   - Banco (with "Sin banco" and "Otro ($)" options)
   - Referencia
   - Monto Bs (optional)

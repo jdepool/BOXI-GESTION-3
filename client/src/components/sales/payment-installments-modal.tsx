@@ -310,7 +310,7 @@ export default function PaymentInstallmentsModal({ sale, open, onOpenChange }: P
               </div>
             </div>
             <div className="bg-green-50 dark:bg-green-900/20 p-3 rounded-lg">
-              <div className="text-xs font-medium text-green-600 dark:text-green-400">Pago Inicial</div>
+              <div className="text-xs font-medium text-green-600 dark:text-green-400">Pago Inicial/Total</div>
               <div className="text-lg font-bold text-green-700 dark:text-green-300">
                 ${summary.pagoInicialUsd.toFixed(2)}
               </div>
