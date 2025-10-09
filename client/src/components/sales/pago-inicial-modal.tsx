@@ -46,7 +46,7 @@ export default function PagoInicialModal({ sale, open, onOpenChange }: PagoInici
   const { toast } = useToast();
   
   const [pagoData, setPagoData] = useState({
-    fecha: null as Date | null,
+    fecha: new Date() as Date | null,
     pagoInicialUsd: "",
     bancoId: "none",
     referencia: "",
@@ -64,7 +64,7 @@ export default function PagoInicialModal({ sale, open, onOpenChange }: PagoInici
   useEffect(() => {
     if (sale) {
       setPagoData({
-        fecha: null,
+        fecha: new Date(),
         pagoInicialUsd: sale.pagoInicialUsd?.toString() || "",
         bancoId: sale.bancoId || "none",
         referencia: sale.referencia || "",
