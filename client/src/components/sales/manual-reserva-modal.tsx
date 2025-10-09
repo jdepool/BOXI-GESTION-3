@@ -214,7 +214,7 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
                     <FormItem>
                       <FormLabel>Nombre *</FormLabel>
                       <FormControl>
-                        <Input placeholder="Nombre y Apellido" {...field} data-testid="input-nombre" required autoComplete="new-password" />
+                        <Input placeholder="Nombre y Apellido" {...field} data-testid="input-nombre" required autoComplete="disable-nombre-res" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -228,7 +228,7 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
                     <FormItem>
                       <FormLabel>Cédula *</FormLabel>
                       <FormControl>
-                        <Input placeholder="12345678" {...field} value={field.value || ""} data-testid="input-cedula" autoComplete="new-password" />
+                        <Input placeholder="12345678" {...field} value={field.value || ""} data-testid="input-cedula" autoComplete="disable-cedula-res" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -242,7 +242,7 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
                     <FormItem>
                       <FormLabel>Teléfono *</FormLabel>
                       <FormControl>
-                        <Input placeholder="04141234567" {...field} value={field.value || ""} data-testid="input-telefono" autoComplete="new-password" />
+                        <Input placeholder="04141234567" {...field} value={field.value || ""} data-testid="input-telefono" autoComplete="disable-telefono-res" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -256,7 +256,7 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
                     <FormItem>
                       <FormLabel>Email</FormLabel>
                       <FormControl>
-                        <Input placeholder="cliente@email.com" {...field} value={field.value || ""} type="email" data-testid="input-email" autoComplete="new-password" />
+                        <Input placeholder="cliente@email.com" {...field} value={field.value || ""} type="email" data-testid="input-email" autoComplete="disable-email-res" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -523,7 +523,7 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
                     <FormItem>
                       <FormLabel>País *</FormLabel>
                       <FormControl>
-                        <Input placeholder="Venezuela" {...field} data-testid="input-facturacion-pais" autoComplete="new-password" />
+                        <Input placeholder="Venezuela" {...field} data-testid="input-facturacion-pais" autoComplete="disable-fact-pais-res" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -537,7 +537,7 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
                     <FormItem>
                       <FormLabel>Estado *</FormLabel>
                       <FormControl>
-                        <Input placeholder="Distrito Capital" {...field} data-testid="input-facturacion-estado" autoComplete="new-password" />
+                        <Input placeholder="Distrito Capital" {...field} data-testid="input-facturacion-estado" autoComplete="disable-fact-estado-res" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -551,7 +551,7 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
                     <FormItem>
                       <FormLabel>Ciudad *</FormLabel>
                       <FormControl>
-                        <Input placeholder="Caracas" {...field} data-testid="input-facturacion-ciudad" autoComplete="new-password" />
+                        <Input placeholder="Caracas" {...field} data-testid="input-facturacion-ciudad" autoComplete="disable-fact-ciudad-res" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -565,7 +565,7 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
                     <FormItem className="md:col-span-2 lg:col-span-3">
                       <FormLabel>Dirección *</FormLabel>
                       <FormControl>
-                        <Input placeholder="Calle, número, apartamento, etc." {...field} data-testid="input-facturacion-direccion" autoComplete="new-password" />
+                        <Input placeholder="Calle, número, apartamento, etc." {...field} data-testid="input-facturacion-direccion" autoComplete="disable-fact-direccion-res" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -579,7 +579,7 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
                     <FormItem>
                       <FormLabel>Urbanización</FormLabel>
                       <FormControl>
-                        <Input placeholder="Nombre de la urbanización" {...field} data-testid="input-facturacion-urbanizacion" autoComplete="new-password" />
+                        <Input placeholder="Nombre de la urbanización" {...field} data-testid="input-facturacion-urbanizacion" autoComplete="disable-fact-urbanizacion-res" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -593,7 +593,7 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
                     <FormItem className="md:col-span-2">
                       <FormLabel>Referencia</FormLabel>
                       <FormControl>
-                        <Input placeholder="Punto de referencia" {...field} data-testid="input-facturacion-referencia" autoComplete="new-password" />
+                        <Input placeholder="Punto de referencia" {...field} data-testid="input-facturacion-referencia" autoComplete="disable-fact-referencia-res" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -641,7 +641,7 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
                     <FormItem>
                       <FormLabel>País</FormLabel>
                       <FormControl>
-                        <Input placeholder="Venezuela" {...field} data-testid="input-despacho-pais" autoComplete="new-password" />
+                        <Input placeholder="Venezuela" {...field} data-testid="input-despacho-pais" autoComplete="disable-desp-pais-res" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -655,7 +655,7 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
                     <FormItem>
                       <FormLabel>Estado</FormLabel>
                       <FormControl>
-                        <Input placeholder="Distrito Capital" {...field} data-testid="input-despacho-estado" autoComplete="new-password" />
+                        <Input placeholder="Distrito Capital" {...field} data-testid="input-despacho-estado" autoComplete="disable-desp-estado-res" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -669,7 +669,7 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
                     <FormItem>
                       <FormLabel>Ciudad</FormLabel>
                       <FormControl>
-                        <Input placeholder="Caracas" {...field} data-testid="input-despacho-ciudad" autoComplete="new-password" />
+                        <Input placeholder="Caracas" {...field} data-testid="input-despacho-ciudad" autoComplete="disable-desp-ciudad-res" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -683,7 +683,7 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
                     <FormItem className="md:col-span-2 lg:col-span-3">
                       <FormLabel>Dirección</FormLabel>
                       <FormControl>
-                        <Input placeholder="Calle, número, apartamento, etc." {...field} data-testid="input-despacho-direccion" autoComplete="new-password" />
+                        <Input placeholder="Calle, número, apartamento, etc." {...field} data-testid="input-despacho-direccion" autoComplete="disable-desp-direccion-res" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -697,7 +697,7 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
                     <FormItem>
                       <FormLabel>Urbanización</FormLabel>
                       <FormControl>
-                        <Input placeholder="Nombre de la urbanización" {...field} data-testid="input-despacho-urbanizacion" autoComplete="new-password" />
+                        <Input placeholder="Nombre de la urbanización" {...field} data-testid="input-despacho-urbanizacion" autoComplete="disable-desp-urbanizacion-res" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -711,7 +711,7 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
                     <FormItem className="md:col-span-2">
                       <FormLabel>Referencia</FormLabel>
                       <FormControl>
-                        <Input placeholder="Punto de referencia cercano" {...field} data-testid="input-despacho-referencia" autoComplete="new-password" />
+                        <Input placeholder="Punto de referencia cercano" {...field} data-testid="input-despacho-referencia" autoComplete="disable-desp-referencia-res" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
