@@ -63,15 +63,26 @@ export default function EditSaleModal({ open, onOpenChange, sale }: EditSaleModa
     enabled: !!sale?.orden && open,
   });
 
+  // Fetch active canales
+  const { data: canales = [] } = useQuery<Array<{ id: string; nombre: string; activo: string }>>({
+    queryKey: ["/api/admin/canales"],
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+
   // Initialize form and products when sale/order data changes
   useEffect(() => {
-    if (sale && open) {
+    if (sale && open && canales.length > 0) {
+      // Find matching canal from canales list (case-insensitive)
+      const matchingCanal = canales.find(
+        c => c.nombre.toLowerCase() === sale.canal?.toLowerCase()
+      );
+      
       form.reset({
         nombre: sale.nombre || "",
         cedula: sale.cedula || "",
         telefono: sale.telefono || "",
         email: sale.email || "",
-        canal: sale.canal || "",
+        canal: matchingCanal?.nombre || sale.canal || "",
         totalUsd: sale.totalOrderUsd?.toString() || sale.totalUsd?.toString() || "",
       });
 
@@ -91,7 +102,7 @@ export default function EditSaleModal({ open, onOpenChange, sale }: EditSaleModa
         setProducts([]);
       }
     }
-  }, [sale, orderProducts, open, form]);
+  }, [sale, orderProducts, canales, open, form]);
 
   const handleAddProduct = (product: ProductFormData) => {
     setProducts([...products, product]);
@@ -257,10 +268,13 @@ export default function EditSaleModal({ open, onOpenChange, sale }: EditSaleModa
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            <SelectItem value="manual">Manual</SelectItem>
-                            <SelectItem value="cashea">Cashea</SelectItem>
-                            <SelectItem value="shopify">Shopify</SelectItem>
-                            <SelectItem value="treble">Treble</SelectItem>
+                            {canales
+                              .filter(canal => canal.activo === "true")
+                              .map((canal) => (
+                                <SelectItem key={canal.id} value={canal.nombre}>
+                                  {canal.nombre}
+                                </SelectItem>
+                              ))}
                           </SelectContent>
                         </Select>
                         <FormMessage />

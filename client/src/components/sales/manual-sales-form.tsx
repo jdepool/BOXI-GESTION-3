@@ -117,6 +117,11 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
     queryKey: ["/api/admin/bancos"],
   });
 
+  const { data: canales = [] } = useQuery<Array<{ id: string; nombre: string; activo: string }>>({
+    queryKey: ["/api/admin/canales"],
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+
   const handleSubmit = (data: ManualSaleFormData) => {
     onSubmit({ ...data, products });
   };
@@ -202,10 +207,13 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="Manual">Manual</SelectItem>
-                      <SelectItem value="Cashea">Cashea</SelectItem>
-                      <SelectItem value="Shopify">Shopify</SelectItem>
-                      <SelectItem value="Treble">Treble</SelectItem>
+                      {canales
+                        .filter(canal => canal.activo === "true")
+                        .map((canal) => (
+                          <SelectItem key={canal.id} value={canal.nombre}>
+                            {canal.nombre}
+                          </SelectItem>
+                        ))}
                     </SelectContent>
                   </Select>
                   <FormMessage />

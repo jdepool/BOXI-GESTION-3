@@ -114,6 +114,12 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
     queryKey: ["/api/admin/bancos"],
   });
 
+  // Fetch canales data
+  const { data: canales = [] } = useQuery<Array<{ id: string; nombre: string; activo: string }>>({
+    queryKey: ["/api/admin/canales"],
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+
   const createReservaMutation = useMutation({
     mutationFn: async (data: ManualReservaFormData) => {
       // Convert form data to proper API format
@@ -271,10 +277,13 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="Manual">Manual</SelectItem>
-                          <SelectItem value="Cashea">Cashea</SelectItem>
-                          <SelectItem value="Shopify">Shopify</SelectItem>
-                          <SelectItem value="Treble">Treble</SelectItem>
+                          {canales
+                            .filter(canal => canal.activo === "true")
+                            .map((canal) => (
+                              <SelectItem key={canal.id} value={canal.nombre}>
+                                {canal.nombre}
+                              </SelectItem>
+                            ))}
                         </SelectContent>
                       </Select>
                       <FormMessage />
