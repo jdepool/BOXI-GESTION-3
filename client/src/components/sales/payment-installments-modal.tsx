@@ -8,10 +8,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { CalendarIcon, Plus, Edit2, Trash2, Check, X } from "lucide-react";
+import { CalendarIcon, Plus, Edit2, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useForm } from "react-hook-form";
@@ -45,7 +44,6 @@ const installmentFormSchema = z.object({
   cuotaAmountBs: z.string().optional(),
   bancoId: z.string().optional(),
   referencia: z.string().optional(),
-  verificado: z.boolean().default(false),
 });
 
 type InstallmentFormData = z.infer<typeof installmentFormSchema>;
@@ -63,7 +61,6 @@ export default function PaymentInstallmentsModal({ sale, open, onOpenChange }: P
       cuotaAmountBs: "",
       bancoId: "",
       referencia: "",
-      verificado: false,
     },
   });
 
@@ -110,7 +107,6 @@ export default function PaymentInstallmentsModal({ sale, open, onOpenChange }: P
         cuotaAmountBs: data.cuotaAmountBs || null,
         bancoId: data.bancoId || null,
         referencia: data.referencia || null,
-        verificado: data.verificado,
       };
 
       return apiRequest("POST", `/api/sales/${sale.id}/installments`, payload);
@@ -139,7 +135,6 @@ export default function PaymentInstallmentsModal({ sale, open, onOpenChange }: P
         cuotaAmountBs: data.cuotaAmountBs || null,
         bancoId: data.bancoId || null,
         referencia: data.referencia || null,
-        verificado: data.verificado,
       };
 
       return apiRequest("PATCH", `/api/installments/${data.id}`, payload);
@@ -178,24 +173,6 @@ export default function PaymentInstallmentsModal({ sale, open, onOpenChange }: P
     },
   });
 
-  // Toggle verification mutation
-  const toggleVerificationMutation = useMutation({
-    mutationFn: async ({ id, verificado }: { id: string; verificado: boolean }) => {
-      return apiRequest("PATCH", `/api/installments/${id}`, { verificado });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/sales/${sale?.id}/installments`] });
-      toast({ title: "Estado de verificación actualizado" });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Error al actualizar verificación",
-        description: error.message || "Ocurrió un error inesperado",
-        variant: "destructive",
-      });
-    },
-  });
-
   const handleAddInstallment = () => {
     form.reset();
     setEditingInstallment(null);
@@ -209,55 +186,12 @@ export default function PaymentInstallmentsModal({ sale, open, onOpenChange }: P
       cuotaAmountBs: installment.cuotaAmountBs || "",
       bancoId: installment.bancoId || "",
       referencia: installment.referencia || "",
-      verificado: installment.verificado ?? false,
     });
     setEditingInstallment(installment);
     setShowForm(true);
   };
 
-  // Helper function to check if operation would cause overpayment
-  const wouldCauseOverpayment = (
-    newAmount: number, 
-    newVerificado: boolean, 
-    excludeInstallmentId?: string
-  ): { wouldOverpay: boolean; details: string } => {
-    const currentInstallment = editingInstallment || (excludeInstallmentId ? installments.find(i => i.id === excludeInstallmentId) : null);
-    
-    // Calculate current verified amount from this installment (if editing)
-    const currentVerifiedAmount = currentInstallment?.verificado ? 
-      parseFloat(currentInstallment.cuotaAmount || '0') : 0;
-
-    // Calculate new verified amount from this operation
-    const newVerifiedAmount = newVerificado ? newAmount : 0;
-
-    // Calculate total paid with this update
-    const totalPaidWithUpdate = summary.totalPagado - currentVerifiedAmount + newVerifiedAmount;
-    
-    if (totalPaidWithUpdate > summary.totalUsd) {
-      const exceededBy = totalPaidWithUpdate - summary.totalUsd;
-      return {
-        wouldOverpay: true,
-        details: `Esta operación excedería el total de la venta por $${exceededBy.toFixed(2)}. Total a pagar: $${summary.totalUsd.toFixed(2)}, Total que resultaría: $${totalPaidWithUpdate.toFixed(2)}`
-      };
-    }
-    
-    return { wouldOverpay: false, details: "" };
-  };
-
   const handleSubmit = (data: InstallmentFormData) => {
-    const amount = parseFloat(data.cuotaAmount);
-    
-    // Validate overpayment before submission
-    const overpaymentCheck = wouldCauseOverpayment(amount, data.verificado);
-    if (overpaymentCheck.wouldOverpay) {
-      toast({
-        title: "Error: Sobrepago detectado",
-        description: overpaymentCheck.details,
-        variant: "destructive",
-      });
-      return;
-    }
-
     if (editingInstallment) {
       updateInstallmentMutation.mutate({ ...data, id: editingInstallment.id });
     } else {
@@ -269,29 +203,6 @@ export default function PaymentInstallmentsModal({ sale, open, onOpenChange }: P
     if (confirm("¿Está seguro de que desea eliminar esta cuota?")) {
       deleteInstallmentMutation.mutate(id);
     }
-  };
-
-  const handleToggleVerification = (id: string, currentStatus: boolean) => {
-    const installment = installments.find(i => i.id === id);
-    if (!installment) return;
-
-    const newVerificado = !currentStatus;
-    const amount = parseFloat(installment.cuotaAmount || '0');
-    
-    // Only check overpayment if we're trying to verify (not unverify)
-    if (newVerificado) {
-      const overpaymentCheck = wouldCauseOverpayment(amount, newVerificado, id);
-      if (overpaymentCheck.wouldOverpay) {
-        toast({
-          title: "Error: No se puede verificar",
-          description: overpaymentCheck.details,
-          variant: "destructive",
-        });
-        return;
-      }
-    }
-
-    toggleVerificationMutation.mutate({ id, verificado: newVerificado });
   };
 
   if (!sale) return null;
@@ -485,24 +396,6 @@ export default function PaymentInstallmentsModal({ sale, open, onOpenChange }: P
                       )}
                     />
 
-                    <FormField
-                      control={form.control}
-                      name="verificado"
-                      render={({ field }) => (
-                        <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                          <FormControl>
-                            <Checkbox
-                              checked={field.value}
-                              onCheckedChange={field.onChange}
-                              data-testid="checkbox-installment-verificado"
-                            />
-                          </FormControl>
-                          <div className="space-y-1 leading-none">
-                            <FormLabel>Verificado</FormLabel>
-                          </div>
-                        </FormItem>
-                      )}
-                    />
                   </div>
 
                   <div className="flex gap-2">
@@ -538,20 +431,19 @@ export default function PaymentInstallmentsModal({ sale, open, onOpenChange }: P
                   <TableHead>Banco</TableHead>
                   <TableHead>Referencia</TableHead>
                   <TableHead>Saldo Restante</TableHead>
-                  <TableHead>Estado</TableHead>
                   <TableHead>Acciones</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {isLoading ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center">
+                    <TableCell colSpan={7} className="text-center">
                       Cargando cuotas...
                     </TableCell>
                   </TableRow>
                 ) : installments.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center text-muted-foreground">
+                    <TableCell colSpan={7} className="text-center text-muted-foreground">
                       No hay cuotas registradas
                     </TableCell>
                   </TableRow>
@@ -569,32 +461,7 @@ export default function PaymentInstallmentsModal({ sale, open, onOpenChange }: P
                         <TableCell>{installment.referencia || "-"}</TableCell>
                         <TableCell>${parseFloat(installment.saldoRemaining || "0").toFixed(2)}</TableCell>
                         <TableCell>
-                          <Badge
-                            variant={installment.verificado ? "default" : "secondary"}
-                            className={installment.verificado ? "bg-green-600" : ""}
-                          >
-                            {installment.verificado ? "Verificado" : "Pendiente"}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
                           <div className="flex gap-1">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() =>
-                                handleToggleVerification(installment.id, installment.verificado ?? false)
-                              }
-                              disabled={toggleVerificationMutation.isPending}
-                              data-testid={`button-verify-${installment.id}`}
-                              className="h-8 w-8 p-0"
-                              title={installment.verificado ? "Marcar como pendiente" : "Verificar"}
-                            >
-                              {installment.verificado ? (
-                                <X className="h-3 w-3" />
-                              ) : (
-                                <Check className="h-3 w-3" />
-                              )}
-                            </Button>
                             <Button
                               variant="outline"
                               size="sm"
