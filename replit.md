@@ -4,6 +4,22 @@ BoxiSleep is a comprehensive sales management dashboard for a sleep products com
 
 # Recent Changes (October 2025)
 
+## Bank Type Differentiation (October 10, 2025)
+- **Added**: Bank type classification system to separate receiving and issuing banks
+- **Database Field**: `tipo` field in bancos table with check constraint (values: "Receptor" or "Emisor")
+- **Bank Types**:
+  - **Banco Receptor** (Receiving Bank) - Used for incoming payments from sales orders
+  - **Banco Emisor** (Issuing Bank) - Reserved for future expense/outflow tracking (Egresos)
+- **Admin UI Updates**:
+  - Added tipo selector in bank add/edit form with visual indicators
+  - Added tipo column in banks table with color-coded badges (green for Receptor, blue for Emisor)
+  - Icons distinguish types: ArrowDownToLine for Receptor, ArrowUpFromLine for Emisor
+- **Payment Form Filtering**:
+  - All payment-related forms now show only Banco Receptor banks
+  - Applies to: Pago Inicial/Total modal, Payment Installments, Flete, and Manual Sales forms
+  - Banco Emisor banks will be used exclusively in future Egresos feature
+- **Migration**: All existing banks automatically set to tipo="Receptor"
+
 ## Payment Date Field Addition (October 9, 2025)
 - **Added**: New `fechaPagoInicial` database field to track payment date separately from order creation date
 - **Database Field**: `fecha_pago_inicial` (timestamp) - stores the actual date when Pago Inicial/Total was received
