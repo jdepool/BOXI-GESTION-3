@@ -158,6 +158,7 @@ export const paymentInstallments = pgTable("payment_installments", {
   referencia: text("referencia"), // Payment reference
   bancoId: varchar("banco_id"), // Bank used for payment
   pagoCuotaUsd: decimal("pago_cuota_usd", { precision: 10, scale: 2 }), // Payment amount in USD
+  verificado: boolean("verificado").default(true), // Whether payment is verified
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => ({

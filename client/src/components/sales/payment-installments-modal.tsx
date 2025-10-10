@@ -42,6 +42,7 @@ const installmentFormSchema = z.object({
   fecha: z.date().optional(),
   cuotaAmount: z.string().min(1, "Monto es requerido").refine((val) => parseFloat(val) > 0, "El monto debe ser mayor a 0"),
   cuotaAmountBs: z.string().optional(),
+  pagoCuotaUsd: z.string().optional(),
   bancoId: z.string().optional(),
   referencia: z.string().optional(),
 });
@@ -59,6 +60,7 @@ export default function PaymentInstallmentsModal({ sale, open, onOpenChange }: P
       fecha: undefined,
       cuotaAmount: "",
       cuotaAmountBs: "",
+      pagoCuotaUsd: "",
       bancoId: "",
       referencia: "",
     },
@@ -105,6 +107,7 @@ export default function PaymentInstallmentsModal({ sale, open, onOpenChange }: P
         fecha: data.fecha?.toISOString(),
         cuotaAmount: data.cuotaAmount,
         cuotaAmountBs: data.cuotaAmountBs || null,
+        pagoCuotaUsd: data.pagoCuotaUsd || null,
         bancoId: data.bancoId || null,
         referencia: data.referencia || null,
       };
@@ -133,6 +136,7 @@ export default function PaymentInstallmentsModal({ sale, open, onOpenChange }: P
         fecha: data.fecha?.toISOString(),
         cuotaAmount: data.cuotaAmount,
         cuotaAmountBs: data.cuotaAmountBs || null,
+        pagoCuotaUsd: data.pagoCuotaUsd || null,
         bancoId: data.bancoId || null,
         referencia: data.referencia || null,
       };
@@ -184,6 +188,7 @@ export default function PaymentInstallmentsModal({ sale, open, onOpenChange }: P
       fecha: installment.fecha ? new Date(installment.fecha) : undefined,
       cuotaAmount: installment.cuotaAmount || "",
       cuotaAmountBs: installment.cuotaAmountBs || "",
+      pagoCuotaUsd: installment.pagoCuotaUsd || "",
       bancoId: installment.bancoId || "",
       referencia: installment.referencia || "",
     });
@@ -355,6 +360,27 @@ export default function PaymentInstallmentsModal({ sale, open, onOpenChange }: P
 
                     <FormField
                       control={form.control}
+                      name="pagoCuotaUsd"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Pago Cuota USD</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="0.00"
+                              type="number"
+                              step="0.01"
+                              min="0"
+                              data-testid="input-pago-cuota-usd"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
                       name="bancoId"
                       render={({ field }) => (
                         <FormItem>
@@ -428,6 +454,7 @@ export default function PaymentInstallmentsModal({ sale, open, onOpenChange }: P
                   <TableHead>Cuota #</TableHead>
                   <TableHead>Fecha</TableHead>
                   <TableHead>Monto USD</TableHead>
+                  <TableHead>Pago Cuota USD</TableHead>
                   <TableHead>Banco</TableHead>
                   <TableHead>Referencia</TableHead>
                   <TableHead>Saldo Restante</TableHead>
@@ -437,13 +464,13 @@ export default function PaymentInstallmentsModal({ sale, open, onOpenChange }: P
               <TableBody>
                 {isLoading ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center">
+                    <TableCell colSpan={8} className="text-center">
                       Cargando cuotas...
                     </TableCell>
                   </TableRow>
                 ) : installments.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center text-muted-foreground">
+                    <TableCell colSpan={8} className="text-center text-muted-foreground">
                       No hay cuotas registradas
                     </TableCell>
                   </TableRow>
@@ -457,6 +484,9 @@ export default function PaymentInstallmentsModal({ sale, open, onOpenChange }: P
                           {installment.fecha ? format(new Date(installment.fecha), "dd/MM/yyyy") : "-"}
                         </TableCell>
                         <TableCell>${parseFloat(installment.cuotaAmount || "0").toFixed(2)}</TableCell>
+                        <TableCell data-testid={`pago-cuota-usd-${installment.id}`}>
+                          {installment.pagoCuotaUsd ? `$${parseFloat(installment.pagoCuotaUsd).toFixed(2)}` : "-"}
+                        </TableCell>
                         <TableCell>{banco?.banco || "-"}</TableCell>
                         <TableCell>{installment.referencia || "-"}</TableCell>
                         <TableCell>${parseFloat(installment.saldoRemaining || "0").toFixed(2)}</TableCell>
