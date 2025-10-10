@@ -51,6 +51,13 @@ export default function FleteModal({ open, onOpenChange, sale }: FleteModalProps
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  // Fetch all sales from the same order
+  const { data: orderSales = [] } = useQuery<Sale[]>({
+    queryKey: ['/api/sales', { orden: sale?.orden }],
+    enabled: !!sale?.orden,
+    select: (data: any) => data?.data || [],
+  });
+
   // Load banks data
   const { data: allBancos = [] } = useQuery<Array<{ id: string; banco: string; tipo: string }>>({
     queryKey: ["/api/admin/bancos"],
@@ -171,10 +178,24 @@ export default function FleteModal({ open, onOpenChange, sale }: FleteModalProps
                 <span className="font-medium">Cliente:</span>
                 <span>{sale.nombre}</span>
               </div>
-              <div className="flex items-center gap-2">
-                <DollarSign className="h-4 w-4" />
-                <span className="font-medium">Total USD:</span>
-                <span>${sale.totalUsd}</span>
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <DollarSign className="h-4 w-4" />
+                  <span className="font-medium">SKUs:</span>
+                </div>
+                <div className="ml-6 space-y-1">
+                  {orderSales.length > 0 ? (
+                    orderSales.map((orderSale, index) => (
+                      <div key={index} className="text-sm" data-testid={`sku-item-${index}`}>
+                        {orderSale.sku || 'N/A'} × {orderSale.cantidad}
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-sm" data-testid="sku-item-0">
+                      {sale.sku || 'N/A'} × {sale.cantidad}
+                    </div>
+                  )}
+                </div>
               </div>
               <div className="flex items-center gap-2">
                 <CalendarIcon className="h-4 w-4" />
