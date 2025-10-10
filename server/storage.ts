@@ -227,7 +227,7 @@ export interface IStorage {
   deleteInstallment(id: string): Promise<boolean>;
   recomputeInstallmentSequenceAndBalances(saleId: string): Promise<void>;
   getInstallmentSummary(saleId: string): Promise<{
-    totalUsd: number;
+    totalOrderUsd: number;
     pagoInicialUsd: number;
     totalCuotas: number;
     totalPagado: number;
@@ -1683,7 +1683,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getInstallmentSummary(saleId: string): Promise<{
-    totalUsd: number;
+    totalOrderUsd: number;
     pagoInicialUsd: number;
     totalCuotas: number;
     totalPagado: number;
@@ -1692,7 +1692,7 @@ export class DatabaseStorage implements IStorage {
     const sale = await this.getSaleById(saleId);
     if (!sale) {
       return {
-        totalUsd: 0,
+        totalOrderUsd: 0,
         pagoInicialUsd: 0,
         totalCuotas: 0,
         totalPagado: 0,
@@ -1703,7 +1703,7 @@ export class DatabaseStorage implements IStorage {
     const installments = await this.getInstallmentsBySale(saleId);
     const verifiedInstallments = installments.filter(i => i.verificado);
     
-    const totalUsd = parseFloat(sale.totalUsd);
+    const totalOrderUsd = parseFloat(sale.totalOrderUsd || '0');
     const pagoInicialUsd = parseFloat(sale.pagoInicialUsd || '0');
     const totalCuotas = installments.length;
     
@@ -1713,15 +1713,15 @@ export class DatabaseStorage implements IStorage {
     }, 0);
     
     const totalPagado = pagoInicialUsd + verifiedInstallmentsTotal;
-    const saldoPendiente = Math.max(0, totalUsd - totalPagado); // Prevent negative balance display
+    const saldoPendiente = Math.max(0, totalOrderUsd - totalPagado); // Prevent negative balance display
 
     // Validation: Log warning if overpayment detected
-    if (totalPagado > totalUsd + 0.01) { // Allow for small floating point errors
-      console.warn(`Overpayment detected in installment summary for sale ${saleId}: Total paid ${totalPagado.toFixed(2)} exceeds sale total ${totalUsd.toFixed(2)}`);
+    if (totalPagado > totalOrderUsd + 0.01) { // Allow for small floating point errors
+      console.warn(`Overpayment detected in installment summary for sale ${saleId}: Total paid ${totalPagado.toFixed(2)} exceeds sale total ${totalOrderUsd.toFixed(2)}`);
     }
 
     return {
-      totalUsd: Math.round(totalUsd * 100) / 100, // Round to 2 decimal places
+      totalOrderUsd: Math.round(totalOrderUsd * 100) / 100, // Round to 2 decimal places
       pagoInicialUsd: Math.round(pagoInicialUsd * 100) / 100,
       totalCuotas,
       totalPagado: Math.round(totalPagado * 100) / 100,

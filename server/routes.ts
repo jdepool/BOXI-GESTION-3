@@ -3346,14 +3346,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Payment amount must be positive" });
       }
 
-      if (validatedData.verificado && (summary.totalPagado + newAmount > summary.totalUsd)) {
+      if (validatedData.verificado && (summary.totalPagado + newAmount > summary.totalOrderUsd)) {
         return res.status(400).json({ 
           error: "Payment would exceed total amount",
           details: {
-            totalUsd: summary.totalUsd,
+            totalOrderUsd: summary.totalOrderUsd,
             currentPaid: summary.totalPagado,
             attemptedPayment: newAmount,
-            wouldExceedBy: (summary.totalPagado + newAmount) - summary.totalUsd
+            wouldExceedBy: (summary.totalPagado + newAmount) - summary.totalOrderUsd
           }
         });
       }
@@ -3426,16 +3426,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const totalPaidWithUpdate = summary.totalPagado - currentVerifiedAmount + newVerifiedAmount;
 
       // Check for overpayment
-      if (totalPaidWithUpdate > summary.totalUsd) {
+      if (totalPaidWithUpdate > summary.totalOrderUsd) {
         return res.status(400).json({ 
           error: "Update would exceed total sale amount",
           details: {
-            totalUsd: summary.totalUsd,
+            totalOrderUsd: summary.totalOrderUsd,
             currentTotalPaid: summary.totalPagado,
             currentInstallmentPaid: currentVerifiedAmount,
             newInstallmentAmount: newVerifiedAmount,
             wouldResultInTotalPaid: totalPaidWithUpdate,
-            wouldExceedBy: totalPaidWithUpdate - summary.totalUsd
+            wouldExceedBy: totalPaidWithUpdate - summary.totalOrderUsd
           }
         });
       }

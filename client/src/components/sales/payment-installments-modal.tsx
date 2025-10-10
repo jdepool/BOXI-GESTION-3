@@ -24,7 +24,7 @@ import type { Sale, PaymentInstallment, Banco } from "@shared/schema";
 interface InstallmentsResponse {
   installments: PaymentInstallment[];
   summary: {
-    totalUsd: number;
+    totalOrderUsd: number;
     pagoInicialUsd: number;
     totalCuotas: number;
     totalPagado: number;
@@ -91,7 +91,7 @@ export default function PaymentInstallmentsModal({ sale, open, onOpenChange }: P
 
   const installments = installmentsData?.installments || [];
   const summary = installmentsData?.summary || {
-    totalUsd: 0,
+    totalOrderUsd: 0,
     pagoInicialUsd: 0,
     totalCuotas: 0,
     totalPagado: 0,
@@ -223,33 +223,33 @@ export default function PaymentInstallmentsModal({ sale, open, onOpenChange }: P
           {/* Summary Cards */}
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
             <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
-              <div className="text-xs font-medium text-blue-600 dark:text-blue-400">Total USD</div>
+              <div className="text-xs font-medium text-blue-600 dark:text-blue-400">Total Order USD</div>
               <div className="text-lg font-bold text-blue-700 dark:text-blue-300">
-                ${summary.totalUsd.toFixed(2)}
+                ${(summary.totalOrderUsd ?? 0).toFixed(2)}
               </div>
             </div>
             <div className="bg-green-50 dark:bg-green-900/20 p-3 rounded-lg">
               <div className="text-xs font-medium text-green-600 dark:text-green-400">Pago Inicial/Total</div>
               <div className="text-lg font-bold text-green-700 dark:text-green-300">
-                ${summary.pagoInicialUsd.toFixed(2)}
+                ${(summary.pagoInicialUsd ?? 0).toFixed(2)}
               </div>
             </div>
             <div className="bg-purple-50 dark:bg-purple-900/20 p-3 rounded-lg">
               <div className="text-xs font-medium text-purple-600 dark:text-purple-400">Total Cuotas</div>
               <div className="text-lg font-bold text-purple-700 dark:text-purple-300">
-                {summary.totalCuotas}
+                {summary.totalCuotas ?? 0}
               </div>
             </div>
             <div className="bg-orange-50 dark:bg-orange-900/20 p-3 rounded-lg">
               <div className="text-xs font-medium text-orange-600 dark:text-orange-400">Total Pagado</div>
               <div className="text-lg font-bold text-orange-700 dark:text-orange-300">
-                ${summary.totalPagado.toFixed(2)}
+                ${(summary.totalPagado ?? 0).toFixed(2)}
               </div>
             </div>
             <div className="bg-red-50 dark:bg-red-900/20 p-3 rounded-lg">
               <div className="text-xs font-medium text-red-600 dark:text-red-400">Pendiente</div>
               <div className="text-lg font-bold text-red-700 dark:text-red-300">
-                ${summary.saldoPendiente.toFixed(2)}
+                ${(summary.saldoPendiente ?? 0).toFixed(2)}
               </div>
             </div>
           </div>

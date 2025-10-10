@@ -4,6 +4,19 @@ BoxiSleep is a comprehensive sales management dashboard for a sleep products com
 
 # Recent Changes (October 2025)
 
+## Payment Installments Modal - Total Order USD Display (October 10, 2025)
+- **Changed**: Payment installments modal now displays "Total Order USD" instead of "Total USD"
+- **Purpose**: Shows the complete order amount (sum of all products in an order) rather than individual product totals
+- **Backend Changes**:
+  - Updated `getInstallmentSummary()` in storage.ts to return `totalOrderUsd` (from `sale.totalOrderUsd`) instead of `totalUsd`
+  - Updated IStorage interface to reflect the new field name
+  - Updated routes.ts overpayment validation to use `totalOrderUsd`
+- **Frontend Changes**:
+  - Updated InstallmentsResponse interface to expect `totalOrderUsd`
+  - Changed metric card label from "Total USD" to "Total Order USD"
+  - Added nullish coalescing (`?? 0`) to all summary fields to prevent crashes when values are undefined
+- **Impact**: Users now see the full order amount in the payment modal, making it clear how much the complete order costs
+
 ## Dashboard Metrics Cards Redesign (October 10, 2025)
 - **Changed**: Completely redesigned dashboard metrics cards to show financial payment tracking instead of order counts
 - **New Metrics** (5 cards replacing the previous 4):
