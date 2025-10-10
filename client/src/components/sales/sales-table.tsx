@@ -262,7 +262,7 @@ export default function SalesTable({
   const handleFilterChange = (key: string, value: string) => {
     const newFilters = { 
       ...parentFilters, 
-      [key]: value,
+      [key]: value === "all" ? "" : value,
       offset: 0 // Reset to first page when filtering
     };
     onFilterChange?.(newFilters);
@@ -354,13 +354,14 @@ export default function SalesTable({
             
             <div className="flex flex-wrap gap-3">
               <Select 
-                value={filters.canal || undefined} 
+                value={filters.canal || "all"} 
                 onValueChange={(value) => handleFilterChange('canal', value)}
               >
                 <SelectTrigger className="w-40" data-testid="filter-channel">
                   <SelectValue placeholder="Todos los canales" />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="all">Todos los canales</SelectItem>
                   <SelectItem value="cashea">Cashea</SelectItem>
                   <SelectItem value="shopify">Shopify</SelectItem>
                   <SelectItem value="treble">Treble</SelectItem>
@@ -368,13 +369,14 @@ export default function SalesTable({
               </Select>
 
               <Select 
-                value={filters.estadoEntrega || undefined} 
+                value={filters.estadoEntrega || "all"} 
                 onValueChange={(value) => handleFilterChange('estadoEntrega', value)}
               >
                 <SelectTrigger className="w-40" data-testid="filter-status">
                   <SelectValue placeholder="Todos los estados" />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="all">Todos los estados</SelectItem>
                   <SelectItem value="Pendiente">Pendiente</SelectItem>
                   <SelectItem value="Perdida">Perdida</SelectItem>
                   <SelectItem value="En proceso">En proceso</SelectItem>
@@ -388,13 +390,14 @@ export default function SalesTable({
               </Select>
 
               <Select 
-                value={filters.asesorId || undefined} 
+                value={filters.asesorId || "all"} 
                 onValueChange={(value) => handleFilterChange('asesorId', value)}
               >
                 <SelectTrigger className="w-40" data-testid="filter-asesor">
                   <SelectValue placeholder="Todos los asesores" />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="all">Todos los asesores</SelectItem>
                   <SelectItem value="none">Sin asesor</SelectItem>
                   {(asesores as any[]).map((asesor: any) => (
                     <SelectItem key={asesor.id} value={asesor.id}>
