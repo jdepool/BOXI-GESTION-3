@@ -25,6 +25,7 @@ import type { Sale, Banco } from "@shared/schema";
 interface FleteData {
   montoFleteUsd: string;
   fechaFlete: string;
+  pagoFleteUsd: string;
   referenciaFlete: string;
   montoFleteVes: string;
   bancoReceptorFlete: string;
@@ -41,6 +42,7 @@ export default function FleteModal({ open, onOpenChange, sale }: FleteModalProps
   const [fleteData, setFleteData] = useState<FleteData>({
     montoFleteUsd: "",
     fechaFlete: "",
+    pagoFleteUsd: "",
     referenciaFlete: "",
     montoFleteVes: "",
     bancoReceptorFlete: "",
@@ -109,6 +111,7 @@ export default function FleteModal({ open, onOpenChange, sale }: FleteModalProps
       setFleteData({
         montoFleteUsd: sale.montoFleteUsd ? sale.montoFleteUsd.toString() : "",
         fechaFlete: fechaValue,
+        pagoFleteUsd: sale.pagoFleteUsd ? sale.pagoFleteUsd.toString() : "",
         referenciaFlete: sale.referenciaFlete || "",
         montoFleteVes: sale.montoFleteVes ? sale.montoFleteVes.toString() : "",
         bancoReceptorFlete: sale.bancoReceptorFlete || "",
@@ -121,6 +124,7 @@ export default function FleteModal({ open, onOpenChange, sale }: FleteModalProps
     setFleteData({
       montoFleteUsd: "",
       fechaFlete: "",
+      pagoFleteUsd: "",
       referenciaFlete: "",
       montoFleteVes: "",
       bancoReceptorFlete: "",
@@ -215,23 +219,7 @@ export default function FleteModal({ open, onOpenChange, sale }: FleteModalProps
             </h3>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="montoFleteUsd">Monto USD (si el pago es en USD)</Label>
-                <div className="relative">
-                  <DollarSign className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="montoFleteUsd"
-                    type="number"
-                    step="0.01"
-                    placeholder="0.00"
-                    value={fleteData.montoFleteUsd}
-                    onChange={handleInputChange('montoFleteUsd')}
-                    className="pl-10"
-                    data-testid="input-monto-flete-usd"
-                  />
-                </div>
-              </div>
-
+              {/* 1. Fecha Pago Flete */}
               <div className="space-y-2">
                 <Label htmlFor="fechaFlete">Fecha Pago Flete</Label>
                 <Popover>
@@ -263,39 +251,25 @@ export default function FleteModal({ open, onOpenChange, sale }: FleteModalProps
                 </Popover>
               </div>
 
+              {/* 2. Pago Flete USD (NEW) */}
               <div className="space-y-2">
-                <Label htmlFor="referenciaFlete">Referencia</Label>
+                <Label htmlFor="pagoFleteUsd">Pago Flete USD</Label>
                 <div className="relative">
-                  <FileText className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <DollarSign className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input
-                    id="referenciaFlete"
-                    type="text"
-                    placeholder="Referencia del flete"
-                    value={fleteData.referenciaFlete}
-                    onChange={handleInputChange('referenciaFlete')}
-                    className="pl-10"
-                    data-testid="input-referencia-flete"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="montoFleteVes">Monto Bs (si el pago es en Bs)</Label>
-                <div className="relative">
-                  <span className="absolute left-3 top-3 text-sm text-muted-foreground font-semibold">Bs</span>
-                  <Input
-                    id="montoFleteVes"
+                    id="pagoFleteUsd"
                     type="number"
                     step="0.01"
                     placeholder="0.00"
-                    value={fleteData.montoFleteVes}
-                    onChange={handleInputChange('montoFleteVes')}
+                    value={fleteData.pagoFleteUsd}
+                    onChange={handleInputChange('pagoFleteUsd')}
                     className="pl-10"
-                    data-testid="input-monto-flete-ves"
+                    data-testid="input-pago-flete-usd"
                   />
                 </div>
               </div>
 
+              {/* 3. Banco Receptor */}
               <div className="space-y-2">
                 <Label htmlFor="bancoReceptorFlete">Banco Receptor</Label>
                 <Select
@@ -321,6 +295,59 @@ export default function FleteModal({ open, onOpenChange, sale }: FleteModalProps
                     ))}
                   </SelectContent>
                 </Select>
+              </div>
+
+              {/* 4. Referencia */}
+              <div className="space-y-2">
+                <Label htmlFor="referenciaFlete">Referencia</Label>
+                <div className="relative">
+                  <FileText className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="referenciaFlete"
+                    type="text"
+                    placeholder="Referencia del flete"
+                    value={fleteData.referenciaFlete}
+                    onChange={handleInputChange('referenciaFlete')}
+                    className="pl-10"
+                    data-testid="input-referencia-flete"
+                  />
+                </div>
+              </div>
+
+              {/* 5. Monto Bs (si el pago es en Bs) */}
+              <div className="space-y-2">
+                <Label htmlFor="montoFleteVes">Monto Bs (si el pago es en Bs)</Label>
+                <div className="relative">
+                  <span className="absolute left-3 top-3 text-sm text-muted-foreground font-semibold">Bs</span>
+                  <Input
+                    id="montoFleteVes"
+                    type="number"
+                    step="0.01"
+                    placeholder="0.00"
+                    value={fleteData.montoFleteVes}
+                    onChange={handleInputChange('montoFleteVes')}
+                    className="pl-10"
+                    data-testid="input-monto-flete-ves"
+                  />
+                </div>
+              </div>
+
+              {/* 6. Monto USD (si el pago es en USD) */}
+              <div className="space-y-2">
+                <Label htmlFor="montoFleteUsd">Monto USD (si el pago es en USD)</Label>
+                <div className="relative">
+                  <DollarSign className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="montoFleteUsd"
+                    type="number"
+                    step="0.01"
+                    placeholder="0.00"
+                    value={fleteData.montoFleteUsd}
+                    onChange={handleInputChange('montoFleteUsd')}
+                    className="pl-10"
+                    data-testid="input-monto-flete-usd"
+                  />
+                </div>
               </div>
             </div>
 

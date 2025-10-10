@@ -238,6 +238,7 @@ export interface IStorage {
   updateSaleFlete(saleId: string, flete: {
     montoFleteUsd?: string;
     fechaFlete?: string;
+    pagoFleteUsd?: string;
     referenciaFlete?: string;
     montoFleteVes?: string;
     bancoReceptorFlete?: string;
@@ -758,6 +759,7 @@ export class DatabaseStorage implements IStorage {
   async updateSaleFlete(saleId: string, flete: {
     montoFleteUsd?: string;
     fechaFlete?: string;
+    pagoFleteUsd?: string;
     referenciaFlete?: string;
     montoFleteVes?: string;
     bancoReceptorFlete?: string;
@@ -772,6 +774,9 @@ export class DatabaseStorage implements IStorage {
     if (flete.fechaFlete !== undefined) {
       const dateValue = flete.fechaFlete && flete.fechaFlete !== "" ? new Date(flete.fechaFlete) : null;
       updateData.fechaFlete = dateValue;
+    }
+    if (flete.pagoFleteUsd !== undefined) {
+      updateData.pagoFleteUsd = flete.pagoFleteUsd === "" ? null : flete.pagoFleteUsd;
     }
     if (flete.referenciaFlete !== undefined) {
       updateData.referenciaFlete = flete.referenciaFlete === "" ? null : flete.referenciaFlete;
