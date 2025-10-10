@@ -4,6 +4,20 @@ BoxiSleep is a comprehensive sales management dashboard for a sleep products com
 
 # Recent Changes (October 2025)
 
+## Flete Modal Field Reordering and Pago Flete USD Addition (October 10, 2025)
+- **Added**: New `pagoFleteUsd` field to track the agreed/paid freight cost in USD
+- **Database Field**: `pago_flete_usd` (decimal) in sales table - stores the freight payment amount in USD
+- **Field Reordering**: Reorganized Flete Modal fields in logical payment flow order:
+  1. Fecha Pago Flete (date picker)
+  2. Pago Flete USD (NEW number input) - The agreed freight cost
+  3. Banco Receptor (dropdown)
+  4. Referencia (text)
+  5. Monto Bs (si el pago es en Bs)
+  6. Monto USD (si el pago es en USD)
+- **Purpose**: Separate the agreed freight cost (Pago Flete USD) from the actual payment amounts (Monto Bs/USD)
+- **Backend Updates**: Updated IStorage interface and updateSaleFlete method to handle the new field
+- **Frontend Updates**: Added pagoFleteUsd to FleteData state and form validation
+
 ## Flete Modal SKU List (October 10, 2025)
 - **Changed**: Flete modal now displays SKU list instead of "Total USD"
 - **Implementation**: 
