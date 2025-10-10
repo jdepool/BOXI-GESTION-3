@@ -27,7 +27,7 @@ interface FleteData {
   fechaFlete: string;
   pagoFleteUsd: string;
   referenciaFlete: string;
-  montoFleteVes: string;
+  montoFleteBs: string;
   bancoReceptorFlete: string;
   fleteGratis: boolean;
 }
@@ -44,7 +44,7 @@ export default function FleteModal({ open, onOpenChange, sale }: FleteModalProps
     fechaFlete: "",
     pagoFleteUsd: "",
     referenciaFlete: "",
-    montoFleteVes: "",
+    montoFleteBs: "",
     bancoReceptorFlete: "",
     fleteGratis: false
   });
@@ -113,7 +113,7 @@ export default function FleteModal({ open, onOpenChange, sale }: FleteModalProps
         fechaFlete: fechaValue,
         pagoFleteUsd: sale.pagoFleteUsd ? sale.pagoFleteUsd.toString() : "",
         referenciaFlete: sale.referenciaFlete || "",
-        montoFleteVes: sale.montoFleteVes ? sale.montoFleteVes.toString() : "",
+        montoFleteBs: sale.montoFleteBs ? sale.montoFleteBs.toString() : "",
         bancoReceptorFlete: sale.bancoReceptorFlete || "",
         fleteGratis: sale.fleteGratis || false
       });
@@ -126,7 +126,7 @@ export default function FleteModal({ open, onOpenChange, sale }: FleteModalProps
       fechaFlete: "",
       pagoFleteUsd: "",
       referenciaFlete: "",
-      montoFleteVes: "",
+      montoFleteBs: "",
       bancoReceptorFlete: "",
       fleteGratis: false
     });
@@ -316,18 +316,18 @@ export default function FleteModal({ open, onOpenChange, sale }: FleteModalProps
 
               {/* 5. Monto Bs (si el pago es en Bs) */}
               <div className="space-y-2">
-                <Label htmlFor="montoFleteVes">Monto Bs (si el pago es en Bs)</Label>
+                <Label htmlFor="montoFleteBs">Monto Bs (si el pago es en Bs)</Label>
                 <div className="relative">
                   <span className="absolute left-3 top-3 text-sm text-muted-foreground font-semibold">Bs</span>
                   <Input
-                    id="montoFleteVes"
+                    id="montoFleteBs"
                     type="number"
                     step="0.01"
                     placeholder="0.00"
-                    value={fleteData.montoFleteVes}
-                    onChange={handleInputChange('montoFleteVes')}
+                    value={fleteData.montoFleteBs}
+                    onChange={handleInputChange('montoFleteBs')}
                     className="pl-10"
-                    data-testid="input-monto-flete-ves"
+                    data-testid="input-monto-flete-bs"
                   />
                 </div>
               </div>

@@ -120,7 +120,7 @@ export const sales = pgTable("sales", {
   fechaFlete: timestamp("fecha_flete"),
   pagoFleteUsd: decimal("pago_flete_usd", { precision: 10, scale: 2 }),
   referenciaFlete: text("referencia_flete"),
-  montoFleteVes: decimal("monto_flete_ves", { precision: 15, scale: 2 }),
+  montoFleteBs: decimal("monto_flete_bs", { precision: 15, scale: 2 }),
   bancoReceptorFlete: text("banco_receptor_flete"),
   statusFlete: text("status_flete"), // Pendiente, En Proceso, A Despacho
   fleteGratis: boolean("flete_gratis").default(false),

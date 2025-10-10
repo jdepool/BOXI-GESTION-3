@@ -36,7 +36,7 @@ BoxiSleep is a comprehensive sales management dashboard for a sleep products com
   - `monto_usd` → `monto_inicial_usd` (Pago Inicial/Total amount in USD)
 - **Purpose**: Clear separation of payment types for better data organization
   - **Pago Inicial/Total**: Uses referenciaInicial, montoInicialBs, montoInicialUsd
-  - **Flete**: Uses referenciaFlete, montoFleteVes, montoFleteUsd (already separate)
+  - **Flete**: Uses referenciaFlete, montoFleteBs, montoFleteUsd (already separate)
   - **Cuotas**: Uses referencia, cuotaAmount, cuotaAmountBs in payment_installments table (already separate)
 - **Schema Updates**: All frontend, backend, and database references updated to use new field names
 

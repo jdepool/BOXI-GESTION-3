@@ -39,7 +39,7 @@ function getFleteStatus(sale: Sale): { status: string; color: string; descriptio
   }
 
   // Solo tiene monto USD
-  if (!sale.fechaFlete || !sale.referenciaFlete || !sale.montoFleteVes || !sale.bancoReceptorFlete) {
+  if (!sale.fechaFlete || !sale.referenciaFlete || !sale.montoFleteBs || !sale.bancoReceptorFlete) {
     return { status: "Pendiente", color: "bg-orange-500", description: "Solo tiene monto en USD" };
   }
 
@@ -231,8 +231,8 @@ export default function Flete() {
                             )}
                           </td>
                           <td className="p-4">
-                            {sale.montoFleteVes ? (
-                              <span className="text-sm font-bold text-orange-600">Bs {Number(sale.montoFleteVes).toLocaleString()}</span>
+                            {sale.montoFleteBs ? (
+                              <span className="text-sm font-bold text-orange-600">Bs {Number(sale.montoFleteBs).toLocaleString()}</span>
                             ) : (
                               <span className="text-sm text-muted-foreground">-</span>
                             )}

@@ -240,7 +240,7 @@ export interface IStorage {
     fechaFlete?: string;
     pagoFleteUsd?: string;
     referenciaFlete?: string;
-    montoFleteVes?: string;
+    montoFleteBs?: string;
     bancoReceptorFlete?: string;
     fleteGratis?: boolean;
   }): Promise<Sale | undefined>;
@@ -761,7 +761,7 @@ export class DatabaseStorage implements IStorage {
     fechaFlete?: string;
     pagoFleteUsd?: string;
     referenciaFlete?: string;
-    montoFleteVes?: string;
+    montoFleteBs?: string;
     bancoReceptorFlete?: string;
     fleteGratis?: boolean;
   }): Promise<Sale | undefined> {
@@ -781,8 +781,8 @@ export class DatabaseStorage implements IStorage {
     if (flete.referenciaFlete !== undefined) {
       updateData.referenciaFlete = flete.referenciaFlete === "" ? null : flete.referenciaFlete;
     }
-    if (flete.montoFleteVes !== undefined) {
-      updateData.montoFleteVes = flete.montoFleteVes === "" ? null : flete.montoFleteVes;
+    if (flete.montoFleteBs !== undefined) {
+      updateData.montoFleteBs = flete.montoFleteBs === "" ? null : flete.montoFleteBs;
     }
     if (flete.bancoReceptorFlete !== undefined) {
       updateData.bancoReceptorFlete = flete.bancoReceptorFlete === "" ? null : flete.bancoReceptorFlete;
