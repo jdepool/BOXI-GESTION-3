@@ -4,6 +4,17 @@ BoxiSleep is a comprehensive sales management dashboard for a sleep products com
 
 # Recent Changes (October 2025)
 
+## Payment Installments - Pago Cuota USD Field Addition (October 10, 2025)
+- **Added**: New `pagoCuotaUsd` field to payment installments for tracking agreed installment payment amounts
+- **Database Field**: `pago_cuota_usd` (decimal) in payment_installments table
+- **Purpose**: Allows tracking the agreed/expected installment payment amount separately from the actual payment amounts
+- **UI Integration**:
+  - Added "Pago Cuota USD" input field in the payment installments form (optional field)
+  - Added "Pago Cuota USD" column in the installments display table
+  - Field appears between "Monto Bs" and "Banco" in the form
+- **Backend**: Auto-handled through Drizzle schema validation in create/update installment endpoints
+- **Bug Fix**: Added missing `verificado` boolean field to payment_installments schema (default: true) to resolve database query errors
+
 ## Flete Modal Field Reordering and Pago Flete USD Addition (October 10, 2025)
 - **Added**: New `pagoFleteUsd` field to track the agreed/paid freight cost in USD
 - **Database Field**: `pago_flete_usd` (decimal) in sales table - stores the freight payment amount in USD
