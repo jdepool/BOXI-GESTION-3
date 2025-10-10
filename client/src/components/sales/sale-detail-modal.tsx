@@ -81,9 +81,9 @@ export default function SaleDetailModal({ sale, onClose }: SaleDetailModalProps)
             <h3 className="font-semibold text-foreground mb-3">Estado y Entrega</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <p className="text-muted-foreground text-sm mb-1">Estado de Entrega</p>
-                <Badge className={`${getStatusBadgeClass(sale.estadoEntrega)} text-white`}>
-                  {sale.estadoEntrega}
+                <p className="text-muted-foreground text-sm mb-1">Tipo</p>
+                <Badge variant="secondary">
+                  {sale.tipo || 'Inmediato'}
                 </Badge>
               </div>
               {sale.estadoPagoInicial && (

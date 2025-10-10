@@ -179,11 +179,7 @@ export default function FleteModal({ open, onOpenChange, sale }: FleteModalProps
                 <span>{sale.nombre}</span>
               </div>
               <div>
-                <div className="flex items-center gap-2 mb-1">
-                  <DollarSign className="h-4 w-4" />
-                  <span className="font-medium">SKUs:</span>
-                </div>
-                <div className="ml-6 space-y-1">
+                <div className="space-y-1">
                   {orderSales.length > 0 ? (
                     orderSales.map((orderSale, index) => (
                       <div key={index} className="text-sm" data-testid={`sku-item-${index}`}>
@@ -204,7 +200,7 @@ export default function FleteModal({ open, onOpenChange, sale }: FleteModalProps
               </div>
               <div className="flex items-center gap-2">
                 <Badge variant="outline">{sale.canal}</Badge>
-                <Badge variant="secondary">{sale.estadoEntrega}</Badge>
+                <Badge variant="secondary">{sale.tipo || 'Inmediato'}</Badge>
               </div>
             </div>
           </div>
