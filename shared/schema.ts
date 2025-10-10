@@ -94,9 +94,9 @@ export const sales = pgTable("sales", {
   bancoId: varchar("banco_id"),
   orden: text("orden"),
   factura: text("factura"),
-  referencia: text("referencia"),
-  montoBs: decimal("monto_bs", { precision: 15, scale: 2 }),
-  montoUsd: decimal("monto_usd", { precision: 15, scale: 2 }),
+  referenciaInicial: text("referencia_inicial"),
+  montoInicialBs: decimal("monto_inicial_bs", { precision: 15, scale: 2 }),
+  montoInicialUsd: decimal("monto_inicial_usd", { precision: 15, scale: 2 }),
   estadoEntrega: text("estado_entrega").notNull().default("Pendiente"), // Pendiente, Perdida, En proceso, A despachar, En tránsito, Entregado, A devolver, Devuelto, Cancelada
   product: text("product").notNull(),
   sku: text("sku"), // Manual override SKU or SKU from Shopify orders
