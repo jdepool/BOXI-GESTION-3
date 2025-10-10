@@ -1,7 +1,6 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useQuery } from "@tanstack/react-query";
 import type { Sale } from "@shared/schema";
 
 interface SaleDetailModalProps {
@@ -10,13 +9,6 @@ interface SaleDetailModalProps {
 }
 
 export default function SaleDetailModal({ sale, onClose }: SaleDetailModalProps) {
-  // Fetch all sales from the same order
-  const { data: orderSales = [] } = useQuery<Sale[]>({
-    queryKey: ['/api/sales', { orden: sale?.orden }],
-    enabled: !!sale?.orden,
-    select: (data: any) => data?.data || [],
-  });
-
   if (!sale) return null;
 
   const getChannelBadgeClass = (canal: string) => {
@@ -64,22 +56,7 @@ export default function SaleDetailModal({ sale, onClose }: SaleDetailModalProps)
                   {sale.canal.charAt(0).toUpperCase() + sale.canal.slice(1)}
                 </Badge>
               </p>
-              <div>
-                <span className="text-muted-foreground">SKUs:</span>
-                <div className="mt-1 space-y-1">
-                  {orderSales.length > 0 ? (
-                    orderSales.map((orderSale, index) => (
-                      <p key={index} className="text-foreground font-medium" data-testid={`sku-item-${index}`}>
-                        {orderSale.sku || 'N/A'} × {orderSale.cantidad}
-                      </p>
-                    ))
-                  ) : (
-                    <p className="text-foreground font-medium" data-testid="sku-item-0">
-                      {sale.sku || 'N/A'} × {sale.cantidad}
-                    </p>
-                  )}
-                </div>
-              </div>
+              <p><span className="text-muted-foreground">Total USD:</span> <span className="text-foreground font-medium">${Number(sale.totalUsd).toLocaleString()}</span></p>
               <p><span className="text-muted-foreground">Monto Bs:</span> <span className="text-foreground">{sale.montoInicialBs ? `Bs ${Number(sale.montoInicialBs).toLocaleString()}` : 'N/A'}</span></p>
               <p><span className="text-muted-foreground">Fecha:</span> <span className="text-foreground">{new Date(sale.fecha).toLocaleDateString()}</span></p>
               <p><span className="text-muted-foreground">Sucursal:</span> <span className="text-foreground">{sale.sucursal || 'N/A'}</span></p>
