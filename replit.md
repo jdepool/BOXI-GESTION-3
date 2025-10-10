@@ -4,14 +4,15 @@ BoxiSleep is a comprehensive sales management dashboard for a sleep products com
 
 # Recent Changes (October 2025)
 
-## Sale Detail Modal SKU List (October 10, 2025)
-- **Changed**: Sale detail modal now displays SKU list instead of "Total USD"
+## Flete Modal SKU List (October 10, 2025)
+- **Changed**: Flete modal now displays SKU list instead of "Total USD"
 - **Implementation**: 
   - Added query to fetch all sales from the same order number
   - Replaced "Total USD" display with list of SKUs and quantities
   - Format: "SKU × quantity" for each product in the order
 - **Multi-Product Support**: Shows all products from an order, one SKU per line
 - **Fallback**: Displays single sale SKU if no order number exists
+- **Location**: Sale information section at the top of the Flete modal
 
 ## Pago Inicial Field Renaming (October 10, 2025)
 - **Renamed**: Pago Inicial payment fields to uniquely identify them from other payment types
