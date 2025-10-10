@@ -14,9 +14,12 @@ export const bancos = pgTable("bancos", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   banco: text("banco").notNull(),
   numeroCuenta: text("numero_cuenta").notNull(),
+  tipo: text("tipo").notNull().default("Receptor"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
-});
+}, (table) => ({
+  tipoCheck: check("tipo_check", sql`${table.tipo} IN ('Receptor', 'Emisor')`),
+}));
 
 export const tiposEgresos = pgTable("tipos_egresos", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
