@@ -2,10 +2,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 interface MetricsCardsProps {
   metrics?: {
-    totalSales: number;
-    completedOrders: number;
-    pendingOrders: number;
-    activeReservations: number;
+    totalOrderUsd: number;
+    pagoInicialVerificado: number;
+    totalCuotas: number;
+    totalPagado: number;
+    pendiente: number;
   };
   isLoading: boolean;
 }
@@ -13,8 +14,8 @@ interface MetricsCardsProps {
 export default function MetricsCards({ metrics, isLoading }: MetricsCardsProps) {
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {[...Array(4)].map((_, i) => (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+        {[...Array(5)].map((_, i) => (
           <div key={i} className="bg-card p-6 rounded-lg border border-border">
             <Skeleton className="h-4 w-24 mb-2" />
             <Skeleton className="h-8 w-16 mb-1" />
@@ -27,45 +28,54 @@ export default function MetricsCards({ metrics, isLoading }: MetricsCardsProps) 
 
   const cards = [
     {
-      title: "Ventas Totales",
-      value: `$${metrics?.totalSales.toLocaleString() || '0'}`,
-      change: "+12.5% vs mes anterior",
-      icon: "fas fa-dollar-sign",
+      title: "Total USD",
+      value: `$${(metrics?.totalOrderUsd ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      change: "Total de órdenes",
+      icon: "fas fa-shopping-cart",
       iconBg: "bg-primary/10",
       iconColor: "text-primary",
-      testId: "metric-total-sales"
+      testId: "metric-total-order-usd"
     },
     {
-      title: "Órdenes Completadas", 
-      value: metrics?.completedOrders.toLocaleString() || '0',
-      change: "+8.2% vs mes anterior",
-      icon: "fas fa-check-circle",
+      title: "Pago Inicial/Total", 
+      value: `$${(metrics?.pagoInicialVerificado ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      change: "Pagos iniciales verificados",
+      icon: "fas fa-money-check-alt",
       iconBg: "bg-green-500/10", 
       iconColor: "text-green-500",
-      testId: "metric-completed-orders"
+      testId: "metric-pago-inicial-verificado"
     },
     {
-      title: "Pedidos Pendientes",
-      value: metrics?.pendingOrders.toLocaleString() || '0',
-      change: "Requieren atención",
-      icon: "fas fa-clock",
-      iconBg: "bg-amber-500/10",
-      iconColor: "text-amber-500", 
-      testId: "metric-pending-orders"
-    },
-    {
-      title: "Reservas Activas",
-      value: metrics?.activeReservations.toLocaleString() || '0', 
-      change: "Para entrega posterior",
-      icon: "fas fa-calendar-alt",
+      title: "Total Cuotas",
+      value: `$${(metrics?.totalCuotas ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      change: "Cuotas verificadas",
+      icon: "fas fa-receipt",
       iconBg: "bg-blue-500/10",
-      iconColor: "text-blue-500",
-      testId: "metric-active-reservations"
+      iconColor: "text-blue-500", 
+      testId: "metric-total-cuotas"
+    },
+    {
+      title: "Total Pagado",
+      value: `$${(metrics?.totalPagado ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, 
+      change: "Inicial + Cuotas",
+      icon: "fas fa-check-circle",
+      iconBg: "bg-purple-500/10",
+      iconColor: "text-purple-500",
+      testId: "metric-total-pagado"
+    },
+    {
+      title: "Pendiente",
+      value: `$${(metrics?.pendiente ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, 
+      change: "Saldo por cobrar",
+      icon: "fas fa-hourglass-half",
+      iconBg: "bg-amber-500/10",
+      iconColor: "text-amber-500",
+      testId: "metric-pendiente"
     }
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
       {cards.map((card, index) => (
         <div key={index} className="bg-card p-6 rounded-lg border border-border" data-testid={card.testId}>
           <div className="flex items-center justify-between">

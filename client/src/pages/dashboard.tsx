@@ -9,10 +9,11 @@ import SalesTable from "@/components/sales/sales-table";
 
 export default function Dashboard() {
   const { data: metrics, isLoading: metricsLoading } = useQuery<{
-    totalSales: number;
-    completedOrders: number;
-    pendingOrders: number;
-    activeReservations: number;
+    totalOrderUsd: number;
+    pagoInicialVerificado: number;
+    totalCuotas: number;
+    totalPagado: number;
+    pendiente: number;
     salesByChannel: { canal: string; total: number; orders: number }[];
     salesByDeliveryStatus: { status: string; count: number }[];
   }>({
