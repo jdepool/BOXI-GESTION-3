@@ -225,7 +225,7 @@ export default function PagoInicialModal({ sale, open, onOpenChange }: PagoInici
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="bancoId">Banco</Label>
+                <Label htmlFor="bancoId">Banco Receptor</Label>
                 <Select
                   value={pagoData.bancoId}
                   onValueChange={handleSelectChange("bancoId")}
