@@ -453,11 +453,11 @@ export default function PaymentInstallmentsModal({ sale, open, onOpenChange }: P
                 <TableRow>
                   <TableHead>Cuota #</TableHead>
                   <TableHead>Fecha</TableHead>
-                  <TableHead>Monto USD</TableHead>
                   <TableHead>Pago Cuota USD</TableHead>
                   <TableHead>Banco</TableHead>
                   <TableHead>Referencia</TableHead>
-                  <TableHead>Saldo Restante</TableHead>
+                  <TableHead>Monto Bs</TableHead>
+                  <TableHead>Monto USD</TableHead>
                   <TableHead>Acciones</TableHead>
                 </TableRow>
               </TableHeader>
@@ -483,13 +483,15 @@ export default function PaymentInstallmentsModal({ sale, open, onOpenChange }: P
                         <TableCell>
                           {installment.fecha ? format(new Date(installment.fecha), "dd/MM/yyyy") : "-"}
                         </TableCell>
-                        <TableCell>${parseFloat(installment.cuotaAmount || "0").toFixed(2)}</TableCell>
                         <TableCell data-testid={`pago-cuota-usd-${installment.id}`}>
                           {installment.pagoCuotaUsd ? `$${parseFloat(installment.pagoCuotaUsd).toFixed(2)}` : "-"}
                         </TableCell>
                         <TableCell>{banco?.banco || "-"}</TableCell>
                         <TableCell>{installment.referencia || "-"}</TableCell>
-                        <TableCell>${parseFloat(installment.saldoRemaining || "0").toFixed(2)}</TableCell>
+                        <TableCell>
+                          {installment.cuotaAmountBs ? `Bs ${parseFloat(installment.cuotaAmountBs).toFixed(2)}` : "-"}
+                        </TableCell>
+                        <TableCell>${parseFloat(installment.cuotaAmount || "0").toFixed(2)}</TableCell>
                         <TableCell>
                           <div className="flex gap-1">
                             <Button
