@@ -4,6 +4,25 @@ BoxiSleep is a comprehensive sales management dashboard for a sleep products com
 
 # Recent Changes (October 2025)
 
+## Dashboard Metrics Cards Redesign (October 10, 2025)
+- **Changed**: Completely redesigned dashboard metrics cards to show financial payment tracking instead of order counts
+- **New Metrics** (5 cards replacing the previous 4):
+  1. **Total USD** - Sum of `totalOrderUsd` field (total value of all orders)
+  2. **Pago Inicial/Total** - Sum of `pagoInicialUsd` when `estadoPagoInicial` is verified (not null and not "pendiente")
+  3. **Total Cuotas** - Sum of all verified `pagoCuotaUsd` from payment_installments table (where `verificado = true`)
+  4. **Total Pagado** - Calculated as Pago Inicial/Total + Total Cuotas
+  5. **Pendiente** - Calculated as Total USD - Total Pagado (remaining balance to collect)
+- **Backend Changes**:
+  - Updated `getSalesMetrics()` in storage.ts to calculate the new financial metrics
+  - Added queries to aggregate payment data from sales and payment_installments tables
+  - Excludes cancelled orders (estadoEntrega = "Cancelada") from all calculations
+- **Frontend Changes**:
+  - Updated MetricsCards component to display 5 cards in a responsive grid (lg:grid-cols-5)
+  - All values formatted with 2 decimal places using toLocaleString
+  - Added nullish coalescing (`?? 0`) to safely handle undefined metrics without crashes
+  - Updated card labels, icons, and colors to match payment tracking theme
+- **Purpose**: Provides real-time visibility into payment collection status and outstanding balances
+
 ## Payment Installments - Pago Cuota USD Field Addition (October 10, 2025)
 - **Added**: New `pagoCuotaUsd` field to payment installments for tracking agreed installment payment amounts
 - **Database Field**: `pago_cuota_usd` (decimal) in payment_installments table
