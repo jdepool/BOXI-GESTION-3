@@ -115,9 +115,12 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
     queryKey: ["/api/admin/productos"],
   });
 
-  const { data: banks = [] } = useQuery<any[]>({
+  const { data: allBanks = [] } = useQuery<Array<{ id: string; banco: string; tipo: string }>>({
     queryKey: ["/api/admin/bancos"],
   });
+  
+  // Filter to show only Receptor banks (for incoming payments)
+  const banks = allBanks.filter(bank => bank.tipo === "Receptor");
 
   const { data: canales = [] } = useQuery<Array<{ id: string; nombre: string; activo: string }>>({
     queryKey: ["/api/admin/canales"],

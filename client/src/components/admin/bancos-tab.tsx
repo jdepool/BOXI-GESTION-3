@@ -5,7 +5,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Plus, Edit, Trash2 } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { Plus, Edit, Trash2, ArrowDownToLine, ArrowUpFromLine } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import type { Banco } from "@shared/schema";
@@ -13,7 +15,7 @@ import type { Banco } from "@shared/schema";
 export function BancosTab() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingBanco, setEditingBanco] = useState<Banco | null>(null);
-  const [formData, setFormData] = useState({ banco: "", numeroCuenta: "" });
+  const [formData, setFormData] = useState({ banco: "", numeroCuenta: "", tipo: "Receptor" as "Receptor" | "Emisor" });
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -22,12 +24,12 @@ export function BancosTab() {
   });
 
   const createMutation = useMutation({
-    mutationFn: (data: { banco: string; numeroCuenta: string }) =>
+    mutationFn: (data: { banco: string; numeroCuenta: string; tipo: string }) =>
       apiRequest("POST", "/api/admin/bancos", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/bancos"] });
       setIsDialogOpen(false);
-      setFormData({ banco: "", numeroCuenta: "" });
+      setFormData({ banco: "", numeroCuenta: "", tipo: "Receptor" });
       toast({ title: "Banco creado exitosamente" });
     },
     onError: () => {
@@ -36,13 +38,13 @@ export function BancosTab() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: { banco: string; numeroCuenta: string } }) =>
+    mutationFn: ({ id, data }: { id: string; data: { banco: string; numeroCuenta: string; tipo: string } }) =>
       apiRequest("PUT", `/api/admin/bancos/${id}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/bancos"] });
       setIsDialogOpen(false);
       setEditingBanco(null);
-      setFormData({ banco: "", numeroCuenta: "" });
+      setFormData({ banco: "", numeroCuenta: "", tipo: "Receptor" });
       toast({ title: "Banco actualizado exitosamente" });
     },
     onError: () => {
@@ -73,13 +75,13 @@ export function BancosTab() {
 
   const openEditDialog = (banco: Banco) => {
     setEditingBanco(banco);
-    setFormData({ banco: banco.banco, numeroCuenta: banco.numeroCuenta });
+    setFormData({ banco: banco.banco, numeroCuenta: banco.numeroCuenta, tipo: banco.tipo as "Receptor" | "Emisor" });
     setIsDialogOpen(true);
   };
 
   const openCreateDialog = () => {
     setEditingBanco(null);
-    setFormData({ banco: "", numeroCuenta: "" });
+    setFormData({ banco: "", numeroCuenta: "", tipo: "Receptor" });
     setIsDialogOpen(true);
   };
 
@@ -128,6 +130,31 @@ export function BancosTab() {
                   data-testid="input-numero-cuenta"
                 />
               </div>
+              <div>
+                <Label htmlFor="tipo">Tipo de Banco</Label>
+                <Select
+                  value={formData.tipo}
+                  onValueChange={(value) => setFormData({ ...formData, tipo: value as "Receptor" | "Emisor" })}
+                >
+                  <SelectTrigger data-testid="select-tipo">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Receptor" data-testid="tipo-receptor">
+                      <div className="flex items-center gap-2">
+                        <ArrowDownToLine className="h-4 w-4 text-green-600" />
+                        <span>Receptor (Ingresos)</span>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="Emisor" data-testid="tipo-emisor">
+                      <div className="flex items-center gap-2">
+                        <ArrowUpFromLine className="h-4 w-4 text-blue-600" />
+                        <span>Emisor (Egresos)</span>
+                      </div>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
               <div className="flex justify-end space-x-2">
                 <Button
                   type="button"
@@ -155,19 +182,20 @@ export function BancosTab() {
             <TableRow>
               <TableHead>Banco</TableHead>
               <TableHead>Número de Cuenta</TableHead>
+              <TableHead>Tipo</TableHead>
               <TableHead className="w-24">Acciones</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={3} className="text-center py-8">
+                <TableCell colSpan={4} className="text-center py-8">
                   Cargando...
                 </TableCell>
               </TableRow>
             ) : (bancos as Banco[]).length === 0 ? (
               <TableRow>
-                <TableCell colSpan={3} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
                   No hay bancos registrados
                 </TableCell>
               </TableRow>
@@ -176,6 +204,19 @@ export function BancosTab() {
                 <TableRow key={banco.id} data-testid={`banco-row-${banco.id}`}>
                   <TableCell className="font-medium">{banco.banco}</TableCell>
                   <TableCell>{banco.numeroCuenta}</TableCell>
+                  <TableCell>
+                    {banco.tipo === "Receptor" ? (
+                      <Badge variant="outline" className="bg-green-50 text-green-700 border-green-300" data-testid={`tipo-badge-${banco.id}`}>
+                        <ArrowDownToLine className="h-3 w-3 mr-1" />
+                        Receptor
+                      </Badge>
+                    ) : (
+                      <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-300" data-testid={`tipo-badge-${banco.id}`}>
+                        <ArrowUpFromLine className="h-3 w-3 mr-1" />
+                        Emisor
+                      </Badge>
+                    )}
+                  </TableCell>
                   <TableCell>
                     <div className="flex space-x-2">
                       <Button

@@ -52,9 +52,12 @@ export default function FleteModal({ open, onOpenChange, sale }: FleteModalProps
   const queryClient = useQueryClient();
 
   // Load banks data
-  const { data: bancos = [] } = useQuery({
+  const { data: allBancos = [] } = useQuery<Array<{ id: string; banco: string; tipo: string }>>({
     queryKey: ["/api/admin/bancos"],
   });
+  
+  // Filter to show only Receptor banks (for incoming payments)
+  const bancos = allBancos.filter(banco => banco.tipo === "Receptor");
 
   // Update flete mutation
   const updateFleteMutation = useMutation({

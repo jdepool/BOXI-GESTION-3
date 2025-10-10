@@ -37,6 +37,7 @@ interface Sale {
 interface Banco {
   id: string;
   banco: string;
+  tipo: string;
 }
 
 interface PagoInicialModalProps {
@@ -58,9 +59,12 @@ export default function PagoInicialModal({ sale, open, onOpenChange }: PagoInici
   });
 
   // Fetch banks for the dropdown
-  const { data: banks = [] } = useQuery<Banco[]>({
+  const { data: allBanks = [] } = useQuery<Banco[]>({
     queryKey: ["/api/admin/bancos"],
   });
+  
+  // Filter to show only Receptor banks (for incoming payments)
+  const banks = allBanks.filter(bank => bank.tipo === "Receptor");
 
   // Initialize form data when sale changes
   useEffect(() => {

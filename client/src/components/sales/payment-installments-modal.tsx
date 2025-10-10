@@ -83,9 +83,12 @@ export default function PaymentInstallmentsModal({ sale, open, onOpenChange }: P
   });
 
   // Fetch banks for the dropdown
-  const { data: banks = [] } = useQuery<Banco[]>({
+  const { data: allBanks = [] } = useQuery<Banco[]>({
     queryKey: ["/api/admin/bancos"],
   });
+  
+  // Filter to show only Receptor banks (for incoming payments)
+  const banks = allBanks.filter(bank => bank.tipo === "Receptor");
 
   const installments = installmentsData?.installments || [];
   const summary = installmentsData?.summary || {
