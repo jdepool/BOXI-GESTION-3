@@ -20,7 +20,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { Save, User, CreditCard, MapPin, Package, CalendarIcon, Plus, Trash2 } from "lucide-react";
+import { Save, User, MapPin, Package, CalendarIcon, Plus, Trash2 } from "lucide-react";
 import { insertSaleSchema } from "@shared/schema";
 import ProductDialog, { ProductFormData } from "./product-dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -355,125 +355,6 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
                   <FormLabel>Total Orden USD *</FormLabel>
                   <FormControl>
                     <Input placeholder="0.00" {...field} data-testid="input-total-usd" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </CardContent>
-        </Card>
-
-        {/* Payment Information */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2">
-              <CreditCard className="h-4 w-4" />
-              Información de Pago
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <FormField
-              control={form.control}
-              name="fecha"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Fecha *</FormLabel>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <FormControl>
-                        <Button
-                          variant="outline"
-                          className={cn(
-                            "w-full justify-start text-left font-normal",
-                            !field.value && "text-muted-foreground"
-                          )}
-                          data-testid="input-fecha"
-                        >
-                          <CalendarIcon className="mr-2 h-4 w-4" />
-                          {field.value ? format(parseLocalDate(field.value) || new Date(), "dd/MM/yyyy") : "Seleccionar fecha"}
-                        </Button>
-                      </FormControl>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={parseLocalDate(field.value)}
-                        onSelect={(date) => {
-                          if (date) {
-                            field.onChange(format(date, "yyyy-MM-dd"));
-                          }
-                        }}
-                        initialFocus
-                      />
-                    </PopoverContent>
-                  </Popover>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="bancoId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Banco</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value || ""}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Seleccionar banco" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {banks.map((bank: any) => (
-                        <SelectItem key={bank.id} value={bank.id}>
-                          {bank.banco}
-                        </SelectItem>
-                      ))}
-                      <SelectItem value="otro">Otro($)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="referencia"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Referencia</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Número de referencia" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="montoBs"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Monto en Bs (Opcional)</FormLabel>
-                  <FormControl>
-                    <Input placeholder="0.00" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="montoUsd"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Monto en USD (Opcional)</FormLabel>
-                  <FormControl>
-                    <Input placeholder="0.00" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
