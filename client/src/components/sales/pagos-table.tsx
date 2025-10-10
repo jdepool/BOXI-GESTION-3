@@ -165,7 +165,8 @@ export default function PagosTable({
                             if (salesData.data && salesData.data.length > 0) {
                               setSelectedSale({
                                 ...salesData.data[0],
-                                orden: order.orden
+                                orden: order.orden,
+                                totalOrderUsd: order.totalOrderUsd // Use order's total, not product's total
                               });
                               setPagoInicialModalOpen(true);
                             }
