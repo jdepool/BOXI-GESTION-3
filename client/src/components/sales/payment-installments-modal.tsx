@@ -318,48 +318,6 @@ export default function PaymentInstallmentsModal({ sale, open, onOpenChange }: P
 
                     <FormField
                       control={form.control}
-                      name="cuotaAmount"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Monto USD</FormLabel>
-                          <FormControl>
-                            <Input
-                              placeholder="0.00"
-                              type="number"
-                              step="0.01"
-                              min="0"
-                              data-testid="input-installment-amount"
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="cuotaAmountBs"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Monto Bs</FormLabel>
-                          <FormControl>
-                            <Input
-                              placeholder="0.00"
-                              type="number"
-                              step="0.01"
-                              min="0"
-                              data-testid="input-installment-amount-bs"
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
                       name="pagoCuotaUsd"
                       render={({ field }) => (
                         <FormItem>
@@ -414,6 +372,48 @@ export default function PaymentInstallmentsModal({ sale, open, onOpenChange }: P
                             <Input
                               placeholder="Número de referencia"
                               data-testid="input-installment-referencia"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="cuotaAmountBs"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Monto Bs</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="0.00"
+                              type="number"
+                              step="0.01"
+                              min="0"
+                              data-testid="input-installment-amount-bs"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="cuotaAmount"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Monto USD</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="0.00"
+                              type="number"
+                              step="0.01"
+                              min="0"
+                              data-testid="input-installment-amount"
                               {...field}
                             />
                           </FormControl>
