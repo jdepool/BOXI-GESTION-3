@@ -278,7 +278,7 @@ export default function PaymentInstallmentsModal({ sale, open, onOpenChange }: P
                       name="fecha"
                       render={({ field }) => (
                         <FormItem className="flex flex-col">
-                          <FormLabel>Fecha de Pago</FormLabel>
+                          <FormLabel>Fecha Pago Cuota</FormLabel>
                           <Popover>
                             <PopoverTrigger asChild>
                               <FormControl>
@@ -342,7 +342,7 @@ export default function PaymentInstallmentsModal({ sale, open, onOpenChange }: P
                       name="bancoId"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Banco</FormLabel>
+                          <FormLabel>Banco Receptor</FormLabel>
                           <Select onValueChange={field.onChange} value={field.value}>
                             <FormControl>
                               <SelectTrigger data-testid="select-installment-banco">
