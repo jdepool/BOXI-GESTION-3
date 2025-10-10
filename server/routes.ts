@@ -201,9 +201,9 @@ function parseFile(buffer: Buffer, canal: string, filename: string) {
           bancoId: null,
           orden: row.Name ? String(row.Name) : null, // Name maps to Order
           factura: null,
-          referencia: null,
-          montoBs: null,
-          montoUsd: String(row['Lineitem price'] || '0'), // Use individual line item price
+          referenciaInicial: null,
+          montoInicialBs: null,
+          montoInicialUsd: null,
           estadoEntrega: 'En proceso', // Route Shopify orders to "Ventas por Completar"
           product: String(row['Lineitem name'] || ''),
           sku: row['Lineitem sku'] || row['Lineitem SKU'] || row['lineitem sku'] || row['SKU'] ? 
@@ -260,9 +260,9 @@ function parseFile(buffer: Buffer, canal: string, filename: string) {
           bancoId: null,
           orden: row.Orden ? String(row.Orden) : null,
           factura: row.Factura ? String(row.Factura) : null,
-          referencia: row.Referencia ? String(row.Referencia) : null,
-          montoBs: row['Monto en bs'] ? String(row['Monto en bs']) : null,
-          montoUsd: null,
+          referenciaInicial: row.Referencia ? String(row.Referencia) : null,
+          montoInicialBs: row['Monto en bs'] ? String(row['Monto en bs']) : null,
+          montoInicialUsd: null,
           estadoEntrega: canal.toLowerCase() === 'cashea' ? 
             'En proceso' : // All Cashea orders start with "En proceso"
             String(row['Estado de entrega'] || 'En proceso'),
@@ -1111,9 +1111,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Preserve other fields
         metodoPagoId: existingSales[0].metodoPagoId,
         bancoId: existingSales[0].bancoId,
-        referencia: existingSales[0].referencia,
-        montoBs: existingSales[0].montoBs,
-        montoUsd: existingSales[0].montoUsd,
+        referenciaInicial: existingSales[0].referenciaInicial,
+        montoInicialBs: existingSales[0].montoInicialBs,
+        montoInicialUsd: existingSales[0].montoInicialUsd,
         asesorId: existingSales[0].asesorId,
       }));
 
@@ -1206,9 +1206,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           bancoId: null,
           orden: row.Name ? String(row.Name) : null, // Name maps to Order
           factura: null,
-          referencia: null,
-          montoBs: null,
-          montoUsd: String(row['Lineitem price'] || '0'),
+          referenciaInicial: null,
+          montoInicialBs: null,
+          montoInicialUsd: null,
           estadoEntrega: 'Pendiente', // Route Shopify orders to "Ventas por Completar"
           product: String(row['Lineitem name'] || ''),
           sku: row['Lineitem sku'] || row['Lineitem SKU'] || row['lineitem sku'] || row['SKU'] ? 
@@ -1632,9 +1632,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         bancoId: null,
         orden: ordenes[i] ? String(ordenes[i]) : null,
         factura: null,
-        referencia: referencias[i] ? String(referencias[i]) : null,
-        montoBs: montosBs[i] ? String(montosBs[i]) : null,
-        montoUsd: null,
+        referenciaInicial: referencias[i] ? String(referencias[i]) : null,
+        montoInicialBs: montosBs[i] ? String(montosBs[i]) : null,
+        montoInicialUsd: null,
         direccionFacturacionPais: null,
         direccionFacturacionEstado: null,
         direccionFacturacionCiudad: null,
@@ -2974,9 +2974,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         cedula: body.cedula !== undefined ? body.cedula : existingSale.cedula,
         telefono: body.telefono !== undefined ? body.telefono : existingSale.telefono,
         email: body.email !== undefined ? body.email : existingSale.email,
-        referencia: body.referencia !== undefined ? body.referencia : existingSale.referencia,
-        montoBs: handleNumericField(body.montoBs, existingSale.montoBs),
-        montoUsd: handleNumericField(body.montoUsd, existingSale.montoUsd),
+        referenciaInicial: body.referenciaInicial !== undefined ? body.referenciaInicial : existingSale.referenciaInicial,
+        montoInicialBs: handleNumericField(body.montoInicialBs, existingSale.montoInicialBs),
+        montoInicialUsd: handleNumericField(body.montoInicialUsd, existingSale.montoInicialUsd),
         pagoInicialUsd: handleNumericField(body.pagoInicialUsd, existingSale.pagoInicialUsd),
         metodoPagoId: body.metodoPagoId !== undefined ? body.metodoPagoId : existingSale.metodoPagoId,
         bancoId: body.bancoId !== undefined ? body.bancoId : existingSale.bancoId,
@@ -3139,9 +3139,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         estadoPagoInicial: body.estadoPagoInicial || "pendiente",
         pagoInicialUsd: (body.pagoInicialUsd !== undefined && body.pagoInicialUsd !== null) ? String(body.pagoInicialUsd) : null,
         factura: null,
-        referencia: body.referencia || null,
-        montoBs: body.montoBs || null,
-        montoUsd: body.montoUsd || null,
+        referenciaInicial: body.referenciaInicial || null,
+        montoInicialBs: body.montoInicialBs || null,
+        montoInicialUsd: body.montoInicialUsd || null,
         metodoPagoId: body.metodoPagoId || null,
         bancoId: body.bancoId || null,
         
@@ -3184,7 +3184,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
             cantidad: parseInt(product.cantidad) || 1,
             // Override totalUsd with product-specific amount
             totalUsd: String(product.totalUsd),
-            montoUsd: String(product.totalUsd),
             // Product-specific medida especial
             medidaEspecial: product.hasMedidaEspecial && product.medidaEspecial && product.medidaEspecial.trim()
               ? product.medidaEspecial.trim()
