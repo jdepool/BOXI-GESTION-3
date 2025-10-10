@@ -57,7 +57,7 @@ export default function SaleDetailModal({ sale, onClose }: SaleDetailModalProps)
                 </Badge>
               </p>
               <p><span className="text-muted-foreground">Total USD:</span> <span className="text-foreground font-medium">${Number(sale.totalUsd).toLocaleString()}</span></p>
-              <p><span className="text-muted-foreground">Monto Bs:</span> <span className="text-foreground">{sale.montoBs ? `Bs ${Number(sale.montoBs).toLocaleString()}` : 'N/A'}</span></p>
+              <p><span className="text-muted-foreground">Monto Bs:</span> <span className="text-foreground">{sale.montoInicialBs ? `Bs ${Number(sale.montoInicialBs).toLocaleString()}` : 'N/A'}</span></p>
               <p><span className="text-muted-foreground">Fecha:</span> <span className="text-foreground">{new Date(sale.fecha).toLocaleDateString()}</span></p>
               <p><span className="text-muted-foreground">Sucursal:</span> <span className="text-foreground">{sale.sucursal || 'N/A'}</span></p>
               <p><span className="text-muted-foreground">Tienda:</span> <span className="text-foreground">{sale.tienda || 'N/A'}</span></p>
@@ -114,7 +114,7 @@ export default function SaleDetailModal({ sale, onClose }: SaleDetailModalProps)
               </div>
               <div>
                 <p className="text-muted-foreground">Referencia</p>
-                <p className="text-foreground font-mono">{sale.referencia || 'N/A'}</p>
+                <p className="text-foreground font-mono">{sale.referenciaInicial || 'N/A'}</p>
               </div>
             </div>
           </div>

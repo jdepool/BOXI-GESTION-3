@@ -562,8 +562,8 @@ export default function SalesTable({
                     <td className="p-2 min-w-[110px] text-xs text-muted-foreground">
                       {sale.pagoInicialUsd ? `$${Number(sale.pagoInicialUsd).toLocaleString()}` : 'N/A'}
                     </td>
-                    <td className="p-2 min-w-[120px] text-xs font-mono text-muted-foreground truncate" title={sale.referencia || undefined}>
-                      {sale.referencia || 'N/A'}
+                    <td className="p-2 min-w-[120px] text-xs font-mono text-muted-foreground truncate" title={sale.referenciaInicial || undefined}>
+                      {sale.referenciaInicial || 'N/A'}
                     </td>
                     <td className="p-2 min-w-[100px] text-xs text-muted-foreground truncate">
                       {(() => {
@@ -574,7 +574,7 @@ export default function SalesTable({
                       })()}
                     </td>
                     <td className="p-2 min-w-[110px] text-xs text-muted-foreground">
-                      {sale.montoBs ? `Bs ${Number(sale.montoBs).toLocaleString()}` : 'N/A'}
+                      {sale.montoInicialBs ? `Bs ${Number(sale.montoInicialBs).toLocaleString()}` : 'N/A'}
                     </td>
                     <td className="p-2 min-w-[100px] text-xs text-muted-foreground truncate">
                       {sale.cedula || 'N/A'}

@@ -249,9 +249,9 @@ export interface IStorage {
     fechaPagoInicial?: string | null;
     pagoInicialUsd?: number | null;
     bancoId?: string | null;
-    referencia?: string | null;
-    montoBs?: number | null;
-    montoUsd?: number | null;
+    referenciaInicial?: string | null;
+    montoInicialBs?: number | null;
+    montoInicialUsd?: number | null;
     estadoPagoInicial?: string;
   }): Promise<Sale[]>;
 }
@@ -802,9 +802,9 @@ export class DatabaseStorage implements IStorage {
     fechaPagoInicial?: string | null;
     pagoInicialUsd?: number | null;
     bancoId?: string | null;
-    referencia?: string | null;
-    montoBs?: number | null;
-    montoUsd?: number | null;
+    referenciaInicial?: string | null;
+    montoInicialBs?: number | null;
+    montoInicialUsd?: number | null;
     estadoPagoInicial?: string;
   }): Promise<Sale[]> {
     const updateData: any = {};
@@ -820,14 +820,14 @@ export class DatabaseStorage implements IStorage {
     if (pagoData.bancoId !== undefined) {
       updateData.bancoId = pagoData.bancoId === "" ? null : pagoData.bancoId;
     }
-    if (pagoData.referencia !== undefined) {
-      updateData.referencia = pagoData.referencia === "" ? null : pagoData.referencia;
+    if (pagoData.referenciaInicial !== undefined) {
+      updateData.referenciaInicial = pagoData.referenciaInicial === "" ? null : pagoData.referenciaInicial;
     }
-    if (pagoData.montoBs !== undefined) {
-      updateData.montoBs = pagoData.montoBs;
+    if (pagoData.montoInicialBs !== undefined) {
+      updateData.montoInicialBs = pagoData.montoInicialBs;
     }
-    if (pagoData.montoUsd !== undefined) {
-      updateData.montoUsd = pagoData.montoUsd;
+    if (pagoData.montoInicialUsd !== undefined) {
+      updateData.montoInicialUsd = pagoData.montoInicialUsd;
     }
     if (pagoData.estadoPagoInicial !== undefined) {
       updateData.estadoPagoInicial = pagoData.estadoPagoInicial;

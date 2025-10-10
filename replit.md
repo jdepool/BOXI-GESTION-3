@@ -4,6 +4,18 @@ BoxiSleep is a comprehensive sales management dashboard for a sleep products com
 
 # Recent Changes (October 2025)
 
+## Pago Inicial Field Renaming (October 10, 2025)
+- **Renamed**: Pago Inicial payment fields to uniquely identify them from other payment types
+- **Database Changes**:
+  - `referencia` → `referenciaInicial` (Pago Inicial/Total payment reference)
+  - `monto_bs` → `monto_inicial_bs` (Pago Inicial/Total amount in Bolivars)
+  - `monto_usd` → `monto_inicial_usd` (Pago Inicial/Total amount in USD)
+- **Purpose**: Clear separation of payment types for better data organization
+  - **Pago Inicial/Total**: Uses referenciaInicial, montoInicialBs, montoInicialUsd
+  - **Flete**: Uses referenciaFlete, montoFleteVes, montoFleteUsd (already separate)
+  - **Cuotas**: Uses referencia, cuotaAmount, cuotaAmountBs in payment_installments table (already separate)
+- **Schema Updates**: All frontend, backend, and database references updated to use new field names
+
 ## Bank Type Differentiation (October 10, 2025)
 - **Added**: Bank type classification system to separate receiving and issuing banks
 - **Database Field**: `tipo` field in bancos table with check constraint (values: "Receptor" or "Emisor")

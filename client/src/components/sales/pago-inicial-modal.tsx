@@ -28,9 +28,9 @@ interface Sale {
   pagoInicialUsd?: string | number | null;
   fechaPagoInicial?: Date | string | null;
   bancoId?: string | null;
-  referencia?: string | null;
-  montoBs?: string | number | null;
-  montoUsd?: string | number | null;
+  referenciaInicial?: string | null;
+  montoInicialBs?: string | number | null;
+  montoInicialUsd?: string | number | null;
   estadoPagoInicial?: string | null;
 }
 
@@ -53,9 +53,9 @@ export default function PagoInicialModal({ sale, open, onOpenChange }: PagoInici
     fechaPagoInicial: new Date() as Date | null,
     pagoInicialUsd: "",
     bancoId: "none",
-    referencia: "",
-    montoBs: "",
-    montoUsd: "",
+    referenciaInicial: "",
+    montoInicialBs: "",
+    montoInicialUsd: "",
   });
 
   // Fetch banks for the dropdown
@@ -73,9 +73,9 @@ export default function PagoInicialModal({ sale, open, onOpenChange }: PagoInici
         fechaPagoInicial: sale.fechaPagoInicial ? new Date(sale.fechaPagoInicial) : new Date(),
         pagoInicialUsd: sale.pagoInicialUsd?.toString() || "",
         bancoId: sale.bancoId || "none",
-        referencia: sale.referencia || "",
-        montoBs: sale.montoBs?.toString() || "",
-        montoUsd: sale.montoUsd?.toString() || "",
+        referenciaInicial: sale.referenciaInicial || "",
+        montoInicialBs: sale.montoInicialBs?.toString() || "",
+        montoInicialUsd: sale.montoInicialUsd?.toString() || "",
       });
     }
   }, [sale]);
@@ -88,9 +88,9 @@ export default function PagoInicialModal({ sale, open, onOpenChange }: PagoInici
         fechaPagoInicial: data.fechaPagoInicial?.toISOString() || null,
         pagoInicialUsd: data.pagoInicialUsd ? parseFloat(data.pagoInicialUsd) : null,
         bancoId: data.bancoId && data.bancoId !== "none" ? data.bancoId : null,
-        referencia: data.referencia || null,
-        montoBs: data.montoBs ? parseFloat(data.montoBs) : null,
-        montoUsd: data.montoUsd ? parseFloat(data.montoUsd) : null,
+        referenciaInicial: data.referenciaInicial || null,
+        montoInicialBs: data.montoInicialBs ? parseFloat(data.montoInicialBs) : null,
+        montoInicialUsd: data.montoInicialUsd ? parseFloat(data.montoInicialUsd) : null,
       };
 
       return apiRequest("PATCH", `/api/sales/${sale.orden}/pago-inicial`, payload);
@@ -246,40 +246,40 @@ export default function PagoInicialModal({ sale, open, onOpenChange }: PagoInici
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="referencia">Referencia</Label>
+                <Label htmlFor="referenciaInicial">Referencia</Label>
                 <Input
-                  id="referencia"
+                  id="referenciaInicial"
                   placeholder="Número de referencia"
-                  value={pagoData.referencia}
-                  onChange={handleInputChange("referencia")}
+                  value={pagoData.referenciaInicial}
+                  onChange={handleInputChange("referenciaInicial")}
                   data-testid="input-referencia-pago"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="montoBs">Monto en Bs (Opcional)</Label>
+                <Label htmlFor="montoInicialBs">Monto en Bs (Opcional)</Label>
                 <Input
-                  id="montoBs"
+                  id="montoInicialBs"
                   type="number"
                   step="0.01"
                   placeholder="0.00"
-                  value={pagoData.montoBs}
-                  onChange={handleInputChange("montoBs")}
+                  value={pagoData.montoInicialBs}
+                  onChange={handleInputChange("montoInicialBs")}
                   data-testid="input-monto-bs-pago"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="montoUsd">Monto en USD (Opcional)</Label>
+                <Label htmlFor="montoInicialUsd">Monto en USD (Opcional)</Label>
                 <div className="relative">
                   <DollarSign className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input
-                    id="montoUsd"
+                    id="montoInicialUsd"
                     type="number"
                     step="0.01"
                     placeholder="0.00"
-                    value={pagoData.montoUsd}
-                    onChange={handleInputChange("montoUsd")}
+                    value={pagoData.montoInicialUsd}
+                    onChange={handleInputChange("montoInicialUsd")}
                     className="pl-10"
                     data-testid="input-monto-usd-pago"
                   />
