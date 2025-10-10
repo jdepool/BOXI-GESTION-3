@@ -155,7 +155,7 @@ export default function FleteModal({ open, onOpenChange, sale }: FleteModalProps
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Truck className="h-5 w-5" />
-            Datos del Flete
+            Pago Flete
           </DialogTitle>
           <DialogDescription>
             Puedes guardar solo con el monto en US$ y completar los demás datos después. El ícono del camión se pondrá naranja una vez guardado.
@@ -194,12 +194,12 @@ export default function FleteModal({ open, onOpenChange, sale }: FleteModalProps
           <div className="space-y-4">
             <h3 className="text-lg font-semibold flex items-center gap-2">
               <Truck className="h-5 w-5" />
-              Información del Flete
+              Información de Pago
             </h3>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="montoFleteUsd">Monto en US$</Label>
+                <Label htmlFor="montoFleteUsd">Monto USD (si el pago es en USD)</Label>
                 <div className="relative">
                   <DollarSign className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input
@@ -216,7 +216,7 @@ export default function FleteModal({ open, onOpenChange, sale }: FleteModalProps
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="fechaFlete">Fecha</Label>
+                <Label htmlFor="fechaFlete">Fecha Pago Flete</Label>
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button
@@ -263,7 +263,7 @@ export default function FleteModal({ open, onOpenChange, sale }: FleteModalProps
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="montoFleteVes">Monto en VES</Label>
+                <Label htmlFor="montoFleteVes">Monto Bs (si el pago es en Bs)</Label>
                 <div className="relative">
                   <span className="absolute left-3 top-3 text-sm text-muted-foreground font-semibold">Bs</span>
                   <Input
