@@ -257,7 +257,7 @@ export default function PagoInicialModal({ sale, open, onOpenChange }: PagoInici
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="montoInicialBs">Monto en Bs (Opcional)</Label>
+                <Label htmlFor="montoInicialBs">Monto Bs (si el pago es en Bs)</Label>
                 <Input
                   id="montoInicialBs"
                   type="number"
@@ -270,7 +270,7 @@ export default function PagoInicialModal({ sale, open, onOpenChange }: PagoInici
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="montoInicialUsd">Monto en USD (Opcional)</Label>
+                <Label htmlFor="montoInicialUsd">Monto USD (si el pago es en USD)</Label>
                 <div className="relative">
                   <DollarSign className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input
