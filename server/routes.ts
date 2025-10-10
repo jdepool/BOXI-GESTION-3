@@ -774,8 +774,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
               'Fecha': new Date(sale.fecha).toLocaleDateString('es-ES'),
               'Total USD': sale.totalUsd,
               'Pago Inicial USD': sale.pagoInicialUsd,
-              'Referencia': sale.referencia,
-              'Monto Bs': sale.montoBs,
+              'Referencia': sale.referenciaInicial,
+              'Monto Bs': sale.montoInicialBs,
               'Asesor': sale.asesorId,
               
               // Billing Address
@@ -844,8 +844,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
               'Fecha': new Date(sale.fecha).toLocaleDateString('es-ES'),
               'Total USD': sale.totalUsd,
               'Pago Inicial USD': sale.pagoInicialUsd,
-              'Referencia': sale.referencia,
-              'Monto Bs': sale.montoBs,
+              'Referencia': sale.referenciaInicial,
+              'Monto Bs': sale.montoInicialBs,
               'Asesor': sale.asesorId,
               
               // Billing Address
@@ -917,8 +917,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         'Fecha': new Date(sale.fecha).toLocaleDateString('es-ES'),
         'Total USD': sale.totalUsd,
         'Pago Inicial USD': sale.pagoInicialUsd,
-        'Referencia': sale.referencia,
-        'Monto Bs': sale.montoBs,
+        'Referencia': sale.referenciaInicial,
+        'Monto Bs': sale.montoInicialBs,
         'Asesor': sale.asesorId,
         
         // Billing Address
@@ -3023,10 +3023,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (existingSale.estadoEntrega === "Pendiente" && existingSale.canal?.toLowerCase() === "manual") {
         // Check if any payment information is being provided
         const hasPaymentInfo = !!(
-          saleData.referencia || 
+          saleData.referenciaInicial || 
           saleData.bancoId || 
           saleData.metodoPagoId ||
-          (saleData.montoUsd && parseFloat(saleData.montoUsd) > 0) ||
+          (saleData.montoInicialUsd && parseFloat(saleData.montoInicialUsd) > 0) ||
           (saleData.pagoInicialUsd && parseFloat(saleData.pagoInicialUsd) > 0)
         );
         
