@@ -8,6 +8,22 @@ Preferred communication style: Simple, everyday language.
 
 # Recent Changes (October 2025)
 
+## Pagos Tab - Payment Metrics Display (October 11, 2025)
+- **Added**: Five metric columns displaying payment status at a glance in the Pagos table
+- **Metrics Displayed**:
+  - Total Orden USD: Total value of the order (blue card)
+  - Pago Inicial/Total: Amount paid as initial/total payment (green card)
+  - Total Cuotas: Sum of all installment payments (purple card)
+  - Total Pagado: Total amount paid (Pago Inicial + Total Cuotas) (teal card)
+  - Pendiente: Outstanding balance (Total Orden USD - Total Pagado) (orange card)
+- **Implementation**:
+  - Backend calculates metrics using SQL aggregation (MAX for pago inicial, SUM for installments)
+  - Server-side calculation of totalPagado and saldoPendiente for accuracy
+  - Frontend displays metrics as compact colored cards matching Cuotas modal design
+  - Color-coded backgrounds for easy visual scanning (blue, green, purple, teal, orange)
+  - Light/dark theme support with appropriate contrast
+- **Impact**: Users can now quickly assess payment status for each order without opening modals, improving workflow efficiency and providing instant visibility into outstanding balances
+
 ## Ventas por Completar - Verificado Button Removed (October 11, 2025)
 - **Removed**: "Verificado" button from the Ventas por completar table
 - **Reason**: Button functionality will be moved to a new dedicated tab in a future update
