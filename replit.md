@@ -46,6 +46,17 @@ Preferred communication style: Simple, everyday language.
 
 # Recent Changes (October 2025)
 
+## Pagos Tab - Free Shipping (Gratis) Logic in Orden + Flete (October 11, 2025)
+- **Updated**: Orden + Flete metric now correctly excludes shipping cost when marked as "Gratis"
+- **Behavior**:
+  - When fleteGratis checkbox is selected: Orden + Flete = Total Order USD + $0 (shipping treated as free)
+  - When fleteGratis is not selected: Orden + Flete = Total Order USD + Pago Flete USD (normal calculation)
+- **Implementation**:
+  - Added fleteGratis field to getOrdersForPayments query using BOOL_OR aggregation
+  - Updated ordenPlusFlete calculation: `(totalOrderUsd || 0) + (fleteGratis ? 0 : pagoFleteUsd)`
+  - Conditional logic ensures free shipping is never added to order totals
+- **Impact**: Accurate financial reporting - free shipping orders no longer inflate the total owed amount, providing clearer visibility into actual costs and payments.
+
 ## Pagos Tab - Payment Metrics Display (October 11, 2025)
 - **Added**: Three essential metric columns displaying payment status at a glance in the Pagos table
 - **Metrics Displayed**:
