@@ -8,6 +8,11 @@ Preferred communication style: Simple, everyday language.
 
 # Recent Changes (October 2025)
 
+## Ventas por Completar - Verificado Button Removed (October 11, 2025)
+- **Removed**: "Verificado" button from the Ventas por completar table
+- **Reason**: Button functionality will be moved to a new dedicated tab in a future update
+- **Impact**: The table now only shows Edit and Email action buttons, streamlining the interface until the verification feature is relocated
+
 ## Pago Inicial/Total Modal - Mandatory Field Validation (October 11, 2025)
 - **Added**: Mandatory field validation for Pago Inicial/Total modal
 - **Required Fields** (blocking save):
