@@ -96,6 +96,9 @@ export interface IStorage {
       estadoEntrega: string | null;
       totalOrderUsd: number | null;
       productCount: number;
+      hasPagoInicial: boolean;
+      hasFlete: boolean;
+      installmentCount: number;
     }>;
     total: number;
   }>;
@@ -464,6 +467,9 @@ export class DatabaseStorage implements IStorage {
       estadoEntrega: string | null;
       totalOrderUsd: number | null;
       productCount: number;
+      hasPagoInicial: boolean;
+      hasFlete: boolean;
+      installmentCount: number;
     }>;
     total: number;
   }> {
@@ -487,6 +493,8 @@ export class DatabaseStorage implements IStorage {
         estadoEntrega: sql<string | null>`MAX(${sales.estadoEntrega})`.as('estadoEntrega'),
         totalOrderUsd: sql<number | null>`MAX(${sales.totalOrderUsd})`.as('totalOrderUsd'),
         productCount: sql<number>`COUNT(*)`.as('productCount'),
+        hasPagoInicial: sql<boolean>`BOOL_OR(${sales.pagoInicialUsd} IS NOT NULL OR ${sales.fechaPagoInicial} IS NOT NULL)`.as('hasPagoInicial'),
+        hasFlete: sql<boolean>`BOOL_OR(${sales.montoFleteUsd} IS NOT NULL OR ${sales.pagoFleteUsd} IS NOT NULL)`.as('hasFlete'),
       })
       .from(sales)
       .where(estadoCondition)
@@ -503,6 +511,26 @@ export class DatabaseStorage implements IStorage {
       .from(sales)
       .where(estadoCondition);
 
+    // Get installment counts for each order (only if we have orders)
+    let installmentCountMap = new Map<string, number>();
+    
+    if (ordersData.length > 0) {
+      const installmentCounts = await db
+        .select({
+          orden: paymentInstallments.orden,
+          count: sql<number>`COUNT(*)`.as('count'),
+        })
+        .from(paymentInstallments)
+        .where(sql`${paymentInstallments.orden} IN (${sql.join(ordersData.map(o => sql`${o.orden}`), sql`, `)})`)
+        .groupBy(paymentInstallments.orden);
+
+      installmentCountMap = new Map(
+        installmentCounts
+          .filter(ic => ic.orden !== null)
+          .map(ic => [ic.orden!, Number(ic.count)])
+      );
+    }
+
     return {
       data: ordersData.map(order => ({
         orden: order.orden!, // Non-null assertion safe because we filter isNotNull(sales.orden)
@@ -513,6 +541,9 @@ export class DatabaseStorage implements IStorage {
         estadoEntrega: order.estadoEntrega,
         totalOrderUsd: order.totalOrderUsd,
         productCount: Number(order.productCount),
+        hasPagoInicial: order.hasPagoInicial,
+        hasFlete: order.hasFlete,
+        installmentCount: installmentCountMap.get(order.orden!) || 0,
       })),
       total: Number(totalCount),
     };

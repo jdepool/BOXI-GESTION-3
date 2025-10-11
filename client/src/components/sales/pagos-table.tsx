@@ -17,6 +17,9 @@ interface Order {
   estadoEntrega: string | null;
   totalOrderUsd: number | null;
   productCount: number;
+  hasPagoInicial: boolean;
+  hasFlete: boolean;
+  installmentCount: number;
 }
 
 interface PagosTableProps {
@@ -180,7 +183,7 @@ export default function PagosTable({
                         data-testid={`button-pago-inicial-${order.orden}`}
                       >
                         <Banknote className="h-3 w-3 mr-1" />
-                        Pago Inicial/Total
+                        {order.hasPagoInicial ? 'Editar' : 'Agregar'}
                       </Button>
                     </td>
                     <td className="p-2 min-w-[100px] text-center">
@@ -203,7 +206,7 @@ export default function PagosTable({
                         data-testid={`button-flete-${order.orden}`}
                       >
                         <Truck className="h-3 w-3 mr-1" />
-                        Flete
+                        {order.hasFlete ? 'Editar' : 'Agregar'}
                       </Button>
                     </td>
                     <td className="p-2 min-w-[100px] text-center">
@@ -226,7 +229,7 @@ export default function PagosTable({
                         data-testid={`button-cuotas-${order.orden}`}
                       >
                         <CreditCard className="h-3 w-3 mr-1" />
-                        Cuotas
+                        {order.installmentCount > 0 ? 'Editar' : 'Agregar'}
                       </Button>
                     </td>
                   </tr>
