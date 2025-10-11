@@ -20,6 +20,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { Check, X } from "lucide-react";
 import { format } from "date-fns";
@@ -159,164 +160,185 @@ export default function VerificacionPage() {
     <div className="container mx-auto p-6">
       <h1 className="text-3xl font-bold mb-6">Verificación de Pagos</h1>
 
-      {/* Filters */}
-      <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow mb-6">
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-          <div>
-            <label className="text-sm font-medium mb-1 block">Fecha Inicio</label>
-            <Input
-              type="date"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              data-testid="input-start-date"
-            />
-          </div>
-          <div>
-            <label className="text-sm font-medium mb-1 block">Fecha Fin</label>
-            <Input
-              type="date"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-              data-testid="input-end-date"
-            />
-          </div>
-          <div>
-            <label className="text-sm font-medium mb-1 block">Banco</label>
-            <Select value={selectedBanco} onValueChange={setSelectedBanco}>
-              <SelectTrigger data-testid="select-banco">
-                <SelectValue placeholder="Todos" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos</SelectItem>
-                {bancos.map((banco) => (
-                  <SelectItem key={banco.id} value={banco.id}>
-                    {banco.banco}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <label className="text-sm font-medium mb-1 block">Orden</label>
-            <Input
-              placeholder="Buscar orden..."
-              value={ordenFilter}
-              onChange={(e) => setOrdenFilter(e.target.value)}
-              data-testid="input-orden"
-            />
-          </div>
-          <div>
-            <label className="text-sm font-medium mb-1 block">Tipo de Pago</label>
-            <Select value={tipoPagoFilter} onValueChange={setTipoPagoFilter}>
-              <SelectTrigger data-testid="select-tipo-pago">
-                <SelectValue placeholder="Todos" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos</SelectItem>
-                <SelectItem value="Inicial/Total">Inicial/Total</SelectItem>
-                <SelectItem value="Flete">Flete</SelectItem>
-                <SelectItem value="Cuota">Cuota</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-      </div>
+      <Tabs defaultValue="ingresos" className="w-full">
+        <TabsList className="mb-6">
+          <TabsTrigger value="ingresos" data-testid="tab-ingresos">
+            Ingresos
+          </TabsTrigger>
+          <TabsTrigger value="egresos" data-testid="tab-egresos">
+            Egresos
+          </TabsTrigger>
+        </TabsList>
 
-      {/* Payments Table */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-x-auto">
-        <table className="w-full">
-          <thead className="bg-gray-50 dark:bg-gray-700">
-            <tr>
-              <th className="p-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                Orden
-              </th>
-              <th className="p-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                Pago
-              </th>
-              <th className="p-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                Monto Bs
-              </th>
-              <th className="p-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                Monto USD
-              </th>
-              <th className="p-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                Referencia
-              </th>
-              <th className="p-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                Banco
-              </th>
-              <th className="p-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                Estado
-              </th>
-              <th className="p-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                Notas
-              </th>
-              <th className="p-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                Acción
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {isLoading ? (
-              <tr>
-                <td colSpan={9} className="p-4 text-center text-muted-foreground">
-                  Cargando...
-                </td>
-              </tr>
-            ) : payments.length === 0 ? (
-              <tr>
-                <td colSpan={9} className="p-4 text-center text-muted-foreground">
-                  No hay pagos para verificar
-                </td>
-              </tr>
-            ) : (
-              payments.map((payment, index) => (
-                <tr
-                  key={`${payment.paymentId}-${payment.paymentType}-${index}`}
-                  className="border-b border-border hover:bg-muted/50"
-                >
-                  <td className="p-3 text-sm" data-testid={`text-orden-${index}`}>
-                    {payment.orden}
-                  </td>
-                  <td className="p-3 text-sm" data-testid={`text-tipo-pago-${index}`}>
-                    <Badge variant="outline">{payment.tipoPago}</Badge>
-                  </td>
-                  <td className="p-3 text-sm" data-testid={`text-monto-bs-${index}`}>
-                    {payment.montoBs ? `Bs ${payment.montoBs.toFixed(2)}` : "-"}
-                  </td>
-                  <td className="p-3 text-sm" data-testid={`text-monto-usd-${index}`}>
-                    {formatCurrency(payment.montoUsd)}
-                  </td>
-                  <td className="p-3 text-sm" data-testid={`text-referencia-${index}`}>
-                    {payment.referencia || "-"}
-                  </td>
-                  <td className="p-3 text-sm" data-testid={`text-banco-${index}`}>
-                    {getBancoName(payment.bancoId)}
-                  </td>
-                  <td className="p-3 text-sm" data-testid={`badge-estado-${index}`}>
-                    <Badge variant={getStatusBadgeVariant(payment.estadoVerificacion)}>
-                      {payment.estadoVerificacion}
-                    </Badge>
-                  </td>
-                  <td className="p-3 text-sm max-w-[200px] truncate" data-testid={`text-notas-${index}`}>
-                    {payment.notasVerificacion || "-"}
-                  </td>
-                  <td className="p-3">
-                    <Button
-                      size="sm"
-                      onClick={() => handleVerify(payment)}
-                      data-testid={`button-verificar-${index}`}
-                    >
-                      <Check className="h-4 w-4 mr-1" />
-                      Verificar
-                    </Button>
-                  </td>
+        <TabsContent value="ingresos">
+          {/* Filters */}
+          <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow mb-6">
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+              <div>
+                <label className="text-sm font-medium mb-1 block">Fecha Inicio</label>
+                <Input
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  data-testid="input-start-date"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium mb-1 block">Fecha Fin</label>
+                <Input
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  data-testid="input-end-date"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium mb-1 block">Banco</label>
+                <Select value={selectedBanco} onValueChange={setSelectedBanco}>
+                  <SelectTrigger data-testid="select-banco">
+                    <SelectValue placeholder="Todos" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos</SelectItem>
+                    {bancos.map((banco) => (
+                      <SelectItem key={banco.id} value={banco.id}>
+                        {banco.banco}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <label className="text-sm font-medium mb-1 block">Orden</label>
+                <Input
+                  placeholder="Buscar orden..."
+                  value={ordenFilter}
+                  onChange={(e) => setOrdenFilter(e.target.value)}
+                  data-testid="input-orden"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium mb-1 block">Tipo de Pago</label>
+                <Select value={tipoPagoFilter} onValueChange={setTipoPagoFilter}>
+                  <SelectTrigger data-testid="select-tipo-pago">
+                    <SelectValue placeholder="Todos" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos</SelectItem>
+                    <SelectItem value="Inicial/Total">Inicial/Total</SelectItem>
+                    <SelectItem value="Flete">Flete</SelectItem>
+                    <SelectItem value="Cuota">Cuota</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          </div>
+
+          {/* Payments Table */}
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50 dark:bg-gray-700">
+                <tr>
+                  <th className="p-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    Orden
+                  </th>
+                  <th className="p-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    Pago
+                  </th>
+                  <th className="p-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    Monto Bs
+                  </th>
+                  <th className="p-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    Monto USD
+                  </th>
+                  <th className="p-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    Referencia
+                  </th>
+                  <th className="p-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    Banco
+                  </th>
+                  <th className="p-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    Estado
+                  </th>
+                  <th className="p-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    Notas
+                  </th>
+                  <th className="p-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    Acción
+                  </th>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+              </thead>
+              <tbody>
+                {isLoading ? (
+                  <tr>
+                    <td colSpan={9} className="p-4 text-center text-muted-foreground">
+                      Cargando...
+                    </td>
+                  </tr>
+                ) : payments.length === 0 ? (
+                  <tr>
+                    <td colSpan={9} className="p-4 text-center text-muted-foreground">
+                      No hay pagos para verificar
+                    </td>
+                  </tr>
+                ) : (
+                  payments.map((payment, index) => (
+                    <tr
+                      key={`${payment.paymentId}-${payment.paymentType}-${index}`}
+                      className="border-b border-border hover:bg-muted/50"
+                    >
+                      <td className="p-3 text-sm" data-testid={`text-orden-${index}`}>
+                        {payment.orden}
+                      </td>
+                      <td className="p-3 text-sm" data-testid={`text-tipo-pago-${index}`}>
+                        <Badge variant="outline">{payment.tipoPago}</Badge>
+                      </td>
+                      <td className="p-3 text-sm" data-testid={`text-monto-bs-${index}`}>
+                        {payment.montoBs ? `Bs ${payment.montoBs.toFixed(2)}` : "-"}
+                      </td>
+                      <td className="p-3 text-sm" data-testid={`text-monto-usd-${index}`}>
+                        {formatCurrency(payment.montoUsd)}
+                      </td>
+                      <td className="p-3 text-sm" data-testid={`text-referencia-${index}`}>
+                        {payment.referencia || "-"}
+                      </td>
+                      <td className="p-3 text-sm" data-testid={`text-banco-${index}`}>
+                        {getBancoName(payment.bancoId)}
+                      </td>
+                      <td className="p-3 text-sm" data-testid={`badge-estado-${index}`}>
+                        <Badge variant={getStatusBadgeVariant(payment.estadoVerificacion)}>
+                          {payment.estadoVerificacion}
+                        </Badge>
+                      </td>
+                      <td className="p-3 text-sm max-w-[200px] truncate" data-testid={`text-notas-${index}`}>
+                        {payment.notasVerificacion || "-"}
+                      </td>
+                      <td className="p-3">
+                        <Button
+                          size="sm"
+                          onClick={() => handleVerify(payment)}
+                          data-testid={`button-verificar-${index}`}
+                        >
+                          <Check className="h-4 w-4 mr-1" />
+                          Verificar
+                        </Button>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="egresos">
+          <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow text-center">
+            <p className="text-muted-foreground text-lg">
+              La verificación de egresos estará disponible próximamente
+            </p>
+          </div>
+        </TabsContent>
+      </Tabs>
 
       {/* Verification Dialog */}
       <Dialog open={isVerifyDialogOpen} onOpenChange={setIsVerifyDialogOpen}>
