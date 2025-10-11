@@ -57,6 +57,9 @@ export default function Sales() {
       estadoEntrega: string | null;
       totalOrderUsd: number | null;
       productCount: number;
+      hasPagoInicial: boolean;
+      hasFlete: boolean;
+      installmentCount: number;
     }>;
     total: number;
   }>({
