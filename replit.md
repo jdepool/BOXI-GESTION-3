@@ -6,6 +6,28 @@ BoxiSleep is a comprehensive sales management dashboard for a sleep products com
 
 Preferred communication style: Simple, everyday language.
 
+# Recent Changes (October 2025)
+
+## Pagos Tab - Fixed Wrong Order Data in Modals (October 11, 2025)
+- **Fixed**: Clicking on an order row in the Pagos Tab now shows the correct order data in all modals (Pago Inicial/Total, Flete, Cuotas)
+- **Issue**: Order #2386 was showing data from #2387 and other orders showed incorrect data
+- **Root Cause**: The `#` symbol in order numbers was not being URL-encoded, causing the API to misinterpret the query parameter
+- **Solution**: 
+  - Added `encodeURIComponent()` to properly encode order numbers before API calls
+  - Ensured all three modals (Pago Inicial, Flete, Cuotas) receive the correct `orden` value from the order object
+- **Impact**: Users can now reliably access the correct order information from any modal in the Pagos Tab
+
+## Notes Character Limit Increased (October 11, 2025)
+- **Changed**: Increased the character limit for notes from 150 to 200 characters
+- **Implementation**:
+  - Updated `maxLength` attribute on notes input field from 150 to 200
+  - Updated `handleNotesChange` validation to allow 200 characters
+- **UI Behavior**:
+  - Column width remains narrow (min-w-[150px]) to save table space
+  - Long notes display truncated with ellipsis (...) in the table
+  - Hovering over truncated notes shows the full text (up to 200 characters) in a tooltip
+- **Impact**: Users can now write more detailed notes (50 characters more than before) while maintaining the compact table layout
+
 # System Architecture
 
 ## Frontend
