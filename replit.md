@@ -26,7 +26,7 @@ The application utilizes shadcn/ui for consistent design patterns and accessibil
 ## Feature Specifications
 - **Sales Data Upload**: Supports Excel files from Cashea, Shopify, and Treble.
 - **Interactive Dashboards**: Visualizes sales metrics and financial payment tracking.
-- **Sales Management**: Includes filtering, searching, and export capabilities for sales records.
+- **Sales Management**: Includes filtering, searching, and export capabilities for sales records. Notes field supports up to 200 characters with hover tooltip to view full text in truncated table display.
 - **Delivery Status Tracking**: Monitors the status of product deliveries with nine distinct states (`Pendiente`, `Perdida`, `En proceso`, `A despachar`, `En tránsito`, `Entregado`, `A devolver`, `Devuelto`, `Cancelada`).
 - **Channel-Specific Metrics**: Provides insights tailored to different sales channels.
 - **Multi-Product Order Handling**: Supports orders with multiple products, tracking both order-level and individual product totals.
