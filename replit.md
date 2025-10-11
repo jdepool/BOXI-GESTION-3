@@ -36,6 +36,7 @@ The application utilizes shadcn/ui for consistent design patterns and accessibil
 - **Bank Type Classification**: Differentiates between "Receptor" (receiving) and "Emisor" (issuing) banks, with payment forms filtering to show only "Receptor" banks.
 - **Payment Date Tracking**: `fechaPagoInicial` field tracks the actual date Pago Inicial/Total was received, separate from the order creation date.
 - **Chrome Autocomplete Suppression**: Implements unique autocomplete values to prevent unwanted autofill suggestions.
+- **Cashea Auto-Bank Assignment**: All Cashea channel sales automatically have Banco Receptor set to "Cashea (BNC compartido Bs)" during both file upload and API download, matching the referencia and payment amounts that come from Cashea.
 
 # External Dependencies
 
