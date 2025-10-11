@@ -1,136 +1,10 @@
 # Overview
 
-BoxiSleep is a comprehensive sales management dashboard for a sleep products company. It enables users to upload sales data from various channels (Cashea, Shopify, Treble), visualize key metrics through interactive dashboards, and manage sales records with filtering and export functionalities. The application provides real-time analytics on sales performance, delivery status, and channel-specific metrics to support informed business decisions, supporting informed business decisions with financial payment tracking.
+BoxiSleep is a comprehensive sales management dashboard for a sleep products company. It enables users to upload sales data from various channels (Cashea, Shopify, Treble), visualize key metrics through interactive dashboards, and manage sales records with filtering and export functionalities. The application provides real-time analytics on sales performance, delivery status, and channel-specific metrics to support informed business decisions, with financial payment tracking.
 
 # User Preferences
 
 Preferred communication style: Simple, everyday language.
-
-# Recent Changes (October 2025)
-
-## Payment Verification Section - Verificación with Tabs (October 11, 2025)
-- **Added**: New "Verificación" section in the main menu for comprehensive payment verification
-- **Tab Structure**:
-  - **Ingresos Tab**: Displays payment verification for sales/income (Pago Inicial/Total, Flete, Cuotas)
-  - **Egresos Tab**: Placeholder for future expense verification functionality
-- **Functionality** (Ingresos Tab):
-  - Displays all payments from Pagos tab as individual rows (Pago Inicial/Total, Flete, and Cuotas)
-  - Each payment type has its own verification status: "Por verificar" (default), "Verificado", or "Rechazado"
-  - Verification is tied to the agreed payment amount (pagoInicialUsd, pagoFleteUsd, pagoCuotaUsd)
-- **Table Columns**:
-  - Orden: Order number
-  - Pago: Payment type indicator (Inicial/Total, Flete, Cuota #)
-  - Monto Bs: Payment amount in Bolívares (when available)
-  - Monto USD: Payment amount in USD (when available)
-  - Referencia: Payment reference
-  - Banco: Receiving bank (Banco Receptor)
-  - Estado: Verification status badge (color-coded: gray for "Por verificar", green for "Verificado", red for "Rechazado")
-  - Notas: Verification notes (truncated in table with full text tooltip)
-  - Acción: "Verificar" button to update verification status
-- **Filters Available**:
-  - Date range (start and end date)
-  - Banco (bank selector)
-  - Order number (text search)
-  - Payment type (Inicial/Total, Flete, Cuota)
-- **Verification Modal**:
-  - Shows order number and payment type
-  - Optional notes field for verification details
-  - Three action buttons: Cancel, Rechazar (reject), and Verificado (verify)
-- **Implementation**:
-  - Backend flattens payments from sales and payment_installments tables
-  - Database fields: estadoVerificacionInicial, notasVerificacionInicial (for Pago Inicial), estadoVerificacionFlete, notasVerificacionFlete (for Flete), estadoVerificacion, notasVerificacion (for Cuotas)
-  - API endpoints: GET /api/sales/verification-payments (with filters), PATCH /api/sales/verification (update status)
-  - Only shows payments from orders with estadoEntrega 'Pendiente' or 'En proceso'
-  - Uses shadcn/ui Tabs component for clean separation of Ingresos and Egresos
-- **Impact**: Provides centralized payment verification workflow with organized tab structure, enabling systematic review of all payment types with notes and status tracking for improved financial control and audit trail. Prepared for future expense verification in Egresos tab.
-
-# Recent Changes (October 2025)
-
-## Pagos Tab - Free Shipping (Gratis) Logic in Orden + Flete (October 11, 2025)
-- **Updated**: Orden + Flete metric now correctly excludes shipping cost when marked as "Gratis"
-- **Behavior**:
-  - When fleteGratis checkbox is selected: Orden + Flete = Total Order USD + $0 (shipping treated as free)
-  - When fleteGratis is not selected: Orden + Flete = Total Order USD + Pago Flete USD (normal calculation)
-- **Implementation**:
-  - Added fleteGratis field to getOrdersForPayments query using BOOL_OR aggregation
-  - Updated ordenPlusFlete calculation: `(totalOrderUsd || 0) + (fleteGratis ? 0 : pagoFleteUsd)`
-  - Conditional logic ensures free shipping is never added to order totals
-- **Impact**: Accurate financial reporting - free shipping orders no longer inflate the total owed amount, providing clearer visibility into actual costs and payments.
-
-## Pagos Tab - Payment Metrics Display (October 11, 2025)
-- **Added**: Three essential metric columns displaying payment status at a glance in the Pagos table
-- **Metrics Displayed**:
-  - Orden + Flete: Total order value plus shipping cost (Total Orden USD + Pago Flete USD) (blue card)
-  - Total Pagado: Total amount paid (Pago Inicial + Total Cuotas) (teal card)
-  - Pendiente: Outstanding balance (Total Orden USD - Total Pagado) (orange card)
-- **Implementation**:
-  - Backend calculates metrics using SQL aggregation (MAX for pago inicial/flete, SUM for installments)
-  - Server-side calculation of ordenPlusFlete, totalPagado and saldoPendiente for accuracy
-  - Frontend displays metrics as compact colored cards matching Cuotas modal design
-  - Color-coded backgrounds for easy visual scanning (blue, teal, orange)
-  - Light/dark theme support with appropriate contrast
-- **Impact**: Users can now quickly assess payment status for each order without opening modals, improving workflow efficiency and providing instant visibility into outstanding balances. The simplified metrics focus on what matters most: total owed, total paid, and what's pending.
-
-## Ventas por Completar - Verificado Button Removed (October 11, 2025)
-- **Removed**: "Verificado" button from the Ventas por completar table
-- **Reason**: Button functionality will be moved to a new dedicated tab in a future update
-- **Impact**: The table now only shows Edit and Email action buttons, streamlining the interface until the verification feature is relocated
-
-## Pago Inicial/Total Modal - Mandatory Field Validation (October 11, 2025)
-- **Added**: Mandatory field validation for Pago Inicial/Total modal
-- **Required Fields** (blocking save):
-  - Pago Inicial/Total USD: Must be filled and greater than 0
-  - Banco Receptor: Must select a valid bank (cannot be "Sin banco")
-  - Referencia: Must be filled (cannot be empty or whitespace)
-- **Warning Validation** (non-blocking):
-  - Shows warning "No has incluído el Monto pagado" when both Monto Bs and Monto USD are empty
-  - Allows save to proceed but reminds user to add payment amount in Bs or USD
-- **Implementation**:
-  - Mandatory validation runs first, blocking save if fields are missing
-  - Warning validation runs after, showing toast but allowing save to continue
-  - Visual feedback: Red borders, red labels with asterisks (*), and error messages below invalid fields
-  - Error toast for mandatory fields (destructive variant) vs warning toast for monto fields (default variant)
-  - Error state resets when modal opens (separate useEffect with [open] dependency)
-  - Form data resets when sale changes (useEffect with [sale] dependency)
-- **Impact**: Ensures data quality by preventing incomplete payment records from being saved while providing helpful reminders for optional fields
-
-## Pagos Tab - Dynamic "Agregar" / "Editar" Button Text (October 11, 2025)
-- **Changed**: Action buttons in Pagos Tab now show "Agregar" (when empty) or "Editar" (when data exists)
-- **Implementation**:
-  - Backend now returns payment status flags for each order: `hasPagoInicial`, `hasFlete`, and `installmentCount`
-  - Pago Inicial/Total: Shows "Editar" if `pagoInicialUsd` OR `fechaPagoInicial` exists
-  - Flete: Shows "Editar" if `montoFleteUsd` OR `pagoFleteUsd` exists
-  - Cuotas: Shows "Editar" if `installmentCount > 0`
-  - Uses BOOL_OR aggregation for payment status across all products in an order
-- **Impact**: Creates a uniform user experience matching the "Direcciones" column pattern in other tables, making it clear when data needs to be added vs edited
-
-## Pagos Tab - Separate Action Columns (October 11, 2025)
-- **Changed**: Replaced the single "Acciones" column with three separate columns: "Pago Inicial/Total", "Flete", and "Cuotas"
-- **Implementation**:
-  - Each action button now has its own dedicated column with centered alignment
-  - Column widths: Pago Inicial/Total (150px), Flete (100px), Cuotas (100px)
-  - Updated table colspan from 8 to 10 to accommodate the new structure
-- **Impact**: Provides a cleaner, more organized layout that matches the look and feel of other tables in the application
-
-## Pagos Tab - Fixed Wrong Order Data in Modals (October 11, 2025)
-- **Fixed**: Clicking on an order row in the Pagos Tab now shows the correct order data in all modals (Pago Inicial/Total, Flete, Cuotas)
-- **Issue**: Order #2386 was showing data from #2387 and other orders showed incorrect data
-- **Root Cause**: The `#` symbol in order numbers was not being URL-encoded, causing the API to misinterpret the query parameter
-- **Solution**: 
-  - Added `encodeURIComponent()` to properly encode order numbers before API calls
-  - Ensured all three modals (Pago Inicial, Flete, Cuotas) receive the correct `orden` value from the order object
-- **Impact**: Users can now reliably access the correct order information from any modal in the Pagos Tab
-
-## Notes Character Limit Increased (October 11, 2025)
-- **Changed**: Increased the character limit for notes from 150 to 200 characters
-- **Implementation**:
-  - Updated `maxLength` attribute on notes input field from 150 to 200
-  - Updated `handleNotesChange` validation to allow 200 characters
-- **UI Behavior**:
-  - Column width remains narrow (min-w-[150px]) to save table space
-  - Long notes display truncated with ellipsis (...) in the table
-  - Hovering over truncated notes shows the full text (up to 200 characters) in a tooltip
-- **Impact**: Users can now write more detailed notes (50 characters more than before) while maintaining the compact table layout
 
 # System Architecture
 
@@ -147,17 +21,18 @@ PostgreSQL is the primary database, accessed via Drizzle ORM for type-safe opera
 The system uses basic username/password authentication. User sessions are managed through PostgreSQL session storage using `connect-pg-simple` for secure server-side session management.
 
 ## UI/UX Design
-The application utilizes shadcn/ui for consistent design patterns and accessibility, built upon Radix UI primitives. Tailwind CSS is used for rapid and responsive styling. Lucide React provides a consistent icon set. The design includes a redesigned dashboard with five financial payment tracking metrics: Total USD, Pago Inicial/Total, Total Cuotas, Total Pagado, and Pendiente.
+The application utilizes shadcn/ui for consistent design patterns and accessibility, built upon Radix UI primitives. Tailwind CSS is used for rapid and responsive styling. Lucide React provides a consistent icon set. The design includes a redesigned dashboard with five financial payment tracking metrics: Total USD, Pago Inicial/Total, Total Cuotas, Total Pagado, and Pendiente. It also features a new "Verificación" section with tabs for "Ingresos" (income) and "Egresos" (expenses), displaying payment verification statuses and allowing updates via a modal. Payment metrics in the "Pagos" tab now only reflect verified payments.
 
 ## Feature Specifications
 - **Sales Data Upload**: Supports Excel files from Cashea, Shopify, and Treble.
 - **Interactive Dashboards**: Visualizes sales metrics and financial payment tracking.
 - **Sales Management**: Includes filtering, searching, and export capabilities for sales records. Notes field supports up to 200 characters with hover tooltip to view full text in truncated table display.
-- **Delivery Status Tracking**: Monitors the status of product deliveries with nine distinct states (`Pendiente`, `Perdida`, `En proceso`, `A despachar`, `En tránsito`, `Entregado`, `A devolver`, `Devuelto`, `Cancelada`).
+- **Delivery Status Tracking**: Monitors the status of product deliveries with nine distinct states.
 - **Channel-Specific Metrics**: Provides insights tailored to different sales channels.
 - **Multi-Product Order Handling**: Supports orders with multiple products, tracking both order-level and individual product totals.
 - **Manual Sales & Reservations**: Allows for manual creation with integrated payment tracking and status updates. Includes a mandatory "Fecha de Entrega" field and consistent field ordering across forms.
-- **Payment Management**: Features a Pago Inicial/Total modal with accurate total order USD display, installment tracking with `pagoCuotaUsd` field, and a Flete modal that displays SKU lists. Payment fields are clearly separated and renamed for better organization (e.g., `referenciaInicial`, `montoInicialBs`).
+- **Payment Management**: Features a Pago Inicial/Total modal with accurate total order USD display, installment tracking, and a Flete modal that displays SKU lists. Payment fields are clearly separated and renamed for better organization. Mandatory field validation is implemented for key payment fields (Pago Inicial/Total USD, Banco Receptor, Referencia), with additional warning validation for payment amounts in Monto Bs/USD. Action buttons for payment types are dynamically labeled "Agregar" or "Editar" based on existing data, and individual payment action columns replace a single "Acciones" column for better organization. Free shipping logic (Gratis) is correctly applied to "Orden + Flete" calculations.
+- **Payment Verification**: A dedicated "Verificación" section with "Ingresos" and "Egresos" tabs allows for tracking and updating the verification status of initial payments, freight, and installments. This includes status badges, notes, and a verification modal.
 - **Bank Type Classification**: Differentiates between "Receptor" (receiving) and "Emisor" (issuing) banks, with payment forms filtering to show only "Receptor" banks.
 - **Payment Date Tracking**: `fechaPagoInicial` field tracks the actual date Pago Inicial/Total was received, separate from the order creation date.
 - **Chrome Autocomplete Suppression**: Implements unique autocomplete values to prevent unwanted autofill suggestions.
@@ -168,7 +43,7 @@ The application utilizes shadcn/ui for consistent design patterns and accessibil
 - **Neon Database**: Serverless PostgreSQL hosting.
 - **Drizzle ORM**: Type-safe database client for schema management and querying.
 
-<h2>File Processing</h2>
+## File Processing
 - **SheetJS (XLSX)**: Excel file parsing library.
 - **Multer**: Express middleware for handling file uploads.
 - **CSV Parse**: Library for parsing CSV files from various sales channels.
