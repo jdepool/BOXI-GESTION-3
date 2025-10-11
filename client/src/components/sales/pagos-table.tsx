@@ -21,6 +21,8 @@ interface Order {
   hasFlete: boolean;
   installmentCount: number;
   pagoInicialUsd: number | null;
+  pagoFleteUsd: number | null;
+  ordenPlusFlete: number;
   totalCuotas: number;
   totalPagado: number;
   saldoPendiente: number;
@@ -98,7 +100,7 @@ export default function PagosTable({
                   Cuotas
                 </th>
                 <th className="p-3 text-center font-semibold text-foreground min-w-[140px] bg-blue-50 dark:bg-blue-950">
-                  Total Orden USD
+                  Orden + Flete
                 </th>
                 <th className="p-3 text-center font-semibold text-foreground min-w-[140px] bg-green-50 dark:bg-green-950">
                   Pago Inicial/Total
@@ -253,8 +255,8 @@ export default function PagosTable({
                     </td>
                     <td className="p-2 min-w-[140px] bg-blue-50 dark:bg-blue-950">
                       <div className="flex justify-center">
-                        <div className="bg-blue-100 dark:bg-blue-900 text-blue-900 dark:text-blue-100 px-3 py-1 rounded-md text-xs font-semibold" data-testid={`metric-total-order-${order.orden}`}>
-                          {formatCurrency(order.totalOrderUsd)}
+                        <div className="bg-blue-100 dark:bg-blue-900 text-blue-900 dark:text-blue-100 px-3 py-1 rounded-md text-xs font-semibold" data-testid={`metric-orden-flete-${order.orden}`}>
+                          {formatCurrency(order.ordenPlusFlete)}
                         </div>
                       </div>
                     </td>
