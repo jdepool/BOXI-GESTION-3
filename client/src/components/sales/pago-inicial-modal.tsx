@@ -110,7 +110,7 @@ export default function PagoInicialModal({ sale, open, onOpenChange }: PagoInici
         montoInicialUsd: data.montoInicialUsd ? parseFloat(data.montoInicialUsd) : null,
       };
 
-      return apiRequest("PATCH", `/api/sales/${sale.orden}/pago-inicial`, payload);
+      return apiRequest("PATCH", `/api/sales/${encodeURIComponent(sale.orden)}/pago-inicial`, payload);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ predicate: (query) => {
