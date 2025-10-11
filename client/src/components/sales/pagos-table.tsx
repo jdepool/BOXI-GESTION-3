@@ -81,21 +81,27 @@ export default function PagosTable({
                 <th className="p-3 text-left font-semibold text-foreground min-w-[140px]">
                   Total Orden USD
                 </th>
-                <th className="p-3 text-left font-semibold text-foreground min-w-[300px]">
-                  Acciones
+                <th className="p-3 text-center font-semibold text-foreground min-w-[150px]">
+                  Pago Inicial/Total
+                </th>
+                <th className="p-3 text-center font-semibold text-foreground min-w-[100px]">
+                  Flete
+                </th>
+                <th className="p-3 text-center font-semibold text-foreground min-w-[100px]">
+                  Cuotas
                 </th>
               </tr>
             </thead>
             <tbody>
               {isLoading ? (
                 <tr>
-                  <td colSpan={8} className="p-4 text-center text-muted-foreground">
+                  <td colSpan={10} className="p-4 text-center text-muted-foreground">
                     Cargando...
                   </td>
                 </tr>
               ) : data.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="p-4 text-center text-muted-foreground">
+                  <td colSpan={10} className="p-4 text-center text-muted-foreground">
                     No hay órdenes pendientes o en proceso
                   </td>
                 </tr>
@@ -153,73 +159,75 @@ export default function PagosTable({
                         </span>
                       )}
                     </td>
-                    <td className="p-2 min-w-[300px]">
-                      <div className="flex gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={async () => {
-                            // Fetch first sale from this order to get details
-                            const response = await fetch(`/api/sales?orden=${encodeURIComponent(order.orden)}&limit=1`);
-                            const salesData = await response.json();
-                            if (salesData.data && salesData.data.length > 0) {
-                              setSelectedSale({
-                                ...salesData.data[0],
-                                orden: order.orden,
-                                totalOrderUsd: order.totalOrderUsd // Use order's total, not product's total
-                              });
-                              setPagoInicialModalOpen(true);
-                            }
-                          }}
-                          className="h-7 text-xs"
-                          data-testid={`button-pago-inicial-${order.orden}`}
-                        >
-                          <Banknote className="h-3 w-3 mr-1" />
-                          Pago Inicial/Total
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={async () => {
-                            // Fetch first sale from this order
-                            const response = await fetch(`/api/sales?orden=${encodeURIComponent(order.orden)}&limit=1`);
-                            const salesData = await response.json();
-                            if (salesData.data && salesData.data.length > 0) {
-                              setSelectedSale({
-                                ...salesData.data[0],
-                                orden: order.orden
-                              });
-                              setFleteModalOpen(true);
-                            }
-                          }}
-                          className="h-7 text-xs"
-                          data-testid={`button-flete-${order.orden}`}
-                        >
-                          <Truck className="h-3 w-3 mr-1" />
-                          Flete
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={async () => {
-                            // Fetch first sale from this order
-                            const response = await fetch(`/api/sales?orden=${encodeURIComponent(order.orden)}&limit=1`);
-                            const salesData = await response.json();
-                            if (salesData.data && salesData.data.length > 0) {
-                              setSelectedSale({
-                                ...salesData.data[0],
-                                orden: order.orden
-                              });
-                              setCuotasModalOpen(true);
-                            }
-                          }}
-                          className="h-7 text-xs"
-                          data-testid={`button-cuotas-${order.orden}`}
-                        >
-                          <CreditCard className="h-3 w-3 mr-1" />
-                          Cuotas
-                        </Button>
-                      </div>
+                    <td className="p-2 min-w-[150px] text-center">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={async () => {
+                          // Fetch first sale from this order to get details
+                          const response = await fetch(`/api/sales?orden=${encodeURIComponent(order.orden)}&limit=1`);
+                          const salesData = await response.json();
+                          if (salesData.data && salesData.data.length > 0) {
+                            setSelectedSale({
+                              ...salesData.data[0],
+                              orden: order.orden,
+                              totalOrderUsd: order.totalOrderUsd // Use order's total, not product's total
+                            });
+                            setPagoInicialModalOpen(true);
+                          }
+                        }}
+                        className="h-7 text-xs"
+                        data-testid={`button-pago-inicial-${order.orden}`}
+                      >
+                        <Banknote className="h-3 w-3 mr-1" />
+                        Pago Inicial/Total
+                      </Button>
+                    </td>
+                    <td className="p-2 min-w-[100px] text-center">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={async () => {
+                          // Fetch first sale from this order
+                          const response = await fetch(`/api/sales?orden=${encodeURIComponent(order.orden)}&limit=1`);
+                          const salesData = await response.json();
+                          if (salesData.data && salesData.data.length > 0) {
+                            setSelectedSale({
+                              ...salesData.data[0],
+                              orden: order.orden
+                            });
+                            setFleteModalOpen(true);
+                          }
+                        }}
+                        className="h-7 text-xs"
+                        data-testid={`button-flete-${order.orden}`}
+                      >
+                        <Truck className="h-3 w-3 mr-1" />
+                        Flete
+                      </Button>
+                    </td>
+                    <td className="p-2 min-w-[100px] text-center">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={async () => {
+                          // Fetch first sale from this order
+                          const response = await fetch(`/api/sales?orden=${encodeURIComponent(order.orden)}&limit=1`);
+                          const salesData = await response.json();
+                          if (salesData.data && salesData.data.length > 0) {
+                            setSelectedSale({
+                              ...salesData.data[0],
+                              orden: order.orden
+                            });
+                            setCuotasModalOpen(true);
+                          }
+                        }}
+                        className="h-7 text-xs"
+                        data-testid={`button-cuotas-${order.orden}`}
+                      >
+                        <CreditCard className="h-3 w-3 mr-1" />
+                        Cuotas
+                      </Button>
                     </td>
                   </tr>
                 ))
