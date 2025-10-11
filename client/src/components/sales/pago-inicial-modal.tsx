@@ -58,6 +58,12 @@ export default function PagoInicialModal({ sale, open, onOpenChange }: PagoInici
     montoInicialUsd: "",
   });
 
+  const [errors, setErrors] = useState({
+    pagoInicialUsd: false,
+    bancoId: false,
+    referenciaInicial: false,
+  });
+
   // Fetch banks for the dropdown
   const { data: allBanks = [] } = useQuery<Banco[]>({
     queryKey: ["/api/admin/bancos"],
@@ -76,6 +82,12 @@ export default function PagoInicialModal({ sale, open, onOpenChange }: PagoInici
         referenciaInicial: sale.referenciaInicial || "",
         montoInicialBs: sale.montoInicialBs?.toString() || "",
         montoInicialUsd: sale.montoInicialUsd?.toString() || "",
+      });
+      // Reset errors when modal opens
+      setErrors({
+        pagoInicialUsd: false,
+        bancoId: false,
+        referenciaInicial: false,
       });
     }
   }, [sale]);
@@ -126,7 +138,34 @@ export default function PagoInicialModal({ sale, open, onOpenChange }: PagoInici
     setPagoData((prev) => ({ ...prev, fechaPagoInicial: date || null }));
   };
 
+  const validateFields = () => {
+    const newErrors = {
+      pagoInicialUsd: !pagoData.pagoInicialUsd || parseFloat(pagoData.pagoInicialUsd) <= 0,
+      bancoId: !pagoData.bancoId || pagoData.bancoId === "none",
+      referenciaInicial: !pagoData.referenciaInicial || pagoData.referenciaInicial.trim() === "",
+    };
+
+    setErrors(newErrors);
+
+    // Check if there are any errors
+    const hasErrors = Object.values(newErrors).some(error => error);
+    
+    if (hasErrors) {
+      toast({
+        title: "Campos obligatorios incompletos",
+        description: "Por favor completa: Pago Inicial/Total USD, Banco Receptor y Referencia",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    return true;
+  };
+
   const handleSave = () => {
+    if (!validateFields()) {
+      return;
+    }
     updatePagoMutation.mutate(pagoData);
   };
 
