@@ -135,6 +135,12 @@ export const sales = pgTable("sales", {
   asesorId: varchar("asesor_id"),
   // Email tracking
   emailSentAt: timestamp("email_sent_at"),
+  // Verification fields for Pago Inicial
+  estadoVerificacionInicial: text("estado_verificacion_inicial").default("Por verificar"), // Por verificar, Verificado, Rechazado
+  notasVerificacionInicial: text("notas_verificacion_inicial"),
+  // Verification fields for Flete
+  estadoVerificacionFlete: text("estado_verificacion_flete").default("Por verificar"), // Por verificar, Verificado, Rechazado
+  notasVerificacionFlete: text("notas_verificacion_flete"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => ({
@@ -159,6 +165,9 @@ export const paymentInstallments = pgTable("payment_installments", {
   bancoId: varchar("banco_id"), // Bank used for payment
   pagoCuotaUsd: decimal("pago_cuota_usd", { precision: 10, scale: 2 }), // Payment amount in USD
   verificado: boolean("verificado").default(true), // Whether payment is verified
+  // Verification fields for Cuotas
+  estadoVerificacion: text("estado_verificacion").default("Por verificar"), // Por verificar, Verificado, Rechazado
+  notasVerificacion: text("notas_verificacion"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => ({
