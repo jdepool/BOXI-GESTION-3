@@ -470,6 +470,10 @@ export class DatabaseStorage implements IStorage {
       hasPagoInicial: boolean;
       hasFlete: boolean;
       installmentCount: number;
+      pagoInicialUsd: number | null;
+      totalCuotas: number;
+      totalPagado: number;
+      saldoPendiente: number;
     }>;
     total: number;
   }> {
@@ -495,6 +499,7 @@ export class DatabaseStorage implements IStorage {
         productCount: sql<number>`COUNT(*)`.as('productCount'),
         hasPagoInicial: sql<boolean>`BOOL_OR(${sales.pagoInicialUsd} IS NOT NULL OR ${sales.fechaPagoInicial} IS NOT NULL)`.as('hasPagoInicial'),
         hasFlete: sql<boolean>`BOOL_OR(${sales.montoFleteUsd} IS NOT NULL OR ${sales.pagoFleteUsd} IS NOT NULL)`.as('hasFlete'),
+        pagoInicialUsd: sql<number | null>`MAX(${sales.pagoInicialUsd})`.as('pagoInicialUsd'),
       })
       .from(sales)
       .where(estadoCondition)
@@ -511,40 +516,59 @@ export class DatabaseStorage implements IStorage {
       .from(sales)
       .where(estadoCondition);
 
-    // Get installment counts for each order (only if we have orders)
+    // Get installment counts and total cuotas for each order (only if we have orders)
     let installmentCountMap = new Map<string, number>();
+    let totalCuotasMap = new Map<string, number>();
     
     if (ordersData.length > 0) {
-      const installmentCounts = await db
+      const installmentData = await db
         .select({
           orden: paymentInstallments.orden,
           count: sql<number>`COUNT(*)`.as('count'),
+          totalCuotas: sql<number>`COALESCE(SUM(${paymentInstallments.pagoCuotaUsd}), 0)`.as('totalCuotas'),
         })
         .from(paymentInstallments)
         .where(sql`${paymentInstallments.orden} IN (${sql.join(ordersData.map(o => sql`${o.orden}`), sql`, `)})`)
         .groupBy(paymentInstallments.orden);
 
       installmentCountMap = new Map(
-        installmentCounts
+        installmentData
           .filter(ic => ic.orden !== null)
           .map(ic => [ic.orden!, Number(ic.count)])
+      );
+      
+      totalCuotasMap = new Map(
+        installmentData
+          .filter(ic => ic.orden !== null)
+          .map(ic => [ic.orden!, Number(ic.totalCuotas)])
       );
     }
 
     return {
-      data: ordersData.map(order => ({
-        orden: order.orden!, // Non-null assertion safe because we filter isNotNull(sales.orden)
-        nombre: order.nombre,
-        fecha: order.fecha,
-        canal: order.canal,
-        tipo: order.tipo,
-        estadoEntrega: order.estadoEntrega,
-        totalOrderUsd: order.totalOrderUsd,
-        productCount: Number(order.productCount),
-        hasPagoInicial: order.hasPagoInicial,
-        hasFlete: order.hasFlete,
-        installmentCount: installmentCountMap.get(order.orden!) || 0,
-      })),
+      data: ordersData.map(order => {
+        const pagoInicial = order.pagoInicialUsd || 0;
+        const totalCuotas = totalCuotasMap.get(order.orden!) || 0;
+        const totalPagado = pagoInicial + totalCuotas;
+        const saldoPendiente = (order.totalOrderUsd || 0) - totalPagado;
+        
+        return {
+          orden: order.orden!, // Non-null assertion safe because we filter isNotNull(sales.orden)
+          nombre: order.nombre,
+          fecha: order.fecha,
+          canal: order.canal,
+          tipo: order.tipo,
+          estadoEntrega: order.estadoEntrega,
+          totalOrderUsd: order.totalOrderUsd,
+          productCount: Number(order.productCount),
+          hasPagoInicial: order.hasPagoInicial,
+          hasFlete: order.hasFlete,
+          installmentCount: installmentCountMap.get(order.orden!) || 0,
+          pagoInicialUsd: order.pagoInicialUsd,
+          totalCuotas,
+          totalPagado,
+          saldoPendiente,
+        };
+      }),
       total: Number(totalCount),
     };
   }
