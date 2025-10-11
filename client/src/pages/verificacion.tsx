@@ -24,6 +24,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { Check, X } from "lucide-react";
 import { format } from "date-fns";
+import Sidebar from "@/components/layout/sidebar";
 
 interface VerificationPayment {
   paymentId: string;
@@ -157,10 +158,15 @@ export default function VerificacionPage() {
   };
 
   return (
-    <div className="container mx-auto p-6">
-      <h1 className="text-3xl font-bold mb-6">Verificación de Pagos</h1>
+    <div className="h-screen flex bg-background">
+      <Sidebar />
+      
+      <main className="flex-1 flex flex-col overflow-hidden">
+        <div className="flex-1 overflow-auto">
+          <div className="container mx-auto p-6">
+            <h1 className="text-3xl font-bold mb-6">Verificación de Pagos</h1>
 
-      <Tabs defaultValue="ingresos" className="w-full">
+            <Tabs defaultValue="ingresos" className="w-full">
         <TabsList className="mb-6">
           <TabsTrigger value="ingresos" data-testid="tab-ingresos">
             Ingresos
@@ -393,6 +399,9 @@ export default function VerificacionPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+          </div>
+        </div>
+      </main>
     </div>
   );
 }
