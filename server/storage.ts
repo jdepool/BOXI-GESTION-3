@@ -518,6 +518,7 @@ export class DatabaseStorage implements IStorage {
         hasFlete: sql<boolean>`BOOL_OR(${sales.montoFleteUsd} IS NOT NULL OR ${sales.pagoFleteUsd} IS NOT NULL)`.as('hasFlete'),
         pagoInicialUsd: sql<number | null>`MAX(${sales.pagoInicialUsd})`.as('pagoInicialUsd'),
         pagoFleteUsd: sql<number | null>`MAX(${sales.pagoFleteUsd})`.as('pagoFleteUsd'),
+        fleteGratis: sql<boolean>`BOOL_OR(${sales.fleteGratis})`.as('fleteGratis'),
       })
       .from(sales)
       .where(estadoCondition)
@@ -566,7 +567,7 @@ export class DatabaseStorage implements IStorage {
       data: ordersData.map(order => {
         const pagoInicial = order.pagoInicialUsd || 0;
         const pagoFlete = order.pagoFleteUsd || 0;
-        const ordenPlusFlete = (order.totalOrderUsd || 0) + pagoFlete;
+        const ordenPlusFlete = (order.totalOrderUsd || 0) + (order.fleteGratis ? 0 : pagoFlete);
         const totalCuotas = totalCuotasMap.get(order.orden!) || 0;
         const totalPagado = pagoInicial + totalCuotas;
         const saldoPendiente = (order.totalOrderUsd || 0) - totalPagado;
