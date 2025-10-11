@@ -519,6 +519,8 @@ export class DatabaseStorage implements IStorage {
         pagoInicialUsd: sql<number | null>`MAX(${sales.pagoInicialUsd})`.as('pagoInicialUsd'),
         pagoFleteUsd: sql<number | null>`MAX(${sales.pagoFleteUsd})`.as('pagoFleteUsd'),
         fleteGratis: sql<boolean>`BOOL_OR(${sales.fleteGratis})`.as('fleteGratis'),
+        estadoVerificacionInicial: sql<string | null>`MAX(${sales.estadoVerificacionInicial})`.as('estadoVerificacionInicial'),
+        estadoVerificacionFlete: sql<string | null>`MAX(${sales.estadoVerificacionFlete})`.as('estadoVerificacionFlete'),
       })
       .from(sales)
       .where(estadoCondition)
@@ -538,6 +540,7 @@ export class DatabaseStorage implements IStorage {
     // Get installment counts and total cuotas for each order (only if we have orders)
     let installmentCountMap = new Map<string, number>();
     let totalCuotasMap = new Map<string, number>();
+    let totalCuotasVerificadasMap = new Map<string, number>();
     
     if (ordersData.length > 0) {
       const installmentData = await db
@@ -545,6 +548,7 @@ export class DatabaseStorage implements IStorage {
           orden: paymentInstallments.orden,
           count: sql<number>`COUNT(*)`.as('count'),
           totalCuotas: sql<number>`COALESCE(SUM(${paymentInstallments.pagoCuotaUsd}), 0)`.as('totalCuotas'),
+          totalCuotasVerificadas: sql<number>`COALESCE(SUM(CASE WHEN ${paymentInstallments.estadoVerificacion} = 'Verificado' THEN ${paymentInstallments.pagoCuotaUsd} ELSE 0 END), 0)`.as('totalCuotasVerificadas'),
         })
         .from(paymentInstallments)
         .where(sql`${paymentInstallments.orden} IN (${sql.join(ordersData.map(o => sql`${o.orden}`), sql`, `)})`)
@@ -561,6 +565,12 @@ export class DatabaseStorage implements IStorage {
           .filter(ic => ic.orden !== null)
           .map(ic => [ic.orden!, Number(ic.totalCuotas)])
       );
+      
+      totalCuotasVerificadasMap = new Map(
+        installmentData
+          .filter(ic => ic.orden !== null)
+          .map(ic => [ic.orden!, Number(ic.totalCuotasVerificadas)])
+      );
     }
 
     return {
@@ -569,7 +579,25 @@ export class DatabaseStorage implements IStorage {
         const pagoFlete = order.pagoFleteUsd || 0;
         const ordenPlusFlete = (order.totalOrderUsd || 0) + (order.fleteGratis ? 0 : pagoFlete);
         const totalCuotas = totalCuotasMap.get(order.orden!) || 0;
-        const totalPagado = pagoInicial + totalCuotas;
+        
+        // Calculate Total Pagado as sum of VERIFIED payments only
+        let totalPagado = 0;
+        
+        // Add verified Pago Inicial
+        if (order.estadoVerificacionInicial === 'Verificado') {
+          totalPagado += pagoInicial;
+        }
+        
+        // Add verified Pago Flete (only if Flete is not $0 or gratis)
+        const hasFletePayment = pagoFlete > 0 && !order.fleteGratis;
+        if (hasFletePayment && order.estadoVerificacionFlete === 'Verificado') {
+          totalPagado += pagoFlete;
+        }
+        
+        // Add verified Cuotas
+        const totalCuotasVerificadas = totalCuotasVerificadasMap.get(order.orden!) || 0;
+        totalPagado += totalCuotasVerificadas;
+        
         const saldoPendiente = (order.totalOrderUsd || 0) - totalPagado;
         
         return {
