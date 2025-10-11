@@ -83,14 +83,19 @@ export default function PagoInicialModal({ sale, open, onOpenChange }: PagoInici
         montoInicialBs: sale.montoInicialBs?.toString() || "",
         montoInicialUsd: sale.montoInicialUsd?.toString() || "",
       });
-      // Reset errors when modal opens
+    }
+  }, [sale]);
+
+  // Reset errors when modal opens
+  useEffect(() => {
+    if (open) {
       setErrors({
         pagoInicialUsd: false,
         bancoId: false,
         referenciaInicial: false,
       });
     }
-  }, [sale]);
+  }, [open]);
 
   const updatePagoMutation = useMutation({
     mutationFn: async (data: typeof pagoData) => {
