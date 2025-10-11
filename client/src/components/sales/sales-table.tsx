@@ -237,7 +237,7 @@ export default function SalesTable({
 
   const handleNotesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    if (value.length <= 150) {
+    if (value.length <= 200) {
       setNotesValue(value);
     }
   };
@@ -675,7 +675,7 @@ export default function SalesTable({
                           onChange={handleNotesChange}
                           onBlur={handleNotesBlur}
                           onKeyDown={handleNotesKeyDown}
-                          maxLength={150}
+                          maxLength={200}
                           placeholder="Agregar nota..."
                           className="h-7 text-xs"
                           autoFocus
