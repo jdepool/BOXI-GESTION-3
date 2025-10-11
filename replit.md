@@ -11,18 +11,18 @@ Preferred communication style: Simple, everyday language.
 ## Pagos Tab - Payment Metrics Display (October 11, 2025)
 - **Added**: Five metric columns displaying payment status at a glance in the Pagos table
 - **Metrics Displayed**:
-  - Total Orden USD: Total value of the order (blue card)
+  - Orden + Flete: Total order value plus shipping cost (Total Orden USD + Pago Flete USD) (blue card)
   - Pago Inicial/Total: Amount paid as initial/total payment (green card)
   - Total Cuotas: Sum of all installment payments (purple card)
   - Total Pagado: Total amount paid (Pago Inicial + Total Cuotas) (teal card)
   - Pendiente: Outstanding balance (Total Orden USD - Total Pagado) (orange card)
 - **Implementation**:
-  - Backend calculates metrics using SQL aggregation (MAX for pago inicial, SUM for installments)
-  - Server-side calculation of totalPagado and saldoPendiente for accuracy
+  - Backend calculates metrics using SQL aggregation (MAX for pago inicial/flete, SUM for installments)
+  - Server-side calculation of ordenPlusFlete, totalPagado and saldoPendiente for accuracy
   - Frontend displays metrics as compact colored cards matching Cuotas modal design
   - Color-coded backgrounds for easy visual scanning (blue, green, purple, teal, orange)
   - Light/dark theme support with appropriate contrast
-- **Impact**: Users can now quickly assess payment status for each order without opening modals, improving workflow efficiency and providing instant visibility into outstanding balances
+- **Impact**: Users can now quickly assess payment status for each order without opening modals, improving workflow efficiency and providing instant visibility into outstanding balances. The first metric shows the complete customer obligation including shipping costs.
 
 ## Ventas por Completar - Verificado Button Removed (October 11, 2025)
 - **Removed**: "Verificado" button from the Ventas por completar table
