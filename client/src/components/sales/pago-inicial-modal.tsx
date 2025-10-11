@@ -247,7 +247,9 @@ export default function PagoInicialModal({ sale, open, onOpenChange }: PagoInici
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="pagoInicialUsd">Pago Inicial/Total USD</Label>
+                <Label htmlFor="pagoInicialUsd" className={errors.pagoInicialUsd ? "text-destructive" : ""}>
+                  Pago Inicial/Total USD *
+                </Label>
                 <div className="relative">
                   <DollarSign className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input
@@ -257,19 +259,27 @@ export default function PagoInicialModal({ sale, open, onOpenChange }: PagoInici
                     placeholder="0.00"
                     value={pagoData.pagoInicialUsd}
                     onChange={handleInputChange("pagoInicialUsd")}
-                    className="pl-10"
+                    className={cn("pl-10", errors.pagoInicialUsd && "border-destructive focus-visible:ring-destructive")}
                     data-testid="input-pago-inicial-usd"
                   />
                 </div>
+                {errors.pagoInicialUsd && (
+                  <p className="text-sm text-destructive">Este campo es obligatorio</p>
+                )}
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="bancoId">Banco Receptor</Label>
+                <Label htmlFor="bancoId" className={errors.bancoId ? "text-destructive" : ""}>
+                  Banco Receptor *
+                </Label>
                 <Select
                   value={pagoData.bancoId}
                   onValueChange={handleSelectChange("bancoId")}
                 >
-                  <SelectTrigger data-testid="select-banco-pago">
+                  <SelectTrigger 
+                    data-testid="select-banco-pago"
+                    className={cn(errors.bancoId && "border-destructive focus:ring-destructive")}
+                  >
                     <SelectValue placeholder="Seleccionar banco" />
                   </SelectTrigger>
                   <SelectContent>
@@ -282,17 +292,26 @@ export default function PagoInicialModal({ sale, open, onOpenChange }: PagoInici
                     <SelectItem value="otro">Otro ($)</SelectItem>
                   </SelectContent>
                 </Select>
+                {errors.bancoId && (
+                  <p className="text-sm text-destructive">Debes seleccionar un banco</p>
+                )}
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="referenciaInicial">Referencia</Label>
+                <Label htmlFor="referenciaInicial" className={errors.referenciaInicial ? "text-destructive" : ""}>
+                  Referencia *
+                </Label>
                 <Input
                   id="referenciaInicial"
                   placeholder="Número de referencia"
                   value={pagoData.referenciaInicial}
                   onChange={handleInputChange("referenciaInicial")}
+                  className={cn(errors.referenciaInicial && "border-destructive focus-visible:ring-destructive")}
                   data-testid="input-referencia-pago"
                 />
+                {errors.referenciaInicial && (
+                  <p className="text-sm text-destructive">Este campo es obligatorio</p>
+                )}
               </div>
 
               <div className="space-y-2">
