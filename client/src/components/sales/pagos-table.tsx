@@ -160,7 +160,7 @@ export default function PagosTable({
                           size="sm"
                           onClick={async () => {
                             // Fetch first sale from this order to get details
-                            const response = await fetch(`/api/sales?orden=${order.orden}&limit=1`);
+                            const response = await fetch(`/api/sales?orden=${encodeURIComponent(order.orden)}&limit=1`);
                             const salesData = await response.json();
                             if (salesData.data && salesData.data.length > 0) {
                               setSelectedSale({
@@ -182,10 +182,13 @@ export default function PagosTable({
                           size="sm"
                           onClick={async () => {
                             // Fetch first sale from this order
-                            const response = await fetch(`/api/sales?orden=${order.orden}&limit=1`);
+                            const response = await fetch(`/api/sales?orden=${encodeURIComponent(order.orden)}&limit=1`);
                             const salesData = await response.json();
                             if (salesData.data && salesData.data.length > 0) {
-                              setSelectedSale(salesData.data[0]);
+                              setSelectedSale({
+                                ...salesData.data[0],
+                                orden: order.orden
+                              });
                               setFleteModalOpen(true);
                             }
                           }}
@@ -200,10 +203,13 @@ export default function PagosTable({
                           size="sm"
                           onClick={async () => {
                             // Fetch first sale from this order
-                            const response = await fetch(`/api/sales?orden=${order.orden}&limit=1`);
+                            const response = await fetch(`/api/sales?orden=${encodeURIComponent(order.orden)}&limit=1`);
                             const salesData = await response.json();
                             if (salesData.data && salesData.data.length > 0) {
-                              setSelectedSale(salesData.data[0]);
+                              setSelectedSale({
+                                ...salesData.data[0],
+                                orden: order.orden
+                              });
                               setCuotasModalOpen(true);
                             }
                           }}
