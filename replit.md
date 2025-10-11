@@ -8,6 +8,14 @@ Preferred communication style: Simple, everyday language.
 
 # Recent Changes (October 2025)
 
+## Pagos Tab - Separate Action Columns (October 11, 2025)
+- **Changed**: Replaced the single "Acciones" column with three separate columns: "Pago Inicial/Total", "Flete", and "Cuotas"
+- **Implementation**:
+  - Each action button now has its own dedicated column with centered alignment
+  - Column widths: Pago Inicial/Total (150px), Flete (100px), Cuotas (100px)
+  - Updated table colspan from 8 to 10 to accommodate the new structure
+- **Impact**: Provides a cleaner, more organized layout that matches the look and feel of other tables in the application
+
 ## Pagos Tab - Fixed Wrong Order Data in Modals (October 11, 2025)
 - **Fixed**: Clicking on an order row in the Pagos Tab now shows the correct order data in all modals (Pago Inicial/Total, Flete, Cuotas)
 - **Issue**: Order #2386 was showing data from #2387 and other orders showed incorrect data
