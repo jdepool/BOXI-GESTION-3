@@ -8,9 +8,12 @@ Preferred communication style: Simple, everyday language.
 
 # Recent Changes (October 2025)
 
-## Payment Verification Section - Verificación (October 11, 2025)
+## Payment Verification Section - Verificación with Tabs (October 11, 2025)
 - **Added**: New "Verificación" section in the main menu for comprehensive payment verification
-- **Functionality**:
+- **Tab Structure**:
+  - **Ingresos Tab**: Displays payment verification for sales/income (Pago Inicial/Total, Flete, Cuotas)
+  - **Egresos Tab**: Placeholder for future expense verification functionality
+- **Functionality** (Ingresos Tab):
   - Displays all payments from Pagos tab as individual rows (Pago Inicial/Total, Flete, and Cuotas)
   - Each payment type has its own verification status: "Por verificar" (default), "Verificado", or "Rechazado"
   - Verification is tied to the agreed payment amount (pagoInicialUsd, pagoFleteUsd, pagoCuotaUsd)
@@ -38,7 +41,8 @@ Preferred communication style: Simple, everyday language.
   - Database fields: estadoVerificacionInicial, notasVerificacionInicial (for Pago Inicial), estadoVerificacionFlete, notasVerificacionFlete (for Flete), estadoVerificacion, notasVerificacion (for Cuotas)
   - API endpoints: GET /api/sales/verification-payments (with filters), PATCH /api/sales/verification (update status)
   - Only shows payments from orders with estadoEntrega 'Pendiente' or 'En proceso'
-- **Impact**: Provides centralized payment verification workflow, enabling systematic review of all payment types with notes and status tracking for improved financial control and audit trail
+  - Uses shadcn/ui Tabs component for clean separation of Ingresos and Egresos
+- **Impact**: Provides centralized payment verification workflow with organized tab structure, enabling systematic review of all payment types with notes and status tracking for improved financial control and audit trail. Prepared for future expense verification in Egresos tab.
 
 # Recent Changes (October 2025)
 
