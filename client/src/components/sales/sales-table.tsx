@@ -32,7 +32,6 @@ interface SalesTableProps {
   onFilterChange?: (filters: any) => void;
   onPageChange?: (offset: number) => void;
   onEditSale?: (sale: Sale) => void;
-  onVerifyPayment?: (sale: Sale) => void;
 }
 
 export default function SalesTable({ 
@@ -49,8 +48,7 @@ export default function SalesTable({
   extraExportParams = {},
   onFilterChange,
   onPageChange,
-  onEditSale,
-  onVerifyPayment
+  onEditSale
 }: SalesTableProps) {
   const { toast } = useToast();
   
@@ -720,21 +718,6 @@ export default function SalesTable({
                             <Mail className={cn("h-3 w-3 mr-1", sale.emailSentAt && "text-green-600")} />
                             {sendEmailMutation.isPending ? "Enviando..." : "Email"}
                           </Button>
-                        )}
-                        {showEditActions && (
-                          <>
-                            <Button
-                              variant="default"
-                              size="sm"
-                              onClick={() => onVerifyPayment?.(sale)}
-                              data-testid={`verify-payment-${sale.id}`}
-                              className="h-7 px-2 text-xs bg-green-600 hover:bg-green-700 text-white"
-                              title="Verificar pago"
-                            >
-                              <i className="fas fa-check text-xs mr-1"></i>
-                              Verificado
-                            </Button>
-                          </>
                         )}
                         <Button
                           variant="ghost"
