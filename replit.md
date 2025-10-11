@@ -10,17 +10,21 @@ Preferred communication style: Simple, everyday language.
 
 ## Pago Inicial/Total Modal - Mandatory Field Validation (October 11, 2025)
 - **Added**: Mandatory field validation for Pago Inicial/Total modal
-- **Required Fields**:
+- **Required Fields** (blocking save):
   - Pago Inicial/Total USD: Must be filled and greater than 0
   - Banco Receptor: Must select a valid bank (cannot be "Sin banco")
   - Referencia: Must be filled (cannot be empty or whitespace)
+- **Warning Validation** (non-blocking):
+  - Shows warning "No has incluído el Monto pagado" when both Monto Bs and Monto USD are empty
+  - Allows save to proceed but reminds user to add payment amount in Bs or USD
 - **Implementation**:
-  - Validation runs before save, preventing submission if any required field is missing
+  - Mandatory validation runs first, blocking save if fields are missing
+  - Warning validation runs after, showing toast but allowing save to continue
   - Visual feedback: Red borders, red labels with asterisks (*), and error messages below invalid fields
-  - Error toast notification shows clear message in Spanish when validation fails
+  - Error toast for mandatory fields (destructive variant) vs warning toast for monto fields (default variant)
   - Error state resets when modal opens (separate useEffect with [open] dependency)
   - Form data resets when sale changes (useEffect with [sale] dependency)
-- **Impact**: Ensures data quality by preventing incomplete payment records from being saved
+- **Impact**: Ensures data quality by preventing incomplete payment records from being saved while providing helpful reminders for optional fields
 
 ## Pagos Tab - Dynamic "Agregar" / "Editar" Button Text (October 11, 2025)
 - **Changed**: Action buttons in Pagos Tab now show "Agregar" (when empty) or "Editar" (when data exists)
