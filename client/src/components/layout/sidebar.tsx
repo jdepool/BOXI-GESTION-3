@@ -34,6 +34,11 @@ const navigationItems = [
     label: "Verificación Pagos Cashea",
   },
   {
+    href: "/verificacion",
+    icon: "fas fa-check-circle",
+    label: "Verificación",
+  },
+  {
     href: "/egresos",
     icon: "fas fa-dollar-sign",
     label: "Egresos",

@@ -8,6 +8,40 @@ Preferred communication style: Simple, everyday language.
 
 # Recent Changes (October 2025)
 
+## Payment Verification Section - Verificación (October 11, 2025)
+- **Added**: New "Verificación" section in the main menu for comprehensive payment verification
+- **Functionality**:
+  - Displays all payments from Pagos tab as individual rows (Pago Inicial/Total, Flete, and Cuotas)
+  - Each payment type has its own verification status: "Por verificar" (default), "Verificado", or "Rechazado"
+  - Verification is tied to the agreed payment amount (pagoInicialUsd, pagoFleteUsd, pagoCuotaUsd)
+- **Table Columns**:
+  - Orden: Order number
+  - Pago: Payment type indicator (Inicial/Total, Flete, Cuota #)
+  - Monto Bs: Payment amount in Bolívares (when available)
+  - Monto USD: Payment amount in USD (when available)
+  - Referencia: Payment reference
+  - Banco: Receiving bank (Banco Receptor)
+  - Estado: Verification status badge (color-coded: gray for "Por verificar", green for "Verificado", red for "Rechazado")
+  - Notas: Verification notes (truncated in table with full text tooltip)
+  - Acción: "Verificar" button to update verification status
+- **Filters Available**:
+  - Date range (start and end date)
+  - Banco (bank selector)
+  - Order number (text search)
+  - Payment type (Inicial/Total, Flete, Cuota)
+- **Verification Modal**:
+  - Shows order number and payment type
+  - Optional notes field for verification details
+  - Three action buttons: Cancel, Rechazar (reject), and Verificado (verify)
+- **Implementation**:
+  - Backend flattens payments from sales and payment_installments tables
+  - Database fields: estadoVerificacionInicial, notasVerificacionInicial (for Pago Inicial), estadoVerificacionFlete, notasVerificacionFlete (for Flete), estadoVerificacion, notasVerificacion (for Cuotas)
+  - API endpoints: GET /api/sales/verification-payments (with filters), PATCH /api/sales/verification (update status)
+  - Only shows payments from orders with estadoEntrega 'Pendiente' or 'En proceso'
+- **Impact**: Provides centralized payment verification workflow, enabling systematic review of all payment types with notes and status tracking for improved financial control and audit trail
+
+# Recent Changes (October 2025)
+
 ## Pagos Tab - Payment Metrics Display (October 11, 2025)
 - **Added**: Three essential metric columns displaying payment status at a glance in the Pagos table
 - **Metrics Displayed**:

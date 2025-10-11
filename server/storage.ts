@@ -259,6 +259,21 @@ export interface IStorage {
     montoInicialUsd?: number | null;
     estadoPagoInicial?: string;
   }): Promise<Sale[]>;
+  
+  // Verification methods
+  getVerificationPayments(filters?: {
+    startDate?: string;
+    endDate?: string;
+    bancoId?: string;
+    orden?: string;
+    tipoPago?: string;
+  }): Promise<any[]>;
+  updatePaymentVerification(data: {
+    paymentId: string;
+    paymentType: string;
+    estadoVerificacion?: string;
+    notasVerificacion?: string;
+  }): Promise<any>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1796,6 +1811,194 @@ export class DatabaseStorage implements IStorage {
     // Consider a payment fully verified if the remaining balance is $5 or less
     // This allows for business flexibility in completing orders
     return summary.saldoPendiente <= 5.00;
+  }
+
+  async getVerificationPayments(filters?: {
+    startDate?: string;
+    endDate?: string;
+    bancoId?: string;
+    orden?: string;
+    tipoPago?: string;
+  }): Promise<any[]> {
+    const payments: any[] = [];
+
+    // Build the base query with filters
+    let salesQuery = db
+      .select({
+        orden: sales.orden,
+        saleId: sales.id,
+        pagoInicialUsd: sales.pagoInicialUsd,
+        fechaPagoInicial: sales.fechaPagoInicial,
+        bancoId: sales.bancoId,
+        referenciaInicial: sales.referenciaInicial,
+        montoInicialBs: sales.montoInicialBs,
+        montoInicialUsd: sales.montoInicialUsd,
+        estadoVerificacionInicial: sales.estadoVerificacionInicial,
+        notasVerificacionInicial: sales.notasVerificacionInicial,
+        pagoFleteUsd: sales.pagoFleteUsd,
+        fechaFlete: sales.fechaFlete,
+        bancoReceptorFlete: sales.bancoReceptorFlete,
+        referenciaFlete: sales.referenciaFlete,
+        montoFleteBs: sales.montoFleteBs,
+        estadoVerificacionFlete: sales.estadoVerificacionFlete,
+        notasVerificacionFlete: sales.notasVerificacionFlete,
+        estadoEntrega: sales.estadoEntrega,
+      })
+      .from(sales)
+      .where(and(
+        or(
+          eq(sales.estadoEntrega, 'Pendiente'),
+          eq(sales.estadoEntrega, 'En proceso')
+        ),
+        filters?.orden ? eq(sales.orden, filters.orden) : undefined
+      ));
+
+    const salesData = await salesQuery;
+
+    // Process Pago Inicial payments
+    for (const sale of salesData) {
+      if (sale.pagoInicialUsd && parseFloat(sale.pagoInicialUsd) > 0) {
+        // Apply filters
+        if (filters?.tipoPago && filters.tipoPago !== 'Inicial/Total') continue;
+        if (filters?.startDate && sale.fechaPagoInicial && sale.fechaPagoInicial < new Date(filters.startDate)) continue;
+        if (filters?.endDate && sale.fechaPagoInicial && sale.fechaPagoInicial > new Date(filters.endDate)) continue;
+        if (filters?.bancoId && sale.bancoId !== filters.bancoId) continue;
+
+        payments.push({
+          paymentId: sale.saleId,
+          paymentType: 'Inicial/Total',
+          orden: sale.orden,
+          tipoPago: 'Inicial/Total',
+          montoBs: sale.montoInicialBs ? parseFloat(sale.montoInicialBs) : null,
+          montoUsd: sale.montoInicialUsd ? parseFloat(sale.montoInicialUsd) : null,
+          referencia: sale.referenciaInicial,
+          bancoId: sale.bancoId,
+          estadoVerificacion: sale.estadoVerificacionInicial || 'Por verificar',
+          notasVerificacion: sale.notasVerificacionInicial,
+          fecha: sale.fechaPagoInicial,
+        });
+      }
+
+      // Process Flete payments
+      if (sale.pagoFleteUsd && parseFloat(sale.pagoFleteUsd) > 0) {
+        // Apply filters
+        if (filters?.tipoPago && filters.tipoPago !== 'Flete') continue;
+        if (filters?.startDate && sale.fechaFlete && sale.fechaFlete < new Date(filters.startDate)) continue;
+        if (filters?.endDate && sale.fechaFlete && sale.fechaFlete > new Date(filters.endDate)) continue;
+        if (filters?.bancoId && sale.bancoReceptorFlete !== filters.bancoId) continue;
+
+        payments.push({
+          paymentId: sale.saleId,
+          paymentType: 'Flete',
+          orden: sale.orden,
+          tipoPago: 'Flete',
+          montoBs: sale.montoFleteBs ? parseFloat(sale.montoFleteBs) : null,
+          montoUsd: null, // Flete doesn't have a separate USD monto field
+          referencia: sale.referenciaFlete,
+          bancoId: sale.bancoReceptorFlete,
+          estadoVerificacion: sale.estadoVerificacionFlete || 'Por verificar',
+          notasVerificacion: sale.notasVerificacionFlete,
+          fecha: sale.fechaFlete,
+        });
+      }
+    }
+
+    // Process Cuota payments
+    let cuotasQuery = db
+      .select({
+        installmentId: paymentInstallments.id,
+        saleId: paymentInstallments.saleId,
+        orden: paymentInstallments.orden,
+        installmentNumber: paymentInstallments.installmentNumber,
+        fecha: paymentInstallments.fecha,
+        cuotaAmountBs: paymentInstallments.cuotaAmountBs,
+        pagoCuotaUsd: paymentInstallments.pagoCuotaUsd,
+        referencia: paymentInstallments.referencia,
+        bancoId: paymentInstallments.bancoId,
+        estadoVerificacion: paymentInstallments.estadoVerificacion,
+        notasVerificacion: paymentInstallments.notasVerificacion,
+      })
+      .from(paymentInstallments)
+      .where(
+        filters?.orden ? eq(paymentInstallments.orden, filters.orden) : undefined
+      );
+
+    const cuotasData = await cuotasQuery;
+
+    for (const cuota of cuotasData) {
+      // Apply filters
+      if (filters?.tipoPago && filters.tipoPago !== 'Cuota') continue;
+      if (filters?.startDate && cuota.fecha && cuota.fecha < new Date(filters.startDate)) continue;
+      if (filters?.endDate && cuota.fecha && cuota.fecha > new Date(filters.endDate)) continue;
+      if (filters?.bancoId && cuota.bancoId !== filters.bancoId) continue;
+
+      payments.push({
+        paymentId: cuota.installmentId,
+        paymentType: 'Cuota',
+        orden: cuota.orden,
+        tipoPago: `Cuota ${cuota.installmentNumber}`,
+        montoBs: cuota.cuotaAmountBs ? parseFloat(cuota.cuotaAmountBs) : null,
+        montoUsd: cuota.pagoCuotaUsd ? parseFloat(cuota.pagoCuotaUsd) : null,
+        referencia: cuota.referencia,
+        bancoId: cuota.bancoId,
+        estadoVerificacion: cuota.estadoVerificacion || 'Por verificar',
+        notasVerificacion: cuota.notasVerificacion,
+        fecha: cuota.fecha,
+      });
+    }
+
+    // Sort by date (most recent first)
+    return payments.sort((a, b) => {
+      if (!a.fecha) return 1;
+      if (!b.fecha) return -1;
+      return new Date(b.fecha).getTime() - new Date(a.fecha).getTime();
+    });
+  }
+
+  async updatePaymentVerification(data: {
+    paymentId: string;
+    paymentType: string;
+    estadoVerificacion?: string;
+    notasVerificacion?: string;
+  }): Promise<any> {
+    const { paymentId, paymentType, estadoVerificacion, notasVerificacion } = data;
+
+    if (paymentType === 'Inicial/Total') {
+      const [updated] = await db
+        .update(sales)
+        .set({
+          estadoVerificacionInicial: estadoVerificacion,
+          notasVerificacionInicial: notasVerificacion,
+          updatedAt: new Date(),
+        })
+        .where(eq(sales.id, paymentId))
+        .returning();
+      return updated;
+    } else if (paymentType === 'Flete') {
+      const [updated] = await db
+        .update(sales)
+        .set({
+          estadoVerificacionFlete: estadoVerificacion,
+          notasVerificacionFlete: notasVerificacion,
+          updatedAt: new Date(),
+        })
+        .where(eq(sales.id, paymentId))
+        .returning();
+      return updated;
+    } else if (paymentType === 'Cuota') {
+      const [updated] = await db
+        .update(paymentInstallments)
+        .set({
+          estadoVerificacion: estadoVerificacion,
+          notasVerificacion: notasVerificacion,
+          updatedAt: new Date(),
+        })
+        .where(eq(paymentInstallments.id, paymentId))
+        .returning();
+      return updated;
+    }
+
+    return null;
   }
 }
 

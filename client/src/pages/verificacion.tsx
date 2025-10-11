@@ -1,0 +1,376 @@
+import { useState } from "react";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { queryClient, apiRequest } from "@/lib/queryClient";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { useToast } from "@/hooks/use-toast";
+import { Check, X } from "lucide-react";
+import { format } from "date-fns";
+
+interface VerificationPayment {
+  paymentId: string;
+  paymentType: string;
+  orden: string;
+  tipoPago: string;
+  montoBs: number | null;
+  montoUsd: number | null;
+  referencia: string | null;
+  bancoId: string | null;
+  estadoVerificacion: string;
+  notasVerificacion: string | null;
+  fecha: Date | null;
+}
+
+interface Banco {
+  id: string;
+  banco: string;
+}
+
+export default function VerificacionPage() {
+  const { toast } = useToast();
+  const [selectedPayment, setSelectedPayment] = useState<VerificationPayment | null>(null);
+  const [verificationNotes, setVerificationNotes] = useState("");
+  const [isVerifyDialogOpen, setIsVerifyDialogOpen] = useState(false);
+  
+  // Filters
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [selectedBanco, setSelectedBanco] = useState("");
+  const [ordenFilter, setOrdenFilter] = useState("");
+  const [tipoPagoFilter, setTipoPagoFilter] = useState("");
+
+  const { data, isLoading } = useQuery<{ data: VerificationPayment[] }>({
+    queryKey: [
+      "/api/sales/verification-payments",
+      startDate,
+      endDate,
+      selectedBanco,
+      ordenFilter,
+      tipoPagoFilter,
+    ],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (startDate) params.append("startDate", startDate);
+      if (endDate) params.append("endDate", endDate);
+      if (selectedBanco) params.append("bancoId", selectedBanco);
+      if (ordenFilter) params.append("orden", ordenFilter);
+      if (tipoPagoFilter) params.append("tipoPago", tipoPagoFilter);
+
+      const url = `/api/sales/verification-payments${params.toString() ? `?${params.toString()}` : ""}`;
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error("Failed to fetch verification payments");
+      }
+      return response.json();
+    },
+  });
+
+  const payments = data?.data || [];
+
+  const { data: bancos = [] } = useQuery<Banco[]>({
+    queryKey: ["/api/admin/bancos"],
+  });
+
+  const updateVerificationMutation = useMutation({
+    mutationFn: async (data: {
+      paymentId: string;
+      paymentType: string;
+      estadoVerificacion: string;
+      notasVerificacion?: string;
+    }) => {
+      return apiRequest("PATCH", "/api/sales/verification", data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/sales/verification-payments"] });
+      toast({
+        title: "Verificación actualizada",
+        description: "El estado de verificación ha sido actualizado exitosamente.",
+      });
+      setIsVerifyDialogOpen(false);
+      setSelectedPayment(null);
+      setVerificationNotes("");
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message || "No se pudo actualizar la verificación",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleVerify = (payment: VerificationPayment) => {
+    setSelectedPayment(payment);
+    setVerificationNotes(payment.notasVerificacion || "");
+    setIsVerifyDialogOpen(true);
+  };
+
+  const confirmVerification = (status: "Verificado" | "Rechazado") => {
+    if (!selectedPayment) return;
+
+    updateVerificationMutation.mutate({
+      paymentId: selectedPayment.paymentId,
+      paymentType: selectedPayment.paymentType,
+      estadoVerificacion: status,
+      notasVerificacion: verificationNotes || undefined,
+    });
+  };
+
+  const getStatusBadgeVariant = (status: string) => {
+    switch (status) {
+      case "Verificado":
+        return "default"; // green
+      case "Rechazado":
+        return "destructive"; // red
+      default:
+        return "secondary"; // yellow/gray
+    }
+  };
+
+  const formatCurrency = (amount: number | null) => {
+    if (amount === null || amount === undefined) return "-";
+    return `$${amount.toFixed(2)}`;
+  };
+
+  const getBancoName = (bancoId: string | null) => {
+    if (!bancoId) return "-";
+    const banco = bancos.find(b => b.id === bancoId);
+    return banco?.banco || bancoId;
+  };
+
+  return (
+    <div className="container mx-auto p-6">
+      <h1 className="text-3xl font-bold mb-6">Verificación de Pagos</h1>
+
+      {/* Filters */}
+      <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+          <div>
+            <label className="text-sm font-medium mb-1 block">Fecha Inicio</label>
+            <Input
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              data-testid="input-start-date"
+            />
+          </div>
+          <div>
+            <label className="text-sm font-medium mb-1 block">Fecha Fin</label>
+            <Input
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              data-testid="input-end-date"
+            />
+          </div>
+          <div>
+            <label className="text-sm font-medium mb-1 block">Banco</label>
+            <Select value={selectedBanco} onValueChange={setSelectedBanco}>
+              <SelectTrigger data-testid="select-banco">
+                <SelectValue placeholder="Todos" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">Todos</SelectItem>
+                {bancos.map((banco) => (
+                  <SelectItem key={banco.id} value={banco.id}>
+                    {banco.banco}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <label className="text-sm font-medium mb-1 block">Orden</label>
+            <Input
+              placeholder="Buscar orden..."
+              value={ordenFilter}
+              onChange={(e) => setOrdenFilter(e.target.value)}
+              data-testid="input-orden"
+            />
+          </div>
+          <div>
+            <label className="text-sm font-medium mb-1 block">Tipo de Pago</label>
+            <Select value={tipoPagoFilter} onValueChange={setTipoPagoFilter}>
+              <SelectTrigger data-testid="select-tipo-pago">
+                <SelectValue placeholder="Todos" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">Todos</SelectItem>
+                <SelectItem value="Inicial/Total">Inicial/Total</SelectItem>
+                <SelectItem value="Flete">Flete</SelectItem>
+                <SelectItem value="Cuota">Cuota</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      </div>
+
+      {/* Payments Table */}
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-x-auto">
+        <table className="w-full">
+          <thead className="bg-gray-50 dark:bg-gray-700">
+            <tr>
+              <th className="p-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                Orden
+              </th>
+              <th className="p-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                Pago
+              </th>
+              <th className="p-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                Monto Bs
+              </th>
+              <th className="p-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                Monto USD
+              </th>
+              <th className="p-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                Referencia
+              </th>
+              <th className="p-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                Banco
+              </th>
+              <th className="p-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                Estado
+              </th>
+              <th className="p-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                Notas
+              </th>
+              <th className="p-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                Acción
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {isLoading ? (
+              <tr>
+                <td colSpan={9} className="p-4 text-center text-muted-foreground">
+                  Cargando...
+                </td>
+              </tr>
+            ) : payments.length === 0 ? (
+              <tr>
+                <td colSpan={9} className="p-4 text-center text-muted-foreground">
+                  No hay pagos para verificar
+                </td>
+              </tr>
+            ) : (
+              payments.map((payment, index) => (
+                <tr
+                  key={`${payment.paymentId}-${payment.paymentType}-${index}`}
+                  className="border-b border-border hover:bg-muted/50"
+                >
+                  <td className="p-3 text-sm" data-testid={`text-orden-${index}`}>
+                    {payment.orden}
+                  </td>
+                  <td className="p-3 text-sm" data-testid={`text-tipo-pago-${index}`}>
+                    <Badge variant="outline">{payment.tipoPago}</Badge>
+                  </td>
+                  <td className="p-3 text-sm" data-testid={`text-monto-bs-${index}`}>
+                    {payment.montoBs ? `Bs ${payment.montoBs.toFixed(2)}` : "-"}
+                  </td>
+                  <td className="p-3 text-sm" data-testid={`text-monto-usd-${index}`}>
+                    {formatCurrency(payment.montoUsd)}
+                  </td>
+                  <td className="p-3 text-sm" data-testid={`text-referencia-${index}`}>
+                    {payment.referencia || "-"}
+                  </td>
+                  <td className="p-3 text-sm" data-testid={`text-banco-${index}`}>
+                    {getBancoName(payment.bancoId)}
+                  </td>
+                  <td className="p-3 text-sm" data-testid={`badge-estado-${index}`}>
+                    <Badge variant={getStatusBadgeVariant(payment.estadoVerificacion)}>
+                      {payment.estadoVerificacion}
+                    </Badge>
+                  </td>
+                  <td className="p-3 text-sm max-w-[200px] truncate" data-testid={`text-notas-${index}`}>
+                    {payment.notasVerificacion || "-"}
+                  </td>
+                  <td className="p-3">
+                    <Button
+                      size="sm"
+                      onClick={() => handleVerify(payment)}
+                      data-testid={`button-verificar-${index}`}
+                    >
+                      <Check className="h-4 w-4 mr-1" />
+                      Verificar
+                    </Button>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Verification Dialog */}
+      <Dialog open={isVerifyDialogOpen} onOpenChange={setIsVerifyDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Verificar Pago</DialogTitle>
+            <DialogDescription>
+              Orden: {selectedPayment?.orden} - {selectedPayment?.tipoPago}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium mb-1 block">
+                Notas de Verificación (opcional)
+              </label>
+              <Textarea
+                value={verificationNotes}
+                onChange={(e) => setVerificationNotes(e.target.value)}
+                placeholder="Agregar notas sobre la verificación..."
+                rows={3}
+                data-testid="textarea-notas"
+              />
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setIsVerifyDialogOpen(false)}
+              data-testid="button-cancelar"
+            >
+              Cancelar
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => confirmVerification("Rechazado")}
+              disabled={updateVerificationMutation.isPending}
+              data-testid="button-rechazar"
+            >
+              <X className="h-4 w-4 mr-1" />
+              Rechazar
+            </Button>
+            <Button
+              onClick={() => confirmVerification("Verificado")}
+              disabled={updateVerificationMutation.isPending}
+              data-testid="button-confirmar-verificado"
+            >
+              <Check className="h-4 w-4 mr-1" />
+              Verificado
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
