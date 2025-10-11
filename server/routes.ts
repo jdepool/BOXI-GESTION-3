@@ -1139,6 +1139,53 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // GET /api/sales/verification-payments - Get all payments flattened for verification
+  app.get("/api/sales/verification-payments", async (req, res) => {
+    try {
+      const { startDate, endDate, bancoId, orden, tipoPago } = req.query;
+
+      const payments = await storage.getVerificationPayments({
+        startDate: startDate as string,
+        endDate: endDate as string,
+        bancoId: bancoId as string,
+        orden: orden as string,
+        tipoPago: tipoPago as string
+      });
+
+      res.json({ data: payments });
+    } catch (error) {
+      console.error("Get verification payments error:", error);
+      res.status(500).json({ error: "Failed to get verification payments" });
+    }
+  });
+
+  // PATCH /api/sales/verification - Update verification status and notes
+  app.patch("/api/sales/verification", async (req, res) => {
+    try {
+      const { paymentId, paymentType, estadoVerificacion, notasVerificacion } = req.body;
+
+      if (!paymentId || !paymentType) {
+        return res.status(400).json({ error: "Payment ID and type are required" });
+      }
+
+      const result = await storage.updatePaymentVerification({
+        paymentId,
+        paymentType,
+        estadoVerificacion,
+        notasVerificacion
+      });
+
+      if (!result) {
+        return res.status(404).json({ error: "Payment not found" });
+      }
+
+      res.json({ success: true, data: result });
+    } catch (error) {
+      console.error("Update verification error:", error);
+      res.status(500).json({ error: "Failed to update verification" });
+    }
+  });
+
   // Get specific sale by ID (MUST BE AFTER specific routes)
   app.get("/api/sales/:id", async (req, res) => {
     try {
@@ -3597,53 +3644,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         error: "Failed to send email", 
         details: error instanceof Error ? error.message : "Unknown error occurred" 
       });
-    }
-  });
-
-  // GET /api/sales/verification-payments - Get all payments flattened for verification
-  app.get("/api/sales/verification-payments", async (req, res) => {
-    try {
-      const { startDate, endDate, bancoId, orden, tipoPago } = req.query;
-
-      const payments = await storage.getVerificationPayments({
-        startDate: startDate as string,
-        endDate: endDate as string,
-        bancoId: bancoId as string,
-        orden: orden as string,
-        tipoPago: tipoPago as string
-      });
-
-      res.json({ data: payments });
-    } catch (error) {
-      console.error("Get verification payments error:", error);
-      res.status(500).json({ error: "Failed to get verification payments" });
-    }
-  });
-
-  // PATCH /api/sales/verification - Update verification status and notes
-  app.patch("/api/sales/verification", async (req, res) => {
-    try {
-      const { paymentId, paymentType, estadoVerificacion, notasVerificacion } = req.body;
-
-      if (!paymentId || !paymentType) {
-        return res.status(400).json({ error: "Payment ID and type are required" });
-      }
-
-      const result = await storage.updatePaymentVerification({
-        paymentId,
-        paymentType,
-        estadoVerificacion,
-        notasVerificacion
-      });
-
-      if (!result) {
-        return res.status(404).json({ error: "Payment not found" });
-      }
-
-      res.json({ success: true, data: result });
-    } catch (error) {
-      console.error("Update verification error:", error);
-      res.status(500).json({ error: "Failed to update verification" });
     }
   });
 

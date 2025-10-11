@@ -52,9 +52,9 @@ export default function VerificacionPage() {
   // Filters
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
-  const [selectedBanco, setSelectedBanco] = useState("");
+  const [selectedBanco, setSelectedBanco] = useState("all");
   const [ordenFilter, setOrdenFilter] = useState("");
-  const [tipoPagoFilter, setTipoPagoFilter] = useState("");
+  const [tipoPagoFilter, setTipoPagoFilter] = useState("all");
 
   const { data, isLoading } = useQuery<{ data: VerificationPayment[] }>({
     queryKey: [
@@ -69,9 +69,9 @@ export default function VerificacionPage() {
       const params = new URLSearchParams();
       if (startDate) params.append("startDate", startDate);
       if (endDate) params.append("endDate", endDate);
-      if (selectedBanco) params.append("bancoId", selectedBanco);
+      if (selectedBanco && selectedBanco !== "all") params.append("bancoId", selectedBanco);
       if (ordenFilter) params.append("orden", ordenFilter);
-      if (tipoPagoFilter) params.append("tipoPago", tipoPagoFilter);
+      if (tipoPagoFilter && tipoPagoFilter !== "all") params.append("tipoPago", tipoPagoFilter);
 
       const url = `/api/sales/verification-payments${params.toString() ? `?${params.toString()}` : ""}`;
       const response = await fetch(url);
@@ -187,7 +187,7 @@ export default function VerificacionPage() {
                 <SelectValue placeholder="Todos" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todos</SelectItem>
+                <SelectItem value="all">Todos</SelectItem>
                 {bancos.map((banco) => (
                   <SelectItem key={banco.id} value={banco.id}>
                     {banco.banco}
@@ -212,7 +212,7 @@ export default function VerificacionPage() {
                 <SelectValue placeholder="Todos" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todos</SelectItem>
+                <SelectItem value="all">Todos</SelectItem>
                 <SelectItem value="Inicial/Total">Inicial/Total</SelectItem>
                 <SelectItem value="Flete">Flete</SelectItem>
                 <SelectItem value="Cuota">Cuota</SelectItem>
