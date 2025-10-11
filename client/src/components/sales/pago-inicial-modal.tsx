@@ -168,9 +168,23 @@ export default function PagoInicialModal({ sale, open, onOpenChange }: PagoInici
   };
 
   const handleSave = () => {
+    // First check mandatory fields
     if (!validateFields()) {
       return;
     }
+
+    // Check for warning: at least one monto field should be filled
+    const hasMontoData = pagoData.montoInicialBs || pagoData.montoInicialUsd;
+    
+    if (!hasMontoData) {
+      toast({
+        title: "No has incluído el Monto pagado",
+        description: "Considera agregar el monto pagado en Bs o USD",
+        variant: "default",
+      });
+    }
+
+    // Proceed with save even if warning was shown
     updatePagoMutation.mutate(pagoData);
   };
 
