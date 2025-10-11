@@ -8,6 +8,16 @@ Preferred communication style: Simple, everyday language.
 
 # Recent Changes (October 2025)
 
+## Pagos Tab - Dynamic "Agregar" / "Editar" Button Text (October 11, 2025)
+- **Changed**: Action buttons in Pagos Tab now show "Agregar" (when empty) or "Editar" (when data exists)
+- **Implementation**:
+  - Backend now returns payment status flags for each order: `hasPagoInicial`, `hasFlete`, and `installmentCount`
+  - Pago Inicial/Total: Shows "Editar" if `pagoInicialUsd` OR `fechaPagoInicial` exists
+  - Flete: Shows "Editar" if `montoFleteUsd` OR `pagoFleteUsd` exists
+  - Cuotas: Shows "Editar" if `installmentCount > 0`
+  - Uses BOOL_OR aggregation for payment status across all products in an order
+- **Impact**: Creates a uniform user experience matching the "Direcciones" column pattern in other tables, making it clear when data needs to be added vs edited
+
 ## Pagos Tab - Separate Action Columns (October 11, 2025)
 - **Changed**: Replaced the single "Acciones" column with three separate columns: "Pago Inicial/Total", "Flete", and "Cuotas"
 - **Implementation**:
