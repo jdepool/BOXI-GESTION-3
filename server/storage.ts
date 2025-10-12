@@ -577,7 +577,7 @@ export class DatabaseStorage implements IStorage {
       data: ordersData.map(order => {
         const pagoInicial = order.pagoInicialUsd || 0;
         const pagoFlete = order.pagoFleteUsd || 0;
-        const ordenPlusFlete = (order.totalOrderUsd || 0) + (order.fleteGratis ? 0 : pagoFlete);
+        const ordenPlusFlete = pagoInicial + (pagoFlete === 0 || order.fleteGratis ? 0 : pagoFlete);
         const totalCuotas = totalCuotasMap.get(order.orden!) || 0;
         
         // Calculate Total Pagado as sum of VERIFIED payments only
