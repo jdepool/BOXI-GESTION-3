@@ -1792,11 +1792,19 @@ export class DatabaseStorage implements IStorage {
 
     const salesData = await salesQuery;
 
+    // Track which orders have already had their Pago Inicial and Flete payments added
+    // to prevent duplicates (since these are order-level payments, not product-level)
+    const processedPagoInicial = new Set<string>();
+    const processedFlete = new Set<string>();
+
     // Process Pago Inicial payments
     for (const sale of salesData) {
       if (sale.pagoInicialUsd && parseFloat(sale.pagoInicialUsd) > 0) {
         // NEW CRITERIA: Only show payments with both Banco Receptor AND Referencia filled
         if (!sale.bancoReceptorInicial || !sale.referenciaInicial) continue;
+        
+        // Skip if we've already processed Pago Inicial for this order (prevents duplicates)
+        if (sale.orden && processedPagoInicial.has(sale.orden)) continue;
         
         // Apply filters
         if (filters?.tipoPago && filters.tipoPago !== 'Inicial/Total') continue;
@@ -1817,12 +1825,18 @@ export class DatabaseStorage implements IStorage {
           notasVerificacion: sale.notasVerificacionInicial,
           fecha: sale.fechaPagoInicial,
         });
+        
+        // Mark this order as processed for Pago Inicial
+        if (sale.orden) processedPagoInicial.add(sale.orden);
       }
 
       // Process Flete payments
       if (sale.pagoFleteUsd && parseFloat(sale.pagoFleteUsd) > 0) {
         // NEW CRITERIA: Only show payments with both Banco Receptor AND Referencia filled
         if (!sale.bancoReceptorFlete || !sale.referenciaFlete) continue;
+        
+        // Skip if we've already processed Flete for this order (prevents duplicates)
+        if (sale.orden && processedFlete.has(sale.orden)) continue;
         
         // Apply filters
         if (filters?.tipoPago && filters.tipoPago !== 'Flete') continue;
@@ -1843,6 +1857,9 @@ export class DatabaseStorage implements IStorage {
           notasVerificacion: sale.notasVerificacionFlete,
           fecha: sale.fechaFlete,
         });
+        
+        // Mark this order as processed for Flete
+        if (sale.orden) processedFlete.add(sale.orden);
       }
     }
 
