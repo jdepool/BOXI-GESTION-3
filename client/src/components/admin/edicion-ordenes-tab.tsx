@@ -98,7 +98,7 @@ export function EdicionOrdenesTab() {
   });
   
   // Fetch admin data for dropdowns
-  const { data: bancos = [] } = useQuery({
+  const { data: allBancos = [] } = useQuery({
     queryKey: ["/api/admin/bancos"],
     queryFn: async () => {
       try {
@@ -112,6 +112,9 @@ export function EdicionOrdenesTab() {
       }
     },
   });
+  
+  // Filter to show only Receptor banks (for incoming payments)
+  const bancos = allBancos.filter((banco: Banco) => banco.tipo === "Receptor");
   
   const { data: metodosPago = [] } = useQuery({
     queryKey: ["/api/admin/metodos-pago"],
