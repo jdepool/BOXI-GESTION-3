@@ -564,9 +564,11 @@ export class DatabaseStorage implements IStorage {
 
     return {
       data: ordersData.map(order => {
-        const pagoInicial = order.pagoInicialUsd || 0;
-        const pagoFlete = order.pagoFleteUsd || 0;
-        const ordenPlusFlete = (order.totalOrderUsd || 0) + (pagoFlete === 0 || order.fleteGratis ? 0 : pagoFlete);
+        // Convert decimal strings to numbers for calculations
+        const pagoInicial = Number(order.pagoInicialUsd) || 0;
+        const pagoFlete = Number(order.pagoFleteUsd) || 0;
+        const totalOrderUsd = Number(order.totalOrderUsd) || 0;
+        const ordenPlusFlete = totalOrderUsd + (pagoFlete === 0 || order.fleteGratis ? 0 : pagoFlete);
         const totalCuotas = totalCuotasMap.get(order.orden!) || 0;
         
         // Calculate Total Pagado as sum of VERIFIED payments only
@@ -587,7 +589,7 @@ export class DatabaseStorage implements IStorage {
         const totalCuotasVerificadas = totalCuotasVerificadasMap.get(order.orden!) || 0;
         totalPagado += totalCuotasVerificadas;
         
-        const saldoPendiente = (order.totalOrderUsd || 0) - totalPagado;
+        const saldoPendiente = totalOrderUsd - totalPagado;
         
         return {
           orden: order.orden!, // Non-null assertion safe because we filter isNotNull(sales.orden)
@@ -596,13 +598,13 @@ export class DatabaseStorage implements IStorage {
           canal: order.canal,
           tipo: order.tipo,
           estadoEntrega: order.estadoEntrega,
-          totalOrderUsd: order.totalOrderUsd,
+          totalOrderUsd: totalOrderUsd,
           productCount: Number(order.productCount),
           hasPagoInicial: order.hasPagoInicial,
           hasFlete: order.hasFlete,
           installmentCount: installmentCountMap.get(order.orden!) || 0,
-          pagoInicialUsd: order.pagoInicialUsd,
-          pagoFleteUsd: order.pagoFleteUsd,
+          pagoInicialUsd: pagoInicial,
+          pagoFleteUsd: pagoFlete,
           ordenPlusFlete,
           totalCuotas,
           totalPagado,
