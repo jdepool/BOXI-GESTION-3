@@ -8,7 +8,6 @@ import { useAuth } from "@/hooks/useAuth";
 import Upload from "@/pages/upload";
 import Sales from "@/pages/sales";
 import Despachos from "@/pages/despachos";
-import Flete from "@/pages/flete";
 import VerificacionPagosCashea from "@/pages/verificacion-pagos-cashea";
 import Verificacion from "@/pages/verificacion";
 import Egresos from "@/pages/egresos";
@@ -36,9 +35,6 @@ function Router() {
       </Route>
       <Route path="/despachos">
         <ProtectedRoute component={Despachos} />
-      </Route>
-      <Route path="/flete">
-        <ProtectedRoute component={Flete} />
       </Route>
       <Route path="/verificacion-pagos-cashea">
         <ProtectedRoute component={VerificacionPagosCashea} />
