@@ -1168,6 +1168,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Payment not found" });
       }
 
+      // If payment was verified, check if Pendiente = 0 and auto-update to "A despachar"
+      if (estadoVerificacion === 'Verificado') {
+        // Get order number from the payment
+        let orden: string | null = null;
+        
+        if (paymentType === 'pago_inicial' || paymentType === 'flete') {
+          const sale = await storage.getSaleById(paymentId);
+          orden = sale?.orden || null;
+        } else if (paymentType === 'cuota') {
+          const installment = await storage.getInstallmentById(paymentId);
+          orden = installment?.orden || null;
+        }
+
+        if (orden) {
+          // Get all sales in the order to calculate Pendiente
+          const salesInOrder = await storage.getSalesByOrderNumber(orden);
+          
+          if (salesInOrder.length > 0) {
+            // Calculate ordenPlusFlete (Order + Flete)
+            const firstSale = salesInOrder[0];
+            const totalOrderUsd = Number(firstSale.totalOrderUsd || 0);
+            const pagoFleteUsd = Number(firstSale.pagoFleteUsd || 0);
+            const fleteGratis = firstSale.fleteGratis || false;
+            const ordenPlusFlete = totalOrderUsd + (fleteGratis ? 0 : pagoFleteUsd);
+
+            // Calculate totalPagado (sum of all verified payments)
+            const pagoInicialVerificado = firstSale.estadoVerificacionInicial === 'Verificado' ? Number(firstSale.pagoInicialUsd || 0) : 0;
+            const fleteVerificado = firstSale.estadoVerificacionFlete === 'Verificado' ? Number(firstSale.pagoFleteUsd || 0) : 0;
+            
+            // Get verified cuotas
+            const installments = await storage.getInstallmentsByOrder(orden);
+            const cuotasVerificadas = installments
+              .filter(inst => inst.estadoVerificacionCuota === 'Verificado')
+              .reduce((sum, inst) => sum + Number(inst.montoCuotaUsd || 0), 0);
+            
+            const totalPagado = pagoInicialVerificado + fleteVerificado + cuotasVerificadas;
+            const saldoPendiente = ordenPlusFlete - totalPagado;
+
+            // Only auto-update if Pendiente = 0 (within tolerance for floating point) and current status is "Pendiente" or "En proceso"
+            // Use tolerance of 0.01 to handle floating point rounding errors
+            if (Math.abs(saldoPendiente) < 0.01 && (firstSale.estadoEntrega === 'Pendiente' || firstSale.estadoEntrega === 'En proceso')) {
+              const updatePromises = salesInOrder.map(sale => 
+                storage.updateSaleDeliveryStatus(sale.id, 'A despachar')
+              );
+              await Promise.all(updatePromises);
+              console.log(`Auto-updated order ${orden} to "A despachar" (Pendiente = 0)`);
+            }
+          }
+        }
+      }
+
       res.json({ success: true, data: result });
     } catch (error) {
       console.error("Update verification error:", error);
@@ -1991,6 +2042,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Update sale notes error:", error);
       res.status(500).json({ error: "Failed to update sale notes" });
+    }
+  });
+
+  // Update estado entrega for all sales in an order
+  app.patch("/api/sales/orders/:orderNumber/estado-entrega", async (req, res) => {
+    try {
+      const { orderNumber } = req.params;
+      const { estadoEntrega } = req.body;
+
+      // Validate estado entrega
+      const validStatuses = ['Pendiente', 'En proceso', 'A despachar', 'En tránsito', 'Entregado', 'A devolver', 'Devuelto', 'Cancelada', 'Perdida'];
+      if (!estadoEntrega || !validStatuses.includes(estadoEntrega)) {
+        return res.status(400).json({ 
+          error: "Invalid estadoEntrega. Must be one of: " + validStatuses.join(', ')
+        });
+      }
+
+      // Find all sales with this order number
+      const salesInOrder = await storage.getSalesByOrderNumber(orderNumber);
+      if (!salesInOrder || salesInOrder.length === 0) {
+        return res.status(404).json({ error: "Order not found" });
+      }
+
+      // Update all sales in the order
+      const updatePromises = salesInOrder.map(sale => 
+        storage.updateSaleDeliveryStatus(sale.id, estadoEntrega)
+      );
+      await Promise.all(updatePromises);
+
+      res.json({ success: true, count: salesInOrder.length });
+    } catch (error) {
+      console.error("Update estado entrega error:", error);
+      res.status(500).json({ error: "Failed to update estado entrega" });
     }
   });
 

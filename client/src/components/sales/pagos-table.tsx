@@ -6,7 +6,16 @@ import { CreditCard, Truck, Banknote } from "lucide-react";
 import PagoInicialModal from "./pago-inicial-modal";
 import FleteModal from "./flete-modal";
 import PaymentInstallmentsModal from "./payment-installments-modal";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface Order {
   orden: string;
@@ -46,6 +55,7 @@ export default function PagosTable({
   onPageChange,
 }: PagosTableProps) {
   const currentPage = Math.floor(offset / limit) + 1;
+  const { toast } = useToast();
   
   const [pagoInicialModalOpen, setPagoInicialModalOpen] = useState(false);
   const [fleteModalOpen, setFleteModalOpen] = useState(false);
@@ -62,6 +72,36 @@ export default function PagosTable({
       maximumFractionDigits: 0,
     }).format(value);
   };
+
+  // Mutation to update estado de entrega for an order
+  const updateEstadoEntregaMutation = useMutation({
+    mutationFn: async ({ orden, estadoEntrega }: { orden: string; estadoEntrega: string }) => {
+      const response = await fetch(`/api/sales/orders/${encodeURIComponent(orden)}/estado-entrega`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ estadoEntrega }),
+      });
+      if (!response.ok) throw new Error('Failed to update estado entrega');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ 
+        predicate: (query) => {
+          return Array.isArray(query.queryKey) && 
+                 typeof query.queryKey[0] === 'string' && 
+                 query.queryKey[0].startsWith('/api/sales');
+        }
+      });
+      toast({ title: "Estado de entrega actualizado" });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "No se pudo actualizar el estado de entrega",
+        variant: "destructive",
+      });
+    },
+  });
 
   return (
     <div className="h-full flex flex-col">
@@ -159,13 +199,33 @@ export default function PagosTable({
                       </Badge>
                     </td>
                     <td className="p-2 min-w-[140px]">
-                      <Badge 
-                        variant="outline"
-                        className="text-xs"
-                        data-testid={`estado-entrega-${order.orden}`}
+                      <Select
+                        value={order.estadoEntrega || ""}
+                        onValueChange={(value) => {
+                          updateEstadoEntregaMutation.mutate({
+                            orden: order.orden,
+                            estadoEntrega: value,
+                          });
+                        }}
                       >
-                        {order.estadoEntrega || "N/A"}
-                      </Badge>
+                        <SelectTrigger 
+                          className="h-7 text-xs w-full"
+                          data-testid={`select-estado-entrega-${order.orden}`}
+                        >
+                          <SelectValue placeholder="Seleccionar" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Pendiente">Pendiente</SelectItem>
+                          <SelectItem value="En proceso">En proceso</SelectItem>
+                          <SelectItem value="A despachar">A despachar</SelectItem>
+                          <SelectItem value="En tránsito">En tránsito</SelectItem>
+                          <SelectItem value="Entregado">Entregado</SelectItem>
+                          <SelectItem value="A devolver">A devolver</SelectItem>
+                          <SelectItem value="Devuelto">Devuelto</SelectItem>
+                          <SelectItem value="Cancelada">Cancelada</SelectItem>
+                          <SelectItem value="Perdida">Perdida</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </td>
                     <td className="p-2 min-w-[140px]">
                       <span className="text-xs font-semibold" data-testid={`total-${order.orden}`}>
@@ -261,9 +321,17 @@ export default function PagosTable({
                         </div>
                       </div>
                     </td>
-                    <td className="p-2 min-w-[120px] bg-orange-50 dark:bg-orange-950">
+                    <td className={`p-2 min-w-[120px] ${
+                      Math.abs(order.saldoPendiente) < 0.01 && (order.estadoEntrega === 'Pendiente' || order.estadoEntrega === 'En proceso')
+                        ? 'bg-yellow-50 dark:bg-yellow-950'
+                        : 'bg-orange-50 dark:bg-orange-950'
+                    }`}>
                       <div className="flex justify-center">
-                        <div className="bg-orange-100 dark:bg-orange-900 text-orange-900 dark:text-orange-100 px-3 py-1 rounded-md text-xs font-semibold" data-testid={`metric-pendiente-${order.orden}`}>
+                        <div className={`${
+                          Math.abs(order.saldoPendiente) < 0.01 && (order.estadoEntrega === 'Pendiente' || order.estadoEntrega === 'En proceso')
+                            ? 'bg-yellow-100 dark:bg-yellow-900 text-yellow-900 dark:text-yellow-100'
+                            : 'bg-orange-100 dark:bg-orange-900 text-orange-900 dark:text-orange-100'
+                        } px-3 py-1 rounded-md text-xs font-semibold`} data-testid={`metric-pendiente-${order.orden}`}>
                           {formatCurrency(order.saldoPendiente)}
                         </div>
                       </div>
