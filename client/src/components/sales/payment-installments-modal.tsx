@@ -40,11 +40,11 @@ interface PaymentInstallmentsModalProps {
 
 const installmentFormSchema = z.object({
   fecha: z.date().optional(),
-  cuotaAmount: z.string().min(1, "Monto es requerido").refine((val) => parseFloat(val) > 0, "El monto debe ser mayor a 0"),
-  cuotaAmountBs: z.string().optional(),
+  montoCuotaUsd: z.string().optional(), // Optional - Monto USD field
+  montoCuotaBs: z.string().optional(),
   pagoCuotaUsd: z.string().optional(),
-  bancoReceptorCuota: z.string().optional(),
-  referencia: z.string().optional(),
+  bancoReceptorCuota: z.string().min(1, "Banco Receptor es requerido"), // Mandatory
+  referencia: z.string().min(1, "Referencia es requerida"), // Mandatory
 });
 
 type InstallmentFormData = z.infer<typeof installmentFormSchema>;
@@ -58,8 +58,8 @@ export default function PaymentInstallmentsModal({ sale, open, onOpenChange }: P
     resolver: zodResolver(installmentFormSchema),
     defaultValues: {
       fecha: new Date(),
-      cuotaAmount: "",
-      cuotaAmountBs: "",
+      montoCuotaUsd: "",
+      montoCuotaBs: "",
       pagoCuotaUsd: "",
       bancoReceptorCuota: "",
       referencia: "",
@@ -98,11 +98,11 @@ export default function PaymentInstallmentsModal({ sale, open, onOpenChange }: P
       
       const payload = {
         fecha: data.fecha?.toISOString(),
-        cuotaAmount: data.cuotaAmount,
-        cuotaAmountBs: data.cuotaAmountBs || null,
+        cuotaAmount: data.montoCuotaUsd || null, // Map montoCuotaUsd to cuotaAmount (DB field)
+        cuotaAmountBs: data.montoCuotaBs || null, // Map montoCuotaBs to cuotaAmountBs (DB field)
         pagoCuotaUsd: data.pagoCuotaUsd || null,
-        bancoReceptorCuota: data.bancoReceptorCuota || null,
-        referencia: data.referencia || null,
+        bancoReceptorCuota: data.bancoReceptorCuota,
+        referencia: data.referencia,
       };
 
       return apiRequest("POST", `/api/sales/${sale.id}/installments`, payload);
@@ -134,11 +134,11 @@ export default function PaymentInstallmentsModal({ sale, open, onOpenChange }: P
     mutationFn: async (data: InstallmentFormData & { id: string }) => {
       const payload = {
         fecha: data.fecha?.toISOString(),
-        cuotaAmount: data.cuotaAmount,
-        cuotaAmountBs: data.cuotaAmountBs || null,
+        cuotaAmount: data.montoCuotaUsd || null, // Map montoCuotaUsd to cuotaAmount (DB field)
+        cuotaAmountBs: data.montoCuotaBs || null, // Map montoCuotaBs to cuotaAmountBs (DB field)
         pagoCuotaUsd: data.pagoCuotaUsd || null,
-        bancoReceptorCuota: data.bancoReceptorCuota || null,
-        referencia: data.referencia || null,
+        bancoReceptorCuota: data.bancoReceptorCuota,
+        referencia: data.referencia,
       };
 
       return apiRequest("PATCH", `/api/installments/${data.id}`, payload);
@@ -200,8 +200,8 @@ export default function PaymentInstallmentsModal({ sale, open, onOpenChange }: P
   const handleEditInstallment = (installment: PaymentInstallment) => {
     form.reset({
       fecha: installment.fecha ? new Date(installment.fecha) : undefined,
-      cuotaAmount: installment.cuotaAmount || "",
-      cuotaAmountBs: installment.cuotaAmountBs || "",
+      montoCuotaUsd: installment.cuotaAmount || "", // Map cuotaAmount to montoCuotaUsd
+      montoCuotaBs: installment.cuotaAmountBs || "", // Map cuotaAmountBs to montoCuotaBs
       pagoCuotaUsd: installment.pagoCuotaUsd || "",
       bancoReceptorCuota: installment.bancoReceptorCuota || "",
       referencia: installment.referencia || "",
@@ -322,7 +322,7 @@ export default function PaymentInstallmentsModal({ sale, open, onOpenChange }: P
                       name="bancoReceptorCuota"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Banco Receptor</FormLabel>
+                          <FormLabel>Banco Receptor *</FormLabel>
                           <Select onValueChange={field.onChange} value={field.value}>
                             <FormControl>
                               <SelectTrigger id="bancoReceptorCuota" data-testid="select-installment-banco">
@@ -347,7 +347,7 @@ export default function PaymentInstallmentsModal({ sale, open, onOpenChange }: P
                       name="referencia"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Referencia</FormLabel>
+                          <FormLabel>Referencia *</FormLabel>
                           <FormControl>
                             <Input
                               placeholder="Número de referencia"
@@ -362,7 +362,7 @@ export default function PaymentInstallmentsModal({ sale, open, onOpenChange }: P
 
                     <FormField
                       control={form.control}
-                      name="cuotaAmountBs"
+                      name="montoCuotaBs"
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Monto Bs</FormLabel>
@@ -383,7 +383,7 @@ export default function PaymentInstallmentsModal({ sale, open, onOpenChange }: P
 
                     <FormField
                       control={form.control}
-                      name="cuotaAmount"
+                      name="montoCuotaUsd"
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Monto USD</FormLabel>
