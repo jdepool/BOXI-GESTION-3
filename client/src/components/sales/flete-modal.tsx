@@ -90,7 +90,11 @@ export default function FleteModal({ open, onOpenChange, sale }: FleteModalProps
       });
       // Invalidate all sales queries to ensure cache refresh
       queryClient.invalidateQueries({ 
-        predicate: (query) => Array.isArray(query.queryKey) && query.queryKey[0] === '/api/sales' 
+        predicate: (query) => {
+          return Array.isArray(query.queryKey) && 
+                 typeof query.queryKey[0] === 'string' && 
+                 query.queryKey[0].startsWith('/api/sales');
+        }
       });
       onOpenChange(false);
       resetForm();

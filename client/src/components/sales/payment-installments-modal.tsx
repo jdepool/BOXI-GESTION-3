@@ -109,6 +109,13 @@ export default function PaymentInstallmentsModal({ sale, open, onOpenChange }: P
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/sales/${sale?.id}/installments`] });
+      queryClient.invalidateQueries({ 
+        predicate: (query) => {
+          return Array.isArray(query.queryKey) && 
+                 typeof query.queryKey[0] === 'string' && 
+                 query.queryKey[0].startsWith('/api/sales');
+        }
+      });
       toast({ title: "Cuota creada exitosamente" });
       form.reset();
       setShowForm(false);
@@ -138,6 +145,13 @@ export default function PaymentInstallmentsModal({ sale, open, onOpenChange }: P
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/sales/${sale?.id}/installments`] });
+      queryClient.invalidateQueries({ 
+        predicate: (query) => {
+          return Array.isArray(query.queryKey) && 
+                 typeof query.queryKey[0] === 'string' && 
+                 query.queryKey[0].startsWith('/api/sales');
+        }
+      });
       toast({ title: "Cuota actualizada exitosamente" });
       form.reset();
       setEditingInstallment(null);
@@ -159,6 +173,13 @@ export default function PaymentInstallmentsModal({ sale, open, onOpenChange }: P
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/sales/${sale?.id}/installments`] });
+      queryClient.invalidateQueries({ 
+        predicate: (query) => {
+          return Array.isArray(query.queryKey) && 
+                 typeof query.queryKey[0] === 'string' && 
+                 query.queryKey[0].startsWith('/api/sales');
+        }
+      });
       toast({ title: "Cuota eliminada exitosamente" });
     },
     onError: (error: any) => {
