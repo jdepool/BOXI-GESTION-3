@@ -253,7 +253,7 @@ export interface IStorage {
   updateOrderPagoInicial(orderNumber: string, pagoData: {
     fechaPagoInicial?: string | null;
     pagoInicialUsd?: number | null;
-    bancoId?: string | null;
+    bancoReceptorInicial?: string | null;
     referenciaInicial?: string | null;
     montoInicialBs?: number | null;
     montoInicialUsd?: number | null;
@@ -913,7 +913,7 @@ export class DatabaseStorage implements IStorage {
   async updateOrderPagoInicial(orderNumber: string, pagoData: {
     fechaPagoInicial?: string | null;
     pagoInicialUsd?: number | null;
-    bancoId?: string | null;
+    bancoReceptorInicial?: string | null;
     referenciaInicial?: string | null;
     montoInicialBs?: number | null;
     montoInicialUsd?: number | null;
@@ -929,8 +929,8 @@ export class DatabaseStorage implements IStorage {
     if (pagoData.pagoInicialUsd !== undefined) {
       updateData.pagoInicialUsd = pagoData.pagoInicialUsd;
     }
-    if (pagoData.bancoId !== undefined) {
-      updateData.bancoId = pagoData.bancoId === "" ? null : pagoData.bancoId;
+    if (pagoData.bancoReceptorInicial !== undefined) {
+      updateData.bancoReceptorInicial = pagoData.bancoReceptorInicial === "" ? null : pagoData.bancoReceptorInicial;
     }
     if (pagoData.referenciaInicial !== undefined) {
       updateData.referenciaInicial = pagoData.referenciaInicial === "" ? null : pagoData.referenciaInicial;
@@ -1858,7 +1858,7 @@ export class DatabaseStorage implements IStorage {
         saleId: sales.id,
         pagoInicialUsd: sales.pagoInicialUsd,
         fechaPagoInicial: sales.fechaPagoInicial,
-        bancoId: sales.bancoId,
+        bancoReceptorInicial: sales.bancoReceptorInicial,
         referenciaInicial: sales.referenciaInicial,
         montoInicialBs: sales.montoInicialBs,
         montoInicialUsd: sales.montoInicialUsd,
@@ -1891,7 +1891,7 @@ export class DatabaseStorage implements IStorage {
         if (filters?.tipoPago && filters.tipoPago !== 'Inicial/Total') continue;
         if (filters?.startDate && sale.fechaPagoInicial && sale.fechaPagoInicial < new Date(filters.startDate)) continue;
         if (filters?.endDate && sale.fechaPagoInicial && sale.fechaPagoInicial > new Date(filters.endDate)) continue;
-        if (filters?.bancoId && sale.bancoId !== filters.bancoId) continue;
+        if (filters?.bancoId && sale.bancoReceptorInicial !== filters.bancoId) continue;
 
         payments.push({
           paymentId: sale.saleId,
@@ -1901,7 +1901,7 @@ export class DatabaseStorage implements IStorage {
           montoBs: sale.montoInicialBs ? parseFloat(sale.montoInicialBs) : null,
           montoUsd: sale.montoInicialUsd ? parseFloat(sale.montoInicialUsd) : null,
           referencia: sale.referenciaInicial,
-          bancoId: sale.bancoId,
+          bancoId: sale.bancoReceptorInicial,
           estadoVerificacion: sale.estadoVerificacionInicial || 'Por verificar',
           notasVerificacion: sale.notasVerificacionInicial,
           fecha: sale.fechaPagoInicial,
@@ -1943,7 +1943,7 @@ export class DatabaseStorage implements IStorage {
         cuotaAmountBs: paymentInstallments.cuotaAmountBs,
         pagoCuotaUsd: paymentInstallments.pagoCuotaUsd,
         referencia: paymentInstallments.referencia,
-        bancoId: paymentInstallments.bancoId,
+        bancoReceptorCuota: paymentInstallments.bancoReceptorCuota,
         estadoVerificacion: paymentInstallments.estadoVerificacion,
         notasVerificacion: paymentInstallments.notasVerificacion,
       })
@@ -1959,7 +1959,7 @@ export class DatabaseStorage implements IStorage {
       if (filters?.tipoPago && filters.tipoPago !== 'Cuota') continue;
       if (filters?.startDate && cuota.fecha && cuota.fecha < new Date(filters.startDate)) continue;
       if (filters?.endDate && cuota.fecha && cuota.fecha > new Date(filters.endDate)) continue;
-      if (filters?.bancoId && cuota.bancoId !== filters.bancoId) continue;
+      if (filters?.bancoId && cuota.bancoReceptorCuota !== filters.bancoId) continue;
 
       payments.push({
         paymentId: cuota.installmentId,
@@ -1969,7 +1969,7 @@ export class DatabaseStorage implements IStorage {
         montoBs: cuota.cuotaAmountBs ? parseFloat(cuota.cuotaAmountBs) : null,
         montoUsd: cuota.pagoCuotaUsd ? parseFloat(cuota.pagoCuotaUsd) : null,
         referencia: cuota.referencia,
-        bancoId: cuota.bancoId,
+        bancoId: cuota.bancoReceptorCuota,
         estadoVerificacion: cuota.estadoVerificacion || 'Por verificar',
         notasVerificacion: cuota.notasVerificacion,
         fecha: cuota.fecha,

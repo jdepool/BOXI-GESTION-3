@@ -91,7 +91,7 @@ export const sales = pgTable("sales", {
   pagoInicialUsd: decimal("pago_inicial_usd", { precision: 10, scale: 2 }),
   fechaPagoInicial: timestamp("fecha_pago_inicial"),
   metodoPagoId: varchar("metodo_pago_id"),
-  bancoId: varchar("banco_id"),
+  bancoReceptorInicial: varchar("banco_receptor_inicial"),
   orden: text("orden"),
   factura: text("factura"),
   referenciaInicial: text("referencia_inicial"),
@@ -162,7 +162,7 @@ export const paymentInstallments = pgTable("payment_installments", {
   cuotaAmountBs: decimal("cuota_amount_bs", { precision: 15, scale: 2 }), // Payment amount BS
   saldoRemaining: decimal("saldo_remaining", { precision: 10, scale: 2 }), // Balance after payment
   referencia: text("referencia"), // Payment reference
-  bancoId: varchar("banco_id"), // Bank used for payment
+  bancoReceptorCuota: varchar("banco_receptor_cuota"), // Banco Receptor used for payment
   pagoCuotaUsd: decimal("pago_cuota_usd", { precision: 10, scale: 2 }), // Payment amount in USD
   verificado: boolean("verificado").default(true), // Whether payment is verified
   // Verification fields for Cuotas

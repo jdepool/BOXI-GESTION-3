@@ -198,7 +198,7 @@ function parseFile(buffer: Buffer, canal: string, filename: string) {
           estadoPagoInicial: null,
           pagoInicialUsd: null,
           metodoPagoId: null,
-          bancoId: null,
+          bancoReceptorInicial: null,
           orden: row.Name ? String(row.Name) : null, // Name maps to Order
           factura: null,
           referenciaInicial: null,
@@ -257,7 +257,7 @@ function parseFile(buffer: Buffer, canal: string, filename: string) {
           estadoPagoInicial: row['Estado pago inicial'] ? String(row['Estado pago inicial']) : null,
           pagoInicialUsd: row['Pago inicial usd'] ? String(row['Pago inicial usd']) : null,
           metodoPagoId: null,
-          bancoId: isCashea ? '450504fa-8107-477a-b5ce-064cebe6d416' : null, // Auto-assign Cashea banco for Cashea sales
+          bancoReceptorInicial: isCashea ? '450504fa-8107-477a-b5ce-064cebe6d416' : null, // Auto-assign Cashea banco for Cashea sales
           orden: row.Orden ? String(row.Orden) : null,
           factura: row.Factura ? String(row.Factura) : null,
           referenciaInicial: row.Referencia ? String(row.Referencia) : null,
@@ -894,7 +894,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               'Monto Cuota USD': installment.cuotaAmount || '',
               'Monto Cuota Bs': installment.cuotaAmountBs || '',
               'Referencia Cuota': installment.referencia || '',
-              'Banco Cuota': installment.bancoId || '',
+              'Banco Cuota': installment.bancoReceptorCuota || '',
               'Saldo Restante': installment.saldoRemaining || '',
               'Verificado': installment.verificado ? 'Sí' : 'No'
             }));
@@ -1110,7 +1110,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         direccionDespachoReferencia: existingSales[0].direccionDespachoReferencia,
         // Preserve other fields
         metodoPagoId: existingSales[0].metodoPagoId,
-        bancoId: existingSales[0].bancoId,
+        bancoReceptorInicial: existingSales[0].bancoReceptorInicial,
         referenciaInicial: existingSales[0].referenciaInicial,
         montoInicialBs: existingSales[0].montoInicialBs,
         montoInicialUsd: existingSales[0].montoInicialUsd,
@@ -1250,7 +1250,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           estadoPagoInicial: null,
           pagoInicialUsd: null,
           metodoPagoId: null,
-          bancoId: null,
+          bancoReceptorInicial: null,
           orden: row.Name ? String(row.Name) : null, // Name maps to Order
           factura: null,
           referenciaInicial: null,
@@ -1676,7 +1676,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         estadoPagoInicial: null,
         pagoInicialUsd: pagosIniciales[i] ? String(pagosIniciales[i]) : null,
         metodoPagoId: null,
-        bancoId: '450504fa-8107-477a-b5ce-064cebe6d416', // Auto-assign Cashea banco for API downloads
+        bancoReceptorInicial: '450504fa-8107-477a-b5ce-064cebe6d416', // Auto-assign Cashea banco for API downloads
         orden: ordenes[i] ? String(ordenes[i]) : null,
         factura: null,
         referenciaInicial: referencias[i] ? String(referencias[i]) : null,
@@ -3026,7 +3026,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         montoInicialUsd: handleNumericField(body.montoInicialUsd, existingSale.montoInicialUsd),
         pagoInicialUsd: handleNumericField(body.pagoInicialUsd, existingSale.pagoInicialUsd),
         metodoPagoId: body.metodoPagoId !== undefined ? body.metodoPagoId : existingSale.metodoPagoId,
-        bancoId: body.bancoId !== undefined ? body.bancoId : existingSale.bancoId,
+        bancoReceptorInicial: body.bancoReceptorInicial !== undefined ? body.bancoReceptorInicial : existingSale.bancoReceptorInicial,
         estadoEntrega: body.estadoEntrega !== undefined ? body.estadoEntrega : existingSale.estadoEntrega,
         
         // Address fields
@@ -3071,7 +3071,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Check if any payment information is being provided
         const hasPaymentInfo = !!(
           saleData.referenciaInicial || 
-          saleData.bancoId || 
+          saleData.bancoReceptorInicial || 
           saleData.metodoPagoId ||
           (saleData.montoInicialUsd && parseFloat(saleData.montoInicialUsd) > 0) ||
           (saleData.pagoInicialUsd && parseFloat(saleData.pagoInicialUsd) > 0)
@@ -3190,7 +3190,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         montoInicialBs: body.montoInicialBs || null,
         montoInicialUsd: body.montoInicialUsd || null,
         metodoPagoId: body.metodoPagoId || null,
-        bancoId: body.bancoId || null,
+        bancoReceptorInicial: body.bancoReceptorInicial || null,
         
         // Address fields
         direccionFacturacionPais: body.direccionFacturacionPais || null,
