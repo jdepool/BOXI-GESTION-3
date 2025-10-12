@@ -590,7 +590,7 @@ export class DatabaseStorage implements IStorage {
         const totalCuotasVerificadas = totalCuotasVerificadasMap.get(order.orden!) || 0;
         totalPagado += totalCuotasVerificadas;
         
-        const saldoPendiente = totalOrderUsd - totalPagado;
+        const saldoPendiente = ordenPlusFlete - totalPagado;
         
         return {
           orden: order.orden!, // Non-null assertion safe because we filter isNotNull(sales.orden)
