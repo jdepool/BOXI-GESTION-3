@@ -1212,12 +1212,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
             }
             
             let fleteVerificado = 0;
-            if (paymentType === 'Flete') {
-              // This payment is being verified now, so include it
-              fleteVerificado = currentPaymentAmount;
-            } else {
-              // Check if it was already verified
-              fleteVerificado = firstSale.estadoVerificacionFlete === 'Verificado' ? Number(firstSale.pagoFleteUsd || 0) : 0;
+            // Only count Flete if amount > 0 AND not marked as gratis (matching Pagos table logic)
+            const hasFletePayment = pagoFleteUsd > 0 && !fleteGratis;
+            if (hasFletePayment) {
+              if (paymentType === 'Flete') {
+                // This payment is being verified now, so include it
+                fleteVerificado = currentPaymentAmount;
+              } else {
+                // Check if it was already verified
+                fleteVerificado = firstSale.estadoVerificacionFlete === 'Verificado' ? Number(firstSale.pagoFleteUsd || 0) : 0;
+              }
             }
             
             // Get verified cuotas
