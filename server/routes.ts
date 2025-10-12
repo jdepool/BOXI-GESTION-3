@@ -1170,15 +1170,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // If payment was verified, check if Pendiente = 0 and auto-update to "A despachar"
       if (estadoVerificacion === 'Verificado') {
-        // Get order number from the payment
+        // Get order number and payment amount from the payment being verified
         let orden: string | null = null;
+        let currentPaymentAmount = 0;
         
-        if (paymentType === 'pago_inicial' || paymentType === 'flete') {
+        if (paymentType === 'pago_inicial') {
           const sale = await storage.getSaleById(paymentId);
           orden = sale?.orden || null;
+          currentPaymentAmount = Number(sale?.pagoInicialUsd || 0);
+        } else if (paymentType === 'flete') {
+          const sale = await storage.getSaleById(paymentId);
+          orden = sale?.orden || null;
+          currentPaymentAmount = Number(sale?.pagoFleteUsd || 0);
         } else if (paymentType === 'cuota') {
           const installment = await storage.getInstallmentById(paymentId);
           orden = installment?.orden || null;
+          currentPaymentAmount = Number(installment?.cuotaAmount || 0);
         }
 
         if (orden) {
@@ -1194,17 +1201,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
             const ordenPlusFlete = totalOrderUsd + (fleteGratis ? 0 : pagoFleteUsd);
 
             // Calculate totalPagado (sum of all verified payments)
-            const pagoInicialVerificado = firstSale.estadoVerificacionInicial === 'Verificado' ? Number(firstSale.pagoInicialUsd || 0) : 0;
-            const fleteVerificado = firstSale.estadoVerificacionFlete === 'Verificado' ? Number(firstSale.pagoFleteUsd || 0) : 0;
+            // Note: We need to check old status from DB and include current payment being verified
+            let pagoInicialVerificado = 0;
+            if (paymentType === 'pago_inicial') {
+              // This payment is being verified now, so include it
+              pagoInicialVerificado = currentPaymentAmount;
+            } else {
+              // Check if it was already verified
+              pagoInicialVerificado = firstSale.estadoVerificacionInicial === 'Verificado' ? Number(firstSale.pagoInicialUsd || 0) : 0;
+            }
+            
+            let fleteVerificado = 0;
+            if (paymentType === 'flete') {
+              // This payment is being verified now, so include it
+              fleteVerificado = currentPaymentAmount;
+            } else {
+              // Check if it was already verified
+              fleteVerificado = firstSale.estadoVerificacionFlete === 'Verificado' ? Number(firstSale.pagoFleteUsd || 0) : 0;
+            }
             
             // Get verified cuotas
             const installments = await storage.getInstallmentsByOrder(orden);
-            const cuotasVerificadas = installments
-              .filter(inst => inst.estadoVerificacionCuota === 'Verificado')
-              .reduce((sum, inst) => sum + Number(inst.montoCuotaUsd || 0), 0);
+            let cuotasVerificadas = 0;
+            if (paymentType === 'cuota') {
+              // Include all previously verified cuotas PLUS the one being verified now
+              cuotasVerificadas = installments
+                .filter(inst => inst.estadoVerificacion === 'Verificado' || inst.id === paymentId)
+                .reduce((sum, inst) => sum + Number(inst.cuotaAmount || 0), 0);
+            } else {
+              // Just get previously verified cuotas
+              cuotasVerificadas = installments
+                .filter(inst => inst.estadoVerificacion === 'Verificado')
+                .reduce((sum, inst) => sum + Number(inst.cuotaAmount || 0), 0);
+            }
             
             const totalPagado = pagoInicialVerificado + fleteVerificado + cuotasVerificadas;
             const saldoPendiente = ordenPlusFlete - totalPagado;
+
+            console.log(`Order ${orden} - Orden+Flete: $${ordenPlusFlete}, Total Pagado: $${totalPagado}, Pendiente: $${saldoPendiente}`);
 
             // Only auto-update if Pendiente = 0 (within tolerance for floating point) and current status is "Pendiente" or "En proceso"
             // Use tolerance of 0.01 to handle floating point rounding errors
@@ -1213,7 +1247,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 storage.updateSaleDeliveryStatus(sale.id, 'A despachar')
               );
               await Promise.all(updatePromises);
-              console.log(`Auto-updated order ${orden} to "A despachar" (Pendiente = 0)`);
+              console.log(`✅ Auto-updated order ${orden} to "A despachar" (Pendiente = $${saldoPendiente.toFixed(2)})`);
             }
           }
         }
