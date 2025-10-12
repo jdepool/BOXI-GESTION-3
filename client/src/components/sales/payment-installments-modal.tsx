@@ -43,7 +43,7 @@ const installmentFormSchema = z.object({
   cuotaAmount: z.string().min(1, "Monto es requerido").refine((val) => parseFloat(val) > 0, "El monto debe ser mayor a 0"),
   cuotaAmountBs: z.string().optional(),
   pagoCuotaUsd: z.string().optional(),
-  bancoId: z.string().optional(),
+  bancoReceptorCuota: z.string().optional(),
   referencia: z.string().optional(),
 });
 
@@ -61,7 +61,7 @@ export default function PaymentInstallmentsModal({ sale, open, onOpenChange }: P
       cuotaAmount: "",
       cuotaAmountBs: "",
       pagoCuotaUsd: "",
-      bancoId: "",
+      bancoReceptorCuota: "",
       referencia: "",
     },
   });
@@ -101,7 +101,7 @@ export default function PaymentInstallmentsModal({ sale, open, onOpenChange }: P
         cuotaAmount: data.cuotaAmount,
         cuotaAmountBs: data.cuotaAmountBs || null,
         pagoCuotaUsd: data.pagoCuotaUsd || null,
-        bancoId: data.bancoId || null,
+        bancoReceptorCuota: data.bancoReceptorCuota || null,
         referencia: data.referencia || null,
       };
 
@@ -130,7 +130,7 @@ export default function PaymentInstallmentsModal({ sale, open, onOpenChange }: P
         cuotaAmount: data.cuotaAmount,
         cuotaAmountBs: data.cuotaAmountBs || null,
         pagoCuotaUsd: data.pagoCuotaUsd || null,
-        bancoId: data.bancoId || null,
+        bancoReceptorCuota: data.bancoReceptorCuota || null,
         referencia: data.referencia || null,
       };
 
@@ -182,7 +182,7 @@ export default function PaymentInstallmentsModal({ sale, open, onOpenChange }: P
       cuotaAmount: installment.cuotaAmount || "",
       cuotaAmountBs: installment.cuotaAmountBs || "",
       pagoCuotaUsd: installment.pagoCuotaUsd || "",
-      bancoId: installment.bancoId || "",
+      bancoReceptorCuota: installment.bancoReceptorCuota || "",
       referencia: installment.referencia || "",
     });
     setEditingInstallment(installment);
@@ -298,13 +298,13 @@ export default function PaymentInstallmentsModal({ sale, open, onOpenChange }: P
 
                     <FormField
                       control={form.control}
-                      name="bancoId"
+                      name="bancoReceptorCuota"
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Banco Receptor</FormLabel>
                           <Select onValueChange={field.onChange} value={field.value}>
                             <FormControl>
-                              <SelectTrigger data-testid="select-installment-banco">
+                              <SelectTrigger id="bancoReceptorCuota" data-testid="select-installment-banco">
                                 <SelectValue placeholder="Seleccionar banco" />
                               </SelectTrigger>
                             </FormControl>
@@ -435,7 +435,7 @@ export default function PaymentInstallmentsModal({ sale, open, onOpenChange }: P
                   </TableRow>
                 ) : (
                   installments.map((installment: PaymentInstallment) => {
-                    const banco = banks.find((b: any) => b.id === installment.bancoId);
+                    const banco = banks.find((b: any) => b.id === installment.bancoReceptorCuota);
                     return (
                       <TableRow key={installment.id}>
                         <TableCell>{installment.installmentNumber}</TableCell>

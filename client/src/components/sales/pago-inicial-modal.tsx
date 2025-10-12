@@ -27,7 +27,7 @@ interface Sale {
   estadoEntrega: string;
   pagoInicialUsd?: string | number | null;
   fechaPagoInicial?: Date | string | null;
-  bancoId?: string | null;
+  bancoReceptorInicial?: string | null;
   referenciaInicial?: string | null;
   montoInicialBs?: string | number | null;
   montoInicialUsd?: string | number | null;
@@ -52,7 +52,7 @@ export default function PagoInicialModal({ sale, open, onOpenChange }: PagoInici
   const [pagoData, setPagoData] = useState({
     fechaPagoInicial: new Date() as Date | null,
     pagoInicialUsd: "",
-    bancoId: "none",
+    bancoReceptorInicial: "none",
     referenciaInicial: "",
     montoInicialBs: "",
     montoInicialUsd: "",
@@ -60,7 +60,7 @@ export default function PagoInicialModal({ sale, open, onOpenChange }: PagoInici
 
   const [errors, setErrors] = useState({
     pagoInicialUsd: false,
-    bancoId: false,
+    bancoReceptorInicial: false,
     referenciaInicial: false,
   });
 
@@ -78,7 +78,7 @@ export default function PagoInicialModal({ sale, open, onOpenChange }: PagoInici
       setPagoData({
         fechaPagoInicial: sale.fechaPagoInicial ? new Date(sale.fechaPagoInicial) : new Date(),
         pagoInicialUsd: sale.pagoInicialUsd?.toString() || "",
-        bancoId: sale.bancoId || "none",
+        bancoReceptorInicial: sale.bancoReceptorInicial || "none",
         referenciaInicial: sale.referenciaInicial || "",
         montoInicialBs: sale.montoInicialBs?.toString() || "",
         montoInicialUsd: sale.montoInicialUsd?.toString() || "",
@@ -91,7 +91,7 @@ export default function PagoInicialModal({ sale, open, onOpenChange }: PagoInici
     if (open) {
       setErrors({
         pagoInicialUsd: false,
-        bancoId: false,
+        bancoReceptorInicial: false,
         referenciaInicial: false,
       });
     }
@@ -104,7 +104,7 @@ export default function PagoInicialModal({ sale, open, onOpenChange }: PagoInici
       const payload = {
         fechaPagoInicial: data.fechaPagoInicial?.toISOString() || null,
         pagoInicialUsd: data.pagoInicialUsd ? parseFloat(data.pagoInicialUsd) : null,
-        bancoId: data.bancoId && data.bancoId !== "none" ? data.bancoId : null,
+        bancoReceptorInicial: data.bancoReceptorInicial && data.bancoReceptorInicial !== "none" ? data.bancoReceptorInicial : null,
         referenciaInicial: data.referenciaInicial || null,
         montoInicialBs: data.montoInicialBs ? parseFloat(data.montoInicialBs) : null,
         montoInicialUsd: data.montoInicialUsd ? parseFloat(data.montoInicialUsd) : null,
@@ -146,7 +146,7 @@ export default function PagoInicialModal({ sale, open, onOpenChange }: PagoInici
   const validateFields = () => {
     const newErrors = {
       pagoInicialUsd: !pagoData.pagoInicialUsd || parseFloat(pagoData.pagoInicialUsd) <= 0,
-      bancoId: !pagoData.bancoId || pagoData.bancoId === "none",
+      bancoReceptorInicial: !pagoData.bancoReceptorInicial || pagoData.bancoReceptorInicial === "none",
       referenciaInicial: !pagoData.referenciaInicial || pagoData.referenciaInicial.trim() === "",
     };
 
@@ -288,16 +288,17 @@ export default function PagoInicialModal({ sale, open, onOpenChange }: PagoInici
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="bancoId" className={errors.bancoId ? "text-destructive" : ""}>
+                <Label htmlFor="bancoReceptorInicial" className={errors.bancoReceptorInicial ? "text-destructive" : ""}>
                   Banco Receptor *
                 </Label>
                 <Select
-                  value={pagoData.bancoId}
-                  onValueChange={handleSelectChange("bancoId")}
+                  value={pagoData.bancoReceptorInicial}
+                  onValueChange={handleSelectChange("bancoReceptorInicial")}
                 >
                   <SelectTrigger 
+                    id="bancoReceptorInicial"
                     data-testid="select-banco-pago"
-                    className={cn(errors.bancoId && "border-destructive focus:ring-destructive")}
+                    className={cn(errors.bancoReceptorInicial && "border-destructive focus:ring-destructive")}
                   >
                     <SelectValue placeholder="Seleccionar banco" />
                   </SelectTrigger>
@@ -311,7 +312,7 @@ export default function PagoInicialModal({ sale, open, onOpenChange }: PagoInici
                     <SelectItem value="otro">Otro ($)</SelectItem>
                   </SelectContent>
                 </Select>
-                {errors.bancoId && (
+                {errors.bancoReceptorInicial && (
                   <p className="text-sm text-destructive">Debes seleccionar un banco</p>
                 )}
               </div>

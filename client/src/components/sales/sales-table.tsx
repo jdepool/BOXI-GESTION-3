@@ -563,9 +563,9 @@ export default function SalesTable({
                     </td>
                     <td className="p-2 min-w-[100px] text-xs text-muted-foreground truncate">
                       {(() => {
-                        if (!sale.bancoId) return 'N/A';
-                        if (sale.bancoId === 'otro') return 'Otro($)';
-                        const bank = (banks as any[]).find((b: any) => b.id === sale.bancoId);
+                        if (!sale.bancoReceptorInicial) return 'N/A';
+                        if (sale.bancoReceptorInicial === 'otro') return 'Otro($)';
+                        const bank = (banks as any[]).find((b: any) => b.id === sale.bancoReceptorInicial);
                         return bank ? bank.banco : 'N/A';
                       })()}
                     </td>
