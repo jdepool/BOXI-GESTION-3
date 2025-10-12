@@ -1887,6 +1887,9 @@ export class DatabaseStorage implements IStorage {
     // Process Pago Inicial payments
     for (const sale of salesData) {
       if (sale.pagoInicialUsd && parseFloat(sale.pagoInicialUsd) > 0) {
+        // NEW CRITERIA: Only show payments with both Banco Receptor AND Referencia filled
+        if (!sale.bancoReceptorInicial || !sale.referenciaInicial) continue;
+        
         // Apply filters
         if (filters?.tipoPago && filters.tipoPago !== 'Inicial/Total') continue;
         if (filters?.startDate && sale.fechaPagoInicial && sale.fechaPagoInicial < new Date(filters.startDate)) continue;
@@ -1910,6 +1913,9 @@ export class DatabaseStorage implements IStorage {
 
       // Process Flete payments
       if (sale.pagoFleteUsd && parseFloat(sale.pagoFleteUsd) > 0) {
+        // NEW CRITERIA: Only show payments with both Banco Receptor AND Referencia filled
+        if (!sale.bancoReceptorFlete || !sale.referenciaFlete) continue;
+        
         // Apply filters
         if (filters?.tipoPago && filters.tipoPago !== 'Flete') continue;
         if (filters?.startDate && sale.fechaFlete && sale.fechaFlete < new Date(filters.startDate)) continue;
@@ -1955,6 +1961,9 @@ export class DatabaseStorage implements IStorage {
     const cuotasData = await cuotasQuery;
 
     for (const cuota of cuotasData) {
+      // NEW CRITERIA: Only show payments with both Banco Receptor AND Referencia filled
+      if (!cuota.bancoReceptorCuota || !cuota.referencia) continue;
+      
       // Apply filters
       if (filters?.tipoPago && filters.tipoPago !== 'Cuota') continue;
       if (filters?.startDate && cuota.fecha && cuota.fecha < new Date(filters.startDate)) continue;
