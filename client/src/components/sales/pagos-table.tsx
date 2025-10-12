@@ -73,6 +73,15 @@ export default function PagosTable({
     }).format(value);
   };
 
+  const getChannelBadgeClass = (canal: string | null) => {
+    switch (canal?.toLowerCase()) {
+      case 'cashea': return 'channel-badge-cashea';
+      case 'shopify': return 'channel-badge-shopify';
+      case 'treble': return 'channel-badge-treble';
+      default: return 'bg-gray-500';
+    }
+  };
+
   // Mutation to update estado de entrega for an order
   const updateEstadoEntregaMutation = useMutation({
     mutationFn: async ({ orden, estadoEntrega }: { orden: string; estadoEntrega: string }) => {
@@ -185,8 +194,8 @@ export default function PagosTable({
                       </span>
                     </td>
                     <td className="p-2 min-w-[100px]">
-                      <Badge variant="outline" className="text-xs" data-testid={`canal-${order.orden}`}>
-                        {order.canal || "N/A"}
+                      <Badge className={`${getChannelBadgeClass(order.canal)} text-white text-xs`} data-testid={`canal-${order.orden}`}>
+                        {order.canal ? order.canal.charAt(0).toUpperCase() + order.canal.slice(1) : "N/A"}
                       </Badge>
                     </td>
                     <td className="p-2 min-w-[100px]">
