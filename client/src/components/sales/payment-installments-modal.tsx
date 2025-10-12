@@ -57,7 +57,7 @@ export default function PaymentInstallmentsModal({ sale, open, onOpenChange }: P
   const form = useForm<InstallmentFormData>({
     resolver: zodResolver(installmentFormSchema),
     defaultValues: {
-      fecha: undefined,
+      fecha: new Date(),
       cuotaAmount: "",
       cuotaAmountBs: "",
       pagoCuotaUsd: "",
