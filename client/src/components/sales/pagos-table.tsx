@@ -323,13 +323,13 @@ export default function PagosTable({
                     </td>
                     <td className={`p-2 min-w-[120px] ${
                       Math.abs(order.saldoPendiente) < 0.01 && (order.estadoEntrega === 'Pendiente' || order.estadoEntrega === 'En proceso')
-                        ? 'bg-yellow-50 dark:bg-yellow-950'
+                        ? 'bg-gray-100 dark:bg-gray-800'
                         : 'bg-orange-50 dark:bg-orange-950'
                     }`}>
                       <div className="flex justify-center">
                         <div className={`${
                           Math.abs(order.saldoPendiente) < 0.01 && (order.estadoEntrega === 'Pendiente' || order.estadoEntrega === 'En proceso')
-                            ? 'bg-yellow-100 dark:bg-yellow-900 text-yellow-900 dark:text-yellow-100'
+                            ? 'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100'
                             : 'bg-orange-100 dark:bg-orange-900 text-orange-900 dark:text-orange-100'
                         } px-3 py-1 rounded-md text-xs font-semibold`} data-testid={`metric-pendiente-${order.orden}`}>
                           {formatCurrency(order.saldoPendiente)}
