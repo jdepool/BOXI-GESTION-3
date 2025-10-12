@@ -213,6 +213,7 @@ export interface IStorage {
 
   // Payment Installments
   getInstallmentsBySale(saleId: string): Promise<PaymentInstallment[]>;
+  getInstallmentsByOrder(orden: string): Promise<PaymentInstallment[]>;
   getInstallmentById(id: string): Promise<PaymentInstallment | undefined>;
   createInstallment(saleId: string, data: Partial<InsertPaymentInstallment>): Promise<PaymentInstallment>;
   updateInstallment(id: string, data: Partial<InsertPaymentInstallment>): Promise<PaymentInstallment | undefined>;
@@ -1582,6 +1583,15 @@ export class DatabaseStorage implements IStorage {
     return installments;
   }
 
+  async getInstallmentsByOrder(orden: string): Promise<PaymentInstallment[]> {
+    const installments = await db
+      .select()
+      .from(paymentInstallments)
+      .where(eq(paymentInstallments.orden, orden))
+      .orderBy(paymentInstallments.installmentNumber);
+    return installments;
+  }
+
   async getInstallmentById(id: string): Promise<PaymentInstallment | undefined> {
     const [installment] = await db
       .select()
@@ -1592,12 +1602,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createInstallment(saleId: string, data: Partial<InsertPaymentInstallment>): Promise<PaymentInstallment> {
-    // Get the next installment number
-    const existingInstallments = await this.getInstallmentsBySale(saleId);
-    const nextInstallmentNumber = Math.max(0, ...existingInstallments.map(i => i.installmentNumber)) + 1;
-
     // Get sale info for orden field
     const sale = await this.getSaleById(saleId);
+    
+    // Get the next installment number by orden (not saleId) since installments are per order
+    const existingInstallments = sale?.orden ? await this.getInstallmentsByOrder(sale.orden) : [];
+    const nextInstallmentNumber = Math.max(0, ...existingInstallments.map(i => i.installmentNumber)) + 1;
     
     const [newInstallment] = await db
       .insert(paymentInstallments)

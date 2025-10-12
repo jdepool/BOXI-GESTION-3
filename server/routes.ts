@@ -3340,8 +3340,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Sale not found" });
       }
 
+      // Get installments by orden (not saleId) to show all installments for the entire order
       const [installments, summary] = await Promise.all([
-        storage.getInstallmentsBySale(saleId),
+        sale.orden ? storage.getInstallmentsByOrder(sale.orden) : [],
         storage.getInstallmentSummary(saleId),
       ]);
 
