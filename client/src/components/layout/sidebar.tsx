@@ -4,11 +4,6 @@ import boxiSleepLogo from "@assets/image_1757033740709.png";
 
 const navigationItems = [
   {
-    href: "/dashboard",
-    icon: "fas fa-chart-line",
-    label: "Dashboard",
-  },
-  {
     href: "/upload", 
     icon: "fas fa-upload",
     label: "Cargar Datos",
@@ -71,7 +66,7 @@ export default function Sidebar() {
       <nav className="flex-1 p-4">
         <ul className="space-y-2">
           {navigationItems.map((item) => {
-            const isActive = location === item.href || (item.href === "/dashboard" && location === "/");
+            const isActive = location === item.href;
             
             return (
               <li key={item.href}>

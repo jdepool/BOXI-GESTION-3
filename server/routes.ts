@@ -639,17 +639,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
-  // Get sales metrics for dashboard
-  app.get("/api/sales/metrics", async (req, res) => {
-    try {
-      const metrics = await storage.getSalesMetrics();
-      res.json(metrics);
-    } catch (error) {
-      console.error("Error fetching sales metrics:", error);
-      res.status(500).json({ error: "Failed to fetch sales metrics" });
-    }
-  });
-
   // Get sales data with filters
   app.get("/api/sales", async (req, res) => {
     try {

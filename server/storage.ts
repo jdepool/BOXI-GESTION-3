@@ -103,17 +103,6 @@ export interface IStorage {
     total: number;
   }>;
   
-  // Analytics methods
-  getSalesMetrics(): Promise<{
-    totalOrderUsd: number;
-    pagoInicialVerificado: number;
-    totalCuotas: number;
-    totalPagado: number;
-    pendiente: number;
-    salesByChannel: { canal: string; total: number; orders: number }[];
-    salesByDeliveryStatus: { status: string; count: number }[];
-  }>;
-  
   // Upload history methods
   createUploadHistory(uploadData: InsertUploadHistory): Promise<UploadHistory>;
   getRecentUploads(limit?: number): Promise<UploadHistory[]>;
@@ -577,7 +566,7 @@ export class DatabaseStorage implements IStorage {
       data: ordersData.map(order => {
         const pagoInicial = order.pagoInicialUsd || 0;
         const pagoFlete = order.pagoFleteUsd || 0;
-        const ordenPlusFlete = pagoInicial + (pagoFlete === 0 || order.fleteGratis ? 0 : pagoFlete);
+        const ordenPlusFlete = (order.totalOrderUsd || 0) + (pagoFlete === 0 || order.fleteGratis ? 0 : pagoFlete);
         const totalCuotas = totalCuotasMap.get(order.orden!) || 0;
         
         // Calculate Total Pagado as sum of VERIFIED payments only
@@ -1026,85 +1015,6 @@ export class DatabaseStorage implements IStorage {
     
     const [result] = await finalQuery;
     return result.count;
-  }
-
-  async getSalesMetrics(): Promise<{
-    totalOrderUsd: number;
-    pagoInicialVerificado: number;
-    totalCuotas: number;
-    totalPagado: number;
-    pendiente: number;
-    salesByChannel: { canal: string; total: number; orders: number }[];
-    salesByDeliveryStatus: { status: string; count: number }[];
-  }> {
-    // 1. Total Order USD - sum of totalOrderUsd field (excluding cancelled orders)
-    const [totalOrderUsdResult] = await db
-      .select({ total: sum(sales.totalOrderUsd) })
-      .from(sales)
-      .where(ne(sales.estadoEntrega, "Cancelada"));
-    
-    // 2. Pago Inicial Verificado - sum of pagoInicialUsd when estadoPagoInicial is verified
-    // Consider verified when estadoPagoInicial is not null and not "pendiente"
-    const [pagoInicialResult] = await db
-      .select({ total: sum(sales.pagoInicialUsd) })
-      .from(sales)
-      .where(
-        and(
-          ne(sales.estadoEntrega, "Cancelada"),
-          isNotNull(sales.estadoPagoInicial),
-          ne(sales.estadoPagoInicial, "pendiente")
-        )
-      );
-    
-    // 3. Total Cuotas - sum of all verified pagoCuotaUsd from payment_installments
-    const [totalCuotasResult] = await db
-      .select({ total: sum(paymentInstallments.pagoCuotaUsd) })
-      .from(paymentInstallments)
-      .where(eq(paymentInstallments.verificado, true));
-    
-    // Count by delivery status
-    const deliveryStatusCounts = await db
-      .select({
-        status: sales.estadoEntrega,
-        count: count()
-      })
-      .from(sales)
-      .groupBy(sales.estadoEntrega);
-    
-    // Sales by channel (excluding cancelled orders)
-    const channelStats = await db
-      .select({
-        canal: sales.canal,
-        total: sum(sales.totalUsd),
-        orders: count()
-      })
-      .from(sales)
-      .where(ne(sales.estadoEntrega, "Cancelada"))
-      .groupBy(sales.canal);
-    
-    // Calculate derived metrics
-    const totalOrderUsd = Number(totalOrderUsdResult.total) || 0;
-    const pagoInicialVerificado = Number(pagoInicialResult.total) || 0;
-    const totalCuotas = Number(totalCuotasResult.total) || 0;
-    const totalPagado = pagoInicialVerificado + totalCuotas;
-    const pendiente = totalOrderUsd - totalPagado;
-    
-    return {
-      totalOrderUsd,
-      pagoInicialVerificado,
-      totalCuotas,
-      totalPagado,
-      pendiente,
-      salesByChannel: channelStats.map(s => ({
-        canal: s.canal,
-        total: Number(s.total) || 0,
-        orders: s.orders
-      })),
-      salesByDeliveryStatus: deliveryStatusCounts.map(s => ({
-        status: s.status,
-        count: s.count
-      }))
-    };
   }
 
   async createUploadHistory(uploadData: InsertUploadHistory): Promise<UploadHistory> {

@@ -1,11 +1,10 @@
-import { Switch, Route } from "wouter";
+import { Switch, Route, Redirect } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/theme-provider";
 import { useAuth } from "@/hooks/useAuth";
-import Dashboard from "@/pages/dashboard";
 import Upload from "@/pages/upload";
 import Sales from "@/pages/sales";
 import Despachos from "@/pages/despachos";
@@ -27,10 +26,7 @@ function Router() {
     <Switch>
       <Route path="/login" component={Login} />
       <Route path="/">
-        <ProtectedRoute component={Dashboard} />
-      </Route>
-      <Route path="/dashboard">
-        <ProtectedRoute component={Dashboard} />
+        <Redirect to="/sales" />
       </Route>
       <Route path="/upload">
         <ProtectedRoute component={Upload} />

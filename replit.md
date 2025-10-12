@@ -1,6 +1,6 @@
 # Overview
 
-BoxiSleep is a comprehensive sales management dashboard for a sleep products company. It enables users to upload sales data from various channels (Cashea, Shopify, Treble), visualize key metrics through interactive dashboards, and manage sales records with filtering and export functionalities. The application provides real-time analytics on sales performance, delivery status, and channel-specific metrics to support informed business decisions, with financial payment tracking.
+BoxiSleep is a comprehensive sales management system for a sleep products company. It enables users to upload sales data from various channels (Cashea, Shopify, Treble) and manage sales records with filtering and export functionalities. The application provides real-time analytics on sales performance, delivery status, and channel-specific metrics to support informed business decisions, with financial payment tracking.
 
 # User Preferences
 
@@ -21,12 +21,11 @@ PostgreSQL is the primary database, accessed via Drizzle ORM for type-safe opera
 The system uses basic username/password authentication. User sessions are managed through PostgreSQL session storage using `connect-pg-simple` for secure server-side session management.
 
 ## UI/UX Design
-The application utilizes shadcn/ui for consistent design patterns and accessibility, built upon Radix UI primitives. Tailwind CSS is used for rapid and responsive styling. Lucide React provides a consistent icon set. The design includes a redesigned dashboard with five financial payment tracking metrics: Total USD, Pago Inicial/Total, Total Cuotas, Total Pagado, and Pendiente. It also features a new "Verificación" section with tabs for "Ingresos" (income) and "Egresos" (expenses), displaying payment verification statuses and allowing updates via a modal. Payment metrics in the "Pagos" tab now only reflect verified payments.
+The application utilizes shadcn/ui for consistent design patterns and accessibility, built upon Radix UI primitives. Tailwind CSS is used for rapid and responsive styling. Lucide React provides a consistent icon set. The application features a tabbed interface for managing sales data, with dedicated views for Lista de Ventas, Ventas por completar, Reservas, and Pagos. It also includes a "Verificación" section with tabs for "Ingresos" (income) and "Egresos" (expenses), displaying payment verification statuses and allowing updates via a modal. Payment metrics in the "Pagos" tab only reflect verified payments.
 
 ## Feature Specifications
 - **Sales Data Upload**: Supports Excel files from Cashea, Shopify, and Treble.
-- **Interactive Dashboards**: Visualizes sales metrics and financial payment tracking.
-- **Sales Management**: Includes filtering, searching, and export capabilities for sales records. Notes field supports up to 200 characters with hover tooltip to view full text in truncated table display.
+- **Sales Management**: Includes filtering, searching, and export capabilities for sales records. Notes field supports up to 200 characters with hover tooltip to view full text in truncated table display. The "Orden + Flete" metric in the Pagos tab is calculated as Total Order USD + Pago Flete USD (with Flete counted as $0 if the amount is zero or the Gratis checkbox is marked).
 - **Delivery Status Tracking**: Monitors the status of product deliveries with nine distinct states.
 - **Channel-Specific Metrics**: Provides insights tailored to different sales channels.
 - **Multi-Product Order Handling**: Supports orders with multiple products, tracking both order-level and individual product totals.
