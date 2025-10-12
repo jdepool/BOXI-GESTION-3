@@ -1990,39 +1990,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Update flete status
-  app.put("/api/sales/:saleId/flete-status", async (req, res) => {
-    try {
-      const { saleId } = req.params;
-      const { status } = req.body;
-
-      // Validate status
-      const validStatuses = ['Pendiente', 'Perdida', 'En proceso', 'A despachar', 'En tránsito', 'Entregado', 'A devolver', 'Devuelto', 'Cancelada'];
-      if (!status || !validStatuses.includes(status)) {
-        return res.status(400).json({ 
-          error: "Invalid status. Must be one of: " + validStatuses.join(', ')
-        });
-      }
-
-      // Validate that sale exists
-      const existingSale = await storage.getSaleById(saleId);
-      if (!existingSale) {
-        return res.status(404).json({ error: "Sale not found" });
-      }
-
-      const updatedSale = await storage.updateFleteStatus(saleId, status);
-      
-      if (!updatedSale) {
-        return res.status(500).json({ error: "Failed to update flete status" });
-      }
-
-      res.json({ success: true, sale: updatedSale });
-    } catch (error) {
-      console.error("Update flete status error:", error);
-      res.status(500).json({ error: "Failed to update flete status" });
-    }
-  });
-
   // Update pago inicial for all products in an order
   app.patch("/api/sales/:orderNumber/pago-inicial", async (req, res) => {
     try {

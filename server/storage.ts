@@ -238,7 +238,6 @@ export interface IStorage {
     bancoReceptorFlete?: string;
     fleteGratis?: boolean;
   }): Promise<Sale | undefined>;
-  updateFleteStatus(saleId: string, newStatus: string): Promise<Sale | undefined>;
   updateSaleNotes(id: string, notas: string | null): Promise<Sale | undefined>;
   updateOrderPagoInicial(orderNumber: string, pagoData: {
     fechaPagoInicial?: string | null;
@@ -700,19 +699,6 @@ export class DatabaseStorage implements IStorage {
     const [updatedSale] = await db
       .update(sales)
       .set(updateData)
-      .where(eq(sales.id, saleId))
-      .returning();
-
-    return updatedSale || undefined;
-  }
-
-  async updateFleteStatus(saleId: string, newStatus: string): Promise<Sale | undefined> {
-    const [updatedSale] = await db
-      .update(sales)
-      .set({ 
-        statusFlete: newStatus,
-        updatedAt: new Date()
-      })
       .where(eq(sales.id, saleId))
       .returning();
 
