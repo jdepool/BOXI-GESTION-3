@@ -14,11 +14,6 @@ const navigationItems = [
     label: "Ventas",
   },
   {
-    href: "/flete",
-    icon: "fas fa-shipping-fast",
-    label: "Flete",
-  },
-  {
     href: "/despachos",
     icon: "fas fa-truck",
     label: "Despachos",
