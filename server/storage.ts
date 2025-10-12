@@ -515,7 +515,7 @@ export class DatabaseStorage implements IStorage {
         totalOrderUsd: sql<number | null>`MAX(${sales.totalOrderUsd})`.as('totalOrderUsd'),
         productCount: sql<number>`COUNT(*)`.as('productCount'),
         hasPagoInicial: sql<boolean>`BOOL_OR(${sales.pagoInicialUsd} IS NOT NULL OR ${sales.fechaPagoInicial} IS NOT NULL)`.as('hasPagoInicial'),
-        hasFlete: sql<boolean>`BOOL_OR(${sales.montoFleteUsd} IS NOT NULL OR ${sales.pagoFleteUsd} IS NOT NULL)`.as('hasFlete'),
+        hasFlete: sql<boolean>`BOOL_OR(${sales.montoFleteUsd} IS NOT NULL OR ${sales.pagoFleteUsd} IS NOT NULL OR ${sales.fleteGratis} = true)`.as('hasFlete'),
         pagoInicialUsd: sql<number | null>`MAX(${sales.pagoInicialUsd})`.as('pagoInicialUsd'),
         pagoFleteUsd: sql<number | null>`MAX(${sales.pagoFleteUsd})`.as('pagoFleteUsd'),
         fleteGratis: sql<boolean>`BOOL_OR(${sales.fleteGratis})`.as('fleteGratis'),
