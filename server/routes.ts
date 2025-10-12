@@ -1174,15 +1174,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         let orden: string | null = null;
         let currentPaymentAmount = 0;
         
-        if (paymentType === 'pago_inicial') {
+        if (paymentType === 'Inicial/Total') {
           const sale = await storage.getSaleById(paymentId);
           orden = sale?.orden || null;
           currentPaymentAmount = Number(sale?.pagoInicialUsd || 0);
-        } else if (paymentType === 'flete') {
+        } else if (paymentType === 'Flete') {
           const sale = await storage.getSaleById(paymentId);
           orden = sale?.orden || null;
           currentPaymentAmount = Number(sale?.pagoFleteUsd || 0);
-        } else if (paymentType === 'cuota') {
+        } else if (paymentType === 'Cuota') {
           const installment = await storage.getInstallmentById(paymentId);
           orden = installment?.orden || null;
           currentPaymentAmount = Number(installment?.cuotaAmount || 0);
@@ -1203,7 +1203,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             // Calculate totalPagado (sum of all verified payments)
             // Note: We need to check old status from DB and include current payment being verified
             let pagoInicialVerificado = 0;
-            if (paymentType === 'pago_inicial') {
+            if (paymentType === 'Inicial/Total') {
               // This payment is being verified now, so include it
               pagoInicialVerificado = currentPaymentAmount;
             } else {
@@ -1212,7 +1212,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             }
             
             let fleteVerificado = 0;
-            if (paymentType === 'flete') {
+            if (paymentType === 'Flete') {
               // This payment is being verified now, so include it
               fleteVerificado = currentPaymentAmount;
             } else {
@@ -1223,7 +1223,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             // Get verified cuotas
             const installments = await storage.getInstallmentsByOrder(orden);
             let cuotasVerificadas = 0;
-            if (paymentType === 'cuota') {
+            if (paymentType === 'Cuota') {
               // Include all previously verified cuotas PLUS the one being verified now
               cuotasVerificadas = installments
                 .filter(inst => inst.estadoVerificacion === 'Verificado' || inst.id === paymentId)
