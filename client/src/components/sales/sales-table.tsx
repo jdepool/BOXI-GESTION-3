@@ -354,8 +354,8 @@ export default function SalesTable({
     <>
       {!hideFilters && (
         <>
-          {/* Toggle button - only show for Lista de Ventas (activeTab === undefined or "all") */}
-          {(activeTab === undefined || activeTab === "all") && (
+          {/* Toggle button - only show for Lista de Ventas */}
+          {activeTab === "lista" && (
             <div className="p-3 border-b border-border flex items-center justify-between">
               <Button 
                 variant="ghost" 
@@ -383,7 +383,7 @@ export default function SalesTable({
           )}
           
           {/* Filter section - collapsible for Lista de Ventas, always visible for other tabs */}
-          {((activeTab === undefined || activeTab === "all") ? filtersVisible : true) && (
+          {(activeTab === "lista" ? filtersVisible : true) && (
             <div className="p-6 border-b border-border">
               <div className="flex flex-wrap gap-3">
                 <Select 
@@ -466,7 +466,7 @@ export default function SalesTable({
                 />
 
                 {/* Show Export button with text for non-Lista de Ventas tabs */}
-                {activeTab !== undefined && activeTab !== "all" && (
+                {activeTab !== "lista" && (
                   <Button variant="outline" onClick={handleExport} data-testid="export-button">
                     <i className="fas fa-download mr-2"></i>
                     Exportar
