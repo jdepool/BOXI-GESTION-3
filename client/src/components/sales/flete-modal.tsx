@@ -146,8 +146,30 @@ export default function FleteModal({ open, onOpenChange, sale }: FleteModalProps
   };
 
 
+  const validateFleteFields = () => {
+    // Validate: pagoFleteUsd must be filled (any value including "0") OR fleteGratis must be checked
+    const hasPagoFleteUsd = fleteData.pagoFleteUsd !== "" && fleteData.pagoFleteUsd !== null && fleteData.pagoFleteUsd !== undefined;
+    const isFleteGratis = fleteData.fleteGratis === true;
+    
+    if (!hasPagoFleteUsd && !isFleteGratis) {
+      toast({
+        title: "Campos obligatorios incompletos",
+        description: "Debes ingresar un Pago Flete USD (incluso si es $0) o marcar Flete Gratis",
+        variant: "destructive",
+      });
+      return false;
+    }
+    
+    return true;
+  };
+
   const handleSave = () => {
     if (!sale) return;
+
+    // Validate before saving
+    if (!validateFleteFields()) {
+      return;
+    }
 
     updateFleteMutation.mutate(fleteData);
   };
