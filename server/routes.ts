@@ -1321,7 +1321,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         // Use existing Shopify mapping logic from parseFile function
         const totalUsdValue = String(row['Lineitem price'] || '0');
-        console.log(`🔍 DEBUG webhook handler: Product="${row['Lineitem name']}", LineitemPrice from row=${row['Lineitem price']}, totalUsd=${totalUsdValue}`);
         
         return {
           nombre: String(row['Billing Name'] || ''),
