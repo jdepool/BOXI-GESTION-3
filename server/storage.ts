@@ -239,6 +239,15 @@ export interface IStorage {
     fleteGratis?: boolean;
   }): Promise<Sale | undefined>;
   updateSaleNotes(id: string, notas: string | null): Promise<Sale | undefined>;
+  updateOrderFlete(orderNumber: string, flete: {
+    montoFleteUsd?: string;
+    fechaFlete?: string;
+    pagoFleteUsd?: string;
+    referenciaFlete?: string;
+    montoFleteBs?: string;
+    bancoReceptorFlete?: string;
+    fleteGratis?: boolean;
+  }): Promise<Sale[]>;
   updateOrderPagoInicial(orderNumber: string, pagoData: {
     fechaPagoInicial?: string | null;
     pagoInicialUsd?: number | null;
@@ -879,6 +888,54 @@ export class DatabaseStorage implements IStorage {
       .returning();
 
     return updatedSale || undefined;
+  }
+
+  async updateOrderFlete(orderNumber: string, flete: {
+    montoFleteUsd?: string;
+    fechaFlete?: string;
+    pagoFleteUsd?: string;
+    referenciaFlete?: string;
+    montoFleteBs?: string;
+    bancoReceptorFlete?: string;
+    fleteGratis?: boolean;
+  }): Promise<Sale[]> {
+    const updateData: any = {};
+    
+    // Add all flete fields to update data
+    if (flete.montoFleteUsd !== undefined) {
+      updateData.montoFleteUsd = flete.montoFleteUsd === "" ? null : flete.montoFleteUsd;
+    }
+    if (flete.fechaFlete !== undefined) {
+      const dateValue = flete.fechaFlete && flete.fechaFlete !== "" ? new Date(flete.fechaFlete) : null;
+      updateData.fechaFlete = dateValue;
+    }
+    if (flete.pagoFleteUsd !== undefined) {
+      updateData.pagoFleteUsd = flete.pagoFleteUsd === "" ? null : flete.pagoFleteUsd;
+    }
+    if (flete.referenciaFlete !== undefined) {
+      updateData.referenciaFlete = flete.referenciaFlete === "" ? null : flete.referenciaFlete;
+    }
+    if (flete.montoFleteBs !== undefined) {
+      updateData.montoFleteBs = flete.montoFleteBs === "" ? null : flete.montoFleteBs;
+    }
+    if (flete.bancoReceptorFlete !== undefined) {
+      updateData.bancoReceptorFlete = flete.bancoReceptorFlete === "" ? null : flete.bancoReceptorFlete;
+    }
+    if (flete.fleteGratis !== undefined) {
+      updateData.fleteGratis = flete.fleteGratis;
+    }
+
+    // Add updated timestamp
+    updateData.updatedAt = new Date();
+
+    // Update all sales rows with this order number
+    const updatedSales = await db
+      .update(sales)
+      .set(updateData)
+      .where(eq(sales.orden, orderNumber))
+      .returning();
+
+    return updatedSales;
   }
 
   async updateOrderPagoInicial(orderNumber: string, pagoData: {
