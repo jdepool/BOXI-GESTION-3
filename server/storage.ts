@@ -86,6 +86,10 @@ export interface IStorage {
   getOrdersForPayments(filters?: {
     limit?: number;
     offset?: number;
+    canal?: string;
+    orden?: string;
+    startDate?: string;
+    endDate?: string;
   }): Promise<{
     data: Array<{
       orden: string;
@@ -470,6 +474,10 @@ export class DatabaseStorage implements IStorage {
   async getOrdersForPayments(filters?: {
     limit?: number;
     offset?: number;
+    canal?: string;
+    orden?: string;
+    startDate?: string;
+    endDate?: string;
   }): Promise<{
     data: Array<{
       orden: string;
@@ -492,14 +500,34 @@ export class DatabaseStorage implements IStorage {
     }>;
     total: number;
   }> {
-    // Filter for orders with estadoEntrega "Pendiente" or "En proceso" and non-null order numbers
-    const estadoCondition = and(
+    // Build filter conditions
+    const conditions = [
       or(
         eq(sales.estadoEntrega, "Pendiente"),
         eq(sales.estadoEntrega, "En proceso")
       ),
       isNotNull(sales.orden)
-    );
+    ];
+
+    // Add canal filter if provided
+    if (filters?.canal) {
+      conditions.push(eq(sales.canal, filters.canal));
+    }
+
+    // Add orden filter if provided
+    if (filters?.orden) {
+      conditions.push(sql`${sales.orden} ILIKE ${`%${filters.orden}%`}`);
+    }
+
+    // Add date range filters
+    if (filters?.startDate) {
+      conditions.push(sql`${sales.fecha} >= ${filters.startDate}`);
+    }
+    if (filters?.endDate) {
+      conditions.push(sql`${sales.fecha} <= ${filters.endDate}`);
+    }
+
+    const estadoCondition = and(...conditions);
 
     // Get grouped orders with aggregated data
     const ordersData = await db
