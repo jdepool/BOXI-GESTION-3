@@ -158,12 +158,14 @@ export const paymentInstallments = pgTable("payment_installments", {
   orden: text("orden"), // Duplicated for faster queries
   installmentNumber: integer("installment_number").notNull(), // 1, 2, 3, etc.
   fecha: timestamp("fecha"), // Payment date
-  cuotaAmount: decimal("cuota_amount", { precision: 10, scale: 2 }), // Payment amount USD
-  cuotaAmountBs: decimal("cuota_amount_bs", { precision: 15, scale: 2 }), // Payment amount BS
+  cuotaAmount: decimal("cuota_amount", { precision: 10, scale: 2 }), // Payment amount USD (legacy - kept for backward compatibility)
+  cuotaAmountBs: decimal("cuota_amount_bs", { precision: 15, scale: 2 }), // Payment amount BS (legacy - kept for backward compatibility)
   saldoRemaining: decimal("saldo_remaining", { precision: 10, scale: 2 }), // Balance after payment
   referencia: text("referencia"), // Payment reference
   bancoReceptorCuota: varchar("banco_receptor_cuota"), // Banco Receptor used for payment
-  pagoCuotaUsd: decimal("pago_cuota_usd", { precision: 10, scale: 2 }), // Payment amount in USD
+  pagoCuotaUsd: decimal("pago_cuota_usd", { precision: 10, scale: 2 }), // Agreed payment amount in USD (required to save modal)
+  montoCuotaUsd: decimal("monto_cuota_usd", { precision: 10, scale: 2 }), // Actual payment amount in USD (displayed in Verificación)
+  montoCuotaBs: decimal("monto_cuota_bs", { precision: 15, scale: 2 }), // Actual payment amount in Bs (displayed in Verificación)
   verificado: boolean("verificado").default(true), // Whether payment is verified
   // Verification fields for Cuotas
   estadoVerificacion: text("estado_verificacion").default("Por verificar"), // Por verificar, Verificado, Rechazado
