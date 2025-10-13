@@ -42,7 +42,10 @@ const installmentFormSchema = z.object({
   fecha: z.date().optional(),
   montoCuotaUsd: z.string().optional(), // Optional - Monto USD field
   montoCuotaBs: z.string().optional(),
-  pagoCuotaUsd: z.string().optional(),
+  pagoCuotaUsd: z.string().min(1, "Pago Cuota USD es requerido").refine((val) => {
+    const num = parseFloat(val);
+    return !isNaN(num) && num > 0;
+  }, "Pago Cuota USD debe ser mayor a 0"), // Mandatory - agreed payment
   bancoReceptorCuota: z.string().min(1, "Banco Receptor es requerido"), // Mandatory
   referencia: z.string().min(1, "Referencia es requerida"), // Mandatory
 });
