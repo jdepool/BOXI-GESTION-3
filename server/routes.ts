@@ -3464,15 +3464,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         saldoRemaining: true
       }).parse(req.body);
 
-      // Check for overpayment
+      // Check for overpayment only if amount is provided and greater than 0
       const summary = await storage.getInstallmentSummary(saleId);
       const newAmount = parseFloat(validatedData.cuotaAmount || '0');
-      
-      if (newAmount <= 0) {
-        return res.status(400).json({ error: "Payment amount must be positive" });
-      }
 
-      if (validatedData.verificado && (summary.totalPagado + newAmount > summary.totalOrderUsd)) {
+      if (newAmount > 0 && validatedData.verificado && (summary.totalPagado + newAmount > summary.totalOrderUsd)) {
         return res.status(400).json({ 
           error: "Payment would exceed total amount",
           details: {
@@ -3517,11 +3513,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Validate request body (partial update)
       const validatedData = insertPaymentInstallmentSchema.partial().parse(req.body);
-
-      // Validate amount if provided
-      if (validatedData.cuotaAmount !== undefined && parseFloat(validatedData.cuotaAmount || '0') <= 0) {
-        return res.status(400).json({ error: "Payment amount must be positive" });
-      }
 
       // Get current installment to check for overpayment
       const currentInstallment = await storage.getInstallmentById(id);
