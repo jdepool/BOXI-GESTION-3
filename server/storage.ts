@@ -1908,7 +1908,7 @@ export class DatabaseStorage implements IStorage {
           orden: sale.orden,
           tipoPago: 'Flete',
           montoBs: sale.montoFleteBs ? parseFloat(sale.montoFleteBs) : null,
-          montoUsd: sale.montoFleteUsd ? parseFloat(sale.montoFleteUsd) : null,
+          montoUsd: sale.pagoFleteUsd ? parseFloat(sale.pagoFleteUsd) : null,
           referencia: sale.referenciaFlete,
           bancoId: sale.bancoReceptorFlete,
           estadoVerificacion: sale.estadoVerificacionFlete || 'Por verificar',
