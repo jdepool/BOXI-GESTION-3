@@ -10,7 +10,7 @@ import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { Truck, DollarSign, CalendarIcon, FileText, User, Phone, Mail, Building2 } from "lucide-react";
+import { Truck, DollarSign, CalendarIcon, FileText, User, Phone, Mail } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { format, parse } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -286,10 +286,7 @@ export default function FleteModal({ open, onOpenChange, sale }: FleteModalProps
                   }}
                 >
                   <SelectTrigger data-testid="select-banco-receptor-flete">
-                    <div className="flex items-center">
-                      <Building2 className="h-4 w-4 mr-2 text-muted-foreground" />
-                      <SelectValue placeholder="Seleccionar banco receptor" />
-                    </div>
+                    <SelectValue placeholder="Seleccionar banco receptor" />
                   </SelectTrigger>
                   <SelectContent>
                     {(bancos as Banco[]).map((banco: Banco) => (

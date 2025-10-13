@@ -326,7 +326,7 @@ export default function PaymentInstallmentsModal({ sale, open, onOpenChange }: P
                           <Select onValueChange={field.onChange} value={field.value}>
                             <FormControl>
                               <SelectTrigger id="bancoReceptorCuota" data-testid="select-installment-banco">
-                                <SelectValue placeholder="Seleccionar banco" />
+                                <SelectValue placeholder="Seleccionar banco receptor" />
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>

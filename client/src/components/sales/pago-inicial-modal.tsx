@@ -52,7 +52,7 @@ export default function PagoInicialModal({ sale, open, onOpenChange }: PagoInici
   const [pagoData, setPagoData] = useState({
     fechaPagoInicial: new Date() as Date | null,
     pagoInicialUsd: "",
-    bancoReceptorInicial: "none",
+    bancoReceptorInicial: "",
     referenciaInicial: "",
     montoInicialBs: "",
     montoInicialUsd: "",
@@ -78,7 +78,7 @@ export default function PagoInicialModal({ sale, open, onOpenChange }: PagoInici
       setPagoData({
         fechaPagoInicial: sale.fechaPagoInicial ? new Date(sale.fechaPagoInicial) : new Date(),
         pagoInicialUsd: sale.pagoInicialUsd?.toString() || "",
-        bancoReceptorInicial: sale.bancoReceptorInicial || "none",
+        bancoReceptorInicial: sale.bancoReceptorInicial || "",
         referenciaInicial: sale.referenciaInicial || "",
         montoInicialBs: sale.montoInicialBs?.toString() || "",
         montoInicialUsd: sale.montoInicialUsd?.toString() || "",
@@ -104,7 +104,7 @@ export default function PagoInicialModal({ sale, open, onOpenChange }: PagoInici
       const payload = {
         fechaPagoInicial: data.fechaPagoInicial?.toISOString() || null,
         pagoInicialUsd: data.pagoInicialUsd ? parseFloat(data.pagoInicialUsd) : null,
-        bancoReceptorInicial: data.bancoReceptorInicial && data.bancoReceptorInicial !== "none" ? data.bancoReceptorInicial : null,
+        bancoReceptorInicial: data.bancoReceptorInicial || null,
         referenciaInicial: data.referenciaInicial || null,
         montoInicialBs: data.montoInicialBs ? parseFloat(data.montoInicialBs) : null,
         montoInicialUsd: data.montoInicialUsd ? parseFloat(data.montoInicialUsd) : null,
@@ -146,7 +146,7 @@ export default function PagoInicialModal({ sale, open, onOpenChange }: PagoInici
   const validateFields = () => {
     const newErrors = {
       pagoInicialUsd: !pagoData.pagoInicialUsd || parseFloat(pagoData.pagoInicialUsd) <= 0,
-      bancoReceptorInicial: !pagoData.bancoReceptorInicial || pagoData.bancoReceptorInicial === "none",
+      bancoReceptorInicial: !pagoData.bancoReceptorInicial || pagoData.bancoReceptorInicial.trim() === "",
       referenciaInicial: !pagoData.referenciaInicial || pagoData.referenciaInicial.trim() === "",
     };
 
@@ -300,16 +300,14 @@ export default function PagoInicialModal({ sale, open, onOpenChange }: PagoInici
                     data-testid="select-banco-pago"
                     className={cn(errors.bancoReceptorInicial && "border-destructive focus:ring-destructive")}
                   >
-                    <SelectValue placeholder="Seleccionar banco" />
+                    <SelectValue placeholder="Seleccionar banco receptor" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="none">Sin banco</SelectItem>
                     {banks.map((bank) => (
                       <SelectItem key={bank.id} value={bank.id}>
                         {bank.banco}
                       </SelectItem>
                     ))}
-                    <SelectItem value="otro">Otro ($)</SelectItem>
                   </SelectContent>
                 </Select>
                 {errors.bancoReceptorInicial && (
