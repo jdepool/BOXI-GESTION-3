@@ -253,6 +253,9 @@ export default function VerificacionPage() {
                     Pago
                   </th>
                   <th className="p-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    Fecha de Pago
+                  </th>
+                  <th className="p-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Monto Bs
                   </th>
                   <th className="p-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
@@ -278,13 +281,13 @@ export default function VerificacionPage() {
               <tbody>
                 {isLoading ? (
                   <tr>
-                    <td colSpan={9} className="p-4 text-center text-muted-foreground">
+                    <td colSpan={10} className="p-4 text-center text-muted-foreground">
                       Cargando...
                     </td>
                   </tr>
                 ) : payments.length === 0 ? (
                   <tr>
-                    <td colSpan={9} className="p-4 text-center text-muted-foreground">
+                    <td colSpan={10} className="p-4 text-center text-muted-foreground">
                       No hay pagos para verificar
                     </td>
                   </tr>
@@ -299,6 +302,9 @@ export default function VerificacionPage() {
                       </td>
                       <td className="p-3 text-sm" data-testid={`text-tipo-pago-${index}`}>
                         <Badge variant="outline">{payment.tipoPago}</Badge>
+                      </td>
+                      <td className="p-3 text-sm" data-testid={`text-fecha-pago-${index}`}>
+                        {payment.fecha ? format(new Date(payment.fecha), "dd/MM/yyyy") : "-"}
                       </td>
                       <td className="p-3 text-sm" data-testid={`text-monto-bs-${index}`}>
                         {payment.montoBs ? `Bs ${payment.montoBs.toFixed(2)}` : "-"}
