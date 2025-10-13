@@ -100,20 +100,9 @@ export default function ManualSalesEntry() {
   }
 
   return (
-    <div className="h-full">
-      <div className="bg-card rounded-lg border border-border h-full flex flex-col">
-        <div className="p-4 border-b border-border flex justify-end">
-          <Button 
-            onClick={() => setShowForm(true)}
-            className="flex items-center gap-2"
-            data-testid="add-manual-sale"
-          >
-            <Plus className="h-4 w-4" />
-            Nueva Venta Manual
-          </Button>
-        </div>
-        <div className="flex-1">
-          <SalesTable 
+    <>
+      <div className="bg-card rounded-lg border border-border h-full">
+        <SalesTable 
             data={incompleteSales?.data || []} 
             total={incompleteSales?.total || 0}
             limit={filters.limit}
@@ -128,8 +117,9 @@ export default function ManualSalesEntry() {
             onFilterChange={handleFilterChange}
             onPageChange={handlePageChange}
             onEditSale={(sale) => setEditSale(sale)}
+            activeTab="manual"
+            onNewManualSale={() => setShowForm(true)}
           />
-        </div>
       </div>
 
       <EditSaleModal
@@ -139,6 +129,6 @@ export default function ManualSalesEntry() {
         }}
         sale={editSale}
       />
-    </div>
+    </>
   );
 }

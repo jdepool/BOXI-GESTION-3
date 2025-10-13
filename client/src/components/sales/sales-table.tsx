@@ -32,6 +32,9 @@ interface SalesTableProps {
   onFilterChange?: (filters: any) => void;
   onPageChange?: (offset: number) => void;
   onEditSale?: (sale: Sale) => void;
+  activeTab?: string;
+  onNewManualSale?: () => void;
+  onNewReserva?: () => void;
 }
 
 export default function SalesTable({ 
@@ -48,7 +51,10 @@ export default function SalesTable({
   extraExportParams = {},
   onFilterChange,
   onPageChange,
-  onEditSale
+  onEditSale,
+  activeTab,
+  onNewManualSale,
+  onNewReserva
 }: SalesTableProps) {
   const { toast } = useToast();
   
@@ -431,6 +437,20 @@ export default function SalesTable({
               <i className="fas fa-download mr-2"></i>
               Exportar
             </Button>
+
+            {activeTab === "manual" && onNewManualSale && (
+              <Button onClick={onNewManualSale} data-testid="button-nueva-venta-manual">
+                <i className="fas fa-plus mr-2"></i>
+                Nueva Venta Manual
+              </Button>
+            )}
+
+            {activeTab === "reservas" && onNewReserva && (
+              <Button onClick={onNewReserva} data-testid="button-nueva-reserva-manual">
+                <i className="fas fa-plus mr-2"></i>
+                Nueva Reserva Manual
+              </Button>
+            )}
           </div>
         </div>
       )}

@@ -26,6 +26,7 @@ export default function Sales() {
   });
 
   const [isManualReservaModalOpen, setIsManualReservaModalOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState("lista");
 
   const { data: salesData, isLoading } = useQuery<{
     data: any[];
@@ -88,7 +89,7 @@ export default function Sales() {
         />
         
         <div className="flex-1 overflow-auto p-6">
-          <Tabs defaultValue="lista" className="h-full">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full">
             <TabsList className="mb-4">
               <TabsTrigger value="lista" data-testid="tab-sales-list">Lista de Ventas</TabsTrigger>
               <TabsTrigger value="manual" data-testid="tab-manual-entry">Ventas por completar</TabsTrigger>
@@ -108,6 +109,7 @@ export default function Sales() {
                   onFilterChange={handleFilterChange}
                   onPageChange={handlePageChange}
                   showDeliveryDateColumn={true}
+                  activeTab={activeTab}
                 />
               </div>
             </TabsContent>
@@ -117,28 +119,19 @@ export default function Sales() {
             </TabsContent>
             
             <TabsContent value="reservas" className="h-full">
-              <div className="bg-card rounded-lg border border-border h-full flex flex-col">
-                <div className="p-4 border-b border-border flex justify-end">
-                  <Button 
-                    onClick={() => setIsManualReservaModalOpen(true)}
-                    data-testid="button-nueva-reserva-manual"
-                  >
-                    <i className="fas fa-plus mr-2"></i>
-                    + Nueva Reserva Manual
-                  </Button>
-                </div>
-                <div className="flex-1">
-                  <SalesTable 
-                    data={reservasData?.data || []} 
-                    total={reservasData?.total || 0}
-                    limit={20}
-                    offset={0}
-                    isLoading={reservasLoading}
-                    hideFilters={false}
-                    hidePagination={false}
-                    showDeliveryDateColumn={true}
-                  />
-                </div>
+              <div className="bg-card rounded-lg border border-border h-full">
+                <SalesTable 
+                  data={reservasData?.data || []} 
+                  total={reservasData?.total || 0}
+                  limit={20}
+                  offset={0}
+                  isLoading={reservasLoading}
+                  hideFilters={false}
+                  hidePagination={false}
+                  showDeliveryDateColumn={true}
+                  activeTab={activeTab}
+                  onNewReserva={() => setIsManualReservaModalOpen(true)}
+                />
               </div>
             </TabsContent>
             

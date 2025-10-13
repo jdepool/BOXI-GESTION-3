@@ -12,7 +12,7 @@ export default function Header({ title, description }: HeaderProps) {
   const { user, logout, isLoggingOut } = useAuth();
 
   return (
-    <header className="bg-card border-b border-border p-6 flex justify-between items-center">
+    <header className="bg-card border-b border-border p-4 flex justify-between items-center">
       <div>
         <h1 className="text-2xl font-bold text-foreground">{title}</h1>
         {description && (
