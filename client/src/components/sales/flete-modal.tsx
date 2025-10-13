@@ -10,7 +10,7 @@ import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { Truck, DollarSign, CalendarIcon, FileText, User, Phone, Mail } from "lucide-react";
+import { Truck, DollarSign, CalendarIcon, User, Phone, Mail } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { format, parse } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -301,18 +301,14 @@ export default function FleteModal({ open, onOpenChange, sale }: FleteModalProps
               {/* 4. Referencia */}
               <div className="space-y-2">
                 <Label htmlFor="referenciaFlete">Referencia</Label>
-                <div className="relative">
-                  <FileText className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="referenciaFlete"
-                    type="text"
-                    placeholder="Referencia del flete"
-                    value={fleteData.referenciaFlete}
-                    onChange={handleInputChange('referenciaFlete')}
-                    className="pl-10"
-                    data-testid="input-referencia-flete"
-                  />
-                </div>
+                <Input
+                  id="referenciaFlete"
+                  type="text"
+                  placeholder="Referencia de pago últimos 8 números"
+                  value={fleteData.referenciaFlete}
+                  onChange={handleInputChange('referenciaFlete')}
+                  data-testid="input-referencia-flete"
+                />
               </div>
 
               {/* 5. Monto Bs (si el pago es en Bs) */}

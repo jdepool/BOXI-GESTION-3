@@ -350,7 +350,7 @@ export default function PaymentInstallmentsModal({ sale, open, onOpenChange }: P
                           <FormLabel>Referencia *</FormLabel>
                           <FormControl>
                             <Input
-                              placeholder="Número de referencia"
+                              placeholder="Referencia de pago últimos 8 números"
                               data-testid="input-installment-referencia"
                               {...field}
                             />

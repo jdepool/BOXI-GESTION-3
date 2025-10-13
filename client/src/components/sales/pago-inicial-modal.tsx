@@ -321,7 +321,7 @@ export default function PagoInicialModal({ sale, open, onOpenChange }: PagoInici
                 </Label>
                 <Input
                   id="referenciaInicial"
-                  placeholder="Número de referencia"
+                  placeholder="Referencia de pago últimos 8 números"
                   value={pagoData.referenciaInicial}
                   onChange={handleInputChange("referenciaInicial")}
                   className={cn(errors.referenciaInicial && "border-destructive focus-visible:ring-destructive")}
