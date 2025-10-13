@@ -1777,6 +1777,7 @@ export class DatabaseStorage implements IStorage {
         bancoReceptorFlete: sales.bancoReceptorFlete,
         referenciaFlete: sales.referenciaFlete,
         montoFleteBs: sales.montoFleteBs,
+        montoFleteUsd: sales.montoFleteUsd,
         estadoVerificacionFlete: sales.estadoVerificacionFlete,
         notasVerificacionFlete: sales.notasVerificacionFlete,
         estadoEntrega: sales.estadoEntrega,
@@ -1850,7 +1851,7 @@ export class DatabaseStorage implements IStorage {
           orden: sale.orden,
           tipoPago: 'Flete',
           montoBs: sale.montoFleteBs ? parseFloat(sale.montoFleteBs) : null,
-          montoUsd: null, // Flete doesn't have a separate USD monto field
+          montoUsd: sale.montoFleteUsd ? parseFloat(sale.montoFleteUsd) : null,
           referencia: sale.referenciaFlete,
           bancoId: sale.bancoReceptorFlete,
           estadoVerificacion: sale.estadoVerificacionFlete || 'Por verificar',
