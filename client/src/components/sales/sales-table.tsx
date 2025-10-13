@@ -365,8 +365,7 @@ export default function SalesTable({
                 className="text-muted-foreground"
               >
                 <Filter className="h-4 w-4 mr-2" />
-                Filtros
-                {filtersVisible ? <ChevronUp className="h-4 w-4 ml-2" /> : <ChevronDown className="h-4 w-4 ml-2" />}
+                {filtersVisible ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
               </Button>
               
               <Button 
