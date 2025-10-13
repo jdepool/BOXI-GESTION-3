@@ -354,9 +354,26 @@ export default function SalesTable({
     <>
       {!hideFilters && (
         <>
-          {/* Toggle button - only show for Lista de Ventas */}
-          {activeTab === "lista" && (
-            <div className="p-3 border-b border-border flex items-center justify-end gap-2">
+          {/* Top toolbar - consistent across all tabs */}
+          <div className="p-3 border-b border-border flex items-center justify-between">
+            {/* Left side - context-specific action buttons */}
+            <div>
+              {activeTab === "manual" && onNewManualSale && (
+                <Button onClick={onNewManualSale} data-testid="button-nueva-venta-manual">
+                  <i className="fas fa-plus mr-2"></i>
+                  Nueva Venta Manual
+                </Button>
+              )}
+              {activeTab === "reservas" && onNewReserva && (
+                <Button onClick={onNewReserva} data-testid="button-nueva-reserva-manual">
+                  <i className="fas fa-plus mr-2"></i>
+                  Nueva Reserva Manual
+                </Button>
+              )}
+            </div>
+            
+            {/* Right side - filter toggle and export buttons */}
+            <div className="flex items-center gap-2">
               <Button 
                 variant="ghost" 
                 size="sm"
@@ -379,10 +396,10 @@ export default function SalesTable({
                 <Download className="h-4 w-4" />
               </Button>
             </div>
-          )}
+          </div>
           
-          {/* Filter section - collapsible for Lista de Ventas, always visible for other tabs */}
-          {(activeTab === "lista" ? filtersVisible : true) && (
+          {/* Filter section - collapsible for all tabs */}
+          {filtersVisible && (
             <div className="p-6 border-b border-border">
               <div className="flex flex-wrap gap-3">
                 <Select 
@@ -463,28 +480,6 @@ export default function SalesTable({
                   className="w-40"
                   data-testid="filter-end-date"
                 />
-
-                {/* Show Export button with text for non-Lista de Ventas tabs */}
-                {activeTab !== "lista" && (
-                  <Button variant="outline" onClick={handleExport} data-testid="export-button">
-                    <i className="fas fa-download mr-2"></i>
-                    Exportar
-                  </Button>
-                )}
-
-                {activeTab === "manual" && onNewManualSale && (
-                  <Button onClick={onNewManualSale} data-testid="button-nueva-venta-manual" className="ml-auto">
-                    <i className="fas fa-plus mr-2"></i>
-                    Nueva Venta Manual
-                  </Button>
-                )}
-
-                {activeTab === "reservas" && onNewReserva && (
-                  <Button onClick={onNewReserva} data-testid="button-nueva-reserva-manual" className="ml-auto">
-                    <i className="fas fa-plus mr-2"></i>
-                    Nueva Reserva Manual
-                  </Button>
-                )}
               </div>
             </div>
           )}
