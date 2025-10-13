@@ -305,11 +305,17 @@ export default function PaymentInstallmentsModal({ sale, open, onOpenChange }: P
                           <FormControl>
                             <Input
                               placeholder="0.00"
-                              type="number"
-                              step="0.01"
-                              min="0"
+                              type="text"
+                              inputMode="decimal"
                               data-testid="input-pago-cuota-usd"
-                              {...field}
+                              value={field.value ?? ""}
+                              onChange={(e) => {
+                                const value = e.target.value;
+                                // Allow empty, numbers, and decimal point
+                                if (value === '' || /^\d*\.?\d*$/.test(value)) {
+                                  field.onChange(value);
+                                }
+                              }}
                             />
                           </FormControl>
                           <FormMessage />
@@ -369,12 +375,17 @@ export default function PaymentInstallmentsModal({ sale, open, onOpenChange }: P
                           <FormControl>
                             <Input
                               placeholder="0.00"
-                              type="number"
-                              step="0.01"
-                              min="0"
+                              type="text"
+                              inputMode="decimal"
                               data-testid="input-installment-amount-bs"
                               value={field.value ?? ""}
-                              onChange={(e) => field.onChange(e.target.value)}
+                              onChange={(e) => {
+                                const value = e.target.value;
+                                // Allow empty, numbers, and decimal point
+                                if (value === '' || /^\d*\.?\d*$/.test(value)) {
+                                  field.onChange(value);
+                                }
+                              }}
                             />
                           </FormControl>
                           <FormMessage />
@@ -391,12 +402,17 @@ export default function PaymentInstallmentsModal({ sale, open, onOpenChange }: P
                           <FormControl>
                             <Input
                               placeholder="0.00"
-                              type="number"
-                              step="0.01"
-                              min="0"
+                              type="text"
+                              inputMode="decimal"
                               data-testid="input-installment-amount"
                               value={field.value ?? ""}
-                              onChange={(e) => field.onChange(e.target.value)}
+                              onChange={(e) => {
+                                const value = e.target.value;
+                                // Allow empty, numbers, and decimal point
+                                if (value === '' || /^\d*\.?\d*$/.test(value)) {
+                                  field.onChange(value);
+                                }
+                              }}
                             />
                           </FormControl>
                           <FormMessage />

@@ -262,11 +262,17 @@ export default function FleteModal({ open, onOpenChange, sale }: FleteModalProps
                   <DollarSign className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input
                     id="pagoFleteUsd"
-                    type="number"
-                    step="0.01"
+                    type="text"
+                    inputMode="decimal"
                     placeholder="0.00"
                     value={fleteData.pagoFleteUsd}
-                    onChange={handleInputChange('pagoFleteUsd')}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      // Allow empty, numbers, and decimal point
+                      if (value === '' || /^\d*\.?\d*$/.test(value)) {
+                        setFleteData(prev => ({ ...prev, pagoFleteUsd: value }));
+                      }
+                    }}
                     className="pl-10"
                     data-testid="input-pago-flete-usd"
                   />
@@ -318,11 +324,17 @@ export default function FleteModal({ open, onOpenChange, sale }: FleteModalProps
                   <span className="absolute left-3 top-3 text-sm text-muted-foreground font-semibold">Bs</span>
                   <Input
                     id="montoFleteBs"
-                    type="number"
-                    step="0.01"
+                    type="text"
+                    inputMode="decimal"
                     placeholder="0.00"
                     value={fleteData.montoFleteBs}
-                    onChange={handleInputChange('montoFleteBs')}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      // Allow empty, numbers, and decimal point
+                      if (value === '' || /^\d*\.?\d*$/.test(value)) {
+                        setFleteData(prev => ({ ...prev, montoFleteBs: value }));
+                      }
+                    }}
                     className="pl-10"
                     data-testid="input-monto-flete-bs"
                   />
@@ -336,11 +348,17 @@ export default function FleteModal({ open, onOpenChange, sale }: FleteModalProps
                   <DollarSign className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input
                     id="montoFleteUsd"
-                    type="number"
-                    step="0.01"
+                    type="text"
+                    inputMode="decimal"
                     placeholder="0.00"
                     value={fleteData.montoFleteUsd}
-                    onChange={handleInputChange('montoFleteUsd')}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      // Allow empty, numbers, and decimal point
+                      if (value === '' || /^\d*\.?\d*$/.test(value)) {
+                        setFleteData(prev => ({ ...prev, montoFleteUsd: value }));
+                      }
+                    }}
                     className="pl-10"
                     data-testid="input-monto-flete-usd"
                   />

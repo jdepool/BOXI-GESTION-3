@@ -273,11 +273,20 @@ export default function PagoInicialModal({ sale, open, onOpenChange }: PagoInici
                   <DollarSign className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input
                     id="pagoInicialUsd"
-                    type="number"
-                    step="0.01"
+                    type="text"
+                    inputMode="decimal"
                     placeholder="0.00"
                     value={pagoData.pagoInicialUsd}
-                    onChange={handleInputChange("pagoInicialUsd")}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      // Allow empty, numbers, and decimal point
+                      if (value === '' || /^\d*\.?\d*$/.test(value)) {
+                        setPagoData(prev => ({ ...prev, pagoInicialUsd: value }));
+                        if (errors.pagoInicialUsd) {
+                          setErrors(prev => ({ ...prev, pagoInicialUsd: false }));
+                        }
+                      }
+                    }}
                     className={cn("pl-10", errors.pagoInicialUsd && "border-destructive focus-visible:ring-destructive")}
                     data-testid="input-pago-inicial-usd"
                   />
@@ -336,11 +345,17 @@ export default function PagoInicialModal({ sale, open, onOpenChange }: PagoInici
                 <Label htmlFor="montoInicialBs">Monto Bs (si el pago es en Bs)</Label>
                 <Input
                   id="montoInicialBs"
-                  type="number"
-                  step="0.01"
+                  type="text"
+                  inputMode="decimal"
                   placeholder="0.00"
                   value={pagoData.montoInicialBs}
-                  onChange={handleInputChange("montoInicialBs")}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    // Allow empty, numbers, and decimal point
+                    if (value === '' || /^\d*\.?\d*$/.test(value)) {
+                      setPagoData(prev => ({ ...prev, montoInicialBs: value }));
+                    }
+                  }}
                   data-testid="input-monto-bs-pago"
                 />
               </div>
@@ -351,11 +366,17 @@ export default function PagoInicialModal({ sale, open, onOpenChange }: PagoInici
                   <DollarSign className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input
                     id="montoInicialUsd"
-                    type="number"
-                    step="0.01"
+                    type="text"
+                    inputMode="decimal"
                     placeholder="0.00"
                     value={pagoData.montoInicialUsd}
-                    onChange={handleInputChange("montoInicialUsd")}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      // Allow empty, numbers, and decimal point
+                      if (value === '' || /^\d*\.?\d*$/.test(value)) {
+                        setPagoData(prev => ({ ...prev, montoInicialUsd: value }));
+                      }
+                    }}
                     className="pl-10"
                     data-testid="input-monto-usd-pago"
                   />
