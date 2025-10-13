@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Check, X } from "lucide-react";
+import { Check, X, Filter, ChevronDown, ChevronUp, Download } from "lucide-react";
 import { format } from "date-fns";
 import Sidebar from "@/components/layout/sidebar";
 
@@ -52,6 +52,7 @@ export default function VerificacionPage() {
   const [isVerifyDialogOpen, setIsVerifyDialogOpen] = useState(false);
   
   // Filters
+  const [filtersVisible, setFiltersVisible] = useState(false);
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [selectedBanco, setSelectedBanco] = useState("all");
@@ -178,67 +179,94 @@ export default function VerificacionPage() {
         </TabsList>
 
         <TabsContent value="ingresos">
-          {/* Filters */}
+          {/* Filter Toolbar */}
           <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow mb-6">
-            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-              <div>
-                <label className="text-sm font-medium mb-1 block">Fecha Inicio</label>
-                <Input
-                  type="date"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  data-testid="input-start-date"
-                />
-              </div>
-              <div>
-                <label className="text-sm font-medium mb-1 block">Fecha Fin</label>
-                <Input
-                  type="date"
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                  data-testid="input-end-date"
-                />
-              </div>
-              <div>
-                <label className="text-sm font-medium mb-1 block">Banco</label>
-                <Select value={selectedBanco} onValueChange={setSelectedBanco}>
-                  <SelectTrigger data-testid="select-banco">
-                    <SelectValue placeholder="Todos" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todos</SelectItem>
-                    {bancos.map((banco) => (
-                      <SelectItem key={banco.id} value={banco.id}>
-                        {banco.banco}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <label className="text-sm font-medium mb-1 block">Orden</label>
-                <Input
-                  placeholder="Buscar orden..."
-                  value={ordenFilter}
-                  onChange={(e) => setOrdenFilter(e.target.value)}
-                  data-testid="input-orden"
-                />
-              </div>
-              <div>
-                <label className="text-sm font-medium mb-1 block">Tipo de Pago</label>
-                <Select value={tipoPagoFilter} onValueChange={setTipoPagoFilter}>
-                  <SelectTrigger data-testid="select-tipo-pago">
-                    <SelectValue placeholder="Todos" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todos</SelectItem>
-                    <SelectItem value="Inicial/Total">Inicial/Total</SelectItem>
-                    <SelectItem value="Flete">Flete</SelectItem>
-                    <SelectItem value="Cuota">Cuota</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+            <div className="flex justify-between items-center">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setFiltersVisible(!filtersVisible)}
+                data-testid="button-toggle-filters"
+              >
+                <Filter className="h-4 w-4 mr-2" />
+                Filtros
+                {filtersVisible ? (
+                  <ChevronUp className="h-4 w-4 ml-2" />
+                ) : (
+                  <ChevronDown className="h-4 w-4 ml-2" />
+                )}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                data-testid="button-export"
+              >
+                <Download className="h-4 w-4 mr-2" />
+                Exportar
+              </Button>
             </div>
+
+            {filtersVisible && (
+              <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mt-4">
+                <div>
+                  <label className="text-sm font-medium mb-1 block">Banco:</label>
+                  <Select value={selectedBanco} onValueChange={setSelectedBanco}>
+                    <SelectTrigger data-testid="select-banco">
+                      <SelectValue placeholder="Todos" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos</SelectItem>
+                      {bancos.map((banco) => (
+                        <SelectItem key={banco.id} value={banco.id}>
+                          {banco.banco}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <label className="text-sm font-medium mb-1 block">Tipo de Pago:</label>
+                  <Select value={tipoPagoFilter} onValueChange={setTipoPagoFilter}>
+                    <SelectTrigger data-testid="select-tipo-pago">
+                      <SelectValue placeholder="Todos" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos</SelectItem>
+                      <SelectItem value="Inicial/Total">Inicial/Total</SelectItem>
+                      <SelectItem value="Flete">Flete</SelectItem>
+                      <SelectItem value="Cuota">Cuota</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <label className="text-sm font-medium mb-1 block">Orden:</label>
+                  <Input
+                    placeholder="Buscar orden..."
+                    value={ordenFilter}
+                    onChange={(e) => setOrdenFilter(e.target.value)}
+                    data-testid="input-orden"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium mb-1 block">Fecha Inicio:</label>
+                  <Input
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    data-testid="input-start-date"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium mb-1 block">Fecha Fin:</label>
+                  <Input
+                    type="date"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    data-testid="input-end-date"
+                  />
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Payments Table */}
