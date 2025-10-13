@@ -98,9 +98,9 @@ export default function PaymentInstallmentsModal({ sale, open, onOpenChange }: P
       
       const payload = {
         fecha: data.fecha?.toISOString(),
-        cuotaAmount: data.montoCuotaUsd || null, // Map montoCuotaUsd to cuotaAmount (DB field)
-        cuotaAmountBs: data.montoCuotaBs || null, // Map montoCuotaBs to cuotaAmountBs (DB field)
-        pagoCuotaUsd: data.pagoCuotaUsd || null,
+        montoCuotaUsd: data.montoCuotaUsd || null, // Actual USD payment (for Verificación display)
+        montoCuotaBs: data.montoCuotaBs || null, // Actual Bs payment (for Verificación display)
+        pagoCuotaUsd: data.pagoCuotaUsd || null, // Agreed payment (required to save)
         bancoReceptorCuota: data.bancoReceptorCuota,
         referencia: data.referencia,
       };
@@ -134,9 +134,9 @@ export default function PaymentInstallmentsModal({ sale, open, onOpenChange }: P
     mutationFn: async (data: InstallmentFormData & { id: string }) => {
       const payload = {
         fecha: data.fecha?.toISOString(),
-        cuotaAmount: data.montoCuotaUsd || null, // Map montoCuotaUsd to cuotaAmount (DB field)
-        cuotaAmountBs: data.montoCuotaBs || null, // Map montoCuotaBs to cuotaAmountBs (DB field)
-        pagoCuotaUsd: data.pagoCuotaUsd || null,
+        montoCuotaUsd: data.montoCuotaUsd || null, // Actual USD payment (for Verificación display)
+        montoCuotaBs: data.montoCuotaBs || null, // Actual Bs payment (for Verificación display)
+        pagoCuotaUsd: data.pagoCuotaUsd || null, // Agreed payment (required to save)
         bancoReceptorCuota: data.bancoReceptorCuota,
         referencia: data.referencia,
       };
@@ -200,9 +200,9 @@ export default function PaymentInstallmentsModal({ sale, open, onOpenChange }: P
   const handleEditInstallment = (installment: PaymentInstallment) => {
     form.reset({
       fecha: installment.fecha ? new Date(installment.fecha) : undefined,
-      montoCuotaUsd: installment.cuotaAmount || "", // Map cuotaAmount to montoCuotaUsd
-      montoCuotaBs: installment.cuotaAmountBs || "", // Map cuotaAmountBs to montoCuotaBs
-      pagoCuotaUsd: installment.pagoCuotaUsd || "",
+      montoCuotaUsd: installment.montoCuotaUsd || "", // Actual USD payment
+      montoCuotaBs: installment.montoCuotaBs || "", // Actual Bs payment
+      pagoCuotaUsd: installment.pagoCuotaUsd || "", // Agreed payment
       bancoReceptorCuota: installment.bancoReceptorCuota || "",
       referencia: installment.referencia || "",
     });
