@@ -1857,11 +1857,9 @@ export class DatabaseStorage implements IStorage {
 
     // Process Pago Inicial payments
     for (const sale of salesData) {
-      // Show payment if there's an amount in USD OR Bs
-      const hasPaymentAmount = (sale.montoInicialUsd && parseFloat(sale.montoInicialUsd) > 0) || 
-                                (sale.montoInicialBs && parseFloat(sale.montoInicialBs) > 0);
-      
-      if (hasPaymentAmount) {
+      // Show payment if agreed payment (pagoInicialUsd) exists
+      // This is the required field to save the modal
+      if (sale.pagoInicialUsd && parseFloat(sale.pagoInicialUsd) > 0) {
         // NEW CRITERIA: Only show payments with both Banco Receptor AND Referencia filled
         if (!sale.bancoReceptorInicial || !sale.referenciaInicial) continue;
         
@@ -1916,7 +1914,7 @@ export class DatabaseStorage implements IStorage {
           orden: sale.orden,
           tipoPago: 'Flete',
           montoBs: sale.montoFleteBs ? parseFloat(sale.montoFleteBs) : null,
-          montoUsd: sale.pagoFleteUsd ? parseFloat(sale.pagoFleteUsd) : null,
+          montoUsd: sale.montoFleteUsd ? parseFloat(sale.montoFleteUsd) : null,
           referencia: sale.referenciaFlete,
           bancoId: sale.bancoReceptorFlete,
           estadoVerificacion: sale.estadoVerificacionFlete || 'Por verificar',
