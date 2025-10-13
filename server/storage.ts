@@ -1935,8 +1935,10 @@ export class DatabaseStorage implements IStorage {
         orden: paymentInstallments.orden,
         installmentNumber: paymentInstallments.installmentNumber,
         fecha: paymentInstallments.fecha,
-        cuotaAmountBs: paymentInstallments.cuotaAmountBs,
-        pagoCuotaUsd: paymentInstallments.pagoCuotaUsd,
+        cuotaAmountBs: paymentInstallments.cuotaAmountBs, // Legacy field
+        pagoCuotaUsd: paymentInstallments.pagoCuotaUsd, // Agreed payment (for condition)
+        montoCuotaUsd: paymentInstallments.montoCuotaUsd, // Actual USD payment (for display)
+        montoCuotaBs: paymentInstallments.montoCuotaBs, // Actual Bs payment (for display)
         referencia: paymentInstallments.referencia,
         bancoReceptorCuota: paymentInstallments.bancoReceptorCuota,
         estadoVerificacion: paymentInstallments.estadoVerificacion,
@@ -1950,11 +1952,9 @@ export class DatabaseStorage implements IStorage {
     const cuotasData = await cuotasQuery;
 
     for (const cuota of cuotasData) {
-      // Show payment if there's an amount in USD OR Bs
-      const hasCuotaAmount = (cuota.pagoCuotaUsd && parseFloat(cuota.pagoCuotaUsd) > 0) || 
-                             (cuota.cuotaAmountBs && parseFloat(cuota.cuotaAmountBs) > 0);
-      
-      if (!hasCuotaAmount) continue;
+      // Show payment if agreed payment (pagoCuotaUsd) exists
+      // This is the required field to save the modal
+      if (!(cuota.pagoCuotaUsd && parseFloat(cuota.pagoCuotaUsd) > 0)) continue;
       
       // NEW CRITERIA: Only show payments with both Banco Receptor AND Referencia filled
       if (!cuota.bancoReceptorCuota || !cuota.referencia) continue;
@@ -1970,8 +1970,8 @@ export class DatabaseStorage implements IStorage {
         paymentType: 'Cuota',
         orden: cuota.orden,
         tipoPago: `Cuota ${cuota.installmentNumber}`,
-        montoBs: cuota.cuotaAmountBs ? parseFloat(cuota.cuotaAmountBs) : null,
-        montoUsd: cuota.pagoCuotaUsd ? parseFloat(cuota.pagoCuotaUsd) : null,
+        montoBs: cuota.montoCuotaBs ? parseFloat(cuota.montoCuotaBs) : null,
+        montoUsd: cuota.montoCuotaUsd ? parseFloat(cuota.montoCuotaUsd) : null,
         referencia: cuota.referencia,
         bancoId: cuota.bancoReceptorCuota,
         estadoVerificacion: cuota.estadoVerificacion || 'Por verificar',
