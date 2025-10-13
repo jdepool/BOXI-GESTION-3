@@ -439,14 +439,14 @@ export default function SalesTable({
             </Button>
 
             {activeTab === "manual" && onNewManualSale && (
-              <Button onClick={onNewManualSale} data-testid="button-nueva-venta-manual">
+              <Button onClick={onNewManualSale} data-testid="button-nueva-venta-manual" className="ml-auto">
                 <i className="fas fa-plus mr-2"></i>
                 Nueva Venta Manual
               </Button>
             )}
 
             {activeTab === "reservas" && onNewReserva && (
-              <Button onClick={onNewReserva} data-testid="button-nueva-reserva-manual">
+              <Button onClick={onNewReserva} data-testid="button-nueva-reserva-manual" className="ml-auto">
                 <i className="fas fa-plus mr-2"></i>
                 Nueva Reserva Manual
               </Button>
