@@ -46,7 +46,7 @@ The system implements a workflow where orders move between tabs based on payment
 3. Final state → Stays in Lista de Ventas + appears in Despachos, disappears from Pagos
 
 ## Feature Specifications
-- **Sales Data Upload**: Supports Excel files from Cashea, Shopify, and Treble.
+- **Sales Data Upload**: Supports Excel files from Cashea, Shopify, and Treble. For Shopify orders, Total USD is correctly calculated as unit price × quantity for each line item (both webhook and file upload paths).
 - **Sales Management**: Includes filtering, searching, and export capabilities for sales records. Notes field supports up to 200 characters with hover tooltip to view full text in truncated table display. The "Orden + Flete" metric in the Pagos tab is calculated as Total Order USD + Pago Flete USD (with Flete counted as $0 if the amount is zero or the Gratis checkbox is marked).
 - **Delivery Status Tracking**: Monitors the status of product deliveries with nine distinct states.
 - **Channel-Specific Metrics**: Provides insights tailored to different sales channels.
