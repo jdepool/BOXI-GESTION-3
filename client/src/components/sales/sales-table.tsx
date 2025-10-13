@@ -10,7 +10,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import SaleDetailModal from "./sale-detail-modal";
 import AddressModal from "@/components/addresses/address-modal";
 import EditSaleModal from "./edit-sale-modal";
-import { MapPin, Edit, CalendarIcon, Mail } from "lucide-react";
+import { MapPin, Edit, CalendarIcon, Mail, Filter, ChevronDown, ChevronUp, Download } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
@@ -90,6 +90,7 @@ export default function SalesTable({
   const [selectedSaleForEdit, setSelectedSaleForEdit] = useState<Sale | null>(null);
   const [editingNotesId, setEditingNotesId] = useState<string | null>(null);
   const [notesValue, setNotesValue] = useState<string>("");
+  const [filtersVisible, setFiltersVisible] = useState(false);
   const filters = {
     canal: parentFilters?.canal || "",
     estadoEntrega: parentFilters?.estadoEntrega || "",
@@ -352,107 +353,143 @@ export default function SalesTable({
   return (
     <>
       {!hideFilters && (
-        <div className="p-6 border-b border-border">
-          <div className="flex flex-wrap gap-3">
-            <Select 
-              value={filters.canal || "all"} 
-              onValueChange={(value) => handleFilterChange('canal', value)}
-            >
-              <SelectTrigger className="w-40" data-testid="filter-channel">
-                <SelectValue placeholder="Todos los canales" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos los canales</SelectItem>
-                <SelectItem value="cashea">Cashea</SelectItem>
-                <SelectItem value="shopify">Shopify</SelectItem>
-                <SelectItem value="treble">Treble</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <Select 
-              value={filters.estadoEntrega || "all"} 
-              onValueChange={(value) => handleFilterChange('estadoEntrega', value)}
-            >
-              <SelectTrigger className="w-40" data-testid="filter-status">
-                <SelectValue placeholder="Todos los estados" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos los estados</SelectItem>
-                <SelectItem value="Pendiente">Pendiente</SelectItem>
-                <SelectItem value="Perdida">Perdida</SelectItem>
-                <SelectItem value="En proceso">En proceso</SelectItem>
-                <SelectItem value="A despachar">A despachar</SelectItem>
-                <SelectItem value="En tránsito">En tránsito</SelectItem>
-                <SelectItem value="Entregado">Entregado</SelectItem>
-                <SelectItem value="A devolver">A devolver</SelectItem>
-                <SelectItem value="Devuelto">Devuelto</SelectItem>
-                <SelectItem value="Cancelada">Cancelada</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <Select 
-              value={filters.asesorId || "all"} 
-              onValueChange={(value) => handleFilterChange('asesorId', value)}
-            >
-              <SelectTrigger className="w-40" data-testid="filter-asesor">
-                <SelectValue placeholder="Todos los asesores" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos los asesores</SelectItem>
-                <SelectItem value="none">Sin asesor</SelectItem>
-                {(asesores as any[]).map((asesor: any) => (
-                  <SelectItem key={asesor.id} value={asesor.id}>
-                    {asesor.nombre}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <Input 
-              type="text"
-              placeholder="Buscar por # orden"
-              value={filters.orden}
-              onChange={(e) => handleFilterChange('orden', e.target.value)}
-              className="w-40"
-              data-testid="filter-order-number"
-            />
-
-            <Input 
-              type="date" 
-              value={filters.startDate}
-              onChange={(e) => handleFilterChange('startDate', e.target.value)}
-              className="w-40"
-              data-testid="filter-start-date"
-            />
-
-            <Input 
-              type="date" 
-              value={filters.endDate}
-              onChange={(e) => handleFilterChange('endDate', e.target.value)}
-              className="w-40"
-              data-testid="filter-end-date"
-            />
-
-            <Button variant="outline" onClick={handleExport} data-testid="export-button">
-              <i className="fas fa-download mr-2"></i>
-              Exportar
-            </Button>
-
-            {activeTab === "manual" && onNewManualSale && (
-              <Button onClick={onNewManualSale} data-testid="button-nueva-venta-manual" className="ml-auto">
-                <i className="fas fa-plus mr-2"></i>
-                Nueva Venta Manual
+        <>
+          {/* Toggle button - only show for Lista de Ventas (activeTab === undefined or "all") */}
+          {(activeTab === undefined || activeTab === "all") && (
+            <div className="p-3 border-b border-border flex items-center justify-between">
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={() => setFiltersVisible(!filtersVisible)}
+                data-testid="toggle-filters-button"
+                className="text-muted-foreground"
+              >
+                <Filter className="h-4 w-4 mr-2" />
+                Filtros
+                {filtersVisible ? <ChevronUp className="h-4 w-4 ml-2" /> : <ChevronDown className="h-4 w-4 ml-2" />}
               </Button>
-            )}
-
-            {activeTab === "reservas" && onNewReserva && (
-              <Button onClick={onNewReserva} data-testid="button-nueva-reserva-manual" className="ml-auto">
-                <i className="fas fa-plus mr-2"></i>
-                Nueva Reserva Manual
+              
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={handleExport} 
+                data-testid="export-button"
+                className="text-muted-foreground"
+                title="Exportar"
+              >
+                <Download className="h-4 w-4" />
               </Button>
-            )}
-          </div>
-        </div>
+            </div>
+          )}
+          
+          {/* Filter section - collapsible for Lista de Ventas, always visible for other tabs */}
+          {((activeTab === undefined || activeTab === "all") ? filtersVisible : true) && (
+            <div className="p-6 border-b border-border">
+              <div className="flex flex-wrap gap-3">
+                <Select 
+                  value={filters.canal || "all"} 
+                  onValueChange={(value) => handleFilterChange('canal', value)}
+                >
+                  <SelectTrigger className="w-40" data-testid="filter-channel">
+                    <SelectValue placeholder="Todos los canales" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos los canales</SelectItem>
+                    <SelectItem value="cashea">Cashea</SelectItem>
+                    <SelectItem value="shopify">Shopify</SelectItem>
+                    <SelectItem value="treble">Treble</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                <Select 
+                  value={filters.estadoEntrega || "all"} 
+                  onValueChange={(value) => handleFilterChange('estadoEntrega', value)}
+                >
+                  <SelectTrigger className="w-40" data-testid="filter-status">
+                    <SelectValue placeholder="Todos los estados" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos los estados</SelectItem>
+                    <SelectItem value="Pendiente">Pendiente</SelectItem>
+                    <SelectItem value="Perdida">Perdida</SelectItem>
+                    <SelectItem value="En proceso">En proceso</SelectItem>
+                    <SelectItem value="A despachar">A despachar</SelectItem>
+                    <SelectItem value="En tránsito">En tránsito</SelectItem>
+                    <SelectItem value="Entregado">Entregado</SelectItem>
+                    <SelectItem value="A devolver">A devolver</SelectItem>
+                    <SelectItem value="Devuelto">Devuelto</SelectItem>
+                    <SelectItem value="Cancelada">Cancelada</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                <Select 
+                  value={filters.asesorId || "all"} 
+                  onValueChange={(value) => handleFilterChange('asesorId', value)}
+                >
+                  <SelectTrigger className="w-40" data-testid="filter-asesor">
+                    <SelectValue placeholder="Todos los asesores" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos los asesores</SelectItem>
+                    <SelectItem value="none">Sin asesor</SelectItem>
+                    {(asesores as any[]).map((asesor: any) => (
+                      <SelectItem key={asesor.id} value={asesor.id}>
+                        {asesor.nombre}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                <Input 
+                  type="text"
+                  placeholder="Buscar por # orden"
+                  value={filters.orden}
+                  onChange={(e) => handleFilterChange('orden', e.target.value)}
+                  className="w-40"
+                  data-testid="filter-order-number"
+                />
+
+                <Input 
+                  type="date" 
+                  value={filters.startDate}
+                  onChange={(e) => handleFilterChange('startDate', e.target.value)}
+                  className="w-40"
+                  data-testid="filter-start-date"
+                />
+
+                <Input 
+                  type="date" 
+                  value={filters.endDate}
+                  onChange={(e) => handleFilterChange('endDate', e.target.value)}
+                  className="w-40"
+                  data-testid="filter-end-date"
+                />
+
+                {/* Show Export button with text for non-Lista de Ventas tabs */}
+                {activeTab !== undefined && activeTab !== "all" && (
+                  <Button variant="outline" onClick={handleExport} data-testid="export-button">
+                    <i className="fas fa-download mr-2"></i>
+                    Exportar
+                  </Button>
+                )}
+
+                {activeTab === "manual" && onNewManualSale && (
+                  <Button onClick={onNewManualSale} data-testid="button-nueva-venta-manual" className="ml-auto">
+                    <i className="fas fa-plus mr-2"></i>
+                    Nueva Venta Manual
+                  </Button>
+                )}
+
+                {activeTab === "reservas" && onNewReserva && (
+                  <Button onClick={onNewReserva} data-testid="button-nueva-reserva-manual" className="ml-auto">
+                    <i className="fas fa-plus mr-2"></i>
+                    Nueva Reserva Manual
+                  </Button>
+                )}
+              </div>
+            </div>
+          )}
+        </>
       )}
 
       <div className="overflow-x-auto overflow-y-auto max-h-[calc(100vh-280px)] bg-background">
