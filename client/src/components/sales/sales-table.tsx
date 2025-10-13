@@ -356,7 +356,7 @@ export default function SalesTable({
         <>
           {/* Toggle button - only show for Lista de Ventas */}
           {activeTab === "lista" && (
-            <div className="p-3 border-b border-border flex items-center justify-between">
+            <div className="p-3 border-b border-border flex items-center justify-end gap-2">
               <Button 
                 variant="ghost" 
                 size="sm"
