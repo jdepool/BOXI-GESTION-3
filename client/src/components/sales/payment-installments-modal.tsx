@@ -373,7 +373,8 @@ export default function PaymentInstallmentsModal({ sale, open, onOpenChange }: P
                               step="0.01"
                               min="0"
                               data-testid="input-installment-amount-bs"
-                              {...field}
+                              value={field.value ?? ""}
+                              onChange={(e) => field.onChange(e.target.value)}
                             />
                           </FormControl>
                           <FormMessage />
@@ -394,7 +395,8 @@ export default function PaymentInstallmentsModal({ sale, open, onOpenChange }: P
                               step="0.01"
                               min="0"
                               data-testid="input-installment-amount"
-                              {...field}
+                              value={field.value ?? ""}
+                              onChange={(e) => field.onChange(e.target.value)}
                             />
                           </FormControl>
                           <FormMessage />
