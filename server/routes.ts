@@ -108,7 +108,7 @@ function transformShopifyWebhookToCSV(shopifyOrder: any) {
     'Created at': shopifyOrder.created_at,
     'Name': shopifyOrder.name, // Order number like #1001
     'Email': shopifyOrder.email,
-    'Lineitem price': lineItem.price, // Individual line item price
+    'Lineitem price': (parseFloat(lineItem.price || 0) * (lineItem.quantity || 1)).toFixed(2), // Total price for this line item (unit price × quantity)
     'Total': shopifyOrder.total_price || shopifyOrder.current_total_price, // Full order total
     
     // Customer billing info (same for all line items)
@@ -204,7 +204,7 @@ function parseFile(buffer: Buffer, canal: string, filename: string) {
           referenciaInicial: null,
           montoInicialBs: null,
           montoInicialUsd: null,
-          estadoEntrega: 'En proceso', // Route Shopify orders to "Ventas por Completar"
+          estadoEntrega: 'Pendiente', // Route Shopify orders to "Ventas por Completar"
           product: String(row['Lineitem name'] || ''),
           sku: row['Lineitem sku'] || row['Lineitem SKU'] || row['lineitem sku'] || row['SKU'] ? 
                String(row['Lineitem sku'] || row['Lineitem SKU'] || row['lineitem sku'] || row['SKU']) : null, // Map SKU from Shopify with fallbacks
