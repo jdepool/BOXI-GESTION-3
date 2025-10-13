@@ -1237,12 +1237,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
               // Include all previously verified cuotas PLUS the one being verified now
               cuotasVerificadas = installments
                 .filter(inst => inst.estadoVerificacion === 'Verificado' || inst.id === paymentId)
-                .reduce((sum, inst) => sum + Number(inst.cuotaAmount || 0), 0);
+                .reduce((sum, inst) => sum + Number(inst.montoCuotaUsd || inst.cuotaAmount || 0), 0);
             } else {
               // Just get previously verified cuotas
               cuotasVerificadas = installments
                 .filter(inst => inst.estadoVerificacion === 'Verificado')
-                .reduce((sum, inst) => sum + Number(inst.cuotaAmount || 0), 0);
+                .reduce((sum, inst) => sum + Number(inst.montoCuotaUsd || inst.cuotaAmount || 0), 0);
             }
             
             const totalPagado = pagoInicialVerificado + fleteVerificado + cuotasVerificadas;

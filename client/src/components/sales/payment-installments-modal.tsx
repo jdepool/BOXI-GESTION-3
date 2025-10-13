@@ -490,10 +490,12 @@ export default function PaymentInstallmentsModal({ sale, open, onOpenChange }: P
                         <TableCell>{banco?.banco || "-"}</TableCell>
                         <TableCell>{installment.referencia || "-"}</TableCell>
                         <TableCell>
-                          {installment.cuotaAmountBs ? `Bs ${parseFloat(installment.cuotaAmountBs).toFixed(2)}` : "-"}
+                          {(installment.montoCuotaBs || installment.cuotaAmountBs) ? 
+                            `Bs ${parseFloat((installment.montoCuotaBs || installment.cuotaAmountBs) as string).toFixed(2)}` : "-"}
                         </TableCell>
                         <TableCell>
-                          {installment.cuotaAmount ? `$${parseFloat(installment.cuotaAmount).toFixed(2)}` : "-"}
+                          {(installment.montoCuotaUsd || installment.cuotaAmount) ? 
+                            `$${parseFloat((installment.montoCuotaUsd || installment.cuotaAmount) as string).toFixed(2)}` : "-"}
                         </TableCell>
                         <TableCell>
                           <div className="flex gap-1">
