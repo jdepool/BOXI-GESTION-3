@@ -103,13 +103,20 @@ function transformShopifyWebhookToCSV(shopifyOrder: any) {
   const lineItems = shopifyOrder.line_items || [];
   
   // Create one record per line item (product) in the order
-  return lineItems.map((lineItem: any) => ({
-    // Order info (same for all line items)
-    'Created at': shopifyOrder.created_at,
-    'Name': shopifyOrder.name, // Order number like #1001
-    'Email': shopifyOrder.email,
-    'Lineitem price': (parseFloat(lineItem.price || 0) * (lineItem.quantity || 1)).toFixed(2), // Total price for this line item (unit price × quantity)
-    'Total': shopifyOrder.total_price || shopifyOrder.current_total_price, // Full order total
+  return lineItems.map((lineItem: any) => {
+    const unitPrice = parseFloat(lineItem.price || 0);
+    const quantity = lineItem.quantity || 1;
+    const totalPrice = (unitPrice * quantity).toFixed(2);
+    
+    console.log(`🔍 DEBUG transformShopifyWebhookToCSV: Product="${lineItem.name}", UnitPrice=${unitPrice}, Qty=${quantity}, CalculatedTotal=${totalPrice}`);
+    
+    return {
+      // Order info (same for all line items)
+      'Created at': shopifyOrder.created_at,
+      'Name': shopifyOrder.name, // Order number like #1001
+      'Email': shopifyOrder.email,
+      'Lineitem price': totalPrice, // Total price for this line item (unit price × quantity)
+      'Total': shopifyOrder.total_price || shopifyOrder.current_total_price, // Full order total
     
     // Customer billing info (same for all line items)
     'Billing Name': shopifyOrder.billing_address?.name || 
@@ -132,7 +139,8 @@ function transformShopifyWebhookToCSV(shopifyOrder: any) {
     'Lineitem name': lineItem.name || lineItem.title,
     'Lineitem quantity': lineItem.quantity || 1,
     'Lineitem sku': lineItem.sku || null, // Add SKU mapping from Shopify line item
-  }));
+    };
+  });
 }
 
 function parseFile(buffer: Buffer, canal: string, filename: string) {
@@ -1314,12 +1322,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
 
         // Use existing Shopify mapping logic from parseFile function
+        const totalUsdValue = String(row['Lineitem price'] || '0');
+        console.log(`🔍 DEBUG webhook handler: Product="${row['Lineitem name']}", LineitemPrice from row=${row['Lineitem price']}, totalUsd=${totalUsdValue}`);
+        
         return {
           nombre: String(row['Billing Name'] || ''),
           cedula: null, // Shopify doesn't have cedula field
           telefono: row['Billing Phone'] ? String(row['Billing Phone']) : null,
           email: row.Email ? String(row.Email) : null,
-          totalUsd: String(row['Lineitem price'] || '0'),
+          totalUsd: totalUsdValue,
           totalOrderUsd: row['Total'] ? String(row['Total']) : null, // Full order total from Shopify
           sucursal: null, // Shopify doesn't have sucursal
           tienda: null, // Shopify doesn't have tienda  
