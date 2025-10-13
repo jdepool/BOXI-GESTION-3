@@ -23,9 +23,6 @@ export default function Administracion() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-foreground">Administración</h1>
-            <p className="text-muted-foreground">
-              Configuración y gestión de datos maestros del sistema
-            </p>
           </div>
           <Link href="/dashboard">
             <Button variant="outline" className="flex items-center gap-2" data-testid="back-to-dashboard">

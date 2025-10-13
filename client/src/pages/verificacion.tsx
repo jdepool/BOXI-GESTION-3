@@ -165,7 +165,7 @@ export default function VerificacionPage() {
       <main className="flex-1 flex flex-col overflow-hidden">
         <div className="flex-1 overflow-auto">
           <div className="container mx-auto p-6">
-            <h1 className="text-3xl font-bold mb-6">Verificación de Pagos</h1>
+            <h1 className="text-3xl font-bold mb-6">Verificación</h1>
 
             <Tabs defaultValue="ingresos" className="w-full">
         <TabsList className="mb-6">

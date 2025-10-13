@@ -84,8 +84,7 @@ export default function Sales() {
       
       <main className="flex-1 flex flex-col overflow-hidden">
         <Header 
-          title="Datos de Ventas"
-          description="Gestión y visualización de todas las ventas"
+          title="Ventas"
         />
         
         <div className="flex-1 overflow-auto p-6">
