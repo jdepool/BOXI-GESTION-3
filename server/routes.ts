@@ -108,8 +108,6 @@ function transformShopifyWebhookToCSV(shopifyOrder: any) {
     const quantity = lineItem.quantity || 1;
     const totalPrice = (unitPrice * quantity).toFixed(2);
     
-    console.log(`🔍 DEBUG transformShopifyWebhookToCSV: Product="${lineItem.name}", UnitPrice=${unitPrice}, Qty=${quantity}, CalculatedTotal=${totalPrice}`);
-    
     return {
       // Order info (same for all line items)
       'Created at': shopifyOrder.created_at,
