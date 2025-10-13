@@ -647,15 +647,8 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getOrdersWithAddresses(limit: number = 20, offset: number = 0): Promise<{ data: Sale[]; total: number }> {
-    // Get orders that are ready for dispatch:
-    // Estado Entrega = A despachar AND (Flete Status = A Despacho OR fleteGratis = true)
-    const dispatchCondition = and(
-      eq(sales.estadoEntrega, 'A despachar'),
-      or(
-        eq(sales.statusFlete, 'A Despacho'),
-        eq(sales.fleteGratis, true)
-      )
-    );
+    // Get all orders that are ready for dispatch (estadoEntrega = 'A despachar')
+    const dispatchCondition = eq(sales.estadoEntrega, 'A despachar');
 
     const ordersForDispatch = await db
       .select()
