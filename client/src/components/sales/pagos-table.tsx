@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { format } from "date-fns";
-import { CreditCard, Truck, Banknote } from "lucide-react";
+import { CreditCard, Truck, Banknote, Filter, ChevronUp, ChevronDown, Download } from "lucide-react";
 import PagoInicialModal from "./pago-inicial-modal";
 import FleteModal from "./flete-modal";
 import PaymentInstallmentsModal from "./payment-installments-modal";
@@ -43,6 +44,15 @@ interface PagosTableProps {
   limit: number;
   offset: number;
   isLoading: boolean;
+  filters?: {
+    canal?: string;
+    orden?: string;
+    startDate?: string;
+    endDate?: string;
+    limit: number;
+    offset: number;
+  };
+  onFilterChange?: (filters: any) => void;
   onPageChange?: (newOffset: number) => void;
 }
 
@@ -52,16 +62,35 @@ export default function PagosTable({
   limit,
   offset,
   isLoading,
+  filters,
+  onFilterChange,
   onPageChange,
 }: PagosTableProps) {
   const currentPage = Math.floor(offset / limit) + 1;
   const { toast } = useToast();
   
+  const [filtersVisible, setFiltersVisible] = useState(true);
   const [pagoInicialModalOpen, setPagoInicialModalOpen] = useState(false);
   const [fleteModalOpen, setFleteModalOpen] = useState(false);
   const [cuotasModalOpen, setCuotasModalOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [selectedSale, setSelectedSale] = useState<any | null>(null);
+
+  const handleFilterChange = (key: string, value: string) => {
+    if (onFilterChange) {
+      onFilterChange({ [key]: value });
+    }
+  };
+
+  const handleExport = () => {
+    const queryParams = new URLSearchParams();
+    if (filters?.canal) queryParams.append('canal', filters.canal);
+    if (filters?.orden) queryParams.append('orden', filters.orden);
+    if (filters?.startDate) queryParams.append('startDate', filters.startDate);
+    if (filters?.endDate) queryParams.append('endDate', filters.endDate);
+    
+    window.location.href = `/api/sales/orders/export?${queryParams.toString()}`;
+  };
 
   const formatCurrency = (value: number | null) => {
     if (value === null || value === undefined) return "$0";
@@ -114,6 +143,78 @@ export default function PagosTable({
 
   return (
     <div className="h-full flex flex-col">
+      {/* Top toolbar with filters */}
+      <div className="p-3 border-b border-border flex items-center justify-end gap-2">
+        <Button 
+          variant="ghost" 
+          size="sm"
+          onClick={() => setFiltersVisible(!filtersVisible)}
+          data-testid="toggle-filters-button"
+          className="text-muted-foreground"
+        >
+          <Filter className="h-4 w-4 mr-2" />
+          {filtersVisible ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+        </Button>
+        
+        <Button 
+          variant="ghost" 
+          size="sm"
+          onClick={handleExport} 
+          data-testid="export-button"
+          className="text-muted-foreground"
+          title="Exportar"
+        >
+          <Download className="h-4 w-4" />
+        </Button>
+      </div>
+
+      {/* Filter section - collapsible */}
+      {filtersVisible && (
+        <div className="p-6 border-b border-border">
+          <div className="flex flex-wrap gap-3">
+            <Select 
+              value={filters?.canal || "all"} 
+              onValueChange={(value) => handleFilterChange('canal', value)}
+            >
+              <SelectTrigger className="w-40" data-testid="filter-channel">
+                <SelectValue placeholder="Todos los canales" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos los canales</SelectItem>
+                <SelectItem value="cashea">Cashea</SelectItem>
+                <SelectItem value="shopify">Shopify</SelectItem>
+                <SelectItem value="treble">Treble</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Input 
+              type="text"
+              placeholder="Buscar por # orden"
+              value={filters?.orden || ""}
+              onChange={(e) => handleFilterChange('orden', e.target.value)}
+              className="w-40"
+              data-testid="filter-order-number"
+            />
+
+            <Input 
+              type="date" 
+              value={filters?.startDate || ""}
+              onChange={(e) => handleFilterChange('startDate', e.target.value)}
+              className="w-40"
+              data-testid="filter-start-date"
+            />
+
+            <Input 
+              type="date" 
+              value={filters?.endDate || ""}
+              onChange={(e) => handleFilterChange('endDate', e.target.value)}
+              className="w-40"
+              data-testid="filter-end-date"
+            />
+          </div>
+        </div>
+      )}
+
       <div className="flex-1 overflow-auto relative">
         <table className="w-full text-sm border-collapse">
           <thead className="sticky top-0 z-10 bg-muted">
