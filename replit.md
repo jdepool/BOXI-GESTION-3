@@ -21,7 +21,29 @@ PostgreSQL is the primary database, accessed via Drizzle ORM for type-safe opera
 The system uses basic username/password authentication. User sessions are managed through PostgreSQL session storage using `connect-pg-simple` for secure server-side session management.
 
 ## UI/UX Design
-The application utilizes shadcn/ui for consistent design patterns and accessibility, built upon Radix UI primitives. Tailwind CSS is used for rapid and responsive styling. Lucide React provides a consistent icon set. The application features a tabbed interface for managing sales data, with dedicated views for Lista de Ventas, Ventas por completar, Reservas, and Pagos. It also includes a "Verificación" section with tabs for "Ingresos" (income) and "Egresos" (expenses), displaying payment verification statuses and allowing updates via a modal. Payment metrics in the "Pagos" tab only reflect verified payments. The interface is space-optimized with compact headers (p-4 padding) and context-aware action buttons in the filter toolbar that appear only for relevant tabs (Nueva Venta Manual for "Ventas por completar", Nueva Reserva Manual for "Reservas"), maximizing table visibility.
+The application utilizes shadcn/ui for consistent design patterns and accessibility, built upon Radix UI primitives. Tailwind CSS is used for rapid and responsive styling. Lucide React provides a consistent icon set. The application features a tabbed interface for managing sales data, with dedicated views for Lista de Ventas, Ventas por completar, Reservas, Pagos, and Despachos. It also includes a "Verificación" section with tabs for "Ingresos" (income) and "Egresos" (expenses), displaying payment verification statuses and allowing updates via a modal. Payment metrics in the "Pagos" tab only reflect verified payments. The interface is space-optimized with compact headers (p-4 padding) and context-aware action buttons in the filter toolbar that appear only for relevant tabs (Nueva Venta Manual for "Ventas por completar", Nueva Reserva Manual for "Reservas"), maximizing table visibility.
+
+### Tab Workflow Logic
+The system implements a workflow where orders move between tabs based on payment status and delivery state:
+
+**Temporary Tabs (holding areas for incomplete orders):**
+- **Ventas por Completar**: Shows `tipo = 'Inmediata'` + `estadoEntrega = 'Pendiente'` orders
+- **Reservas**: Shows `tipo = 'Reserva'` + `estadoEntrega = 'Pendiente'` orders
+- **Pagos**: Shows orders with `estadoEntrega IN ('Pendiente', 'En proceso')` for payment management
+
+**Permanent/Working Tabs:**
+- **Lista de Ventas**: Shows all sales where `estadoEntrega ≠ 'Pendiente'` (completed/processed sales)
+- **Despachos**: Shows all orders with `estadoEntrega = 'A despachar'` (ready for shipping)
+
+**Workflow for Shopify/Manual Orders:**
+1. New order enters → `estadoEntrega = 'Pendiente'` → Appears in Ventas por Completar/Reservas + Pagos (NOT in Lista de Ventas)
+2. Payments verified → Pendiente reaches $0 → Auto-updates to `estadoEntrega = 'A despachar'`
+3. Final state → Appears in Lista de Ventas + Despachos, disappears from Pagos + temporary tabs
+
+**Workflow for Cashea Orders (exception):**
+1. New order enters → `estadoEntrega = 'En proceso'` → Appears directly in Lista de Ventas + Pagos (skips temporary tabs)
+2. Payments verified → Pendiente reaches $0 → Auto-updates to `estadoEntrega = 'A despachar'`
+3. Final state → Stays in Lista de Ventas + appears in Despachos, disappears from Pagos
 
 ## Feature Specifications
 - **Sales Data Upload**: Supports Excel files from Cashea, Shopify, and Treble.
