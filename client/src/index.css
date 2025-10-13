@@ -191,3 +191,17 @@
   background-color: hsl(210, 100%, 65%);
   color: hsl(218, 35%, 8%);
 }
+
+/* Hide number input spinner arrows for all currency amount fields */
+/* Chrome, Safari, Edge, Opera */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Firefox */
+input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
