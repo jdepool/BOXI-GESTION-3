@@ -65,6 +65,12 @@ export default function Sales() {
       hasPagoInicial: boolean;
       hasFlete: boolean;
       installmentCount: number;
+      pagoInicialUsd: number | null;
+      pagoFleteUsd: number | null;
+      ordenPlusFlete: number;
+      totalCuotas: number;
+      totalPagado: number;
+      saldoPendiente: number;
     }>;
     total: number;
   }>({
