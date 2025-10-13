@@ -1857,7 +1857,11 @@ export class DatabaseStorage implements IStorage {
 
     // Process Pago Inicial payments
     for (const sale of salesData) {
-      if (sale.pagoInicialUsd && parseFloat(sale.pagoInicialUsd) > 0) {
+      // Show payment if there's an amount in USD OR Bs
+      const hasPaymentAmount = (sale.montoInicialUsd && parseFloat(sale.montoInicialUsd) > 0) || 
+                                (sale.montoInicialBs && parseFloat(sale.montoInicialBs) > 0);
+      
+      if (hasPaymentAmount) {
         // NEW CRITERIA: Only show payments with both Banco Receptor AND Referencia filled
         if (!sale.bancoReceptorInicial || !sale.referenciaInicial) continue;
         
@@ -1889,7 +1893,11 @@ export class DatabaseStorage implements IStorage {
       }
 
       // Process Flete payments
-      if (sale.pagoFleteUsd && parseFloat(sale.pagoFleteUsd) > 0) {
+      // Show payment if there's an amount in USD OR Bs
+      const hasFleteAmount = (sale.pagoFleteUsd && parseFloat(sale.pagoFleteUsd) > 0) || 
+                             (sale.montoFleteBs && parseFloat(sale.montoFleteBs) > 0);
+      
+      if (hasFleteAmount) {
         // NEW CRITERIA: Only show payments with both Banco Receptor AND Referencia filled
         if (!sale.bancoReceptorFlete || !sale.referenciaFlete) continue;
         
@@ -1944,6 +1952,12 @@ export class DatabaseStorage implements IStorage {
     const cuotasData = await cuotasQuery;
 
     for (const cuota of cuotasData) {
+      // Show payment if there's an amount in USD OR Bs
+      const hasCuotaAmount = (cuota.pagoCuotaUsd && parseFloat(cuota.pagoCuotaUsd) > 0) || 
+                             (cuota.cuotaAmountBs && parseFloat(cuota.cuotaAmountBs) > 0);
+      
+      if (!hasCuotaAmount) continue;
+      
       // NEW CRITERIA: Only show payments with both Banco Receptor AND Referencia filled
       if (!cuota.bancoReceptorCuota || !cuota.referencia) continue;
       
