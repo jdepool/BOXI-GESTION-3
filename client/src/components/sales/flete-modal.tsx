@@ -14,6 +14,7 @@ import { Truck, DollarSign, CalendarIcon, User, Phone, Mail } from "lucide-react
 import { useToast } from "@/hooks/use-toast";
 import { format, parse } from "date-fns";
 import { cn } from "@/lib/utils";
+import { apiRequest } from "@/lib/queryClient";
 
 // Helper function to safely parse YYYY-MM-DD as local date
 const parseLocalDate = (dateString: string) => {
@@ -70,18 +71,10 @@ export default function FleteModal({ open, onOpenChange, sale }: FleteModalProps
 
   // Update flete mutation
   const updateFleteMutation = useMutation({
-    mutationFn: async (data: { saleId: string; flete: FleteData }) => {
-      const response = await fetch(`/api/sales/${data.saleId}/flete`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(data.flete)
-      });
-      if (!response.ok) {
-        throw new Error('Failed to update flete');
-      }
-      return response.json();
+    mutationFn: async (data: FleteData) => {
+      if (!sale?.orden) throw new Error("Order number is required");
+      
+      return apiRequest("PATCH", `/api/sales/${encodeURIComponent(sale.orden)}/flete`, data);
     },
     onSuccess: () => {
       toast({
@@ -156,10 +149,7 @@ export default function FleteModal({ open, onOpenChange, sale }: FleteModalProps
   const handleSave = () => {
     if (!sale) return;
 
-    updateFleteMutation.mutate({
-      saleId: sale.id,
-      flete: fleteData
-    });
+    updateFleteMutation.mutate(fleteData);
   };
 
   if (!sale) return null;
