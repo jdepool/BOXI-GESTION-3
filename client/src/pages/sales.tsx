@@ -21,6 +21,10 @@ export default function Sales() {
   });
 
   const [pagosFilters, setPagosFilters] = useState({
+    canal: "",
+    orden: "",
+    startDate: "",
+    endDate: "",
     limit: 20,
     offset: 0,
   });
@@ -73,6 +77,10 @@ export default function Sales() {
 
   const handlePageChange = (newOffset: number) => {
     setFilters(prev => ({ ...prev, offset: newOffset }));
+  };
+
+  const handlePagosFilterChange = (newFilters: Partial<typeof pagosFilters>) => {
+    setPagosFilters(prev => ({ ...prev, ...newFilters, offset: 0 }));
   };
 
   const handlePagosPageChange = (newOffset: number) => {
@@ -143,6 +151,8 @@ export default function Sales() {
                   limit={pagosFilters.limit}
                   offset={pagosFilters.offset}
                   isLoading={pagosLoading}
+                  filters={pagosFilters}
+                  onFilterChange={handlePagosFilterChange}
                   onPageChange={handlePagosPageChange}
                 />
               </div>
