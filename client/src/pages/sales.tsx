@@ -37,14 +37,14 @@ export default function Sales() {
     queryKey: ["/api/sales", { ...filters, excludePendingManual: true }],
   });
 
-  // Query for Reserva orders that are still pending (exclude those ready for dispatch)
+  // Query for Reserva orders that are still pending
   const { data: reservasData, isLoading: reservasLoading } = useQuery<{
     data: any[];
     total: number;
     limit: number;
     offset: number;
   }>({
-    queryKey: ["/api/sales", { tipo: "Reserva", excludeADespachar: true }],
+    queryKey: ["/api/sales", { tipo: "Reserva", estadoEntrega: "Pendiente" }],
   });
 
   // Query for Pagos tab - orders grouped by order number with estadoEntrega Pendiente or En Proceso
