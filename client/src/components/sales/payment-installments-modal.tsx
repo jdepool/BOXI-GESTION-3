@@ -473,7 +473,9 @@ export default function PaymentInstallmentsModal({ sale, open, onOpenChange }: P
                         <TableCell>
                           {installment.cuotaAmountBs ? `Bs ${parseFloat(installment.cuotaAmountBs).toFixed(2)}` : "-"}
                         </TableCell>
-                        <TableCell>${parseFloat(installment.cuotaAmount || "0").toFixed(2)}</TableCell>
+                        <TableCell>
+                          {installment.cuotaAmount ? `$${parseFloat(installment.cuotaAmount).toFixed(2)}` : "-"}
+                        </TableCell>
                         <TableCell>
                           <div className="flex gap-1">
                             <Button
