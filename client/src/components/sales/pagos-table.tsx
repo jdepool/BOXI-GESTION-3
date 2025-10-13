@@ -78,7 +78,9 @@ export default function PagosTable({
 
   const handleFilterChange = (key: string, value: string) => {
     if (onFilterChange) {
-      onFilterChange({ [key]: value });
+      // Normalize "all" to empty string for canal filter
+      const normalizedValue = (key === 'canal' && value === 'all') ? '' : value;
+      onFilterChange({ [key]: normalizedValue });
     }
   };
 
