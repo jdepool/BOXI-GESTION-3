@@ -189,7 +189,7 @@ function parseFile(buffer: Buffer, canal: string, filename: string) {
           cedula: null, // Shopify doesn't have cedula field
           telefono: row['Billing Phone'] ? String(row['Billing Phone']) : null,
           email: row.Email ? String(row.Email) : null,
-          totalUsd: String(row['Lineitem price'] || '0'), // Use individual line item price
+          totalUsd: String((parseFloat(row['Lineitem price'] || 0) * Number(row['Lineitem quantity'] || 1)).toFixed(2)), // Total price for this line item (unit price × quantity)
           totalOrderUsd: row['Total'] ? String(row['Total']) : null, // Full order total from Shopify
           sucursal: null, // Shopify doesn't have sucursal
           tienda: null, // Shopify doesn't have tienda  
