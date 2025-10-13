@@ -1935,7 +1935,8 @@ export class DatabaseStorage implements IStorage {
         orden: paymentInstallments.orden,
         installmentNumber: paymentInstallments.installmentNumber,
         fecha: paymentInstallments.fecha,
-        cuotaAmountBs: paymentInstallments.cuotaAmountBs, // Legacy field
+        cuotaAmount: paymentInstallments.cuotaAmount, // Legacy USD field (fallback)
+        cuotaAmountBs: paymentInstallments.cuotaAmountBs, // Legacy Bs field (fallback)
         pagoCuotaUsd: paymentInstallments.pagoCuotaUsd, // Agreed payment (for condition)
         montoCuotaUsd: paymentInstallments.montoCuotaUsd, // Actual USD payment (for display)
         montoCuotaBs: paymentInstallments.montoCuotaBs, // Actual Bs payment (for display)
@@ -1970,8 +1971,9 @@ export class DatabaseStorage implements IStorage {
         paymentType: 'Cuota',
         orden: cuota.orden,
         tipoPago: `Cuota ${cuota.installmentNumber}`,
-        montoBs: cuota.montoCuotaBs ? parseFloat(cuota.montoCuotaBs) : null,
-        montoUsd: cuota.montoCuotaUsd ? parseFloat(cuota.montoCuotaUsd) : null,
+        // Use new fields (montoCuotaBs, montoCuotaUsd) with fallback to legacy fields (cuotaAmountBs, cuotaAmount)
+        montoBs: cuota.montoCuotaBs ? parseFloat(cuota.montoCuotaBs) : (cuota.cuotaAmountBs ? parseFloat(cuota.cuotaAmountBs) : null),
+        montoUsd: cuota.montoCuotaUsd ? parseFloat(cuota.montoCuotaUsd) : (cuota.cuotaAmount ? parseFloat(cuota.cuotaAmount) : null),
         referencia: cuota.referencia,
         bancoId: cuota.bancoReceptorCuota,
         estadoVerificacion: cuota.estadoVerificacion || 'Por verificar',
