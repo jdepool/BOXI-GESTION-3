@@ -899,6 +899,9 @@ export class DatabaseStorage implements IStorage {
     bancoReceptorFlete?: string;
     fleteGratis?: boolean;
   }): Promise<Sale[]> {
+    console.log('🔍 DEBUG updateOrderFlete - Order:', orderNumber);
+    console.log('🔍 DEBUG updateOrderFlete - Received data:', JSON.stringify(flete, null, 2));
+    
     const updateData: any = {};
     
     // Add all flete fields to update data
@@ -928,12 +931,16 @@ export class DatabaseStorage implements IStorage {
     // Add updated timestamp
     updateData.updatedAt = new Date();
 
+    console.log('🔍 DEBUG updateOrderFlete - Update data to DB:', JSON.stringify(updateData, null, 2));
+
     // Update all sales rows with this order number
     const updatedSales = await db
       .update(sales)
       .set(updateData)
       .where(eq(sales.orden, orderNumber))
       .returning();
+
+    console.log('🔍 DEBUG updateOrderFlete - Updated', updatedSales.length, 'sales');
 
     return updatedSales;
   }

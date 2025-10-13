@@ -2034,8 +2034,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { orderNumber } = req.params;
       const fleteData = req.body;
 
+      console.log('🔍 DEBUG PATCH flete - Order number from params:', orderNumber);
+      console.log('🔍 DEBUG PATCH flete - Request body:', JSON.stringify(fleteData, null, 2));
+
       // Find all sales with this order number
       const salesInOrder = await storage.getSalesByOrderNumber(orderNumber);
+      console.log('🔍 DEBUG PATCH flete - Found', salesInOrder?.length || 0, 'sales for order', orderNumber);
+      
       if (!salesInOrder || salesInOrder.length === 0) {
         return res.status(404).json({ error: "Order not found" });
       }
@@ -2047,6 +2052,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(500).json({ error: "Failed to update flete" });
       }
 
+      console.log('🔍 DEBUG PATCH flete - Success! Updated', updatedSales.length, 'sales');
       res.json({ success: true, sales: updatedSales });
     } catch (error) {
       console.error("Update flete error:", error);
