@@ -2028,6 +2028,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update flete for all products in an order
+  app.patch("/api/sales/:orderNumber/flete", async (req, res) => {
+    try {
+      const { orderNumber } = req.params;
+      const fleteData = req.body;
+
+      // Find all sales with this order number
+      const salesInOrder = await storage.getSalesByOrderNumber(orderNumber);
+      if (!salesInOrder || salesInOrder.length === 0) {
+        return res.status(404).json({ error: "Order not found" });
+      }
+
+      // Update flete data for all products in this order
+      const updatedSales = await storage.updateOrderFlete(orderNumber, fleteData);
+      
+      if (!updatedSales) {
+        return res.status(500).json({ error: "Failed to update flete" });
+      }
+
+      res.json({ success: true, sales: updatedSales });
+    } catch (error) {
+      console.error("Update flete error:", error);
+      res.status(500).json({ error: "Failed to update flete" });
+    }
+  });
+
   // Update sale notes
   app.put("/api/sales/:saleId/notes", async (req, res) => {
     try {
