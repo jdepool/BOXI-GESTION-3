@@ -502,6 +502,7 @@ export class DatabaseStorage implements IStorage {
     startDate?: string;
     endDate?: string;
     asesorId?: string;
+    estadoEntrega?: string;
     excludePerdida?: boolean;
   }): Promise<{
     data: Array<{
@@ -528,16 +529,26 @@ export class DatabaseStorage implements IStorage {
     total: number;
   }> {
     // Build filter conditions
-    const conditions = [
-      or(
-        eq(sales.estadoEntrega, "Pendiente"),
-        eq(sales.estadoEntrega, "En proceso")
-      ),
+    const conditions: any[] = [
       isNotNull(sales.orden)
     ];
 
-    // Exclude Perdida orders if requested
-    if (filters?.excludePerdida) {
+    // Add estadoEntrega filter if provided
+    if (filters?.estadoEntrega) {
+      conditions.push(eq(sales.estadoEntrega, filters.estadoEntrega));
+    } else {
+      // Default: show Pendiente or En proceso orders
+      const defaultEstadoCondition = or(
+        eq(sales.estadoEntrega, "Pendiente"),
+        eq(sales.estadoEntrega, "En proceso")
+      );
+      if (defaultEstadoCondition) {
+        conditions.push(defaultEstadoCondition);
+      }
+    }
+
+    // Exclude Perdida orders if requested (and not explicitly filtering for Perdida)
+    if (filters?.excludePerdida && filters?.estadoEntrega !== "Perdida") {
       conditions.push(ne(sales.estadoEntrega, "Perdida"));
     }
 
