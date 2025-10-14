@@ -3,7 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Download, Package, User, Phone, Mail } from "lucide-react";
+import { Download, Package, User, Phone, Mail, ChevronLeft, ChevronRight } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -330,7 +330,7 @@ export default function DispatchTable({
               disabled={offset === 0}
               data-testid="pagination-previous"
             >
-              <i className="fas fa-chevron-left"></i>
+              <ChevronLeft className="h-4 w-4" />
             </Button>
             
             <Button
@@ -340,7 +340,7 @@ export default function DispatchTable({
               disabled={offset + limit >= total}
               data-testid="pagination-next"
             >
-              <i className="fas fa-chevron-right"></i>
+              <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
         </div>
