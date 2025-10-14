@@ -294,7 +294,7 @@ export default function PagosTable({
                     className="border-b border-border hover:bg-muted/50"
                   >
                     <td className="p-2 min-w-[120px] sticky left-0 z-10 bg-background">
-                      <span className="text-xs" data-testid={`order-${order.orden}`}>
+                      <span className="text-xs text-muted-foreground" data-testid={`order-${order.orden}`}>
                         {order.orden}
                       </span>
                     </td>
@@ -304,7 +304,7 @@ export default function PagosTable({
                       </span>
                     </td>
                     <td className="p-2 min-w-[100px]">
-                      <span className="text-xs" data-testid={`fecha-${order.orden}`}>
+                      <span className="text-xs text-muted-foreground" data-testid={`fecha-${order.orden}`}>
                         {format(new Date(order.fecha), "dd/MM/yyyy")}
                       </span>
                     </td>
