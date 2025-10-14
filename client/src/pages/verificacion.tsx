@@ -159,6 +159,43 @@ export default function VerificacionPage() {
     return banco?.banco || bancoId;
   };
 
+  const handleExport = async () => {
+    try {
+      const queryParams = new URLSearchParams();
+      if (startDate) queryParams.append("startDate", startDate);
+      if (endDate) queryParams.append("endDate", endDate);
+      if (selectedBanco && selectedBanco !== "all") queryParams.append("bancoId", selectedBanco);
+      if (ordenFilter) queryParams.append("orden", ordenFilter);
+      if (tipoPagoFilter && tipoPagoFilter !== "all") queryParams.append("tipoPago", tipoPagoFilter);
+
+      const url = `/api/sales/verification-payments/export${queryParams.toString() ? `?${queryParams.toString()}` : ""}`;
+      
+      const response = await fetch(url);
+      if (!response.ok) throw new Error("Error al exportar");
+      
+      const blob = await response.blob();
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = downloadUrl;
+      link.download = `verificacion_${new Date().toISOString().split('T')[0]}.xlsx`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(downloadUrl);
+
+      toast({
+        title: "Exportación exitosa",
+        description: "Los datos de verificación han sido exportados.",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "No se pudo exportar los datos.",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="h-screen flex bg-background">
       <Sidebar />
@@ -196,6 +233,7 @@ export default function VerificacionPage() {
               <Button 
                 variant="ghost" 
                 size="sm"
+                onClick={handleExport}
                 data-testid="export-button"
                 className="text-muted-foreground"
                 title="Exportar"

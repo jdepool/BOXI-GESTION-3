@@ -1165,6 +1165,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // GET /api/sales/verification-payments/export - Export verification payments to Excel
+  app.get("/api/sales/verification-payments/export", async (req, res) => {
+    try {
+      const { startDate, endDate, bancoId, orden, tipoPago } = req.query;
+
+      const payments = await storage.getVerificationPayments({
+        startDate: startDate as string,
+        endDate: endDate as string,
+        bancoId: bancoId as string,
+        orden: orden as string,
+        tipoPago: tipoPago as string
+      });
+
+      // Format data for Excel export
+      const excelData = payments.map(payment => ({
+        'Orden': payment.orden,
+        'Tipo de Pago': payment.tipoPago,
+        'Fecha de Pago': payment.fecha ? new Date(payment.fecha).toLocaleDateString('es-ES') : '-',
+        'Monto Bs': payment.montoBs ? `Bs ${payment.montoBs.toFixed(2)}` : '-',
+        'Monto USD': payment.montoUsd ? `$${payment.montoUsd.toFixed(2)}` : '-',
+        'Referencia': payment.referencia || '-',
+        'Banco': payment.bancoId || '-',
+        'Estado de Verificación': payment.estadoVerificacion,
+        'Notas': payment.notasVerificacion || '-'
+      }));
+
+      // Convert to Excel format
+      const worksheet = XLSX.utils.json_to_sheet(excelData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Verificación');
+
+      const buffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' });
+
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+      res.setHeader('Content-Disposition', `attachment; filename="verificacion_boxisleep_${new Date().toISOString().split('T')[0]}.xlsx"`);
+      res.send(buffer);
+
+    } catch (error) {
+      console.error("Error exporting verification payments:", error);
+      res.status(500).json({ error: "Failed to export verification payments" });
+    }
+  });
+
   // PATCH /api/sales/verification - Update verification status and notes
   app.patch("/api/sales/verification", async (req, res) => {
     try {
