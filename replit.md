@@ -30,7 +30,7 @@ Orders progress through tabs based on payment and delivery status:
 Orders typically move from temporary tabs to permanent tabs upon payment verification and status updates. Cashea orders have a unique workflow, appearing directly in "Lista de Ventas" and "Pagos".
 
 ## Feature Specifications
-- **Sales Data Upload & Management**: Supports Excel uploads from multiple channels with upsert logic for products and bank accounts, including an undo mechanism. Features comprehensive filtering, searching, and export.
+- **Sales Data Upload & Management**: Supports Excel uploads from multiple channels with complete replacement logic for Administración items (products and bank accounts) - uploads delete existing data then insert from file, preserving row order via position field. Includes automatic backup and undo mechanism. Features comprehensive filtering, searching, and export.
 - **Order & Payment Tracking**: Detailed tracking of sales, delivery statuses (nine states), and channel-specific metrics. Supports multi-product orders, manual sales, and reservations.
 - **Advanced Payment System**: Manages initial payments, freight, and installments with distinct fields for "agreed payment" (pago*) and "actual payment" (monto*). Includes a "Verificación" section for tracking and updating payment verification statuses, automatically updating `estadoEntrega` to "A despachar" when balances reach zero. Supports manual status control.
 - **Installment (Cuotas) Architecture**: Installments are tracked at the order level, with sequential numbering per order.

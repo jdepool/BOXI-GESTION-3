@@ -117,6 +117,9 @@ export interface IStorage {
   createBanco(banco: InsertBanco): Promise<Banco>;
   updateBanco(id: string, banco: Partial<InsertBanco>): Promise<Banco | undefined>;
   deleteBanco(id: string): Promise<boolean>;
+  backupBancos(): Promise<void>;
+  restoreBancosFromBackup(): Promise<void>;
+  replaceBancos(bancos: InsertBanco[]): Promise<{ created: number }>;
 
   // Tipos de Egresos
   getTiposEgresos(): Promise<TipoEgreso[]>;
@@ -131,7 +134,7 @@ export interface IStorage {
   deleteProducto(id: string): Promise<boolean>;
   backupProductos(): Promise<void>;
   restoreProductosFromBackup(): Promise<void>;
-  upsertProductos(productos: InsertProducto[]): Promise<{ created: number; updated: number }>;
+  replaceProductos(productos: InsertProducto[]): Promise<{ created: number }>;
 
   // Métodos de Pago
   getMetodosPago(): Promise<MetodoPago[]>;
