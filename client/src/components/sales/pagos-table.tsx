@@ -639,18 +639,21 @@ export default function PagosTable({
                     <td className="p-2 min-w-[100px]">
                       <div className="flex justify-center">
                         <Button
-                          variant="destructive"
+                          variant={order.estadoEntrega === "Perdida" ? "outline" : "destructive"}
                           size="sm"
                           onClick={() => {
                             setSelectedOrderForPerdida(order);
                             setPerdidaConfirmOpen(true);
                           }}
-                          disabled={markAsPerdidaMutation.isPending}
+                          disabled={order.estadoEntrega === "Perdida" || markAsPerdidaMutation.isPending}
                           data-testid={`perdida-order-${order.orden}`}
-                          className="h-7 text-xs"
+                          className={cn(
+                            "h-7 text-xs",
+                            order.estadoEntrega === "Perdida" && "bg-green-800 text-white hover:bg-green-800 opacity-70 cursor-not-allowed border-green-700"
+                          )}
                           title={order.estadoEntrega === "Perdida" ? "Orden ya marcada como perdida" : "Marcar orden como perdida"}
                         >
-                          <XCircle className={cn("h-3 w-3 mr-1", order.estadoEntrega === "Perdida" && "text-green-600")} />
+                          <XCircle className={cn("h-3 w-3 mr-1", order.estadoEntrega === "Perdida" && "text-green-400")} />
                           Perdida
                         </Button>
                       </div>
