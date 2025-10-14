@@ -499,6 +499,7 @@ export class DatabaseStorage implements IStorage {
     orden?: string;
     startDate?: string;
     endDate?: string;
+    asesorId?: string;
     excludePerdida?: boolean;
   }): Promise<{
     data: Array<{
@@ -546,6 +547,17 @@ export class DatabaseStorage implements IStorage {
     // Add orden filter if provided
     if (filters?.orden) {
       conditions.push(sql`${sales.orden} ILIKE ${`%${filters.orden}%`}`);
+    }
+
+    // Add asesor filter if provided
+    if (filters?.asesorId) {
+      if (filters.asesorId === 'null') {
+        // Filter for orders with no asesor
+        conditions.push(isNull(sales.asesorId));
+      } else {
+        // Filter for specific asesor
+        conditions.push(eq(sales.asesorId, filters.asesorId));
+      }
     }
 
     // Add date range filters
