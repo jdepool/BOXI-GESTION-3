@@ -35,6 +35,7 @@ interface Order {
   canal: string | null;
   tipo: string | null;
   estadoEntrega: string | null;
+  asesorId: string | null;
   totalOrderUsd: number | null;
   productCount: number;
   hasPagoInicial: boolean;
@@ -46,7 +47,7 @@ interface Order {
   totalCuotas: number;
   totalPagado: number;
   saldoPendiente: number;
-  notas: string | null;
+  seguimientoPago: string | null;
 }
 
 interface PagosTableProps {
@@ -88,8 +89,16 @@ export default function PagosTable({
   const [selectedSale, setSelectedSale] = useState<any | null>(null);
   const [perdidaConfirmOpen, setPerdidaConfirmOpen] = useState(false);
   const [selectedOrderForPerdida, setSelectedOrderForPerdida] = useState<Order | null>(null);
-  const [editingNotesOrder, setEditingNotesOrder] = useState<string | null>(null);
-  const [notesValue, setNotesValue] = useState<string>("");
+  const [editingSeguimientoOrder, setEditingSeguimientoOrder] = useState<string | null>(null);
+  const [seguimientoValue, setSeguimientoValue] = useState<string>("");
+
+  // Fetch asesores for displaying asesor names
+  const { data: asesores = [] } = useQuery<Array<{ id: string; nombre: string }>>({
+    queryKey: ["/api/admin/asesores"],
+  });
+
+  // Create a map of asesor IDs to names for quick lookup
+  const asesorMap = new Map(asesores.map((a) => [a.id, a.nombre]));
 
   const handleFilterChange = (key: string, value: string) => {
     if (onFilterChange) {
@@ -181,10 +190,10 @@ export default function PagosTable({
     },
   });
 
-  // Mutation to update notes for all sales in an order
-  const updateNotesMutation = useMutation({
-    mutationFn: async ({ orderNumber, notas }: { orderNumber: string; notas: string }) => {
-      return apiRequest("PATCH", `/api/sales/orders/${encodeURIComponent(orderNumber)}/notes`, { notas });
+  // Mutation to update seguimiento pago for all sales in an order
+  const updateSeguimientoMutation = useMutation({
+    mutationFn: async ({ orderNumber, seguimientoPago }: { orderNumber: string; seguimientoPago: string }) => {
+      return apiRequest("PATCH", `/api/sales/orders/${encodeURIComponent(orderNumber)}/seguimiento-pago`, { seguimientoPago });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ 
@@ -194,34 +203,34 @@ export default function PagosTable({
     onError: () => {
       toast({
         title: "Error",
-        description: "No se pudieron actualizar las notas",
+        description: "No se pudo actualizar el seguimiento de pago",
         variant: "destructive",
       });
     },
   });
 
-  const handleNotesClick = (order: Order) => {
-    setEditingNotesOrder(order.orden);
-    setNotesValue(order.notas || "");
+  const handleSeguimientoClick = (order: Order) => {
+    setEditingSeguimientoOrder(order.orden);
+    setSeguimientoValue(order.seguimientoPago || "");
   };
 
-  const handleNotesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setNotesValue(e.target.value);
+  const handleSeguimientoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSeguimientoValue(e.target.value);
   };
 
-  const handleNotesBlur = () => {
-    if (editingNotesOrder) {
-      updateNotesMutation.mutate({ orderNumber: editingNotesOrder, notas: notesValue });
-      setEditingNotesOrder(null);
+  const handleSeguimientoBlur = () => {
+    if (editingSeguimientoOrder) {
+      updateSeguimientoMutation.mutate({ orderNumber: editingSeguimientoOrder, seguimientoPago: seguimientoValue });
+      setEditingSeguimientoOrder(null);
     }
   };
 
-  const handleNotesKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleSeguimientoKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
-      handleNotesBlur();
+      handleSeguimientoBlur();
     } else if (e.key === 'Escape') {
-      setEditingNotesOrder(null);
-      setNotesValue("");
+      setEditingSeguimientoOrder(null);
+      setSeguimientoValue("");
     }
   };
 
@@ -333,6 +342,9 @@ export default function PagosTable({
                 <th className="p-2 text-left text-xs font-medium text-muted-foreground min-w-[140px]">
                   Estado Entrega
                 </th>
+                <th className="p-2 text-left text-xs font-medium text-muted-foreground min-w-[120px]">
+                  Asesor
+                </th>
                 <th className="p-2 text-left text-xs font-medium text-muted-foreground min-w-[140px]">
                   Total Orden USD
                 </th>
@@ -354,8 +366,8 @@ export default function PagosTable({
                 <th className="p-2 text-center text-xs font-medium text-muted-foreground min-w-[120px] bg-orange-50 dark:bg-orange-950">
                   Pendiente
                 </th>
-                <th className="p-2 text-left text-xs font-medium text-muted-foreground min-w-[200px]">
-                  Notas
+                <th className="p-2 text-left text-xs font-medium text-muted-foreground min-w-[250px]">
+                  Seguimiento Pago
                 </th>
                 <th className="p-2 text-center text-xs font-medium text-muted-foreground min-w-[100px]">
                   Acción
@@ -365,13 +377,13 @@ export default function PagosTable({
             <tbody>
               {isLoading ? (
                 <tr>
-                  <td colSpan={15} className="p-4 text-center text-muted-foreground">
+                  <td colSpan={16} className="p-4 text-center text-muted-foreground">
                     Cargando...
                   </td>
                 </tr>
               ) : data.length === 0 ? (
                 <tr>
-                  <td colSpan={15} className="p-4 text-center text-muted-foreground">
+                  <td colSpan={16} className="p-4 text-center text-muted-foreground">
                     No hay órdenes pendientes o en proceso
                   </td>
                 </tr>
@@ -438,6 +450,11 @@ export default function PagosTable({
                           <SelectItem value="Perdida">Perdida</SelectItem>
                         </SelectContent>
                       </Select>
+                    </td>
+                    <td className="p-2 min-w-[120px]">
+                      <span className="text-xs text-muted-foreground" data-testid={`asesor-${order.orden}`}>
+                        {order.asesorId ? (asesorMap.get(order.asesorId) || order.asesorId) : "-"}
+                      </span>
                     </td>
                     <td className="p-2 min-w-[140px]">
                       <span className="text-xs" data-testid={`total-${order.orden}`}>
@@ -548,24 +565,24 @@ export default function PagosTable({
                         </div>
                       </div>
                     </td>
-                    <td className="p-2 min-w-[200px]">
-                      {editingNotesOrder === order.orden ? (
+                    <td className="p-2 min-w-[250px]">
+                      {editingSeguimientoOrder === order.orden ? (
                         <Input
-                          value={notesValue}
-                          onChange={handleNotesChange}
-                          onBlur={handleNotesBlur}
-                          onKeyDown={handleNotesKeyDown}
+                          value={seguimientoValue}
+                          onChange={handleSeguimientoChange}
+                          onBlur={handleSeguimientoBlur}
+                          onKeyDown={handleSeguimientoKeyDown}
                           autoFocus
                           className="h-7 text-xs"
-                          data-testid={`input-notas-${order.orden}`}
+                          data-testid={`input-seguimiento-${order.orden}`}
                         />
                       ) : (
                         <div
-                          onClick={() => handleNotesClick(order)}
+                          onClick={() => handleSeguimientoClick(order)}
                           className="text-xs cursor-pointer hover:bg-muted/50 p-1 rounded min-h-[28px]"
-                          data-testid={`notas-${order.orden}`}
+                          data-testid={`seguimiento-${order.orden}`}
                         >
-                          {order.notas || <span className="text-muted-foreground italic">Click para agregar...</span>}
+                          {order.seguimientoPago || <span className="text-muted-foreground italic">Click para agregar...</span>}
                         </div>
                       )}
                     </td>

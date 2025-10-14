@@ -2127,11 +2127,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Update notes for all sales in an order
-  app.patch("/api/sales/orders/:orderNumber/notes", async (req, res) => {
+  // Update seguimientoPago for all sales in an order
+  app.patch("/api/sales/orders/:orderNumber/seguimiento-pago", async (req, res) => {
     try {
       const { orderNumber } = req.params;
-      const { notas } = req.body;
+      const { seguimientoPago } = req.body;
 
       // Validate that order exists
       const existingSales = await storage.getSalesByOrderNumber(orderNumber);
@@ -2140,21 +2140,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const updatedSales = await storage.updateSalesByOrderNumber(orderNumber, { 
-        notas: notas || null 
+        seguimientoPago: seguimientoPago || null 
       });
       
       if (!updatedSales || updatedSales.length === 0) {
-        return res.status(500).json({ error: "Failed to update notes" });
+        return res.status(500).json({ error: "Failed to update seguimiento pago" });
       }
 
       res.json({ 
         success: true, 
-        message: `Updated notes for ${updatedSales.length} sale(s)`,
+        message: `Updated seguimiento pago for ${updatedSales.length} sale(s)`,
         salesUpdated: updatedSales.length 
       });
     } catch (error) {
-      console.error("Update order notes error:", error);
-      res.status(500).json({ error: "Failed to update notes" });
+      console.error("Update order seguimiento pago error:", error);
+      res.status(500).json({ error: "Failed to update seguimiento pago" });
     }
   });
 
