@@ -1,7 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Download, Package, User, Phone, Mail, ChevronLeft, ChevronRight } from "lucide-react";
@@ -229,73 +228,125 @@ export default function DispatchTable({
             </p>
           </div>
         ) : (
-          <div className="border border-border rounded-lg overflow-hidden">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-32">Orden</TableHead>
-                  <TableHead className="w-36">Estado de Entrega</TableHead>
-                  <TableHead className="w-36">Fecha de Entrega</TableHead>
-                  <TableHead className="min-w-48">Producto</TableHead>
-                  <TableHead className="w-20">Cant.</TableHead>
-                  <TableHead className="min-w-72">Dirección de Despacho</TableHead>
-                  <TableHead className="min-w-48">Nombre</TableHead>
-                  <TableHead className="w-36">Teléfono</TableHead>
-                  <TableHead className="min-w-48">Email</TableHead>
-                  <TableHead className="w-32">Cédula</TableHead>
-                  <TableHead className="min-w-72">Dirección de Facturación</TableHead>
-                  <TableHead className="w-28">Fecha</TableHead>
-                  <TableHead className="w-24">Canal</TableHead>
-                  <TableHead className="min-w-48">Notas</TableHead>
-                  <TableHead className="w-36">Acciones</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {data.map((sale) => (
-                  <TableRow key={sale.id} data-testid={`dispatch-row-${sale.id}`}>
-                    <TableCell className="font-medium">
-                      #{sale.orden}
-                    </TableCell>
-                    
-                    <TableCell>
-                      <Badge 
-                        variant={getStatusBadgeVariant(sale.estadoEntrega)}
-                        className="text-xs"
-                      >
-                        {sale.estadoEntrega}
-                      </Badge>
-                    </TableCell>
-                    
-                    <TableCell>
-                      {sale.fechaEntrega ? (
-                        <div className="text-xs" data-testid={`fecha-entrega-${sale.id}`}>
-                          {new Date(sale.fechaEntrega).toLocaleDateString('es-ES')}
+          <div className="overflow-x-auto overflow-y-auto max-h-[calc(100vh-280px)] bg-background">
+            <div className="min-w-max">
+              <table className="w-full min-w-[2560px] relative">
+                <thead className="bg-muted sticky top-0 z-10">
+                  <tr>
+                    <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[100px] sticky left-0 bg-muted z-20 border-r border-border shadow-[2px_0_5px_rgba(0,0,0,0.1)]">Orden</th>
+                    <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[150px] sticky left-[100px] bg-muted z-20 border-r border-border shadow-[2px_0_5px_rgba(0,0,0,0.1)]">Estado de Entrega</th>
+                    <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[150px] sticky left-[250px] bg-muted z-20 border-r border-border shadow-[2px_0_5px_rgba(0,0,0,0.1)]">Fecha de Entrega</th>
+                    <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[200px]">Producto</th>
+                    <th className="text-center p-2 text-xs font-medium text-muted-foreground min-w-[80px]">Cant.</th>
+                    <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[300px]">Dirección de Despacho</th>
+                    <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[200px]">Nombre</th>
+                    <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[150px]">Teléfono</th>
+                    <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[200px]">Email</th>
+                    <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[120px]">Cédula</th>
+                    <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[300px]">Dirección de Facturación</th>
+                    <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[120px]">Fecha</th>
+                    <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[100px]">Canal</th>
+                    <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[200px]">Notas</th>
+                    <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[150px]">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.map((sale) => (
+                    <tr 
+                      key={sale.id} 
+                      className="border-b border-border hover:bg-muted/50 transition-colors text-xs"
+                      data-testid={`dispatch-row-${sale.id}`}
+                    >
+                      <td className="p-2 min-w-[100px] text-xs font-mono text-muted-foreground sticky left-0 bg-background z-10 border-r border-border shadow-[2px_0_5px_rgba(0,0,0,0.1)]">
+                        #{sale.orden}
+                      </td>
+                      
+                      <td className="p-2 min-w-[150px] text-xs sticky left-[100px] bg-background z-10 border-r border-border shadow-[2px_0_5px_rgba(0,0,0,0.1)]">
+                        <Badge 
+                          variant={getStatusBadgeVariant(sale.estadoEntrega)}
+                          className="text-xs"
+                        >
+                          {sale.estadoEntrega}
+                        </Badge>
+                      </td>
+                      
+                      <td className="p-2 min-w-[150px] text-xs sticky left-[250px] bg-background z-10 border-r border-border shadow-[2px_0_5px_rgba(0,0,0,0.1)]">
+                        {sale.fechaEntrega ? (
+                          <div className="text-xs" data-testid={`fecha-entrega-${sale.id}`}>
+                            {new Date(sale.fechaEntrega).toLocaleDateString('es-ES')}
+                          </div>
+                        ) : sale.estadoEntrega === "A despachar" ? (
+                          <div className="text-xs text-amber-600 bg-amber-50 dark:bg-amber-950/20 p-2 rounded border border-amber-200 dark:border-amber-800 font-medium" data-testid={`warning-fecha-entrega-${sale.id}`}>
+                            ⚠️ Sin fecha
+                          </div>
+                        ) : (
+                          <div className="text-xs text-muted-foreground" data-testid={`fecha-entrega-empty-${sale.id}`}>
+                            —
+                          </div>
+                        )}
+                      </td>
+                      
+                      <td className="p-2 min-w-[200px] text-xs">
+                        <div className="text-sm">
+                          <div className="font-medium">{sale.product}</div>
+                          <div className="text-muted-foreground">
+                            ${Number(sale.totalUsd).toLocaleString()} USD
+                          </div>
                         </div>
-                      ) : sale.estadoEntrega === "A despachar" ? (
-                        <div className="text-xs text-amber-600 bg-amber-50 dark:bg-amber-950/20 p-2 rounded border border-amber-200 dark:border-amber-800 font-medium" data-testid={`warning-fecha-entrega-${sale.id}`}>
-                          ⚠️ Sin fecha
-                        </div>
-                      ) : (
-                        <div className="text-xs text-muted-foreground" data-testid={`fecha-entrega-empty-${sale.id}`}>
-                          —
-                        </div>
-                      )}
-                    </TableCell>
-                    
-                    <TableCell>
-                      <div className="text-sm">
-                        <div className="font-medium">{sale.product}</div>
-                        <div className="text-muted-foreground">
-                          ${Number(sale.totalUsd).toLocaleString()} USD
-                        </div>
-                      </div>
-                    </TableCell>
-                    
-                    <TableCell className="text-center">{sale.cantidad}</TableCell>
-                    
-                    <TableCell>
-                      {sale.direccionFacturacionPais ? (
-                        sale.direccionDespachoIgualFacturacion === "true" ? (
+                      </td>
+                      
+                      <td className="p-2 min-w-[80px] text-center text-xs">{sale.cantidad}</td>
+                      
+                      <td className="p-2 min-w-[300px] text-xs">
+                        {sale.direccionFacturacionPais ? (
+                          sale.direccionDespachoIgualFacturacion === "true" ? (
+                            <div className="text-xs space-y-1 max-w-72">
+                              <div className="font-medium">{sale.direccionFacturacionDireccion}</div>
+                              <div>
+                                {sale.direccionFacturacionCiudad}, {sale.direccionFacturacionEstado}
+                              </div>
+                              <div>{sale.direccionFacturacionPais}</div>
+                              {sale.direccionFacturacionUrbanizacion && (
+                                <div className="text-muted-foreground">Urb. {sale.direccionFacturacionUrbanizacion}</div>
+                              )}
+                              {sale.direccionFacturacionReferencia && (
+                                <div className="text-muted-foreground">Ref: {sale.direccionFacturacionReferencia}</div>
+                              )}
+                            </div>
+                          ) : (
+                            <div className="text-xs space-y-1 max-w-72">
+                              <div className="font-medium">{sale.direccionDespachoDireccion}</div>
+                              <div>
+                                {sale.direccionDespachoCiudad}, {sale.direccionDespachoEstado}
+                              </div>
+                              <div>{sale.direccionDespachoPais}</div>
+                              {sale.direccionDespachoUrbanizacion && (
+                                <div className="text-muted-foreground">Urb. {sale.direccionDespachoUrbanizacion}</div>
+                              )}
+                              {sale.direccionDespachoReferencia && (
+                                <div className="text-muted-foreground">Ref: {sale.direccionDespachoReferencia}</div>
+                              )}
+                            </div>
+                          )
+                        ) : (
+                          <div className="text-xs text-amber-600 bg-amber-50 dark:bg-amber-950/20 p-2 rounded border border-amber-200 dark:border-amber-800 font-medium">
+                            ⚠️ Sin dirección
+                          </div>
+                        )}
+                      </td>
+                      
+                      <td className="p-2 min-w-[200px] text-xs">
+                        <div className="font-medium">{sale.nombre}</div>
+                      </td>
+                      
+                      <td className="p-2 min-w-[150px] text-xs">{sale.telefono}</td>
+                      
+                      <td className="p-2 min-w-[200px] text-xs">{sale.email}</td>
+                      
+                      <td className="p-2 min-w-[120px] text-xs">{sale.cedula}</td>
+                      
+                      <td className="p-2 min-w-[300px] text-xs">
+                        {sale.direccionFacturacionPais ? (
                           <div className="text-xs space-y-1 max-w-72">
                             <div className="font-medium">{sale.direccionFacturacionDireccion}</div>
                             <div>
@@ -310,120 +361,74 @@ export default function DispatchTable({
                             )}
                           </div>
                         ) : (
-                          <div className="text-xs space-y-1 max-w-72">
-                            <div className="font-medium">{sale.direccionDespachoDireccion}</div>
-                            <div>
-                              {sale.direccionDespachoCiudad}, {sale.direccionDespachoEstado}
-                            </div>
-                            <div>{sale.direccionDespachoPais}</div>
-                            {sale.direccionDespachoUrbanizacion && (
-                              <div className="text-muted-foreground">Urb. {sale.direccionDespachoUrbanizacion}</div>
-                            )}
-                            {sale.direccionDespachoReferencia && (
-                              <div className="text-muted-foreground">Ref: {sale.direccionDespachoReferencia}</div>
-                            )}
+                          <div className="text-xs text-amber-600 bg-amber-50 dark:bg-amber-950/20 p-2 rounded border border-amber-200 dark:border-amber-800 font-medium">
+                            ⚠️ Sin dirección
                           </div>
-                        )
-                      ) : (
-                        <div className="text-xs text-amber-600 bg-amber-50 dark:bg-amber-950/20 p-2 rounded border border-amber-200 dark:border-amber-800 font-medium">
-                          ⚠️ Sin dirección
-                        </div>
-                      )}
-                    </TableCell>
-                    
-                    <TableCell>
-                      <div className="font-medium">{sale.nombre}</div>
-                    </TableCell>
-                    
-                    <TableCell>{sale.telefono}</TableCell>
-                    
-                    <TableCell className="text-sm">{sale.email}</TableCell>
-                    
-                    <TableCell>{sale.cedula}</TableCell>
-                    
-                    <TableCell>
-                      {sale.direccionFacturacionPais ? (
-                        <div className="text-xs space-y-1 max-w-72">
-                          <div className="font-medium">{sale.direccionFacturacionDireccion}</div>
-                          <div>
-                            {sale.direccionFacturacionCiudad}, {sale.direccionFacturacionEstado}
+                        )}
+                      </td>
+                      
+                      <td className="p-2 min-w-[120px] text-xs">
+                        {new Date(sale.fecha).toLocaleDateString('es-ES')}
+                      </td>
+                      
+                      <td className="p-2 min-w-[100px] text-xs">
+                        <Badge className={`${getChannelBadgeClass(sale.canal)} text-white text-xs`}>
+                          {sale.canal.charAt(0).toUpperCase() + sale.canal.slice(1)}
+                        </Badge>
+                      </td>
+                      
+                      <td className="p-2 min-w-[200px] text-xs">
+                        {editingNotesId === sale.id ? (
+                          <Input
+                            value={notesValue}
+                            onChange={handleNotesChange}
+                            onBlur={handleNotesBlur}
+                            onKeyDown={handleNotesKeyDown}
+                            maxLength={300}
+                            placeholder="Agregar nota..."
+                            className="h-7 text-xs"
+                            autoFocus
+                            data-testid={`notes-input-${sale.id}`}
+                          />
+                        ) : (
+                          <div 
+                            className="text-xs text-muted-foreground truncate cursor-pointer hover:bg-muted/50 rounded px-2 py-1 min-h-[28px] flex items-center"
+                            title={sale.notas || "Click para agregar nota"}
+                            onClick={() => handleNotesClick(sale)}
+                            data-testid={`notes-display-${sale.id}`}
+                          >
+                            {sale.notas || 'Click para agregar nota'}
                           </div>
-                          <div>{sale.direccionFacturacionPais}</div>
-                          {sale.direccionFacturacionUrbanizacion && (
-                            <div className="text-muted-foreground">Urb. {sale.direccionFacturacionUrbanizacion}</div>
-                          )}
-                          {sale.direccionFacturacionReferencia && (
-                            <div className="text-muted-foreground">Ref: {sale.direccionFacturacionReferencia}</div>
-                          )}
-                        </div>
-                      ) : (
-                        <div className="text-xs text-amber-600 bg-amber-50 dark:bg-amber-950/20 p-2 rounded border border-amber-200 dark:border-amber-800 font-medium">
-                          ⚠️ Sin dirección
-                        </div>
-                      )}
-                    </TableCell>
-                    
-                    <TableCell className="text-xs">
-                      {new Date(sale.fecha).toLocaleDateString('es-ES')}
-                    </TableCell>
-                    
-                    <TableCell>
-                      <Badge className={`${getChannelBadgeClass(sale.canal)} text-white text-xs`}>
-                        {sale.canal.charAt(0).toUpperCase() + sale.canal.slice(1)}
-                      </Badge>
-                    </TableCell>
-                    
-                    <TableCell>
-                      {editingNotesId === sale.id ? (
-                        <Input
-                          value={notesValue}
-                          onChange={handleNotesChange}
-                          onBlur={handleNotesBlur}
-                          onKeyDown={handleNotesKeyDown}
-                          maxLength={300}
-                          placeholder="Agregar nota..."
-                          className="h-7 text-xs"
-                          autoFocus
-                          data-testid={`notes-input-${sale.id}`}
-                        />
-                      ) : (
-                        <div 
-                          className="text-xs text-muted-foreground truncate cursor-pointer hover:bg-muted/50 rounded px-2 py-1 min-h-[28px] flex items-center"
-                          title={sale.notas || "Click para agregar nota"}
-                          onClick={() => handleNotesClick(sale)}
-                          data-testid={`notes-display-${sale.id}`}
+                        )}
+                      </td>
+                      
+                      <td className="p-2 min-w-[150px] text-xs">
+                        <Select
+                          value={sale.estadoEntrega}
+                          onValueChange={(newStatus) => handleStatusChange(sale.id, newStatus)}
+                          disabled={updateDeliveryStatusMutation.isPending}
                         >
-                          {sale.notas || 'Click para agregar nota'}
-                        </div>
-                      )}
-                    </TableCell>
-                    
-                    <TableCell>
-                      <Select
-                        value={sale.estadoEntrega}
-                        onValueChange={(newStatus) => handleStatusChange(sale.id, newStatus)}
-                        disabled={updateDeliveryStatusMutation.isPending}
-                      >
-                        <SelectTrigger className="w-32 h-8 text-xs">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Pendiente">Pendiente</SelectItem>
-                          <SelectItem value="Perdida">Perdida</SelectItem>
-                          <SelectItem value="En proceso">En proceso</SelectItem>
-                          <SelectItem value="A despachar">A despachar</SelectItem>
-                          <SelectItem value="En tránsito">En tránsito</SelectItem>
-                          <SelectItem value="Entregado">Entregado</SelectItem>
-                          <SelectItem value="A devolver">A devolver</SelectItem>
-                          <SelectItem value="Devuelto">Devuelto</SelectItem>
-                          <SelectItem value="Cancelada">Cancelada</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                          <SelectTrigger className="w-32 h-8 text-xs">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Pendiente">Pendiente</SelectItem>
+                            <SelectItem value="Perdida">Perdida</SelectItem>
+                            <SelectItem value="En proceso">En proceso</SelectItem>
+                            <SelectItem value="A despachar">A despachar</SelectItem>
+                            <SelectItem value="En tránsito">En tránsito</SelectItem>
+                            <SelectItem value="Entregado">Entregado</SelectItem>
+                            <SelectItem value="A devolver">A devolver</SelectItem>
+                            <SelectItem value="Devuelto">Devuelto</SelectItem>
+                            <SelectItem value="Cancelada">Cancelada</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
       </div>
