@@ -2528,11 +2528,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/admin/productos/undo", async (req, res) => {
+    try {
+      await storage.restoreProductosFromBackup();
+      res.json({ success: true, message: "Products restored from backup" });
+    } catch (error) {
+      console.error("Undo productos error:", error);
+      res.status(500).json({ 
+        error: "Failed to restore products",
+        message: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
   app.post("/api/admin/productos/upload-excel", upload.single('file'), async (req, res) => {
     try {
       if (!req.file) {
         return res.status(400).json({ error: "No file uploaded" });
       }
+
+      // Create backup before processing
+      await storage.backupProductos();
 
       // Get valid categorias from database (or fallback to hardcoded if no table exists)
       let validCategorias = ["Colchón", "Seat", "Pillow", "Topper", "Bed"];
@@ -2561,11 +2577,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // Check for duplicates within file and against database
-      const existingProducts = await storage.getProductos();
-      const existingNombres = new Set(existingProducts.map(p => p.nombre.toLowerCase()));
-      const existingSKUs = new Set(existingProducts.map(p => p.sku).filter(Boolean));
-      
+      // Check for duplicates within file only
       const nombresInFile = new Set<string>();
       const skusInFile = new Set<string>();
       const additionalErrors = [];
@@ -2588,15 +2600,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
           nombresInFile.add(data.nombre.toLowerCase());
         }
         
-        // Check for duplicate nombres against database
-        if (existingNombres.has(data.nombre.toLowerCase())) {
-          additionalErrors.push({
-            row: row.row,
-            error: `Product name "${data.nombre}" already exists in database`
-          });
-          hasError = true;
-        }
-        
         // Check for duplicate SKUs within file
         if (data.sku && skusInFile.has(data.sku)) {
           additionalErrors.push({
@@ -2606,15 +2609,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
           hasError = true;
         } else if (data.sku) {
           skusInFile.add(data.sku);
-        }
-        
-        // Check for duplicate SKUs against database
-        if (data.sku && existingSKUs.has(data.sku)) {
-          additionalErrors.push({
-            row: row.row,
-            error: `SKU "${data.sku}" already exists in database`
-          });
-          hasError = true;
         }
         
         if (!hasError) {
@@ -2636,34 +2630,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ...additionalErrors
       ];
 
-      // Import valid produtos
-      const createdProductos = [];
-      const creationErrors = [];
-      
-      for (const producto of validProductos) {
-        try {
-          const created = await storage.createProducto(producto);
-          createdProductos.push(created);
-        } catch (error) {
-          creationErrors.push({
-            row: 'unknown', // We've lost the original row mapping at this point
-            error: `Database error: ${error instanceof Error ? error.message : 'Unknown error'}`
-          });
-        }
-      }
+      // Upsert valid productos (insert new, update existing)
+      const { created, updated } = await storage.upsertProductos(validProductos);
 
       // Return results with detailed statistics
       res.json({
         success: true,
-        created: createdProductos.length,
+        created,
+        updated,
         total: parsedRows.length,
-        errors: allErrors.length + creationErrors.length,
+        errors: allErrors.length,
         details: {
           validRows: validRows.length,
           invalidRows: invalidRows.length,
           duplicates: additionalErrors.length,
-          creationErrors: creationErrors.length,
-          errorList: [...allErrors, ...creationErrors].slice(0, 20) // Show first 20 errors
+          errorList: allErrors.slice(0, 20) // Show first 20 errors
         }
       });
 
