@@ -357,6 +357,31 @@ export default function DispatchTable({
                     </TableCell>
                     
                     <TableCell>
+                      {editingNotesId === sale.id ? (
+                        <Input
+                          value={notesValue}
+                          onChange={handleNotesChange}
+                          onBlur={handleNotesBlur}
+                          onKeyDown={handleNotesKeyDown}
+                          maxLength={300}
+                          placeholder="Agregar nota..."
+                          className="h-7 text-xs"
+                          autoFocus
+                          data-testid={`notes-input-${sale.id}`}
+                        />
+                      ) : (
+                        <div 
+                          className="text-xs text-muted-foreground truncate cursor-pointer hover:bg-muted/50 rounded px-2 py-1 min-h-[28px] flex items-center"
+                          title={sale.notas || "Click para agregar nota"}
+                          onClick={() => handleNotesClick(sale)}
+                          data-testid={`notes-display-${sale.id}`}
+                        >
+                          {sale.notas || 'Click para agregar nota'}
+                        </div>
+                      )}
+                    </TableCell>
+                    
+                    <TableCell>
                       <Select
                         value={sale.estadoEntrega}
                         onValueChange={(newStatus) => handleStatusChange(sale.id, newStatus)}
