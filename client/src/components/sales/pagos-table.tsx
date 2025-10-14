@@ -61,6 +61,7 @@ interface PagosTableProps {
     orden?: string;
     startDate?: string;
     endDate?: string;
+    asesorId?: string;
     limit: number;
     offset: number;
   };
@@ -279,6 +280,29 @@ export default function PagosTable({
                   <SelectItem value="cashea">Cashea</SelectItem>
                   <SelectItem value="shopify">Shopify</SelectItem>
                   <SelectItem value="treble">Treble</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <label className="text-sm font-medium mb-1 block">Asesor:</label>
+              <Select 
+                value={filters?.asesorId || "all"} 
+                onValueChange={(value) => handleFilterChange('asesorId', value)}
+              >
+                <SelectTrigger className="w-40" data-testid="filter-asesor">
+                  <SelectValue placeholder="Todos los asesores" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos los asesores</SelectItem>
+                  <SelectItem value="none">Sin asesor</SelectItem>
+                  {asesores
+                    .filter(asesor => asesor.activo !== false)
+                    .map(asesor => (
+                      <SelectItem key={asesor.id} value={asesor.id}>
+                        {asesor.nombre}
+                      </SelectItem>
+                    ))}
                 </SelectContent>
               </Select>
             </div>
