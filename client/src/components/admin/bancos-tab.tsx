@@ -239,24 +239,30 @@ export function BancosTab() {
               <TableHead>Banco</TableHead>
               <TableHead>Número de Cuenta</TableHead>
               <TableHead>Tipo</TableHead>
+              <TableHead>Moneda</TableHead>
+              <TableHead>Método de Pago</TableHead>
               <TableHead className="w-24">Acciones</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={4} className="text-center py-8">
+                <TableCell colSpan={6} className="text-center py-8">
                   Cargando...
                 </TableCell>
               </TableRow>
             ) : (bancos as Banco[]).length === 0 ? (
               <TableRow>
-                <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
                   No hay bancos registrados
                 </TableCell>
               </TableRow>
             ) : (
-              (bancos as Banco[]).map((banco: Banco) => (
+              (bancos as Banco[]).map((banco: Banco) => {
+                const moneda = (monedas as any[]).find((m: any) => m.id === banco.monedaId);
+                const metodoPago = (metodosPago as any[]).find((mp: any) => mp.id === banco.metodoPagoId);
+                
+                return (
                 <TableRow key={banco.id} data-testid={`banco-row-${banco.id}`}>
                   <TableCell className="font-medium">{banco.banco}</TableCell>
                   <TableCell>{banco.numeroCuenta}</TableCell>
@@ -271,6 +277,20 @@ export function BancosTab() {
                         <ArrowUpFromLine className="h-3 w-3 mr-1" />
                         Emisor
                       </Badge>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {moneda ? (
+                      <span>{moneda.codigo} - {moneda.nombre}</span>
+                    ) : (
+                      <span className="text-muted-foreground">-</span>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    {metodoPago ? (
+                      <span>{metodoPago.nombre}</span>
+                    ) : (
+                      <span className="text-muted-foreground">-</span>
                     )}
                   </TableCell>
                   <TableCell>
@@ -295,7 +315,8 @@ export function BancosTab() {
                     </div>
                   </TableCell>
                 </TableRow>
-              ))
+                );
+              })
             )}
           </TableBody>
         </Table>
