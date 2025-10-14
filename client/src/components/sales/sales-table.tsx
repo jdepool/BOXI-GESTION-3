@@ -10,7 +10,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import SaleDetailModal from "./sale-detail-modal";
 import AddressModal from "@/components/addresses/address-modal";
 import EditSaleModal from "./edit-sale-modal";
-import { MapPin, Edit, CalendarIcon, Mail, Filter, ChevronDown, ChevronUp, Download } from "lucide-react";
+import { MapPin, Edit, CalendarIcon, Mail, Filter, ChevronDown, ChevronUp, Download, ChevronLeft, ChevronRight } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
@@ -818,7 +818,7 @@ export default function SalesTable({
               disabled={offset === 0}
               data-testid="pagination-previous"
             >
-              <i className="fas fa-chevron-left"></i>
+              <ChevronLeft className="h-4 w-4" />
             </Button>
             
             <Button
@@ -828,7 +828,7 @@ export default function SalesTable({
               disabled={offset + limit >= total}
               data-testid="pagination-next"
             >
-              <i className="fas fa-chevron-right"></i>
+              <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
         </div>
