@@ -1902,7 +1902,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         estadoPagoInicial: null,
         pagoInicialUsd: pagosIniciales[i] ? String(pagosIniciales[i]) : null,
         metodoPagoId: null,
-        bancoReceptorInicial: '450504fa-8107-477a-b5ce-064cebe6d416', // Auto-assign Cashea banco for API downloads
+        bancoReceptorInicial: 'f3de098b-58c0-4be0-a799-299a643a0018', // Auto-assign Cashea banco for API downloads
         orden: ordenes[i] ? String(ordenes[i]) : null,
         factura: null,
         referenciaInicial: referencias[i] ? String(referencias[i]) : null,
