@@ -15,7 +15,13 @@ import type { Banco } from "@shared/schema";
 export function BancosTab() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingBanco, setEditingBanco] = useState<Banco | null>(null);
-  const [formData, setFormData] = useState({ banco: "", numeroCuenta: "", tipo: "Receptor" as "Receptor" | "Emisor" });
+  const [formData, setFormData] = useState({ 
+    banco: "", 
+    numeroCuenta: "", 
+    tipo: "Receptor" as "Receptor" | "Emisor",
+    monedaId: "",
+    metodoPagoId: ""
+  });
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -23,13 +29,21 @@ export function BancosTab() {
     queryKey: ["/api/admin/bancos"],
   });
 
+  const { data: monedas = [] } = useQuery({
+    queryKey: ["/api/admin/monedas"],
+  });
+
+  const { data: metodosPago = [] } = useQuery({
+    queryKey: ["/api/admin/metodos-pago"],
+  });
+
   const createMutation = useMutation({
-    mutationFn: (data: { banco: string; numeroCuenta: string; tipo: string }) =>
+    mutationFn: (data: { banco: string; numeroCuenta: string; tipo: string; monedaId?: string; metodoPagoId?: string }) =>
       apiRequest("POST", "/api/admin/bancos", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/bancos"] });
       setIsDialogOpen(false);
-      setFormData({ banco: "", numeroCuenta: "", tipo: "Receptor" });
+      setFormData({ banco: "", numeroCuenta: "", tipo: "Receptor", monedaId: "", metodoPagoId: "" });
       toast({ title: "Banco creado exitosamente" });
     },
     onError: () => {
@@ -38,13 +52,13 @@ export function BancosTab() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: { banco: string; numeroCuenta: string; tipo: string } }) =>
+    mutationFn: ({ id, data }: { id: string; data: { banco: string; numeroCuenta: string; tipo: string; monedaId?: string; metodoPagoId?: string } }) =>
       apiRequest("PUT", `/api/admin/bancos/${id}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/bancos"] });
       setIsDialogOpen(false);
       setEditingBanco(null);
-      setFormData({ banco: "", numeroCuenta: "", tipo: "Receptor" });
+      setFormData({ banco: "", numeroCuenta: "", tipo: "Receptor", monedaId: "", metodoPagoId: "" });
       toast({ title: "Banco actualizado exitosamente" });
     },
     onError: () => {
@@ -75,13 +89,19 @@ export function BancosTab() {
 
   const openEditDialog = (banco: Banco) => {
     setEditingBanco(banco);
-    setFormData({ banco: banco.banco, numeroCuenta: banco.numeroCuenta, tipo: banco.tipo as "Receptor" | "Emisor" });
+    setFormData({ 
+      banco: banco.banco, 
+      numeroCuenta: banco.numeroCuenta, 
+      tipo: banco.tipo as "Receptor" | "Emisor",
+      monedaId: banco.monedaId || "",
+      metodoPagoId: banco.metodoPagoId || ""
+    });
     setIsDialogOpen(true);
   };
 
   const openCreateDialog = () => {
     setEditingBanco(null);
-    setFormData({ banco: "", numeroCuenta: "", tipo: "Receptor" });
+    setFormData({ banco: "", numeroCuenta: "", tipo: "Receptor", monedaId: "", metodoPagoId: "" });
     setIsDialogOpen(true);
   };
 
@@ -152,6 +172,42 @@ export function BancosTab() {
                         <span>Emisor (Egresos)</span>
                       </div>
                     </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="moneda">Moneda</Label>
+                <Select
+                  value={formData.monedaId}
+                  onValueChange={(value) => setFormData({ ...formData, monedaId: value })}
+                >
+                  <SelectTrigger data-testid="select-moneda">
+                    <SelectValue placeholder="Seleccionar moneda" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(monedas as any[]).map((moneda: any) => (
+                      <SelectItem key={moneda.id} value={moneda.id} data-testid={`moneda-${moneda.id}`}>
+                        {moneda.codigo} - {moneda.nombre}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="metodoPago">Método de Pago</Label>
+                <Select
+                  value={formData.metodoPagoId}
+                  onValueChange={(value) => setFormData({ ...formData, metodoPagoId: value })}
+                >
+                  <SelectTrigger data-testid="select-metodo-pago">
+                    <SelectValue placeholder="Seleccionar método de pago" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(metodosPago as any[]).map((metodo: any) => (
+                      <SelectItem key={metodo.id} value={metodo.id} data-testid={`metodo-pago-${metodo.id}`}>
+                        {metodo.nombre}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
