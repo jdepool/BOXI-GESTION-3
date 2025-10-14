@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { format } from "date-fns";
 import { CreditCard, Truck, Banknote, Filter, ChevronUp, ChevronDown, Download, ChevronLeft, ChevronRight, XCircle } from "lucide-react";
+import { cn } from "@/lib/utils";
 import PagoInicialModal from "./pago-inicial-modal";
 import FleteModal from "./flete-modal";
 import PaymentInstallmentsModal from "./payment-installments-modal";
@@ -647,9 +648,9 @@ export default function PagosTable({
                           disabled={markAsPerdidaMutation.isPending}
                           data-testid={`perdida-order-${order.orden}`}
                           className="h-7 text-xs"
-                          title="Marcar orden como perdida"
+                          title={order.estadoEntrega === "Perdida" ? "Orden ya marcada como perdida" : "Marcar orden como perdida"}
                         >
-                          <XCircle className="h-3 w-3 mr-1" />
+                          <XCircle className={cn("h-3 w-3 mr-1", order.estadoEntrega === "Perdida" && "text-green-600")} />
                           Perdida
                         </Button>
                       </div>
