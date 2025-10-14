@@ -4,7 +4,7 @@ BoxiSleep is a comprehensive sales management system for a sleep products compan
 
 # Recent Changes
 
-**2025-10-14**: Implemented frozen columns in Despachos table - first three columns (Orden, Estado de Entrega, Fecha de Entrega) stay fixed when scrolling horizontally, and header row stays fixed when scrolling vertically, matching Ventas table pattern for easier data review. Enhanced Despachos table with Notas column (300 char limit, inline editing with proper state management - only saves on actual changes, Escape restores original) and updated Dirección de Despacho to display full billing address instead of "Igual a facturación" message for easier dispatch management. Reordered columns: Orden → Estado de Entrega → Fecha de Entrega → Producto → Cantidad → Dirección de Despacho → Nombre → Teléfono → Email → Cédula → Dirección de Facturación → Fecha → Canal → Notas → Acciones. Renamed "Estado" to "Estado de Entrega" and "Cliente" to "Nombre" for consistency. Warning simplifications: Fecha de Entrega shows "⚠️ Sin fecha" (only when status is "A despachar" and date missing), addresses show "⚠️ Sin dirección". Earlier: Pagos table lighter styling; auto-calculation for Total Orden USD in manual forms.
+**2025-10-14**: Product management system updated to use additive Excel uploads with undo capability. Excel uploads now use upsert logic (update existing products by name, insert new ones) instead of replacement, removing duplicate checks against database. Added backup/restore system: backup table (`productos_backup`) stores snapshot before each upload, undo button (icon-only, appears after upload) restores previous state. Removed "Cargar Predefinidos" button as products are managed via uploads and manual addition. Earlier: Frozen columns in Despachos table (Orden, Estado de Entrega, Fecha de Entrega fixed on horizontal scroll, header fixed on vertical scroll). Enhanced Despachos with Notas column (300 char limit, inline edit with Escape cancel). Full billing address display in Dirección de Despacho. Column reordering and renaming for consistency.
 
 # User Preferences
 
@@ -67,6 +67,7 @@ The system implements a workflow where orders move between tabs based on payment
 - **Payment Date Tracking**: `fechaPagoInicial` field tracks the actual date Pago Inicial/Total was received, separate from the order creation date.
 - **Chrome Autocomplete Suppression**: Implements unique autocomplete values to prevent unwanted autofill suggestions.
 - **Cashea Auto-Bank Assignment**: All Cashea channel sales automatically have Banco Receptor set to "Cashea (BNC compartido Bs)" during both file upload and API download, matching the referencia and payment amounts that come from Cashea.
+- **Product Management with Undo**: Excel product uploads use additive upsert logic (case-insensitive name matching) to update existing products or create new ones, with automatic backup before processing. An undo button (icon-only) appears after uploads to restore the previous product catalog state. Only checks for duplicates within the uploaded file, not against database, allowing seamless updates to existing products. Backend stores backup in `productos_backup` table and restores via `/api/admin/productos/undo` endpoint.
 
 # External Dependencies
 
