@@ -4,7 +4,7 @@ BoxiSleep is a comprehensive sales management system for a sleep products compan
 
 # Recent Changes
 
-**2025-10-14**: Fixed Pagos table pagination footer visibility by removing the `h-full flex flex-col` wrapper and using a fragment `<>` instead, matching the pattern used in SalesTable. The root cause was a cascading chain of `h-full` constraints (TabsContent → wrapper div → PagosTable) that pushed the pagination footer outside the viewport. The table container now uses `overflow-auto max-h-[calc(100vh-280px)]` for proper scrolling behavior while keeping the footer visible.
+**2025-10-14**: Fixed Pagos table pagination footer visibility by changing the default filter state from expanded to collapsed (`useState(false)` instead of `useState(true)`). The pagination footer was always present but hidden when filters were expanded by default, pushing it below the viewport. Also removed the `h-full flex flex-col` wrapper and used a fragment `<>` instead to match SalesTable's pattern. The table container uses `overflow-auto max-h-[calc(100vh-280px)]` for proper scrolling behavior.
 
 # User Preferences
 

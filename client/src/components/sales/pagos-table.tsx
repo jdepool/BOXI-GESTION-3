@@ -69,7 +69,7 @@ export default function PagosTable({
   const currentPage = Math.floor(offset / limit) + 1;
   const { toast } = useToast();
   
-  const [filtersVisible, setFiltersVisible] = useState(true);
+  const [filtersVisible, setFiltersVisible] = useState(false);
   const [pagoInicialModalOpen, setPagoInicialModalOpen] = useState(false);
   const [fleteModalOpen, setFleteModalOpen] = useState(false);
   const [cuotasModalOpen, setCuotasModalOpen] = useState(false);
