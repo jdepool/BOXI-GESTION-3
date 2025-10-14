@@ -36,6 +36,7 @@ Orders typically move from temporary tabs to permanent tabs upon payment verific
 - **Payment Tracking Notes**: Two separate note fields serve different purposes:
   - **Notas** (sales level): General notes about products, customer preferences, and sale details
   - **Seguimiento Pago** (order level in Pagos tab): Payment follow-up notes, communication logs, and payment method issues specific to tracking payment collection
+- **Asesor Management**: Automatic asesor propagation ensures one order = one asesor. When an asesor is assigned to any sale in an order, the system automatically assigns that same asesor to all sales in that order, maintaining consistency across multi-product orders.
 - **Installment (Cuotas) Architecture**: Installments are tracked at the order level, with sequential numbering per order.
 - **Bank Management**: Differentiates between "Receptor" (receiving) and "Emisor" (issuing) banks, with forms consistently filtering to show only "Receptor" banks.
 - **Automation & Consistency**: Automatic assignment of "Cashea (BNC compartido Bs)" as Banco Receptor for Cashea sales. Consistent naming conventions for bank fields and payment date tracking (`fechaPagoInicial`). Chrome autocomplete suppression is implemented.
