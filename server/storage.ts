@@ -1,5 +1,5 @@
 import { 
-  sales, uploadHistory, users, bancos, tiposEgresos, productos, metodosPago, monedas, categorias, canales, asesores, egresos, egresosPorAprobar, paymentInstallments,
+  sales, uploadHistory, users, bancos, tiposEgresos, productos, productosBackup, metodosPago, monedas, categorias, canales, asesores, egresos, egresosPorAprobar, paymentInstallments,
   type User, type InsertUser, type Sale, type InsertSale, type UploadHistory, type InsertUploadHistory,
   type Banco, type InsertBanco, type TipoEgreso, type InsertTipoEgreso,
   type Producto, type InsertProducto, type MetodoPago, type InsertMetodoPago,
@@ -129,6 +129,9 @@ export interface IStorage {
   createProducto(producto: InsertProducto): Promise<Producto>;
   updateProducto(id: string, producto: Partial<InsertProducto>): Promise<Producto | undefined>;
   deleteProducto(id: string): Promise<boolean>;
+  backupProductos(): Promise<void>;
+  restoreProductosFromBackup(): Promise<void>;
+  upsertProductos(productos: InsertProducto[]): Promise<{ created: number; updated: number }>;
 
   // Métodos de Pago
   getMetodosPago(): Promise<MetodoPago[]>;
@@ -1193,6 +1196,89 @@ export class DatabaseStorage implements IStorage {
   async deleteProducto(id: string): Promise<boolean> {
     const result = await db.delete(productos).where(eq(productos.id, id));
     return (result.rowCount ?? 0) > 0;
+  }
+
+  async backupProductos(): Promise<void> {
+    // First, clear existing backup
+    await db.delete(productosBackup);
+    
+    // Then, backup all current productos
+    const currentProductos = await db.select().from(productos);
+    
+    if (currentProductos.length > 0) {
+      await db.insert(productosBackup).values(
+        currentProductos.map(p => ({
+          nombre: p.nombre,
+          sku: p.sku,
+          categoria: p.categoria,
+          originalId: p.id,
+          backedUpAt: new Date(),
+        }))
+      );
+    }
+  }
+
+  async restoreProductosFromBackup(): Promise<void> {
+    // Get backup products
+    const backup = await db.select().from(productosBackup);
+    
+    if (backup.length === 0) {
+      throw new Error("No backup found");
+    }
+    
+    // Clear current productos
+    await db.delete(productos);
+    
+    // Restore from backup
+    await db.insert(productos).values(
+      backup.map(p => ({
+        nombre: p.nombre,
+        sku: p.sku || undefined,
+        categoria: p.categoria,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      }))
+    );
+    
+    // Clear backup after restore
+    await db.delete(productosBackup);
+  }
+
+  async upsertProductos(productosData: InsertProducto[]): Promise<{ created: number; updated: number }> {
+    let created = 0;
+    let updated = 0;
+    
+    for (const producto of productosData) {
+      // Check if product exists by nombre (case-insensitive)
+      const existing = await db
+        .select()
+        .from(productos)
+        .where(sql`LOWER(${productos.nombre}) = LOWER(${producto.nombre})`)
+        .limit(1);
+      
+      if (existing.length > 0) {
+        // Update existing product
+        await db
+          .update(productos)
+          .set({
+            sku: producto.sku,
+            categoria: producto.categoria,
+            updatedAt: new Date(),
+          })
+          .where(eq(productos.id, existing[0].id));
+        updated++;
+      } else {
+        // Create new product
+        await db.insert(productos).values({
+          ...producto,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        });
+        created++;
+      }
+    }
+    
+    return { created, updated };
   }
 
   // Métodos de Pago methods
