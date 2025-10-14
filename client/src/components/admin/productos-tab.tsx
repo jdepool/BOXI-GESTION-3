@@ -277,11 +277,12 @@ export function ProductosTab() {
           <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
             <DialogTrigger asChild>
               <Button 
-                variant="outline"
+                variant="ghost"
+                size="icon"
+                title="Subir Excel"
                 data-testid="upload-excel-productos"
               >
-                <Upload className="h-4 w-4 mr-2" />
-                Subir Excel
+                <Upload className="h-4 w-4" />
               </Button>
             </DialogTrigger>
             <DialogContent>
