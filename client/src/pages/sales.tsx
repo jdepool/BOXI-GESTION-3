@@ -38,10 +38,14 @@ export default function Sales() {
     limit: number;
     offset: number;
   }>({
-    queryKey: ["/api/sales", { ...filters, excludePendingManual: true, excludePerdida: true }],
+    queryKey: ["/api/sales", { 
+      ...filters, 
+      excludePendingManual: true, 
+      excludePerdida: filters.estadoEntrega !== "Perdida"
+    }],
   });
 
-  // Query for Reserva orders that are still pending
+  // Query for Reserva orders that are still pending (excludePerdida always true for this hardcoded query)
   const { data: reservasData, isLoading: reservasLoading } = useQuery<{
     data: any[];
     total: number;
@@ -74,7 +78,7 @@ export default function Sales() {
     }>;
     total: number;
   }>({
-    queryKey: ["/api/sales/orders", pagosFilters],
+    queryKey: ["/api/sales/orders", { ...pagosFilters, excludePerdida: true }], // Always exclude Perdida for Pagos tab
   });
 
   const handleFilterChange = (newFilters: Partial<typeof filters>) => {

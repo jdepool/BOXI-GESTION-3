@@ -93,6 +93,7 @@ export interface IStorage {
     orden?: string;
     startDate?: string;
     endDate?: string;
+    excludePerdida?: boolean;
   }): Promise<{
     data: Array<{
       orden: string;
@@ -496,6 +497,7 @@ export class DatabaseStorage implements IStorage {
     orden?: string;
     startDate?: string;
     endDate?: string;
+    excludePerdida?: boolean;
   }): Promise<{
     data: Array<{
       orden: string;
@@ -526,6 +528,11 @@ export class DatabaseStorage implements IStorage {
       ),
       isNotNull(sales.orden)
     ];
+
+    // Exclude Perdida orders if requested
+    if (filters?.excludePerdida) {
+      conditions.push(ne(sales.estadoEntrega, "Perdida"));
+    }
 
     // Add canal filter if provided
     if (filters?.canal) {

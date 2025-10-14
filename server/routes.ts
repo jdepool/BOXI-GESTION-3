@@ -1214,6 +1214,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const orden = req.query.orden as string | undefined;
       const startDate = req.query.startDate as string | undefined;
       const endDate = req.query.endDate as string | undefined;
+      const excludePerdida = req.query.excludePerdida === 'true';
 
       const result = await storage.getOrdersForPayments({ 
         limit, 
@@ -1221,7 +1222,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         canal, 
         orden, 
         startDate, 
-        endDate 
+        endDate,
+        excludePerdida
       });
       res.json(result);
     } catch (error) {
