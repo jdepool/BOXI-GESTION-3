@@ -26,6 +26,7 @@ export default function Sales() {
     startDate: "",
     endDate: "",
     asesorId: "",
+    estadoEntrega: "",
     limit: 20,
     offset: 0,
   });
@@ -81,7 +82,11 @@ export default function Sales() {
     }>;
     total: number;
   }>({
-    queryKey: ["/api/sales/orders", { ...pagosFilters, excludePerdida: true }], // Always exclude Perdida for Pagos tab
+    queryKey: ["/api/sales/orders", { 
+      ...pagosFilters, 
+      // Exclude Perdida by default unless explicitly filtering for it
+      excludePerdida: pagosFilters.estadoEntrega !== "Perdida"
+    }],
   });
 
   const handleFilterChange = (newFilters: Partial<typeof filters>) => {
@@ -99,6 +104,7 @@ export default function Sales() {
     const normalized = { ...newFilters };
     if (normalized.canal === "all") normalized.canal = "";
     if (normalized.asesorId === "all") normalized.asesorId = "";
+    if (normalized.estadoEntrega === "all") normalized.estadoEntrega = "";
     setPagosFilters(prev => ({ ...prev, ...normalized, offset: 0 }));
   };
 
