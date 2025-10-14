@@ -1214,7 +1214,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const orden = req.query.orden as string | undefined;
       const startDate = req.query.startDate as string | undefined;
       const endDate = req.query.endDate as string | undefined;
-      const estadoEntrega = req.query.estadoEntrega as string | undefined;
+      
+      // Validate estadoEntrega against known delivery statuses
+      const validEstadoEntrega = [
+        "Pendiente", "En espera de pago", "A despachar", "Despachado", 
+        "Entregado", "Devuelto", "Cancelado", "Perdida", "Rechazado"
+      ];
+      const estadoEntregaParam = req.query.estadoEntrega as string | undefined;
+      const estadoEntrega = estadoEntregaParam && validEstadoEntrega.includes(estadoEntregaParam)
+        ? estadoEntregaParam
+        : undefined;
+      
       const excludePerdida = req.query.excludePerdida === 'true';
       
       // Handle asesorId filter - normalize 'all' to undefined, keep 'none' as 'null' for null filter

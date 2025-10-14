@@ -535,21 +535,14 @@ export class DatabaseStorage implements IStorage {
 
     // Add estadoEntrega filter if provided
     if (filters?.estadoEntrega) {
+      // Filter by specific status (route layer ensures this is never 'all' or empty)
       conditions.push(eq(sales.estadoEntrega, filters.estadoEntrega));
     } else {
-      // Default: show Pendiente or En proceso orders
-      const defaultEstadoCondition = or(
-        eq(sales.estadoEntrega, "Pendiente"),
-        eq(sales.estadoEntrega, "En proceso")
-      );
-      if (defaultEstadoCondition) {
-        conditions.push(defaultEstadoCondition);
+      // When no specific status is selected, show all statuses
+      // but exclude Perdida if requested
+      if (filters?.excludePerdida) {
+        conditions.push(ne(sales.estadoEntrega, "Perdida"));
       }
-    }
-
-    // Exclude Perdida orders if requested (and not explicitly filtering for Perdida)
-    if (filters?.excludePerdida && filters?.estadoEntrega !== "Perdida") {
-      conditions.push(ne(sales.estadoEntrega, "Perdida"));
     }
 
     // Add canal filter if provided
