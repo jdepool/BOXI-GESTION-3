@@ -174,45 +174,57 @@ export default function PagosTable({
       {filtersVisible && (
         <div className="p-6 border-b border-border">
           <div className="flex flex-wrap gap-3">
-            <Select 
-              value={filters?.canal || "all"} 
-              onValueChange={(value) => handleFilterChange('canal', value)}
-            >
-              <SelectTrigger className="w-40" data-testid="filter-channel">
-                <SelectValue placeholder="Todos los canales" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos los canales</SelectItem>
-                <SelectItem value="cashea">Cashea</SelectItem>
-                <SelectItem value="shopify">Shopify</SelectItem>
-                <SelectItem value="treble">Treble</SelectItem>
-              </SelectContent>
-            </Select>
+            <div>
+              <label className="text-sm font-medium mb-1 block">Canal:</label>
+              <Select 
+                value={filters?.canal || "all"} 
+                onValueChange={(value) => handleFilterChange('canal', value)}
+              >
+                <SelectTrigger className="w-40" data-testid="filter-channel">
+                  <SelectValue placeholder="Todos los canales" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos los canales</SelectItem>
+                  <SelectItem value="cashea">Cashea</SelectItem>
+                  <SelectItem value="shopify">Shopify</SelectItem>
+                  <SelectItem value="treble">Treble</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
-            <Input 
-              type="text"
-              placeholder="Buscar por # orden"
-              value={filters?.orden || ""}
-              onChange={(e) => handleFilterChange('orden', e.target.value)}
-              className="w-40"
-              data-testid="filter-order-number"
-            />
+            <div>
+              <label className="text-sm font-medium mb-1 block">Orden:</label>
+              <Input 
+                type="text"
+                placeholder="Buscar por # orden"
+                value={filters?.orden || ""}
+                onChange={(e) => handleFilterChange('orden', e.target.value)}
+                className="w-40"
+                data-testid="filter-order-number"
+              />
+            </div>
 
-            <Input 
-              type="date" 
-              value={filters?.startDate || ""}
-              onChange={(e) => handleFilterChange('startDate', e.target.value)}
-              className="w-40"
-              data-testid="filter-start-date"
-            />
+            <div>
+              <label className="text-sm font-medium mb-1 block">Fecha Inicio:</label>
+              <Input 
+                type="date" 
+                value={filters?.startDate || ""}
+                onChange={(e) => handleFilterChange('startDate', e.target.value)}
+                className="w-40"
+                data-testid="filter-start-date"
+              />
+            </div>
 
-            <Input 
-              type="date" 
-              value={filters?.endDate || ""}
-              onChange={(e) => handleFilterChange('endDate', e.target.value)}
-              className="w-40"
-              data-testid="filter-end-date"
-            />
+            <div>
+              <label className="text-sm font-medium mb-1 block">Fecha Fin:</label>
+              <Input 
+                type="date" 
+                value={filters?.endDate || ""}
+                onChange={(e) => handleFilterChange('endDate', e.target.value)}
+                className="w-40"
+                data-testid="filter-end-date"
+              />
+            </div>
           </div>
         </div>
       )}
