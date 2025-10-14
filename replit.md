@@ -4,7 +4,7 @@ BoxiSleep is a comprehensive sales management system for a sleep products compan
 
 # Recent Changes
 
-**2025-10-14**: Updated Pagos table styling for a lighter appearance - changed all column headers from `font-semibold` to `font-medium`, removed `font-mono` from Orden column cells, and removed `font-semibold` from data cells (Total Orden USD and metric badges). This matches the lighter styling pattern used in other Ventas tabs like Lista de Ventas. Earlier, fixed Pagos table pagination footer visibility by changing default filter state to collapsed and removing the `h-full flex flex-col` wrapper.
+**2025-10-14**: Implemented auto-calculation for Total Orden USD field in both Nueva Venta Manual and Nueva Reserva Manual forms. The field now automatically calculates as the sum of all individual product Total USD values and is displayed as read-only with a muted background. This prevents manual entry errors and ensures order totals are always accurate. Changes applied via useEffect hooks that trigger whenever products are added or removed. Earlier, updated Pagos table styling for lighter appearance and fixed pagination footer visibility.
 
 # User Preferences
 
