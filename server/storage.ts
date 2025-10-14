@@ -107,6 +107,7 @@ export interface IStorage {
       hasPagoInicial: boolean;
       hasFlete: boolean;
       installmentCount: number;
+      notas: string | null;
     }>;
     total: number;
   }>;
@@ -572,6 +573,7 @@ export class DatabaseStorage implements IStorage {
         fleteGratis: sql<boolean>`BOOL_OR(${sales.fleteGratis})`.as('fleteGratis'),
         estadoVerificacionInicial: sql<string | null>`MAX(${sales.estadoVerificacionInicial})`.as('estadoVerificacionInicial'),
         estadoVerificacionFlete: sql<string | null>`MAX(${sales.estadoVerificacionFlete})`.as('estadoVerificacionFlete'),
+        notas: sql<string | null>`MAX(${sales.notas})`.as('notas'),
       })
       .from(sales)
       .where(estadoCondition)
@@ -671,6 +673,7 @@ export class DatabaseStorage implements IStorage {
           totalCuotas,
           totalPagado,
           saldoPendiente,
+          notas: order.notas,
         };
       }),
       total: Number(totalCount),
