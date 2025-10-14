@@ -36,6 +36,7 @@ export default function DispatchTable({
   
   const [editingNotesId, setEditingNotesId] = useState<string | null>(null);
   const [notesValue, setNotesValue] = useState("");
+  const [originalNotesValue, setOriginalNotesValue] = useState("");
 
   const getChannelBadgeClass = (canal: string) => {
     switch (canal?.toLowerCase()) {
@@ -122,7 +123,9 @@ export default function DispatchTable({
 
   const handleNotesClick = (sale: Sale) => {
     setEditingNotesId(sale.id);
-    setNotesValue(sale.notas || "");
+    const currentNotes = sale.notas || "";
+    setNotesValue(currentNotes);
+    setOriginalNotesValue(currentNotes);
   };
 
   const handleNotesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -130,26 +133,30 @@ export default function DispatchTable({
   };
 
   const handleNotesBlur = () => {
-    if (editingNotesId) {
+    if (editingNotesId && notesValue.trim() !== originalNotesValue) {
       updateNotesMutation.mutate({ 
         saleId: editingNotesId, 
         notas: notesValue.trim() 
       });
+    } else {
+      setEditingNotesId(null);
     }
   };
 
   const handleNotesKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
       e.preventDefault();
-      if (editingNotesId) {
+      if (editingNotesId && notesValue.trim() !== originalNotesValue) {
         updateNotesMutation.mutate({ 
           saleId: editingNotesId, 
           notas: notesValue.trim() 
         });
+      } else {
+        setEditingNotesId(null);
       }
     } else if (e.key === 'Escape') {
       setEditingNotesId(null);
-      setNotesValue("");
+      setNotesValue(originalNotesValue);
     }
   };
 
@@ -289,8 +296,18 @@ export default function DispatchTable({
                     <TableCell>
                       {sale.direccionFacturacionPais ? (
                         sale.direccionDespachoIgualFacturacion === "true" ? (
-                          <div className="text-xs text-muted-foreground italic">
-                            Igual a facturación
+                          <div className="text-xs space-y-1 max-w-72">
+                            <div className="font-medium">{sale.direccionFacturacionDireccion}</div>
+                            <div>
+                              {sale.direccionFacturacionCiudad}, {sale.direccionFacturacionEstado}
+                            </div>
+                            <div>{sale.direccionFacturacionPais}</div>
+                            {sale.direccionFacturacionUrbanizacion && (
+                              <div className="text-muted-foreground">Urb. {sale.direccionFacturacionUrbanizacion}</div>
+                            )}
+                            {sale.direccionFacturacionReferencia && (
+                              <div className="text-muted-foreground">Ref: {sale.direccionFacturacionReferencia}</div>
+                            )}
                           </div>
                         ) : (
                           <div className="text-xs space-y-1 max-w-72">
