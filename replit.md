@@ -4,7 +4,7 @@ BoxiSleep is a comprehensive sales management system for a sleep products compan
 
 # Recent Changes
 
-**2025-10-14**: Updated Pagos table for lighter, more uniform appearance - column headers use `text-xs font-medium text-muted-foreground p-2`, and Orden/Fecha cell values also use `text-muted-foreground` for consistency. This creates a cohesive lighter look matching other Ventas tabs. Earlier, implemented auto-calculation for Total Orden USD field in Nueva Venta Manual and Nueva Reserva Manual forms (auto-sums individual product totals, displayed as read-only with muted background).
+**2025-10-14**: Added Fecha de Entrega column to Despachos table after Nombre column, with conditional warning display - shows amber warning ("⚠️ Sin fecha - Pendiente de agregar") only when order status is "A despachar" AND fechaEntrega is missing, otherwise shows formatted date or neutral "—" dash. Renamed "Cliente" column to "Nombre" for consistency across tables. Earlier updates: Pagos table styling unified with lighter appearance using `text-muted-foreground` for Orden/Fecha cells and column headers; auto-calculation for Total Orden USD in manual sales forms.
 
 # User Preferences
 
