@@ -181,28 +181,26 @@ export default function VerificacionPage() {
         <TabsContent value="ingresos">
           {/* Filter Toolbar */}
           <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow mb-6">
-            <div className="flex justify-between items-center">
-              <Button
-                variant="outline"
+            <div className="flex justify-end items-center gap-2">
+              <Button 
+                variant="ghost" 
                 size="sm"
                 onClick={() => setFiltersVisible(!filtersVisible)}
-                data-testid="button-toggle-filters"
+                data-testid="toggle-filters-button"
+                className="text-muted-foreground"
               >
                 <Filter className="h-4 w-4 mr-2" />
-                Filtros
-                {filtersVisible ? (
-                  <ChevronUp className="h-4 w-4 ml-2" />
-                ) : (
-                  <ChevronDown className="h-4 w-4 ml-2" />
-                )}
+                {filtersVisible ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
               </Button>
-              <Button
-                variant="outline"
+              
+              <Button 
+                variant="ghost" 
                 size="sm"
-                data-testid="button-export"
+                data-testid="export-button"
+                className="text-muted-foreground"
+                title="Exportar"
               >
-                <Download className="h-4 w-4 mr-2" />
-                Exportar
+                <Download className="h-4 w-4" />
               </Button>
             </div>
 
