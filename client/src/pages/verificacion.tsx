@@ -312,37 +312,37 @@ export default function VerificacionPage() {
 
           {/* Payments Table */}
           <div className="flex-1 overflow-auto relative">
-            <table className="w-full text-sm border-collapse">
+            <table className="w-full border-collapse">
               <thead className="sticky top-0 z-10 bg-muted">
                 <tr className="border-b border-border">
-                  <th className="p-3 text-left font-semibold text-foreground min-w-[120px]">
+                  <th className="p-2 text-left text-xs font-medium text-muted-foreground min-w-[120px]">
                     Orden
                   </th>
-                  <th className="p-3 text-left font-semibold text-foreground min-w-[140px]">
+                  <th className="p-2 text-left text-xs font-medium text-muted-foreground min-w-[140px]">
                     Pago
                   </th>
-                  <th className="p-3 text-left font-semibold text-foreground min-w-[130px]">
+                  <th className="p-2 text-left text-xs font-medium text-muted-foreground min-w-[130px]">
                     Fecha de Pago
                   </th>
-                  <th className="p-3 text-left font-semibold text-foreground min-w-[110px]">
+                  <th className="p-2 text-left text-xs font-medium text-muted-foreground min-w-[110px]">
                     Monto Bs
                   </th>
-                  <th className="p-3 text-left font-semibold text-foreground min-w-[110px]">
+                  <th className="p-2 text-left text-xs font-medium text-muted-foreground min-w-[110px]">
                     Monto USD
                   </th>
-                  <th className="p-3 text-left font-semibold text-foreground min-w-[120px]">
+                  <th className="p-2 text-left text-xs font-medium text-muted-foreground min-w-[120px]">
                     Referencia
                   </th>
-                  <th className="p-3 text-left font-semibold text-foreground min-w-[150px]">
+                  <th className="p-2 text-left text-xs font-medium text-muted-foreground min-w-[150px]">
                     Banco
                   </th>
-                  <th className="p-3 text-left font-semibold text-foreground min-w-[120px]">
+                  <th className="p-2 text-left text-xs font-medium text-muted-foreground min-w-[120px]">
                     Estado
                   </th>
-                  <th className="p-3 text-left font-semibold text-foreground min-w-[150px]">
+                  <th className="p-2 text-left text-xs font-medium text-muted-foreground min-w-[150px]">
                     Notas
                   </th>
-                  <th className="p-3 text-left font-semibold text-foreground min-w-[100px]">
+                  <th className="p-2 text-left text-xs font-medium text-muted-foreground min-w-[100px]">
                     Acción
                   </th>
                 </tr>
@@ -364,38 +364,38 @@ export default function VerificacionPage() {
                   payments.map((payment, index) => (
                     <tr
                       key={`${payment.paymentId}-${payment.paymentType}-${index}`}
-                      className="border-b border-border hover:bg-muted/50"
+                      className="border-b border-border hover:bg-muted/50 text-xs"
                     >
-                      <td className="p-3 text-sm" data-testid={`text-orden-${index}`}>
+                      <td className="p-2 text-xs" data-testid={`text-orden-${index}`}>
                         {payment.orden}
                       </td>
-                      <td className="p-3 text-sm" data-testid={`text-tipo-pago-${index}`}>
+                      <td className="p-2 text-xs" data-testid={`text-tipo-pago-${index}`}>
                         <Badge variant="outline">{payment.tipoPago}</Badge>
                       </td>
-                      <td className="p-3 text-sm" data-testid={`text-fecha-pago-${index}`}>
+                      <td className="p-2 text-xs" data-testid={`text-fecha-pago-${index}`}>
                         {payment.fecha ? format(new Date(payment.fecha), "dd/MM/yyyy") : "-"}
                       </td>
-                      <td className="p-3 text-sm" data-testid={`text-monto-bs-${index}`}>
+                      <td className="p-2 text-xs" data-testid={`text-monto-bs-${index}`}>
                         {payment.montoBs ? `Bs ${payment.montoBs.toFixed(2)}` : "-"}
                       </td>
-                      <td className="p-3 text-sm" data-testid={`text-monto-usd-${index}`}>
+                      <td className="p-2 text-xs" data-testid={`text-monto-usd-${index}`}>
                         {formatCurrency(payment.montoUsd)}
                       </td>
-                      <td className="p-3 text-sm" data-testid={`text-referencia-${index}`}>
+                      <td className="p-2 text-xs" data-testid={`text-referencia-${index}`}>
                         {payment.referencia || "-"}
                       </td>
-                      <td className="p-3 text-sm" data-testid={`text-banco-${index}`}>
+                      <td className="p-2 text-xs" data-testid={`text-banco-${index}`}>
                         {getBancoName(payment.bancoId)}
                       </td>
-                      <td className="p-3 text-sm" data-testid={`badge-estado-${index}`}>
+                      <td className="p-2 text-xs" data-testid={`badge-estado-${index}`}>
                         <Badge variant={getStatusBadgeVariant(payment.estadoVerificacion)}>
                           {payment.estadoVerificacion}
                         </Badge>
                       </td>
-                      <td className="p-3 text-sm max-w-[200px] truncate" data-testid={`text-notas-${index}`}>
+                      <td className="p-2 text-xs max-w-[200px] truncate" data-testid={`text-notas-${index}`}>
                         {payment.notasVerificacion || "-"}
                       </td>
-                      <td className="p-3">
+                      <td className="p-2">
                         <Button
                           size="sm"
                           onClick={() => handleVerify(payment)}
