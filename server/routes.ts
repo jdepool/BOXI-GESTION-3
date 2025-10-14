@@ -2410,7 +2410,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Assign asesor to sale
+  // Assign asesor to sale (and automatically to all sales in the same order)
   app.put("/api/sales/:saleId/asesor", async (req, res) => {
     try {
       const { saleId } = req.params;
@@ -2433,12 +2433,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
-      const updatedSale = await storage.updateSale(saleId, { asesorId });
-      if (!updatedSale) {
+      // Get the sale to check if it has an orden
+      const existingSale = await storage.getSaleById(saleId);
+      if (!existingSale) {
         return res.status(404).json({ error: "Sale not found" });
       }
 
-      res.json(updatedSale);
+      // If the sale has an orden, update all sales in that order
+      // This ensures one order = one asesor
+      if (existingSale.orden) {
+        const updatedSales = await storage.updateSalesByOrderNumber(existingSale.orden, { asesorId });
+        if (!updatedSales || updatedSales.length === 0) {
+          return res.status(500).json({ error: "Failed to update sales" });
+        }
+        // Return the first sale (the one that was clicked on)
+        res.json(updatedSales.find(s => s.id === saleId) || updatedSales[0]);
+      } else {
+        // No orden, just update the single sale
+        const updatedSale = await storage.updateSale(saleId, { asesorId });
+        if (!updatedSale) {
+          return res.status(404).json({ error: "Sale not found" });
+        }
+        res.json(updatedSale);
+      }
     } catch (error) {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ error: "Invalid request data", details: error.errors });
