@@ -46,6 +46,7 @@ interface Order {
   totalCuotas: number;
   totalPagado: number;
   saldoPendiente: number;
+  notas: string | null;
 }
 
 interface PagosTableProps {
@@ -87,6 +88,8 @@ export default function PagosTable({
   const [selectedSale, setSelectedSale] = useState<any | null>(null);
   const [perdidaConfirmOpen, setPerdidaConfirmOpen] = useState(false);
   const [selectedOrderForPerdida, setSelectedOrderForPerdida] = useState<Order | null>(null);
+  const [editingNotesOrder, setEditingNotesOrder] = useState<string | null>(null);
+  const [notesValue, setNotesValue] = useState<string>("");
 
   const handleFilterChange = (key: string, value: string) => {
     if (onFilterChange) {
@@ -177,6 +180,50 @@ export default function PagosTable({
       });
     },
   });
+
+  // Mutation to update notes for all sales in an order
+  const updateNotesMutation = useMutation({
+    mutationFn: async ({ orderNumber, notas }: { orderNumber: string; notas: string }) => {
+      return apiRequest("PATCH", `/api/sales/orders/${encodeURIComponent(orderNumber)}/notes`, { notas });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ 
+        predicate: (query) => Array.isArray(query.queryKey) && typeof query.queryKey[0] === 'string' && query.queryKey[0].startsWith('/api/sales')
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "No se pudieron actualizar las notas",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleNotesClick = (order: Order) => {
+    setEditingNotesOrder(order.orden);
+    setNotesValue(order.notas || "");
+  };
+
+  const handleNotesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setNotesValue(e.target.value);
+  };
+
+  const handleNotesBlur = () => {
+    if (editingNotesOrder) {
+      updateNotesMutation.mutate({ orderNumber: editingNotesOrder, notas: notesValue });
+      setEditingNotesOrder(null);
+    }
+  };
+
+  const handleNotesKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      handleNotesBlur();
+    } else if (e.key === 'Escape') {
+      setEditingNotesOrder(null);
+      setNotesValue("");
+    }
+  };
 
   return (
     <>
