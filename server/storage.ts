@@ -32,6 +32,7 @@ export interface IStorage {
     excludePendingManual?: boolean;
     excludeReservas?: boolean;
     excludeADespachar?: boolean;
+    excludePerdida?: boolean;
     limit?: number;
     offset?: number;
   }): Promise<Sale[]>;
@@ -66,6 +67,7 @@ export interface IStorage {
     excludePendingManual?: boolean;
     excludeReservas?: boolean;
     excludeADespachar?: boolean;
+    excludePerdida?: boolean;
   }): Promise<number>;
   getExistingOrderNumbers(orders: string[]): Promise<string[]>;
   getOrdersByOrderNumber(orderNumber: string): Promise<{orden: string; product: string}[]>;
@@ -80,6 +82,7 @@ export interface IStorage {
     excludePendingManual?: boolean;
     excludeReservas?: boolean;
     excludeADespachar?: boolean;
+    excludePerdida?: boolean;
     limit?: number;
     offset?: number;
   }): Promise<Array<Sale & { installments: PaymentInstallment[] }>>;
@@ -346,6 +349,7 @@ export class DatabaseStorage implements IStorage {
     excludePendingManual?: boolean;
     excludeReservas?: boolean;
     excludeADespachar?: boolean;
+    excludePerdida?: boolean;
     limit?: number;
     offset?: number;
   }): Promise<Sale[]> {
@@ -394,6 +398,12 @@ export class DatabaseStorage implements IStorage {
       // Exclude orders with estadoEntrega "A despachar" - for Reservas tab to only show pending reservas
       conditions.push(
         ne(sales.estadoEntrega, "A despachar")
+      );
+    }
+    if (filters?.excludePerdida) {
+      // Exclude orders with estadoEntrega "Perdida" - lost sales hidden by default
+      conditions.push(
+        ne(sales.estadoEntrega, "Perdida")
       );
     }
     
@@ -1040,6 +1050,7 @@ export class DatabaseStorage implements IStorage {
     excludePendingManual?: boolean;
     excludeReservas?: boolean;
     excludeADespachar?: boolean;
+    excludePerdida?: boolean;
   }): Promise<number> {
     const conditions = [];
     if (filters?.canal) {
@@ -1086,6 +1097,12 @@ export class DatabaseStorage implements IStorage {
       // Exclude orders with estadoEntrega "A despachar" - for Reservas tab to only show pending reservas
       conditions.push(
         ne(sales.estadoEntrega, "A despachar")
+      );
+    }
+    if (filters?.excludePerdida) {
+      // Exclude orders with estadoEntrega "Perdida" - lost sales hidden by default
+      conditions.push(
+        ne(sales.estadoEntrega, "Perdida")
       );
     }
     
