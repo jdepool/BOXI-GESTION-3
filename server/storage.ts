@@ -102,12 +102,13 @@ export interface IStorage {
       canal: string | null;
       tipo: string | null;
       estadoEntrega: string | null;
+      asesorId: string | null;
       totalOrderUsd: number | null;
       productCount: number;
       hasPagoInicial: boolean;
       hasFlete: boolean;
       installmentCount: number;
-      notas: string | null;
+      seguimientoPago: string | null;
     }>;
     total: number;
   }>;
@@ -507,6 +508,7 @@ export class DatabaseStorage implements IStorage {
       canal: string | null;
       tipo: string | null;
       estadoEntrega: string | null;
+      asesorId: string | null;
       totalOrderUsd: number | null;
       productCount: number;
       hasPagoInicial: boolean;
@@ -518,6 +520,7 @@ export class DatabaseStorage implements IStorage {
       totalCuotas: number;
       totalPagado: number;
       saldoPendiente: number;
+      seguimientoPago: string | null;
     }>;
     total: number;
   }> {
