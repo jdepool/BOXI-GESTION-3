@@ -316,10 +316,10 @@ export default function VerificacionPage() {
             <table className="w-full border-collapse">
               <thead className="sticky top-0 z-10 bg-muted">
                 <tr className="border-b border-border">
-                  <th className="p-2 text-left text-xs font-normal text-muted-foreground min-w-[120px]">
+                  <th className="p-2 text-left text-xs font-light text-muted-foreground min-w-[120px]">
                     Orden
                   </th>
-                  <th className="p-2 text-left text-xs font-normal text-muted-foreground min-w-[140px]">
+                  <th className="p-2 text-left text-xs font-light text-muted-foreground min-w-[140px]">
                     Pago
                   </th>
                   <th className="p-2 text-left text-xs font-medium text-muted-foreground min-w-[130px]">
