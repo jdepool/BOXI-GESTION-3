@@ -3,10 +3,12 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 import { Download, Package, User, Phone, Mail, ChevronLeft, ChevronRight } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { useState } from "react";
 import type { Sale } from "@shared/schema";
 
 interface DispatchTableProps {
@@ -31,6 +33,9 @@ export default function DispatchTable({
   const totalPages = Math.ceil(total / limit);
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  
+  const [editingNotesId, setEditingNotesId] = useState<string | null>(null);
+  const [notesValue, setNotesValue] = useState("");
 
   const getChannelBadgeClass = (canal: string) => {
     switch (canal?.toLowerCase()) {
@@ -89,6 +94,63 @@ export default function DispatchTable({
 
   const handleStatusChange = (saleId: string, newStatus: string) => {
     updateDeliveryStatusMutation.mutate({ saleId, status: newStatus });
+  };
+
+  const updateNotesMutation = useMutation({
+    mutationFn: async ({ saleId, notas }: { saleId: string; notas: string }) => {
+      return apiRequest("PATCH", `/api/sales/${saleId}`, { notas });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ 
+        predicate: (query) => Array.isArray(query.queryKey) && typeof query.queryKey[0] === 'string' && query.queryKey[0].startsWith('/api/sales')
+      });
+      setEditingNotesId(null);
+      toast({
+        title: "Nota actualizada",
+        description: "La nota ha sido guardada correctamente.",
+      });
+    },
+    onError: (error) => {
+      console.error('Failed to update notes:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo guardar la nota.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleNotesClick = (sale: Sale) => {
+    setEditingNotesId(sale.id);
+    setNotesValue(sale.notas || "");
+  };
+
+  const handleNotesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setNotesValue(e.target.value);
+  };
+
+  const handleNotesBlur = () => {
+    if (editingNotesId) {
+      updateNotesMutation.mutate({ 
+        saleId: editingNotesId, 
+        notas: notesValue.trim() 
+      });
+    }
+  };
+
+  const handleNotesKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (editingNotesId) {
+        updateNotesMutation.mutate({ 
+          saleId: editingNotesId, 
+          notas: notesValue.trim() 
+        });
+      }
+    } else if (e.key === 'Escape') {
+      setEditingNotesId(null);
+      setNotesValue("");
+    }
   };
 
   const getStatusBadgeVariant = (status: string) => {
@@ -177,6 +239,7 @@ export default function DispatchTable({
                   <TableHead className="min-w-72">Dirección de Facturación</TableHead>
                   <TableHead className="w-28">Fecha</TableHead>
                   <TableHead className="w-24">Canal</TableHead>
+                  <TableHead className="min-w-48">Notas</TableHead>
                   <TableHead className="w-36">Acciones</TableHead>
                 </TableRow>
               </TableHeader>
