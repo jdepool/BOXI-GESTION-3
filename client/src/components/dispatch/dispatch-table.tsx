@@ -197,13 +197,8 @@ export default function DispatchTable({
                           {new Date(sale.fechaEntrega).toLocaleDateString('es-ES')}
                         </div>
                       ) : sale.estadoEntrega === "A despachar" ? (
-                        <div className="text-xs text-amber-600 bg-amber-50 dark:bg-amber-950/20 p-2 rounded border border-amber-200 dark:border-amber-800" data-testid={`warning-fecha-entrega-${sale.id}`}>
-                          <div className="font-medium flex items-center gap-1">
-                            ⚠️ Sin fecha
-                          </div>
-                          <div className="text-amber-700 dark:text-amber-300">
-                            Pendiente de agregar
-                          </div>
+                        <div className="text-xs text-amber-600 bg-amber-50 dark:bg-amber-950/20 p-2 rounded border border-amber-200 dark:border-amber-800 font-medium" data-testid={`warning-fecha-entrega-${sale.id}`}>
+                          ⚠️ Sin fecha
                         </div>
                       ) : (
                         <div className="text-xs text-muted-foreground" data-testid={`fecha-entrega-empty-${sale.id}`}>
@@ -251,13 +246,8 @@ export default function DispatchTable({
                           )}
                         </div>
                       ) : (
-                        <div className="text-xs text-amber-600 bg-amber-50 dark:bg-amber-950/20 p-2 rounded border border-amber-200 dark:border-amber-800">
-                          <div className="font-medium flex items-center gap-1">
-                            ⚠️ Sin dirección
-                          </div>
-                          <div className="text-amber-700 dark:text-amber-300">
-                            Pendiente de agregar
-                          </div>
+                        <div className="text-xs text-amber-600 bg-amber-50 dark:bg-amber-950/20 p-2 rounded border border-amber-200 dark:border-amber-800 font-medium">
+                          ⚠️ Sin dirección
                         </div>
                       )}
                     </TableCell>
@@ -284,13 +274,8 @@ export default function DispatchTable({
                           </div>
                         )
                       ) : (
-                        <div className="text-xs text-amber-600 bg-amber-50 dark:bg-amber-950/20 p-2 rounded border border-amber-200 dark:border-amber-800">
-                          <div className="font-medium flex items-center gap-1">
-                            ⚠️ Sin dirección
-                          </div>
-                          <div className="text-amber-700 dark:text-amber-300">
-                            Pendiente de agregar
-                          </div>
+                        <div className="text-xs text-amber-600 bg-amber-50 dark:bg-amber-950/20 p-2 rounded border border-amber-200 dark:border-amber-800 font-medium">
+                          ⚠️ Sin dirección
                         </div>
                       )}
                     </TableCell>

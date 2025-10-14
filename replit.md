@@ -4,7 +4,7 @@ BoxiSleep is a comprehensive sales management system for a sleep products compan
 
 # Recent Changes
 
-**2025-10-14**: Added Fecha de Entrega column to Despachos table after Nombre column, with conditional warning display - shows amber warning ("⚠️ Sin fecha - Pendiente de agregar") only when order status is "A despachar" AND fechaEntrega is missing, otherwise shows formatted date or neutral "—" dash. Renamed "Cliente" column to "Nombre" for consistency across tables. Earlier updates: Pagos table styling unified with lighter appearance using `text-muted-foreground` for Orden/Fecha cells and column headers; auto-calculation for Total Orden USD in manual sales forms.
+**2025-10-14**: Added Fecha de Entrega column to Despachos table after Nombre column, with conditional warning display - shows simplified amber warning ("⚠️ Sin fecha") only when order status is "A despachar" AND fechaEntrega is missing, otherwise shows formatted date or neutral "—" dash. Address warnings also simplified to show only "⚠️ Sin dirección" (removed redundant "Pendiente de agregar" text from all warnings). Renamed "Cliente" column to "Nombre" for consistency across tables. Earlier updates: Pagos table styling unified with lighter appearance using `text-muted-foreground` for Orden/Fecha cells and column headers; auto-calculation for Total Orden USD in manual sales forms.
 
 # User Preferences
 
