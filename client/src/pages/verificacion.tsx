@@ -371,7 +371,7 @@ export default function VerificacionPage() {
                         {payment.orden}
                       </td>
                       <td className="p-2 text-xs font-mono text-muted-foreground" data-testid={`text-tipo-pago-${index}`}>
-                        <Badge variant="outline">{payment.tipoPago}</Badge>
+                        {payment.tipoPago}
                       </td>
                       <td className="p-2 text-xs" data-testid={`text-fecha-pago-${index}`}>
                         {payment.fecha ? format(new Date(payment.fecha), "dd/MM/yyyy") : "-"}
