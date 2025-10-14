@@ -2,6 +2,10 @@
 
 BoxiSleep is a comprehensive sales management system for a sleep products company. It enables users to upload sales data from various channels (Cashea, Shopify, Treble) and manage sales records with filtering and export functionalities. The application provides real-time analytics on sales performance, delivery status, and channel-specific metrics to support informed business decisions, with financial payment tracking.
 
+# Recent Changes
+
+**2025-10-14**: Fixed Pagos table pagination footer visibility by replacing `flex-1` with `max-h-[calc(100vh-280px)]` on the table container. This ensures the pagination controls remain visible at the bottom of the screen, matching the pattern used in other tables (Lista de Ventas, Verificación).
+
 # User Preferences
 
 Preferred communication style: Simple, everyday language.
