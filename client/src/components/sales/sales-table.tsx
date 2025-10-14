@@ -161,7 +161,9 @@ export default function SalesTable({
       return apiRequest("PUT", `/api/sales/${saleId}/asesor`, { asesorId });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/sales"] });
+      queryClient.invalidateQueries({ 
+        predicate: (query) => Array.isArray(query.queryKey) && typeof query.queryKey[0] === 'string' && query.queryKey[0].startsWith('/api/sales')
+      });
       toast({
         title: "Asesor actualizado",
         description: "El asesor ha sido asignado correctamente.",
