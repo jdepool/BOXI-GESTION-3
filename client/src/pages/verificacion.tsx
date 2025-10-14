@@ -217,7 +217,7 @@ export default function VerificacionPage() {
 
         <TabsContent value="ingresos">
           {/* Filter Toolbar */}
-          <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow mb-6">
+          <div className="p-4 border-b border-border">
             <div className="flex justify-end items-center gap-2">
               <Button 
                 variant="ghost" 
@@ -241,13 +241,15 @@ export default function VerificacionPage() {
                 <Download className="h-4 w-4" />
               </Button>
             </div>
+          </div>
 
-            {filtersVisible && (
-              <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mt-4">
+          {filtersVisible && (
+            <div className="p-6 border-b border-border">
+              <div className="flex flex-wrap gap-3">
                 <div>
                   <label className="text-sm font-medium mb-1 block">Banco:</label>
                   <Select value={selectedBanco} onValueChange={setSelectedBanco}>
-                    <SelectTrigger data-testid="select-banco">
+                    <SelectTrigger className="w-40" data-testid="select-banco">
                       <SelectValue placeholder="Todos" />
                     </SelectTrigger>
                     <SelectContent>
@@ -263,7 +265,7 @@ export default function VerificacionPage() {
                 <div>
                   <label className="text-sm font-medium mb-1 block">Tipo de Pago:</label>
                   <Select value={tipoPagoFilter} onValueChange={setTipoPagoFilter}>
-                    <SelectTrigger data-testid="select-tipo-pago">
+                    <SelectTrigger className="w-40" data-testid="select-tipo-pago">
                       <SelectValue placeholder="Todos" />
                     </SelectTrigger>
                     <SelectContent>
@@ -280,6 +282,7 @@ export default function VerificacionPage() {
                     placeholder="Buscar orden..."
                     value={ordenFilter}
                     onChange={(e) => setOrdenFilter(e.target.value)}
+                    className="w-40"
                     data-testid="input-orden"
                   />
                 </div>
@@ -289,6 +292,7 @@ export default function VerificacionPage() {
                     type="date"
                     value={startDate}
                     onChange={(e) => setStartDate(e.target.value)}
+                    className="w-40"
                     data-testid="input-start-date"
                   />
                 </div>
@@ -298,46 +302,47 @@ export default function VerificacionPage() {
                     type="date"
                     value={endDate}
                     onChange={(e) => setEndDate(e.target.value)}
+                    className="w-40"
                     data-testid="input-end-date"
                   />
                 </div>
               </div>
-            )}
-          </div>
+            </div>
+          )}
 
           {/* Payments Table */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50 dark:bg-gray-700">
-                <tr>
-                  <th className="p-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+          <div className="flex-1 overflow-auto relative">
+            <table className="w-full text-sm border-collapse">
+              <thead className="sticky top-0 z-10 bg-muted">
+                <tr className="border-b border-border">
+                  <th className="p-3 text-left font-semibold text-foreground min-w-[120px]">
                     Orden
                   </th>
-                  <th className="p-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  <th className="p-3 text-left font-semibold text-foreground min-w-[140px]">
                     Pago
                   </th>
-                  <th className="p-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  <th className="p-3 text-left font-semibold text-foreground min-w-[130px]">
                     Fecha de Pago
                   </th>
-                  <th className="p-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  <th className="p-3 text-left font-semibold text-foreground min-w-[110px]">
                     Monto Bs
                   </th>
-                  <th className="p-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  <th className="p-3 text-left font-semibold text-foreground min-w-[110px]">
                     Monto USD
                   </th>
-                  <th className="p-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  <th className="p-3 text-left font-semibold text-foreground min-w-[120px]">
                     Referencia
                   </th>
-                  <th className="p-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  <th className="p-3 text-left font-semibold text-foreground min-w-[150px]">
                     Banco
                   </th>
-                  <th className="p-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  <th className="p-3 text-left font-semibold text-foreground min-w-[120px]">
                     Estado
                   </th>
-                  <th className="p-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  <th className="p-3 text-left font-semibold text-foreground min-w-[150px]">
                     Notas
                   </th>
-                  <th className="p-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  <th className="p-3 text-left font-semibold text-foreground min-w-[100px]">
                     Acción
                   </th>
                 </tr>
@@ -409,7 +414,7 @@ export default function VerificacionPage() {
         </TabsContent>
 
         <TabsContent value="egresos">
-          <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow text-center">
+          <div className="p-8 text-center">
             <p className="text-muted-foreground text-lg">
               La verificación de egresos estará disponible próximamente
             </p>
