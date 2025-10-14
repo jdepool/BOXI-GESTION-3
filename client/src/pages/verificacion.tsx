@@ -316,7 +316,7 @@ export default function VerificacionPage() {
             <table className="w-full border-collapse">
               <thead className="sticky top-0 z-10 bg-muted">
                 <tr className="border-b border-border">
-                  <th className="p-2 text-left text-xs font-light text-muted-foreground min-w-[120px]">
+                  <th className="p-2 text-left text-xs font-light text-muted-foreground min-w-[120px] sticky left-0 bg-muted z-20 border-r border-border shadow-[2px_0_5px_rgba(0,0,0,0.1)]">
                     Orden
                   </th>
                   <th className="p-2 text-left text-xs font-light text-muted-foreground min-w-[140px]">
@@ -367,7 +367,7 @@ export default function VerificacionPage() {
                       key={`${payment.paymentId}-${payment.paymentType}-${index}`}
                       className="border-b border-border hover:bg-muted/50 text-xs"
                     >
-                      <td className="p-2 text-xs font-mono text-muted-foreground" data-testid={`text-orden-${index}`}>
+                      <td className="p-2 text-xs font-mono text-muted-foreground sticky left-0 bg-background z-10 border-r border-border shadow-[2px_0_5px_rgba(0,0,0,0.1)]" data-testid={`text-orden-${index}`}>
                         {payment.orden}
                       </td>
                       <td className="p-2 text-xs font-mono text-muted-foreground" data-testid={`text-tipo-pago-${index}`}>
