@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Check, X, Filter, ChevronDown, ChevronUp, Download } from "lucide-react";
+import { Check, X, Filter, ChevronDown, ChevronUp, Download, ChevronLeft, ChevronRight } from "lucide-react";
 import { format } from "date-fns";
 import Sidebar from "@/components/layout/sidebar";
 
@@ -58,8 +58,12 @@ export default function VerificacionPage() {
   const [selectedBanco, setSelectedBanco] = useState("all");
   const [ordenFilter, setOrdenFilter] = useState("");
   const [tipoPagoFilter, setTipoPagoFilter] = useState("all");
+  
+  // Pagination
+  const [limit] = useState(20);
+  const [offset, setOffset] = useState(0);
 
-  const { data, isLoading } = useQuery<{ data: VerificationPayment[] }>({
+  const { data, isLoading } = useQuery<{ data: VerificationPayment[]; total: number }>({
     queryKey: [
       "/api/sales/verification-payments",
       startDate,
@@ -67,6 +71,8 @@ export default function VerificacionPage() {
       selectedBanco,
       ordenFilter,
       tipoPagoFilter,
+      limit,
+      offset,
     ],
     queryFn: async () => {
       const params = new URLSearchParams();
@@ -75,6 +81,8 @@ export default function VerificacionPage() {
       if (selectedBanco && selectedBanco !== "all") params.append("bancoId", selectedBanco);
       if (ordenFilter) params.append("orden", ordenFilter);
       if (tipoPagoFilter && tipoPagoFilter !== "all") params.append("tipoPago", tipoPagoFilter);
+      params.append("limit", limit.toString());
+      params.append("offset", offset.toString());
 
       const url = `/api/sales/verification-payments${params.toString() ? `?${params.toString()}` : ""}`;
       const response = await fetch(url);
@@ -86,6 +94,7 @@ export default function VerificacionPage() {
   });
 
   const payments = data?.data || [];
+  const total = data?.total || 0;
 
   const { data: bancos = [] } = useQuery<Banco[]>({
     queryKey: ["/api/admin/bancos"],
@@ -412,6 +421,37 @@ export default function VerificacionPage() {
               </tbody>
             </table>
           </div>
+
+          {/* Pagination Footer */}
+          {total > 0 && (
+            <div className="p-4 border-t border-border flex justify-between items-center">
+              <div className="text-sm text-muted-foreground">
+                {offset + 1}-{Math.min(offset + limit, total)} de {total} pagos
+              </div>
+              
+              <div className="flex space-x-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setOffset(Math.max(0, offset - limit))}
+                  disabled={offset === 0}
+                  data-testid="pagination-previous"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setOffset(offset + limit)}
+                  disabled={offset + limit >= total}
+                  data-testid="pagination-next"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          )}
           </div>
         </TabsContent>
 

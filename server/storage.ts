@@ -269,7 +269,9 @@ export interface IStorage {
     bancoId?: string;
     orden?: string;
     tipoPago?: string;
-  }): Promise<any[]>;
+    limit?: number;
+    offset?: number;
+  }): Promise<{ data: any[]; total: number }>;
   updatePaymentVerification(data: {
     paymentId: string;
     paymentType: string;
@@ -1841,7 +1843,9 @@ export class DatabaseStorage implements IStorage {
     bancoId?: string;
     orden?: string;
     tipoPago?: string;
-  }): Promise<any[]> {
+    limit?: number;
+    offset?: number;
+  }): Promise<{ data: any[]; total: number }> {
     const payments: any[] = [];
 
     // Build the base query with filters
@@ -2011,11 +2015,22 @@ export class DatabaseStorage implements IStorage {
     }
 
     // Sort by date (most recent first)
-    return payments.sort((a, b) => {
+    const sortedPayments = payments.sort((a, b) => {
       if (!a.fecha) return 1;
       if (!b.fecha) return -1;
       return new Date(b.fecha).getTime() - new Date(a.fecha).getTime();
     });
+
+    // Apply pagination
+    const total = sortedPayments.length;
+    const limit = filters?.limit || 20;
+    const offset = filters?.offset || 0;
+    const paginatedPayments = sortedPayments.slice(offset, offset + limit);
+
+    return {
+      data: paginatedPayments,
+      total,
+    };
   }
 
   async updatePaymentVerification(data: {

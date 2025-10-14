@@ -1148,17 +1148,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // GET /api/sales/verification-payments - Get all payments flattened for verification
   app.get("/api/sales/verification-payments", async (req, res) => {
     try {
-      const { startDate, endDate, bancoId, orden, tipoPago } = req.query;
+      const { startDate, endDate, bancoId, orden, tipoPago, limit, offset } = req.query;
 
-      const payments = await storage.getVerificationPayments({
+      const result = await storage.getVerificationPayments({
         startDate: startDate as string,
         endDate: endDate as string,
         bancoId: bancoId as string,
         orden: orden as string,
-        tipoPago: tipoPago as string
+        tipoPago: tipoPago as string,
+        limit: limit ? parseInt(limit as string) : 20,
+        offset: offset ? parseInt(offset as string) : 0
       });
 
-      res.json({ data: payments });
+      res.json(result);
     } catch (error) {
       console.error("Get verification payments error:", error);
       res.status(500).json({ error: "Failed to get verification payments" });
@@ -1170,16 +1172,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { startDate, endDate, bancoId, orden, tipoPago } = req.query;
 
-      const payments = await storage.getVerificationPayments({
+      const result = await storage.getVerificationPayments({
         startDate: startDate as string,
         endDate: endDate as string,
         bancoId: bancoId as string,
         orden: orden as string,
-        tipoPago: tipoPago as string
+        tipoPago: tipoPago as string,
+        limit: 999999, // Get all records for export
+        offset: 0
       });
 
       // Format data for Excel export
-      const excelData = payments.map(payment => ({
+      const excelData = result.data.map(payment => ({
         'Orden': payment.orden,
         'Tipo de Pago': payment.tipoPago,
         'Fecha de Pago': payment.fecha ? new Date(payment.fecha).toLocaleDateString('es-ES') : '-',
