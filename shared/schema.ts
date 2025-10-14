@@ -23,6 +23,19 @@ export const bancos = pgTable("bancos", {
   tipoCheck: check("tipo_check", sql`${table.tipo} IN ('Receptor', 'Emisor')`),
 }));
 
+export const bancosBackup = pgTable("bancos_backup", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  banco: text("banco").notNull(),
+  numeroCuenta: text("numero_cuenta").notNull(),
+  tipo: text("tipo").notNull().default("Receptor"),
+  monedaId: varchar("moneda_id"),
+  metodoPagoId: varchar("metodo_pago_id"),
+  createdAt: timestamp("created_at"),
+  updatedAt: timestamp("updated_at"),
+  originalId: varchar("original_id"),
+  backedUpAt: timestamp("backed_up_at").defaultNow(),
+});
+
 export const tiposEgresos = pgTable("tipos_egresos", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   nombre: text("nombre").notNull().unique(),

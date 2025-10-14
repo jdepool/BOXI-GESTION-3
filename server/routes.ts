@@ -364,6 +364,88 @@ function parseProductosFile(buffer: Buffer, filename: string, validCategorias: s
   }
 }
 
+function parseBancosFile(buffer: Buffer, filename: string) {
+  try {
+    let data: any[];
+    
+    // Determine file type and parse accordingly
+    if (filename.endsWith('.csv')) {
+      // Parse CSV file
+      const csvString = buffer.toString('utf-8');
+      data = parseCSV(csvString, {
+        columns: true, // Use first row as column headers
+        skip_empty_lines: true,
+        trim: true
+      });
+    } else {
+      // Parse Excel file
+      const workbook = XLSX.read(buffer, { type: 'buffer' });
+      const sheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[sheetName];
+      data = XLSX.utils.sheet_to_json(worksheet);
+    }
+
+    // Map the Excel/CSV data to banco format with row-level error handling
+    const bancosData = data.map((row: any, index: number) => {
+      const rowNumber = index + 2; // +2 because Excel is 1-indexed and first row is header
+      
+      try {
+        // Handle different possible column names (case insensitive)
+        const banco = row['Banco'] || row['banco'];
+        const numeroCuenta = row['Número de Cuenta'] || row['Numero de Cuenta'] || row['numero_cuenta'] || row['numeroCuenta'] || row['NumeroCuenta'];
+        const tipo = row['Tipo'] || row['tipo'];
+        const moneda = row['Moneda'] || row['moneda'];
+        const metodoPago = row['Método de Pago'] || row['Metodo de Pago'] || row['metodo_pago'] || row['metodoPago'] || row['MetodoPago'];
+
+        // Collect validation errors for this row
+        const rowErrors = [];
+        
+        if (!banco || String(banco).trim() === '') {
+          rowErrors.push('Missing required field: Banco');
+        }
+        if (!numeroCuenta || String(numeroCuenta).trim() === '') {
+          rowErrors.push('Missing required field: Número de Cuenta');
+        }
+        if (!tipo || String(tipo).trim() === '') {
+          rowErrors.push('Missing required field: Tipo');
+        } else if (!['Receptor', 'Emisor'].includes(String(tipo).trim())) {
+          rowErrors.push(`Invalid Tipo: "${tipo}". Must be "Receptor" or "Emisor"`);
+        }
+
+        if (rowErrors.length > 0) {
+          return {
+            row: rowNumber,
+            error: rowErrors.join('; '),
+            data: null
+          };
+        }
+
+        return {
+          row: rowNumber,
+          error: null,
+          data: {
+            banco: String(banco).trim(),
+            numeroCuenta: String(numeroCuenta).trim(),
+            tipo: String(tipo).trim(),
+            moneda: moneda ? String(moneda).trim() : undefined,
+            metodoPago: metodoPago ? String(metodoPago).trim() : undefined
+          }
+        };
+      } catch (error) {
+        return {
+          row: rowNumber,
+          error: `Error processing row: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          data: null
+        };
+      }
+    });
+
+    return bancosData;
+  } catch (error) {
+    throw new Error(`Error parsing bancos file: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+}
+
 function parseBankStatementFile(buffer: Buffer) {
   try {
     const workbook = XLSX.read(buffer, { type: 'buffer' });
@@ -2536,6 +2618,105 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("Undo productos error:", error);
       res.status(500).json({ 
         error: "Failed to restore products",
+        message: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
+  // BANCOS upload/undo endpoints
+  app.post("/api/admin/bancos/undo", async (req, res) => {
+    try {
+      await storage.restoreBancosFromBackup();
+      res.json({ success: true, message: "Bancos restored from backup" });
+    } catch (error) {
+      console.error("Undo bancos error:", error);
+      res.status(500).json({ 
+        error: "Failed to restore bancos",
+        message: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
+  app.post("/api/admin/bancos/upload", upload.single('file'), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: "No file uploaded" });
+      }
+
+      // Create backup before processing
+      await storage.backupBancos();
+
+      // Parse file with row-level error handling
+      const parsedRows = parseBancosFile(req.file.buffer, req.file.originalname);
+      
+      // Separate valid rows from invalid rows
+      const validRows = parsedRows.filter(row => !row.error && row.data);
+      const invalidRows = parsedRows.filter(row => row.error);
+      
+      if (validRows.length === 0) {
+        return res.status(400).json({
+          error: "No valid rows found",
+          details: invalidRows.slice(0, 10).map(row => ({ row: row.row, error: row.error })),
+          totalErrors: invalidRows.length
+        });
+      }
+
+      // Check for duplicates within file only (banco + numeroCuenta combination)
+      const bancoCuentaInFile = new Set<string>();
+      const additionalErrors = [];
+      const validBancos = [];
+      
+      for (const row of validRows) {
+        const { data } = row;
+        if (!data) continue;
+        
+        let hasError = false;
+        
+        // Check for duplicate banco+cuenta within file
+        const key = `${data.banco.toLowerCase()}|${data.numeroCuenta.toLowerCase()}`;
+        if (bancoCuentaInFile.has(key)) {
+          additionalErrors.push({
+            row: row.row,
+            error: `Duplicate banco "${data.banco}" with account number "${data.numeroCuenta}" found in file`
+          });
+          hasError = true;
+        } else {
+          bancoCuentaInFile.add(key);
+        }
+        
+        if (!hasError) {
+          validBancos.push(data);
+        }
+      }
+
+      // Combine all errors
+      const allErrors = [
+        ...invalidRows.map(row => ({ row: row.row, error: row.error })),
+        ...additionalErrors
+      ];
+
+      // Upsert valid bancos (insert new, update existing)
+      const { created, updated } = await storage.upsertBancos(validBancos);
+
+      // Return results with detailed statistics
+      res.json({
+        success: true,
+        created,
+        updated,
+        total: parsedRows.length,
+        errors: allErrors.length,
+        details: {
+          validRows: validRows.length,
+          invalidRows: invalidRows.length,
+          duplicates: additionalErrors.length,
+          errorList: allErrors.slice(0, 20) // Show first 20 errors
+        }
+      });
+
+    } catch (error) {
+      console.error("Upload bancos error:", error);
+      res.status(500).json({ 
+        error: "Failed to process upload",
         message: error instanceof Error ? error.message : 'Unknown error'
       });
     }

@@ -1,5 +1,5 @@
 import { 
-  sales, uploadHistory, users, bancos, tiposEgresos, productos, productosBackup, metodosPago, monedas, categorias, canales, asesores, egresos, egresosPorAprobar, paymentInstallments,
+  sales, uploadHistory, users, bancos, bancosBackup, tiposEgresos, productos, productosBackup, metodosPago, monedas, categorias, canales, asesores, egresos, egresosPorAprobar, paymentInstallments,
   type User, type InsertUser, type Sale, type InsertSale, type UploadHistory, type InsertUploadHistory,
   type Banco, type InsertBanco, type TipoEgreso, type InsertTipoEgreso,
   type Producto, type InsertProducto, type MetodoPago, type InsertMetodoPago,
@@ -1140,6 +1140,126 @@ export class DatabaseStorage implements IStorage {
   async deleteBanco(id: string): Promise<boolean> {
     const result = await db.delete(bancos).where(eq(bancos.id, id));
     return (result.rowCount ?? 0) > 0;
+  }
+
+  async backupBancos(): Promise<void> {
+    // First, clear existing backup
+    await db.delete(bancosBackup);
+    
+    // Then, backup all current bancos
+    const currentBancos = await db.select().from(bancos);
+    
+    if (currentBancos.length > 0) {
+      await db.insert(bancosBackup).values(
+        currentBancos.map(b => ({
+          banco: b.banco,
+          numeroCuenta: b.numeroCuenta,
+          tipo: b.tipo,
+          monedaId: b.monedaId,
+          metodoPagoId: b.metodoPagoId,
+          createdAt: b.createdAt,
+          updatedAt: b.updatedAt,
+          originalId: b.id,
+          backedUpAt: new Date(),
+        }))
+      );
+    }
+  }
+
+  async restoreBancosFromBackup(): Promise<void> {
+    // Get backup bancos
+    const backup = await db.select().from(bancosBackup);
+    
+    if (backup.length === 0) {
+      throw new Error("No backup found");
+    }
+    
+    // Clear current bancos
+    await db.delete(bancos);
+    
+    // Restore from backup
+    await db.insert(bancos).values(
+      backup.map(b => ({
+        banco: b.banco,
+        numeroCuenta: b.numeroCuenta,
+        tipo: b.tipo,
+        monedaId: b.monedaId || undefined,
+        metodoPagoId: b.metodoPagoId || undefined,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      }))
+    );
+    
+    // Clear backup after restore
+    await db.delete(bancosBackup);
+  }
+
+  async upsertBancos(bancosData: { banco: string; numeroCuenta: string; tipo: string; moneda?: string; metodoPago?: string }[]): Promise<{ created: number; updated: number }> {
+    let created = 0;
+    let updated = 0;
+    
+    // Fetch all monedas and metodos de pago for lookup
+    const allMonedas = await db.select().from(monedas);
+    const allMetodosPago = await db.select().from(metodosPago);
+    
+    for (const bancoData of bancosData) {
+      // Lookup monedaId by codigo or nombre (case-insensitive)
+      let monedaId: string | undefined = undefined;
+      if (bancoData.moneda) {
+        const moneda = allMonedas.find(m => 
+          m.codigo.toLowerCase() === bancoData.moneda!.toLowerCase() ||
+          m.nombre.toLowerCase() === bancoData.moneda!.toLowerCase()
+        );
+        monedaId = moneda?.id;
+      }
+      
+      // Lookup metodoPagoId by nombre (case-insensitive)
+      let metodoPagoId: string | undefined = undefined;
+      if (bancoData.metodoPago) {
+        const metodoPago = allMetodosPago.find(mp => 
+          mp.nombre.toLowerCase() === bancoData.metodoPago!.toLowerCase()
+        );
+        metodoPagoId = metodoPago?.id;
+      }
+      
+      // Check if banco exists by banco name AND numero cuenta (case-insensitive)
+      const existing = await db
+        .select()
+        .from(bancos)
+        .where(and(
+          sql`LOWER(${bancos.banco}) = LOWER(${bancoData.banco})`,
+          sql`LOWER(${bancos.numeroCuenta}) = LOWER(${bancoData.numeroCuenta})`
+        ))
+        .limit(1);
+      
+      if (existing.length > 0) {
+        // Update existing banco
+        await db
+          .update(bancos)
+          .set({
+            tipo: bancoData.tipo,
+            monedaId,
+            metodoPagoId,
+            updatedAt: new Date(),
+          })
+          .where(eq(bancos.id, existing[0].id));
+        updated++;
+      } else {
+        // Create new banco
+        await db.insert(bancos).values({
+          banco: bancoData.banco,
+          numeroCuenta: bancoData.numeroCuenta,
+          tipo: bancoData.tipo,
+          monedaId,
+          metodoPagoId,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        });
+        created++;
+      }
+    }
+    
+    return { created, updated };
   }
 
   // Tipos de Egresos methods
