@@ -165,18 +165,18 @@ export default function DispatchTable({
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-32">Orden</TableHead>
-                  <TableHead className="min-w-48">Nombre</TableHead>
+                  <TableHead className="w-36">Estado de Entrega</TableHead>
                   <TableHead className="w-36">Fecha de Entrega</TableHead>
-                  <TableHead className="w-32">Cédula</TableHead>
-                  <TableHead className="w-36">Teléfono</TableHead>
-                  <TableHead className="min-w-48">Email</TableHead>
                   <TableHead className="min-w-48">Producto</TableHead>
                   <TableHead className="w-20">Cant.</TableHead>
-                  <TableHead className="w-24">Canal</TableHead>
-                  <TableHead className="min-w-72">Dirección de Facturación</TableHead>
                   <TableHead className="min-w-72">Dirección de Despacho</TableHead>
-                  <TableHead className="w-36">Estado</TableHead>
+                  <TableHead className="min-w-48">Nombre</TableHead>
+                  <TableHead className="w-36">Teléfono</TableHead>
+                  <TableHead className="min-w-48">Email</TableHead>
+                  <TableHead className="w-32">Cédula</TableHead>
+                  <TableHead className="min-w-72">Dirección de Facturación</TableHead>
                   <TableHead className="w-28">Fecha</TableHead>
+                  <TableHead className="w-24">Canal</TableHead>
                   <TableHead className="w-36">Acciones</TableHead>
                 </TableRow>
               </TableHeader>
