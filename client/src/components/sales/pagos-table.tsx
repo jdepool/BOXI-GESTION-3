@@ -94,7 +94,7 @@ export default function PagosTable({
   const [seguimientoValue, setSeguimientoValue] = useState<string>("");
 
   // Fetch asesores for displaying asesor names
-  const { data: asesores = [] } = useQuery<Array<{ id: string; nombre: string }>>({
+  const { data: asesores = [] } = useQuery<Array<{ id: string; nombre: string; activo?: boolean }>>({
     queryKey: ["/api/admin/asesores"],
   });
 
