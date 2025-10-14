@@ -188,7 +188,12 @@ export default function DispatchTable({
                     </TableCell>
                     
                     <TableCell>
-                      <div className="font-medium">{sale.nombre}</div>
+                      <Badge 
+                        variant={getStatusBadgeVariant(sale.estadoEntrega)}
+                        className="text-xs"
+                      >
+                        {sale.estadoEntrega}
+                      </Badge>
                     </TableCell>
                     
                     <TableCell>
@@ -207,12 +212,6 @@ export default function DispatchTable({
                       )}
                     </TableCell>
                     
-                    <TableCell>{sale.cedula}</TableCell>
-                    
-                    <TableCell>{sale.telefono}</TableCell>
-                    
-                    <TableCell className="text-sm">{sale.email}</TableCell>
-                    
                     <TableCell>
                       <div className="text-sm">
                         <div className="font-medium">{sale.product}</div>
@@ -223,34 +222,6 @@ export default function DispatchTable({
                     </TableCell>
                     
                     <TableCell className="text-center">{sale.cantidad}</TableCell>
-                    
-                    <TableCell>
-                      <Badge className={`${getChannelBadgeClass(sale.canal)} text-white text-xs`}>
-                        {sale.canal.charAt(0).toUpperCase() + sale.canal.slice(1)}
-                      </Badge>
-                    </TableCell>
-                    
-                    <TableCell>
-                      {sale.direccionFacturacionPais ? (
-                        <div className="text-xs space-y-1 max-w-72">
-                          <div className="font-medium">{sale.direccionFacturacionDireccion}</div>
-                          <div>
-                            {sale.direccionFacturacionCiudad}, {sale.direccionFacturacionEstado}
-                          </div>
-                          <div>{sale.direccionFacturacionPais}</div>
-                          {sale.direccionFacturacionUrbanizacion && (
-                            <div className="text-muted-foreground">Urb. {sale.direccionFacturacionUrbanizacion}</div>
-                          )}
-                          {sale.direccionFacturacionReferencia && (
-                            <div className="text-muted-foreground">Ref: {sale.direccionFacturacionReferencia}</div>
-                          )}
-                        </div>
-                      ) : (
-                        <div className="text-xs text-amber-600 bg-amber-50 dark:bg-amber-950/20 p-2 rounded border border-amber-200 dark:border-amber-800 font-medium">
-                          ⚠️ Sin dirección
-                        </div>
-                      )}
-                    </TableCell>
                     
                     <TableCell>
                       {sale.direccionFacturacionPais ? (
@@ -281,16 +252,45 @@ export default function DispatchTable({
                     </TableCell>
                     
                     <TableCell>
-                      <Badge 
-                        variant={getStatusBadgeVariant(sale.estadoEntrega)}
-                        className="text-xs"
-                      >
-                        {sale.estadoEntrega}
-                      </Badge>
+                      <div className="font-medium">{sale.nombre}</div>
+                    </TableCell>
+                    
+                    <TableCell>{sale.telefono}</TableCell>
+                    
+                    <TableCell className="text-sm">{sale.email}</TableCell>
+                    
+                    <TableCell>{sale.cedula}</TableCell>
+                    
+                    <TableCell>
+                      {sale.direccionFacturacionPais ? (
+                        <div className="text-xs space-y-1 max-w-72">
+                          <div className="font-medium">{sale.direccionFacturacionDireccion}</div>
+                          <div>
+                            {sale.direccionFacturacionCiudad}, {sale.direccionFacturacionEstado}
+                          </div>
+                          <div>{sale.direccionFacturacionPais}</div>
+                          {sale.direccionFacturacionUrbanizacion && (
+                            <div className="text-muted-foreground">Urb. {sale.direccionFacturacionUrbanizacion}</div>
+                          )}
+                          {sale.direccionFacturacionReferencia && (
+                            <div className="text-muted-foreground">Ref: {sale.direccionFacturacionReferencia}</div>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="text-xs text-amber-600 bg-amber-50 dark:bg-amber-950/20 p-2 rounded border border-amber-200 dark:border-amber-800 font-medium">
+                          ⚠️ Sin dirección
+                        </div>
+                      )}
                     </TableCell>
                     
                     <TableCell className="text-xs">
                       {new Date(sale.fecha).toLocaleDateString('es-ES')}
+                    </TableCell>
+                    
+                    <TableCell>
+                      <Badge className={`${getChannelBadgeClass(sale.canal)} text-white text-xs`}>
+                        {sale.canal.charAt(0).toUpperCase() + sale.canal.slice(1)}
+                      </Badge>
                     </TableCell>
                     
                     <TableCell>
