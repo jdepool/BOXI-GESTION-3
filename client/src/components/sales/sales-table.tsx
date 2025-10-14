@@ -7,6 +7,16 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import SaleDetailModal from "./sale-detail-modal";
 import AddressModal from "@/components/addresses/address-modal";
 import EditSaleModal from "./edit-sale-modal";
@@ -88,6 +98,8 @@ export default function SalesTable({
   const [selectedSaleForAddress, setSelectedSaleForAddress] = useState<Sale | null>(null);
   const [editSaleModalOpen, setEditSaleModalOpen] = useState(false);
   const [selectedSaleForEdit, setSelectedSaleForEdit] = useState<Sale | null>(null);
+  const [perdidaConfirmOpen, setPerdidaConfirmOpen] = useState(false);
+  const [selectedSaleForPerdida, setSelectedSaleForPerdida] = useState<Sale | null>(null);
   const [editingNotesId, setEditingNotesId] = useState<string | null>(null);
   const [notesValue, setNotesValue] = useState<string>("");
   const [filtersVisible, setFiltersVisible] = useState(false);
@@ -797,7 +809,10 @@ export default function SalesTable({
                           <Button
                             variant="destructive"
                             size="sm"
-                            onClick={() => markAsPerdidaMutation.mutate(sale.id)}
+                            onClick={() => {
+                              setSelectedSaleForPerdida(sale);
+                              setPerdidaConfirmOpen(true);
+                            }}
                             disabled={markAsPerdidaMutation.isPending}
                             data-testid={`perdida-sale-${sale.id}`}
                             className="h-7 text-xs"
@@ -897,6 +912,38 @@ export default function SalesTable({
         }}
         sale={selectedSaleForEdit}
       />
+
+      <AlertDialog open={perdidaConfirmOpen} onOpenChange={setPerdidaConfirmOpen}>
+        <AlertDialogContent data-testid="perdida-confirm-dialog">
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Confirmar venta perdida?</AlertDialogTitle>
+            <AlertDialogDescription>
+              ¿Está seguro que desea marcar esta venta como perdida? Esta acción ocultará la venta de las vistas principales.
+              {selectedSaleForPerdida && (
+                <div className="mt-2 text-sm font-medium">
+                  Orden: {selectedSaleForPerdida.orden} - {selectedSaleForPerdida.nombre}
+                </div>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel data-testid="perdida-cancel">Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              data-testid="perdida-confirm"
+              onClick={() => {
+                if (selectedSaleForPerdida) {
+                  markAsPerdidaMutation.mutate(selectedSaleForPerdida.id);
+                }
+                setPerdidaConfirmOpen(false);
+                setSelectedSaleForPerdida(null);
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Confirmar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
