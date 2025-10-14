@@ -11,14 +11,6 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import type { Categoria } from "@shared/schema";
 
-const categoriasPredefinidas = [
-  "Colchón",
-  "Seat", 
-  "Pillow",
-  "Topper",
-  "Bed"
-];
-
 export function CategoriasTab() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingCategoria, setEditingCategoria] = useState<Categoria | null>(null);
@@ -71,22 +63,6 @@ export function CategoriasTab() {
     },
   });
 
-  const cargarCategoriasPredefinidas = useMutation({
-    mutationFn: async () => {
-      const promises = categoriasPredefinidas.map(nombre =>
-        apiRequest("POST", "/api/admin/categorias", { nombre })
-      );
-      return Promise.allSettled(promises);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/categorias"] });
-      toast({ title: "Categorías predefinidas cargadas exitosamente" });
-    },
-    onError: () => {
-      toast({ title: "Error al cargar categorías predefinidas", variant: "destructive" });
-    },
-  });
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (editingCategoria) {
@@ -129,14 +105,6 @@ export function CategoriasTab() {
           </p>
         </div>
         <div className="flex space-x-2">
-          <Button
-            variant="outline"
-            onClick={() => cargarCategoriasPredefinidas.mutate()}
-            disabled={cargarCategoriasPredefinidas.isPending}
-            data-testid="load-predefined-categorias"
-          >
-            Cargar Predefinidas
-          </Button>
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
               <Button onClick={openCreateDialog} data-testid="add-categoria-button">
@@ -202,7 +170,7 @@ export function CategoriasTab() {
             ) : (categorias as Categoria[]).length === 0 ? (
               <TableRow>
                 <TableCell colSpan={2} className="text-center py-8 text-muted-foreground">
-                  No hay categorías registradas. Usa "Cargar Predefinidas" para agregar las categorías estándar.
+                  No hay categorías registradas. Usa "Agregar Categoría" para comenzar.
                 </TableCell>
               </TableRow>
             ) : (
