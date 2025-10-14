@@ -31,11 +31,15 @@ Orders typically move from temporary tabs to permanent tabs upon payment verific
 
 ## Feature Specifications
 - **Sales Data Upload & Management**: Supports Excel uploads from multiple channels with complete replacement logic for Administración items (products and bank accounts) - uploads delete existing data then insert from file, preserving row order via position field. Includes automatic backup and undo mechanism. Features comprehensive filtering, searching, and export.
-- **Order & Payment Tracking**: Detailed tracking of sales, delivery statuses (nine states), and channel-specific metrics. Supports multi-product orders, manual sales, and reservations.
+- **Order & Payment Tracking**: Detailed tracking of sales, delivery statuses (nine states), and channel-specific metrics. Supports multi-product orders, manual sales, and reservations. The Pagos tab displays orders with an Asesor column showing assigned sales representatives.
 - **Advanced Payment System**: Manages initial payments, freight, and installments with distinct fields for "agreed payment" (pago*) and "actual payment" (monto*). Includes a "Verificación" section for tracking and updating payment verification statuses, automatically updating `estadoEntrega` to "A despachar" when balances reach zero. Supports manual status control.
+- **Payment Tracking Notes**: Two separate note fields serve different purposes:
+  - **Notas** (sales level): General notes about products, customer preferences, and sale details
+  - **Seguimiento Pago** (order level in Pagos tab): Payment follow-up notes, communication logs, and payment method issues specific to tracking payment collection
 - **Installment (Cuotas) Architecture**: Installments are tracked at the order level, with sequential numbering per order.
 - **Bank Management**: Differentiates between "Receptor" (receiving) and "Emisor" (issuing) banks, with forms consistently filtering to show only "Receptor" banks.
 - **Automation & Consistency**: Automatic assignment of "Cashea (BNC compartido Bs)" as Banco Receptor for Cashea sales. Consistent naming conventions for bank fields and payment date tracking (`fechaPagoInicial`). Chrome autocomplete suppression is implemented.
+- **Perdida Status**: Orders that never complete payment can be marked as "Perdida" (Lost) exclusively from the Pagos tab, operating at the order level to mark all sales in an order simultaneously.
 
 # External Dependencies
 
