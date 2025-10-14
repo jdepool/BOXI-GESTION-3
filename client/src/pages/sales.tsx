@@ -85,7 +85,10 @@ export default function Sales() {
   });
 
   const handleFilterChange = (newFilters: Partial<typeof filters>) => {
-    setFilters(prev => ({ ...prev, ...newFilters, offset: 0 }));
+    const normalized = { ...newFilters };
+    if (normalized.canal === "all") normalized.canal = "";
+    if (normalized.estadoEntrega === "all") normalized.estadoEntrega = "";
+    setFilters(prev => ({ ...prev, ...normalized, offset: 0 }));
   };
 
   const handlePageChange = (newOffset: number) => {
@@ -93,7 +96,10 @@ export default function Sales() {
   };
 
   const handlePagosFilterChange = (newFilters: Partial<typeof pagosFilters>) => {
-    setPagosFilters(prev => ({ ...prev, ...newFilters, offset: 0 }));
+    const normalized = { ...newFilters };
+    if (normalized.canal === "all") normalized.canal = "";
+    if (normalized.asesorId === "all") normalized.asesorId = "";
+    setPagosFilters(prev => ({ ...prev, ...normalized, offset: 0 }));
   };
 
   const handlePagosPageChange = (newOffset: number) => {
