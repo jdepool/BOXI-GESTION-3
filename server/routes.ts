@@ -2695,14 +2695,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ...additionalErrors
       ];
 
-      // Upsert valid bancos (insert new, update existing)
-      const { created, updated } = await storage.upsertBancos(validBancos);
+      // Replace all bancos with new data (delete all, then insert)
+      const { created } = await storage.replaceBancos(validBancos);
 
       // Return results with detailed statistics
       res.json({
         success: true,
         created,
-        updated,
         total: parsedRows.length,
         errors: allErrors.length,
         details: {
@@ -2811,14 +2810,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ...additionalErrors
       ];
 
-      // Upsert valid productos (insert new, update existing)
-      const { created, updated } = await storage.upsertProductos(validProductos);
+      // Replace all productos with new data (delete all, then insert)
+      const { created } = await storage.replaceProductos(validProductos);
 
       // Return results with detailed statistics
       res.json({
         success: true,
         created,
-        updated,
         total: parsedRows.length,
         errors: allErrors.length,
         details: {

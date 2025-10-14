@@ -1116,7 +1116,7 @@ export class DatabaseStorage implements IStorage {
 
   // Bancos methods
   async getBancos(): Promise<Banco[]> {
-    return await db.select().from(bancos).orderBy(bancos.banco);
+    return await db.select().from(bancos).orderBy(bancos.position, bancos.banco);
   }
 
   async createBanco(banco: InsertBanco): Promise<Banco> {
@@ -1157,6 +1157,7 @@ export class DatabaseStorage implements IStorage {
           tipo: b.tipo,
           monedaId: b.monedaId,
           metodoPagoId: b.metodoPagoId,
+          position: b.position,
           createdAt: b.createdAt,
           updatedAt: b.updatedAt,
           originalId: b.id,
@@ -1185,6 +1186,7 @@ export class DatabaseStorage implements IStorage {
         tipo: b.tipo,
         monedaId: b.monedaId || undefined,
         metodoPagoId: b.metodoPagoId || undefined,
+        position: b.position,
         createdAt: new Date(),
         updatedAt: new Date(),
       }))
@@ -1194,15 +1196,16 @@ export class DatabaseStorage implements IStorage {
     await db.delete(bancosBackup);
   }
 
-  async upsertBancos(bancosData: { banco: string; numeroCuenta: string; tipo: string; moneda?: string; metodoPago?: string }[]): Promise<{ created: number; updated: number }> {
-    let created = 0;
-    let updated = 0;
-    
+  async replaceBancos(bancosData: { banco: string; numeroCuenta: string; tipo: string; moneda?: string; metodoPago?: string }[]): Promise<{ created: number }> {
     // Fetch all monedas and metodos de pago for lookup
     const allMonedas = await db.select().from(monedas);
     const allMetodosPago = await db.select().from(metodosPago);
     
-    for (const bancoData of bancosData) {
+    // Delete all existing bancos
+    await db.delete(bancos);
+    
+    // Insert all new bancos with position tracking
+    const bancosToInsert = bancosData.map((bancoData, index) => {
       // Lookup monedaId by codigo or nombre (case-insensitive)
       let monedaId: string | undefined = undefined;
       if (bancoData.moneda) {
@@ -1222,44 +1225,23 @@ export class DatabaseStorage implements IStorage {
         metodoPagoId = metodoPago?.id;
       }
       
-      // Check if banco exists by banco name AND numero cuenta (case-insensitive)
-      const existing = await db
-        .select()
-        .from(bancos)
-        .where(and(
-          sql`LOWER(${bancos.banco}) = LOWER(${bancoData.banco})`,
-          sql`LOWER(${bancos.numeroCuenta}) = LOWER(${bancoData.numeroCuenta})`
-        ))
-        .limit(1);
-      
-      if (existing.length > 0) {
-        // Update existing banco
-        await db
-          .update(bancos)
-          .set({
-            tipo: bancoData.tipo,
-            monedaId,
-            metodoPagoId,
-            updatedAt: new Date(),
-          })
-          .where(eq(bancos.id, existing[0].id));
-        updated++;
-      } else {
-        // Create new banco
-        await db.insert(bancos).values({
-          banco: bancoData.banco,
-          numeroCuenta: bancoData.numeroCuenta,
-          tipo: bancoData.tipo,
-          monedaId,
-          metodoPagoId,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        });
-        created++;
-      }
+      return {
+        banco: bancoData.banco,
+        numeroCuenta: bancoData.numeroCuenta,
+        tipo: bancoData.tipo,
+        monedaId,
+        metodoPagoId,
+        position: index,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+    });
+    
+    if (bancosToInsert.length > 0) {
+      await db.insert(bancos).values(bancosToInsert);
     }
     
-    return { created, updated };
+    return { created: bancosToInsert.length };
   }
 
   // Tipos de Egresos methods
@@ -1292,7 +1274,7 @@ export class DatabaseStorage implements IStorage {
 
   // Productos methods
   async getProductos(): Promise<Producto[]> {
-    return await db.select().from(productos).orderBy(productos.categoria, productos.nombre);
+    return await db.select().from(productos).orderBy(productos.position, productos.categoria, productos.nombre);
   }
 
   async createProducto(producto: InsertProducto): Promise<Producto> {
@@ -1331,6 +1313,7 @@ export class DatabaseStorage implements IStorage {
           nombre: p.nombre,
           sku: p.sku,
           categoria: p.categoria,
+          position: p.position,
           originalId: p.id,
           backedUpAt: new Date(),
         }))
@@ -1355,6 +1338,7 @@ export class DatabaseStorage implements IStorage {
         nombre: p.nombre,
         sku: p.sku || undefined,
         categoria: p.categoria,
+        position: p.position,
         createdAt: new Date(),
         updatedAt: new Date(),
       }))
@@ -1364,41 +1348,23 @@ export class DatabaseStorage implements IStorage {
     await db.delete(productosBackup);
   }
 
-  async upsertProductos(productosData: InsertProducto[]): Promise<{ created: number; updated: number }> {
-    let created = 0;
-    let updated = 0;
+  async replaceProductos(productosData: InsertProducto[]): Promise<{ created: number }> {
+    // Delete all existing productos
+    await db.delete(productos);
     
-    for (const producto of productosData) {
-      // Check if product exists by nombre (case-insensitive)
-      const existing = await db
-        .select()
-        .from(productos)
-        .where(sql`LOWER(${productos.nombre}) = LOWER(${producto.nombre})`)
-        .limit(1);
-      
-      if (existing.length > 0) {
-        // Update existing product
-        await db
-          .update(productos)
-          .set({
-            sku: producto.sku,
-            categoria: producto.categoria,
-            updatedAt: new Date(),
-          })
-          .where(eq(productos.id, existing[0].id));
-        updated++;
-      } else {
-        // Create new product
-        await db.insert(productos).values({
-          ...producto,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        });
-        created++;
-      }
+    // Insert all new productos with position tracking
+    const productosToInsert = productosData.map((producto, index) => ({
+      ...producto,
+      position: index,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }));
+    
+    if (productosToInsert.length > 0) {
+      await db.insert(productos).values(productosToInsert);
     }
     
-    return { created, updated };
+    return { created: productosToInsert.length };
   }
 
   // Métodos de Pago methods

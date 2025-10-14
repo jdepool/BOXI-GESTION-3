@@ -122,8 +122,8 @@ export function ProductosTab() {
       setIsUploading(false);
       setHasBackup(true); // Mark that we have a backup available
       
-      const { created, updated, total, errors, details } = result;
-      let message = `${created} productos nuevos, ${updated || 0} actualizados de ${total} filas`;
+      const { created, total, errors, details } = result;
+      let message = `${created} productos cargados de ${total} filas`;
       
       if (errors > 0) {
         message += `, ${errors} errores encontrados`;
@@ -133,9 +133,9 @@ export function ProductosTab() {
       }
       
       toast({ 
-        title: created > 0 || updated > 0 ? "Excel procesado" : "Excel procesado con errores",
+        title: created > 0 ? "Excel procesado" : "Excel procesado con errores",
         description: message,
-        variant: created > 0 || updated > 0 ? "default" : "destructive"
+        variant: created > 0 ? "default" : "destructive"
       });
       
       // Show detailed errors if any

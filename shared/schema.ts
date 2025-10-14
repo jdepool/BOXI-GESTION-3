@@ -17,6 +17,7 @@ export const bancos = pgTable("bancos", {
   tipo: text("tipo").notNull().default("Receptor"),
   monedaId: varchar("moneda_id"),
   metodoPagoId: varchar("metodo_pago_id"),
+  position: integer("position"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => ({
@@ -30,6 +31,7 @@ export const bancosBackup = pgTable("bancos_backup", {
   tipo: text("tipo").notNull().default("Receptor"),
   monedaId: varchar("moneda_id"),
   metodoPagoId: varchar("metodo_pago_id"),
+  position: integer("position"),
   createdAt: timestamp("created_at"),
   updatedAt: timestamp("updated_at"),
   originalId: varchar("original_id"),
@@ -48,6 +50,7 @@ export const productos = pgTable("productos", {
   nombre: text("nombre").notNull().unique(),
   sku: text("sku").unique(),
   categoria: text("categoria").notNull(),
+  position: integer("position"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -57,6 +60,7 @@ export const productosBackup = pgTable("productos_backup", {
   nombre: text("nombre").notNull(),
   sku: text("sku"),
   categoria: text("categoria").notNull(),
+  position: integer("position"),
   originalId: varchar("original_id"),
   backedUpAt: timestamp("backed_up_at").defaultNow(),
 });
