@@ -38,7 +38,7 @@ export default function Sales() {
     limit: number;
     offset: number;
   }>({
-    queryKey: ["/api/sales", { ...filters, excludePendingManual: true }],
+    queryKey: ["/api/sales", { ...filters, excludePendingManual: true, excludePerdida: true }],
   });
 
   // Query for Reserva orders that are still pending
@@ -48,7 +48,7 @@ export default function Sales() {
     limit: number;
     offset: number;
   }>({
-    queryKey: ["/api/sales", { tipo: "Reserva", estadoEntrega: "Pendiente" }],
+    queryKey: ["/api/sales", { tipo: "Reserva", estadoEntrega: "Pendiente", excludePerdida: true }],
   });
 
   // Query for Pagos tab - orders grouped by order number with estadoEntrega Pendiente or En Proceso

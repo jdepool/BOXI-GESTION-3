@@ -10,7 +10,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import SaleDetailModal from "./sale-detail-modal";
 import AddressModal from "@/components/addresses/address-modal";
 import EditSaleModal from "./edit-sale-modal";
-import { MapPin, Edit, CalendarIcon, Mail, Filter, ChevronDown, ChevronUp, Download, ChevronLeft, ChevronRight } from "lucide-react";
+import { MapPin, Edit, CalendarIcon, Mail, Filter, ChevronDown, ChevronUp, Download, ChevronLeft, ChevronRight, XCircle } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
@@ -230,6 +230,29 @@ export default function SalesTable({
   const handleTipoChange = (saleId: string, newTipo: string) => {
     updateTipoMutation.mutate({ saleId, tipo: newTipo });
   };
+
+  const markAsPerdidaMutation = useMutation({
+    mutationFn: async (saleId: string) => {
+      return apiRequest("PUT", `/api/sales/${saleId}/delivery-status`, { status: "Perdida" });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ 
+        predicate: (query) => Array.isArray(query.queryKey) && typeof query.queryKey[0] === 'string' && query.queryKey[0].startsWith('/api/sales')
+      });
+      toast({
+        title: "Venta marcada como perdida",
+        description: "La venta ha sido marcada como perdida correctamente.",
+      });
+    },
+    onError: (error) => {
+      console.error('Failed to mark sale as perdida:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo marcar la venta como perdida.",
+        variant: "destructive",
+      });
+    },
+  });
 
   const handleFechaEntregaChange = (saleId: string, fechaEntrega: Date | null) => {
     updateFechaEntregaMutation.mutate({ saleId, fechaEntrega });
@@ -770,6 +793,20 @@ export default function SalesTable({
                           <Edit className="h-3 w-3 mr-1" />
                           Editar
                         </Button>
+                        {(activeTab === "manual" || activeTab === "reservas") && (
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => markAsPerdidaMutation.mutate(sale.id)}
+                            disabled={markAsPerdidaMutation.isPending}
+                            data-testid={`perdida-sale-${sale.id}`}
+                            className="h-7 text-xs"
+                            title="Marcar como venta perdida"
+                          >
+                            <XCircle className="h-3 w-3 mr-1" />
+                            Perdida
+                          </Button>
+                        )}
                         {sale.canal?.toLowerCase() === "manual" && sale.email && (
                           <Button
                             variant="outline"
