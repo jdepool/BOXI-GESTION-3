@@ -294,7 +294,7 @@ export default function PagosTable({
                     className="border-b border-border hover:bg-muted/50"
                   >
                     <td className="p-2 min-w-[120px] sticky left-0 z-10 bg-background">
-                      <span className="text-xs font-mono" data-testid={`order-${order.orden}`}>
+                      <span className="text-xs" data-testid={`order-${order.orden}`}>
                         {order.orden}
                       </span>
                     </td>
@@ -352,7 +352,7 @@ export default function PagosTable({
                       </Select>
                     </td>
                     <td className="p-2 min-w-[140px]">
-                      <span className="text-xs font-semibold" data-testid={`total-${order.orden}`}>
+                      <span className="text-xs" data-testid={`total-${order.orden}`}>
                         {formatCurrency(order.totalOrderUsd)}
                       </span>
                       {order.productCount > 1 && (
@@ -433,14 +433,14 @@ export default function PagosTable({
                     </td>
                     <td className="p-2 min-w-[140px] bg-blue-50 dark:bg-blue-950">
                       <div className="flex justify-center">
-                        <div className="bg-blue-100 dark:bg-blue-900 text-blue-900 dark:text-blue-100 px-3 py-1 rounded-md text-xs font-semibold" data-testid={`metric-orden-flete-${order.orden}`}>
+                        <div className="bg-blue-100 dark:bg-blue-900 text-blue-900 dark:text-blue-100 px-3 py-1 rounded-md text-xs" data-testid={`metric-orden-flete-${order.orden}`}>
                           {formatCurrency(order.ordenPlusFlete)}
                         </div>
                       </div>
                     </td>
                     <td className="p-2 min-w-[120px] bg-teal-50 dark:bg-teal-950">
                       <div className="flex justify-center">
-                        <div className="bg-teal-100 dark:bg-teal-900 text-teal-900 dark:text-teal-100 px-3 py-1 rounded-md text-xs font-semibold" data-testid={`metric-total-pagado-${order.orden}`}>
+                        <div className="bg-teal-100 dark:bg-teal-900 text-teal-900 dark:text-teal-100 px-3 py-1 rounded-md text-xs" data-testid={`metric-total-pagado-${order.orden}`}>
                           {formatCurrency(order.totalPagado)}
                         </div>
                       </div>
@@ -455,7 +455,7 @@ export default function PagosTable({
                           Math.abs(order.saldoPendiente) < 0.01 && (order.estadoEntrega === 'Pendiente' || order.estadoEntrega === 'En proceso')
                             ? 'bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100'
                             : 'bg-orange-100 dark:bg-orange-900 text-orange-900 dark:text-orange-100'
-                        } px-3 py-1 rounded-md text-xs font-semibold`} data-testid={`metric-pendiente-${order.orden}`}>
+                        } px-3 py-1 rounded-md text-xs`} data-testid={`metric-pendiente-${order.orden}`}>
                           {formatCurrency(order.saldoPendiente)}
                         </div>
                       </div>
