@@ -367,10 +367,10 @@ export default function VerificacionPage() {
                       key={`${payment.paymentId}-${payment.paymentType}-${index}`}
                       className="border-b border-border hover:bg-muted/50 text-xs"
                     >
-                      <td className="p-2 text-xs" data-testid={`text-orden-${index}`}>
+                      <td className="p-2 text-xs font-mono text-muted-foreground" data-testid={`text-orden-${index}`}>
                         {payment.orden}
                       </td>
-                      <td className="p-2 text-xs" data-testid={`text-tipo-pago-${index}`}>
+                      <td className="p-2 text-xs font-mono text-muted-foreground" data-testid={`text-tipo-pago-${index}`}>
                         <Badge variant="outline">{payment.tipoPago}</Badge>
                       </td>
                       <td className="p-2 text-xs" data-testid={`text-fecha-pago-${index}`}>
