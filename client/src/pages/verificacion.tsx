@@ -312,7 +312,7 @@ export default function VerificacionPage() {
           )}
 
           {/* Payments Table */}
-          <div className="flex-1 overflow-auto relative">
+          <div className="flex-1 overflow-auto relative max-h-[calc(100vh-280px)]">
             <table className="w-full border-collapse">
               <thead className="sticky top-0 z-10 bg-muted">
                 <tr className="border-b border-border">
