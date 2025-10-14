@@ -216,6 +216,7 @@ export default function VerificacionPage() {
         </TabsList>
 
         <TabsContent value="ingresos">
+          <div className="bg-card rounded-lg border border-border">
           {/* Filter Toolbar */}
           <div className="p-4 border-b border-border">
             <div className="flex justify-end items-center gap-2">
@@ -315,10 +316,10 @@ export default function VerificacionPage() {
             <table className="w-full border-collapse">
               <thead className="sticky top-0 z-10 bg-muted">
                 <tr className="border-b border-border">
-                  <th className="p-2 text-left text-xs font-medium text-muted-foreground min-w-[120px]">
+                  <th className="p-2 text-left text-xs font-normal text-muted-foreground min-w-[120px]">
                     Orden
                   </th>
-                  <th className="p-2 text-left text-xs font-medium text-muted-foreground min-w-[140px]">
+                  <th className="p-2 text-left text-xs font-normal text-muted-foreground min-w-[140px]">
                     Pago
                   </th>
                   <th className="p-2 text-left text-xs font-medium text-muted-foreground min-w-[130px]">
@@ -410,6 +411,7 @@ export default function VerificacionPage() {
                 )}
               </tbody>
             </table>
+          </div>
           </div>
         </TabsContent>
 
