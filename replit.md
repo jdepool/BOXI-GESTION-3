@@ -4,7 +4,7 @@ BoxiSleep is a comprehensive sales management system for a sleep products compan
 
 # Recent Changes
 
-**2025-10-14**: Fixed Pagos table pagination footer visibility by changing the default filter state from expanded to collapsed (`useState(false)` instead of `useState(true)`). The pagination footer was always present but hidden when filters were expanded by default, pushing it below the viewport. Also removed the `h-full flex flex-col` wrapper and used a fragment `<>` instead to match SalesTable's pattern. The table container uses `overflow-auto max-h-[calc(100vh-280px)]` for proper scrolling behavior.
+**2025-10-14**: Updated Pagos table styling for a lighter appearance - changed all column headers from `font-semibold` to `font-medium`, removed `font-mono` from Orden column cells, and removed `font-semibold` from data cells (Total Orden USD and metric badges). This matches the lighter styling pattern used in other Ventas tabs like Lista de Ventas. Earlier, fixed Pagos table pagination footer visibility by changing default filter state to collapsed and removing the `h-full flex flex-col` wrapper.
 
 # User Preferences
 
