@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -90,6 +90,12 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
   });
 
   const watchDespachoIgual = form.watch("direccionDespachoIgualFacturacion");
+
+  // Auto-calculate Total Orden USD from sum of products
+  useEffect(() => {
+    const total = products.reduce((sum, product) => sum + product.totalUsd, 0);
+    form.setValue("totalUsd", total.toFixed(2));
+  }, [products, form]);
 
   const handleAddProduct = (product: ProductFormData) => {
     setProducts([...products, product]);
@@ -411,7 +417,13 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
                     <FormItem className="max-w-xs">
                       <FormLabel>Total Orden USD *</FormLabel>
                       <FormControl>
-                        <Input placeholder="0.00" {...field} data-testid="input-total-orden-usd" />
+                        <Input 
+                          placeholder="0.00" 
+                          {...field} 
+                          data-testid="input-total-orden-usd"
+                          disabled
+                          className="bg-muted"
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
