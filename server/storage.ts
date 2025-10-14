@@ -94,6 +94,7 @@ export interface IStorage {
     startDate?: string;
     endDate?: string;
     asesorId?: string;
+    estadoEntrega?: string;
     excludePerdida?: boolean;
   }): Promise<{
     data: Array<{
