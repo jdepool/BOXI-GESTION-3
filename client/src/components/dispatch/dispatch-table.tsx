@@ -247,13 +247,13 @@ export default function DispatchTable({
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[100px] sticky left-0 bg-muted z-20 border-r border-border shadow-[2px_0_5px_rgba(0,0,0,0.1)]">Orden</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[150px] sticky left-[100px] bg-muted z-20 border-r border-border shadow-[2px_0_5px_rgba(0,0,0,0.1)]">Estado de Entrega</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[150px] sticky left-[250px] bg-muted z-20 border-r border-border shadow-[2px_0_5px_rgba(0,0,0,0.1)]">Fecha de Entrega</th>
-                    <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[200px]">Producto</th>
-                    <th className="text-center p-2 text-xs font-medium text-muted-foreground min-w-[80px]">Cant.</th>
-                    <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[300px]">Dirección de Despacho</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[200px]">Nombre</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[150px]">Teléfono</th>
-                    <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[200px]">Email</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[120px]">Cédula</th>
+                    <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[300px]">Dirección de Despacho</th>
+                    <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[200px]">Producto</th>
+                    <th className="text-center p-2 text-xs font-medium text-muted-foreground min-w-[80px]">Cant.</th>
+                    <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[200px]">Email</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[120px]">Fecha</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[100px]">Canal</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[150px]">Asesor</th>
@@ -298,15 +298,12 @@ export default function DispatchTable({
                       </td>
                       
                       <td className="p-2 min-w-[200px] text-xs">
-                        <div className="text-sm">
-                          <div className="font-medium">{sale.product}</div>
-                          <div className="text-muted-foreground">
-                            ${Number(sale.totalUsd).toLocaleString()} USD
-                          </div>
-                        </div>
+                        <div className="font-medium">{sale.nombre}</div>
                       </td>
                       
-                      <td className="p-2 min-w-[80px] text-center text-xs">{sale.cantidad}</td>
+                      <td className="p-2 min-w-[150px] text-xs">{sale.telefono}</td>
+                      
+                      <td className="p-2 min-w-[120px] text-xs">{sale.cedula}</td>
                       
                       <td className="p-2 min-w-[300px] text-xs">
                         {sale.direccionFacturacionPais ? (
@@ -347,14 +344,17 @@ export default function DispatchTable({
                       </td>
                       
                       <td className="p-2 min-w-[200px] text-xs">
-                        <div className="font-medium">{sale.nombre}</div>
+                        <div className="text-sm">
+                          <div className="font-medium">{sale.product}</div>
+                          <div className="text-muted-foreground">
+                            ${Number(sale.totalUsd).toLocaleString()} USD
+                          </div>
+                        </div>
                       </td>
                       
-                      <td className="p-2 min-w-[150px] text-xs">{sale.telefono}</td>
+                      <td className="p-2 min-w-[80px] text-center text-xs">{sale.cantidad}</td>
                       
                       <td className="p-2 min-w-[200px] text-xs">{sale.email}</td>
-                      
-                      <td className="p-2 min-w-[120px] text-xs">{sale.cedula}</td>
                       
                       <td className="p-2 min-w-[120px] text-xs">
                         {new Date(sale.fecha).toLocaleDateString('es-ES')}
