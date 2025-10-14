@@ -3,7 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { format } from "date-fns";
-import { CreditCard, Truck, Banknote, Filter, ChevronUp, ChevronDown, Download } from "lucide-react";
+import { CreditCard, Truck, Banknote, Filter, ChevronUp, ChevronDown, Download, ChevronLeft, ChevronRight } from "lucide-react";
 import PagoInicialModal from "./pago-inicial-modal";
 import FleteModal from "./flete-modal";
 import PaymentInstallmentsModal from "./payment-installments-modal";
@@ -481,7 +481,7 @@ export default function PagosTable({
               disabled={offset === 0}
               data-testid="pagination-previous"
             >
-              <i className="fas fa-chevron-left"></i>
+              <ChevronLeft className="h-4 w-4" />
             </Button>
             
             <Button
@@ -491,7 +491,7 @@ export default function PagosTable({
               disabled={offset + limit >= total}
               data-testid="pagination-next"
             >
-              <i className="fas fa-chevron-right"></i>
+              <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
         </div>
