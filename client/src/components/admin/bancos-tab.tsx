@@ -272,9 +272,8 @@ export function BancosTab() {
           )}
           <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
             <DialogTrigger asChild>
-              <Button variant="outline" data-testid="upload-excel-button">
-                <Upload className="h-4 w-4 mr-2" />
-                Cargar Excel
+              <Button variant="outline" size="icon" data-testid="upload-excel-button">
+                <Upload className="h-4 w-4" />
               </Button>
             </DialogTrigger>
             <DialogContent>
