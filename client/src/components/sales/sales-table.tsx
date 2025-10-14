@@ -805,10 +805,9 @@ export default function SalesTable({
       </div>
 
       {!hidePagination && total > 0 && (
-        <div className="p-4 border-t border-border flex flex-col sm:flex-row justify-between items-center gap-4">
+        <div className="p-4 border-t border-border flex justify-between items-center">
           <div className="text-sm text-muted-foreground">
-            <p>Mostrando {offset + 1}-{Math.min(offset + limit, total)} de {total} registros</p>
-            <p className="text-xs">💡 Desliza horizontalmente para ver todas las columnas de la tabla</p>
+            {offset + 1}-{Math.min(offset + limit, total)} de {total} registros
           </div>
           
           <div className="flex space-x-2">
@@ -819,13 +818,8 @@ export default function SalesTable({
               disabled={offset === 0}
               data-testid="pagination-previous"
             >
-              <i className="fas fa-chevron-left mr-1"></i>
-              Anterior
+              <i className="fas fa-chevron-left"></i>
             </Button>
-            
-            <span className="flex items-center px-3 py-2 text-sm bg-primary text-primary-foreground rounded-lg">
-              {currentPage}
-            </span>
             
             <Button
               variant="outline"
@@ -834,8 +828,7 @@ export default function SalesTable({
               disabled={offset + limit >= total}
               data-testid="pagination-next"
             >
-              Siguiente
-              <i className="fas fa-chevron-right ml-1"></i>
+              <i className="fas fa-chevron-right"></i>
             </Button>
           </div>
         </div>
