@@ -166,6 +166,7 @@ export default function DispatchTable({
                 <TableRow>
                   <TableHead className="w-32">Orden</TableHead>
                   <TableHead className="min-w-48">Nombre</TableHead>
+                  <TableHead className="w-36">Fecha de Entrega</TableHead>
                   <TableHead className="w-32">Cédula</TableHead>
                   <TableHead className="w-36">Teléfono</TableHead>
                   <TableHead className="min-w-48">Email</TableHead>
