@@ -25,6 +25,7 @@ export default function Sales() {
     orden: "",
     startDate: "",
     endDate: "",
+    asesorId: "",
     limit: 20,
     offset: 0,
   });
@@ -64,6 +65,7 @@ export default function Sales() {
       canal: string | null;
       tipo: string | null;
       estadoEntrega: string | null;
+      asesorId: string | null;
       totalOrderUsd: number | null;
       productCount: number;
       hasPagoInicial: boolean;
@@ -75,6 +77,7 @@ export default function Sales() {
       totalCuotas: number;
       totalPagado: number;
       saldoPendiente: number;
+      seguimientoPago: string | null;
     }>;
     total: number;
   }>({
