@@ -395,7 +395,7 @@ export default function VerificacionPage() {
                       <td className="p-2 text-xs max-w-[200px] truncate" data-testid={`text-notas-${index}`}>
                         {payment.notasVerificacion || "-"}
                       </td>
-                      <td className="p-2">
+                      <td className="p-2 text-xs">
                         <Button
                           size="sm"
                           onClick={() => handleVerify(payment)}
