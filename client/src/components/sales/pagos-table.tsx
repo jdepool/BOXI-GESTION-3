@@ -144,7 +144,7 @@ export default function PagosTable({
   });
 
   return (
-    <div className="h-full flex flex-col">
+    <>
       {/* Top toolbar with filters */}
       <div className="p-3 border-b border-border flex items-center justify-end gap-2">
         <Button 
@@ -229,7 +229,7 @@ export default function PagosTable({
         </div>
       )}
 
-      <div className="flex-1 overflow-auto relative">
+      <div className="overflow-auto max-h-[calc(100vh-280px)] relative">
         <table className="w-full text-sm border-collapse">
           <thead className="sticky top-0 z-10 bg-muted">
               <tr className="border-b border-border">
@@ -513,6 +513,6 @@ export default function PagosTable({
         open={cuotasModalOpen}
         onOpenChange={setCuotasModalOpen}
       />
-    </div>
+    </>
   );
 }
