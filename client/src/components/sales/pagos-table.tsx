@@ -354,6 +354,9 @@ export default function PagosTable({
                 <th className="p-2 text-center text-xs font-medium text-muted-foreground min-w-[120px] bg-orange-50 dark:bg-orange-950">
                   Pendiente
                 </th>
+                <th className="p-2 text-left text-xs font-medium text-muted-foreground min-w-[200px]">
+                  Notas
+                </th>
                 <th className="p-2 text-center text-xs font-medium text-muted-foreground min-w-[100px]">
                   Acción
                 </th>
@@ -362,13 +365,13 @@ export default function PagosTable({
             <tbody>
               {isLoading ? (
                 <tr>
-                  <td colSpan={14} className="p-4 text-center text-muted-foreground">
+                  <td colSpan={15} className="p-4 text-center text-muted-foreground">
                     Cargando...
                   </td>
                 </tr>
               ) : data.length === 0 ? (
                 <tr>
-                  <td colSpan={14} className="p-4 text-center text-muted-foreground">
+                  <td colSpan={15} className="p-4 text-center text-muted-foreground">
                     No hay órdenes pendientes o en proceso
                   </td>
                 </tr>
@@ -544,6 +547,27 @@ export default function PagosTable({
                           {formatCurrency(order.saldoPendiente)}
                         </div>
                       </div>
+                    </td>
+                    <td className="p-2 min-w-[200px]">
+                      {editingNotesOrder === order.orden ? (
+                        <Input
+                          value={notesValue}
+                          onChange={handleNotesChange}
+                          onBlur={handleNotesBlur}
+                          onKeyDown={handleNotesKeyDown}
+                          autoFocus
+                          className="h-7 text-xs"
+                          data-testid={`input-notas-${order.orden}`}
+                        />
+                      ) : (
+                        <div
+                          onClick={() => handleNotesClick(order)}
+                          className="text-xs cursor-pointer hover:bg-muted/50 p-1 rounded min-h-[28px]"
+                          data-testid={`notas-${order.orden}`}
+                        >
+                          {order.notas || <span className="text-muted-foreground italic">Click para agregar...</span>}
+                        </div>
+                      )}
                     </td>
                     <td className="p-2 min-w-[100px]">
                       <div className="flex justify-center">

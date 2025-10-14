@@ -2127,6 +2127,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update notes for all sales in an order
+  app.patch("/api/sales/orders/:orderNumber/notes", async (req, res) => {
+    try {
+      const { orderNumber } = req.params;
+      const { notas } = req.body;
+
+      // Validate that order exists
+      const existingSales = await storage.getSalesByOrderNumber(orderNumber);
+      if (!existingSales || existingSales.length === 0) {
+        return res.status(404).json({ error: "Order not found" });
+      }
+
+      const updatedSales = await storage.updateSalesByOrderNumber(orderNumber, { 
+        notas: notas || null 
+      });
+      
+      if (!updatedSales || updatedSales.length === 0) {
+        return res.status(500).json({ error: "Failed to update notes" });
+      }
+
+      res.json({ 
+        success: true, 
+        message: `Updated notes for ${updatedSales.length} sale(s)`,
+        salesUpdated: updatedSales.length 
+      });
+    } catch (error) {
+      console.error("Update order notes error:", error);
+      res.status(500).json({ error: "Failed to update notes" });
+    }
+  });
+
   // Update sale addresses
   app.put("/api/sales/:saleId/addresses", async (req, res) => {
     try {
