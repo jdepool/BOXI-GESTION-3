@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -101,6 +101,12 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
   });
 
   const watchDespachoIgual = form.watch("direccionDespachoIgualFacturacion");
+
+  // Auto-calculate Total Orden USD from sum of products
+  useEffect(() => {
+    const total = products.reduce((sum, product) => sum + product.totalUsd, 0);
+    form.setValue("totalUsd", total.toFixed(2));
+  }, [products, form]);
 
   const handleAddProduct = (product: ProductFormData) => {
     setProducts([...products, product]);
@@ -354,7 +360,13 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
                 <FormItem className="max-w-xs">
                   <FormLabel>Total Orden USD *</FormLabel>
                   <FormControl>
-                    <Input placeholder="0.00" {...field} data-testid="input-total-usd" />
+                    <Input 
+                      placeholder="0.00" 
+                      {...field} 
+                      data-testid="input-total-usd"
+                      disabled
+                      className="bg-muted"
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
