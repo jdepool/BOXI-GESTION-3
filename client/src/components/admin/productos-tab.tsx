@@ -8,47 +8,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Edit, Trash2, Upload } from "lucide-react";
+import { Plus, Edit, Trash2, Upload, RotateCcw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import type { Producto } from "@shared/schema";
-
-const productosPredefinidos = [
-  { nombre: "Boxi Hibryd Pillow", categoria: "Pillow" },
-  { nombre: "Boxi Original Pillow", categoria: "Pillow" },
-  { nombre: "Boxi Seat", categoria: "Seat" },
-  { nombre: "Evolve 100x190", categoria: "Colchón" },
-  { nombre: "Evolve 120x190", categoria: "Colchón" },
-  { nombre: "Evolve 140x190", categoria: "Colchón" },
-  { nombre: "Evolve 160x190", categoria: "Colchón" },
-  { nombre: "Evolve 200x200", categoria: "Colchón" },
-  { nombre: "Evolve 80x190", categoria: "Colchón" },
-  { nombre: "Legend 100x190", categoria: "Colchón" },
-  { nombre: "Legend 120x190", categoria: "Colchón" },
-  { nombre: "Legend 140x190", categoria: "Colchón" },
-  { nombre: "Legend 160x190", categoria: "Colchón" },
-  { nombre: "Legend 200x200", categoria: "Colchón" },
-  { nombre: "Legend 80x190", categoria: "Colchón" },
-  { nombre: "One 100x190", categoria: "Colchón" },
-  { nombre: "One 120x190", categoria: "Colchón" },
-  { nombre: "One 140x190", categoria: "Colchón" },
-  { nombre: "One 160x190", categoria: "Colchón" },
-  { nombre: "One 200x200", categoria: "Colchón" },
-  { nombre: "One 80x190", categoria: "Colchón" },
-  { nombre: "Original 100x190", categoria: "Colchón" },
-  { nombre: "Original 120x190", categoria: "Colchón" },
-  { nombre: "Original 140x190", categoria: "Colchón" },
-  { nombre: "Original 160x190", categoria: "Colchón" },
-  { nombre: "Original 200x200", categoria: "Colchón" },
-  { nombre: "Original 80x190", categoria: "Colchón" },
-  { nombre: "Original 100x200", categoria: "Colchón" },
-  { nombre: "Original 180x200", categoria: "Colchón" },
-  { nombre: "Topper Firme", categoria: "Topper" },
-  { nombre: "Topper Boxi 200x200", categoria: "Topper" },
-  { nombre: "Bed 140x190", categoria: "Bed" },
-  { nombre: "Bed 80x190", categoria: "Bed" },
-  { nombre: "Bed 100x200", categoria: "Bed" }
-];
 
 const categorias = ["Colchón", "Seat", "Pillow", "Topper", "Bed"];
 
@@ -62,6 +25,7 @@ export function ProductosTab() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [hasBackup, setHasBackup] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -110,19 +74,18 @@ export function ProductosTab() {
     },
   });
 
-  const cargarProductosPredefinidos = useMutation({
+  const undoMutation = useMutation({
     mutationFn: async () => {
-      const promises = productosPredefinidos.map(producto =>
-        apiRequest("POST", "/api/admin/productos", producto)
-      );
-      return Promise.allSettled(promises);
+      const response = await apiRequest("POST", "/api/admin/productos/undo");
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/productos"] });
-      toast({ title: "Productos predefinidos cargados exitosamente" });
+      setHasBackup(false);
+      toast({ title: "Productos restaurados correctamente" });
     },
     onError: () => {
-      toast({ title: "Error al cargar productos predefinidos", variant: "destructive" });
+      toast({ title: "Error al restaurar productos", variant: "destructive" });
     },
   });
 
@@ -157,9 +120,10 @@ export function ProductosTab() {
       setSelectedFile(null);
       setUploadProgress(0);
       setIsUploading(false);
+      setHasBackup(true); // Mark that we have a backup available
       
-      const { created, total, errors, details } = result;
-      let message = `${created} productos creados de ${total} filas`;
+      const { created, updated, total, errors, details } = result;
+      let message = `${created} productos nuevos, ${updated || 0} actualizados de ${total} filas`;
       
       if (errors > 0) {
         message += `, ${errors} errores encontrados`;
@@ -169,9 +133,9 @@ export function ProductosTab() {
       }
       
       toast({ 
-        title: created > 0 ? "Excel procesado" : "Excel procesado con errores",
+        title: created > 0 || updated > 0 ? "Excel procesado" : "Excel procesado con errores",
         description: message,
-        variant: created > 0 ? "default" : "destructive"
+        variant: created > 0 || updated > 0 ? "default" : "destructive"
       });
       
       // Show detailed errors if any
@@ -298,14 +262,18 @@ export function ProductosTab() {
           </p>
         </div>
         <div className="flex space-x-2">
-          <Button
-            variant="outline"
-            onClick={() => cargarProductosPredefinidos.mutate()}
-            disabled={cargarProductosPredefinidos.isPending}
-            data-testid="load-predefined-productos"
-          >
-            Cargar Predefinidos
-          </Button>
+          {hasBackup && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => undoMutation.mutate()}
+              disabled={undoMutation.isPending}
+              title="Deshacer última carga"
+              data-testid="undo-productos-upload"
+            >
+              <RotateCcw className="h-4 w-4" />
+            </Button>
+          )}
           <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
             <DialogTrigger asChild>
               <Button 
@@ -476,7 +444,7 @@ export function ProductosTab() {
             ) : (productos as Producto[]).length === 0 ? (
               <TableRow>
                 <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
-                  No hay productos registrados. Usa "Cargar Predefinidos" para agregar el catálogo completo.
+                  No hay productos registrados. Usa "Subir Excel" o "Agregar Producto" para comenzar.
                 </TableCell>
               </TableRow>
             ) : (
