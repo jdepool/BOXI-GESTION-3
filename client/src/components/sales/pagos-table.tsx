@@ -233,43 +233,43 @@ export default function PagosTable({
         <table className="w-full text-sm border-collapse">
           <thead className="sticky top-0 z-10 bg-muted">
               <tr className="border-b border-border">
-                <th className="p-3 text-left font-medium text-foreground min-w-[120px] sticky left-0 z-20 bg-muted">
+                <th className="p-2 text-left text-xs font-medium text-muted-foreground min-w-[120px] sticky left-0 z-20 bg-muted">
                   Orden
                 </th>
-                <th className="p-3 text-left font-medium text-foreground min-w-[180px] sticky left-[120px] z-20 bg-muted">
+                <th className="p-2 text-left text-xs font-medium text-muted-foreground min-w-[180px] sticky left-[120px] z-20 bg-muted">
                   Nombre
                 </th>
-                <th className="p-3 text-left font-medium text-foreground min-w-[100px]">
+                <th className="p-2 text-left text-xs font-medium text-muted-foreground min-w-[100px]">
                   Fecha
                 </th>
-                <th className="p-3 text-left font-medium text-foreground min-w-[100px]">
+                <th className="p-2 text-left text-xs font-medium text-muted-foreground min-w-[100px]">
                   Canal
                 </th>
-                <th className="p-3 text-left font-medium text-foreground min-w-[100px]">
+                <th className="p-2 text-left text-xs font-medium text-muted-foreground min-w-[100px]">
                   Tipo
                 </th>
-                <th className="p-3 text-left font-medium text-foreground min-w-[140px]">
+                <th className="p-2 text-left text-xs font-medium text-muted-foreground min-w-[140px]">
                   Estado Entrega
                 </th>
-                <th className="p-3 text-left font-medium text-foreground min-w-[140px]">
+                <th className="p-2 text-left text-xs font-medium text-muted-foreground min-w-[140px]">
                   Total Orden USD
                 </th>
-                <th className="p-3 text-center font-medium text-foreground min-w-[150px]">
+                <th className="p-2 text-center text-xs font-medium text-muted-foreground min-w-[150px]">
                   Pago Inicial/Total
                 </th>
-                <th className="p-3 text-center font-medium text-foreground min-w-[100px]">
+                <th className="p-2 text-center text-xs font-medium text-muted-foreground min-w-[100px]">
                   Flete
                 </th>
-                <th className="p-3 text-center font-medium text-foreground min-w-[100px]">
+                <th className="p-2 text-center text-xs font-medium text-muted-foreground min-w-[100px]">
                   Cuotas
                 </th>
-                <th className="p-3 text-center font-medium text-foreground min-w-[140px] bg-blue-50 dark:bg-blue-950">
+                <th className="p-2 text-center text-xs font-medium text-muted-foreground min-w-[140px] bg-blue-50 dark:bg-blue-950">
                   Orden + Flete
                 </th>
-                <th className="p-3 text-center font-medium text-foreground min-w-[120px] bg-teal-50 dark:bg-teal-950">
+                <th className="p-2 text-center text-xs font-medium text-muted-foreground min-w-[120px] bg-teal-50 dark:bg-teal-950">
                   Total Pagado
                 </th>
-                <th className="p-3 text-center font-medium text-foreground min-w-[120px] bg-orange-50 dark:bg-orange-950">
+                <th className="p-2 text-center text-xs font-medium text-muted-foreground min-w-[120px] bg-orange-50 dark:bg-orange-950">
                   Pendiente
                 </th>
               </tr>

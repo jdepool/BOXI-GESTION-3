@@ -4,7 +4,7 @@ BoxiSleep is a comprehensive sales management system for a sleep products compan
 
 # Recent Changes
 
-**2025-10-14**: Implemented auto-calculation for Total Orden USD field in both Nueva Venta Manual and Nueva Reserva Manual forms. The field now automatically calculates as the sum of all individual product Total USD values and is displayed as read-only with a muted background. This prevents manual entry errors and ensures order totals are always accurate. Changes applied via useEffect hooks that trigger whenever products are added or removed. Earlier, updated Pagos table styling for lighter appearance and fixed pagination footer visibility.
+**2025-10-14**: Updated Pagos table column headers to match other Ventas tabs styling - changed to `text-xs font-medium text-muted-foreground` with `p-2` padding for a uniform, lighter appearance across all tabs. Earlier, implemented auto-calculation for Total Orden USD field in Nueva Venta Manual and Nueva Reserva Manual forms (auto-sums individual product totals, displayed as read-only with muted background).
 
 # User Preferences
 
