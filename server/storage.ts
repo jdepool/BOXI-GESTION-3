@@ -564,6 +564,7 @@ export class DatabaseStorage implements IStorage {
         canal: sql<string | null>`MAX(${sales.canal})`.as('canal'),
         tipo: sql<string | null>`MAX(${sales.tipo})`.as('tipo'),
         estadoEntrega: sql<string | null>`MAX(${sales.estadoEntrega})`.as('estadoEntrega'),
+        asesorId: sql<string | null>`MAX(${sales.asesorId})`.as('asesorId'),
         totalOrderUsd: sql<number | null>`MAX(${sales.totalOrderUsd})`.as('totalOrderUsd'),
         productCount: sql<number>`COUNT(*)`.as('productCount'),
         hasPagoInicial: sql<boolean>`BOOL_OR(${sales.pagoInicialUsd} IS NOT NULL OR ${sales.fechaPagoInicial} IS NOT NULL)`.as('hasPagoInicial'),
@@ -573,7 +574,7 @@ export class DatabaseStorage implements IStorage {
         fleteGratis: sql<boolean>`BOOL_OR(${sales.fleteGratis})`.as('fleteGratis'),
         estadoVerificacionInicial: sql<string | null>`MAX(${sales.estadoVerificacionInicial})`.as('estadoVerificacionInicial'),
         estadoVerificacionFlete: sql<string | null>`MAX(${sales.estadoVerificacionFlete})`.as('estadoVerificacionFlete'),
-        notas: sql<string | null>`MAX(${sales.notas})`.as('notas'),
+        seguimientoPago: sql<string | null>`MAX(${sales.seguimientoPago})`.as('seguimientoPago'),
       })
       .from(sales)
       .where(estadoCondition)
@@ -662,6 +663,7 @@ export class DatabaseStorage implements IStorage {
           canal: order.canal,
           tipo: order.tipo,
           estadoEntrega: order.estadoEntrega,
+          asesorId: order.asesorId,
           totalOrderUsd: totalOrderUsd,
           productCount: Number(order.productCount),
           hasPagoInicial: order.hasPagoInicial,
@@ -673,7 +675,7 @@ export class DatabaseStorage implements IStorage {
           totalCuotas,
           totalPagado,
           saldoPendiente,
-          notas: order.notas,
+          seguimientoPago: order.seguimientoPago,
         };
       }),
       total: Number(totalCount),
