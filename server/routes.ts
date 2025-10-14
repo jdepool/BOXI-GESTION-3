@@ -2097,6 +2097,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Mark all sales in an order as Perdida
+  app.put("/api/sales/orders/:orderNumber/mark-perdida", async (req, res) => {
+    try {
+      const { orderNumber } = req.params;
+
+      // Validate that order exists
+      const existingSales = await storage.getSalesByOrderNumber(orderNumber);
+      if (!existingSales || existingSales.length === 0) {
+        return res.status(404).json({ error: "Order not found" });
+      }
+
+      const updatedSales = await storage.updateSalesByOrderNumber(orderNumber, { 
+        estadoEntrega: "Perdida" 
+      });
+      
+      if (!updatedSales || updatedSales.length === 0) {
+        return res.status(500).json({ error: "Failed to mark order as Perdida" });
+      }
+
+      res.json({ 
+        success: true, 
+        message: `Marked ${updatedSales.length} sale(s) as Perdida`,
+        salesUpdated: updatedSales.length 
+      });
+    } catch (error) {
+      console.error("Mark order as Perdida error:", error);
+      res.status(500).json({ error: "Failed to mark order as Perdida" });
+    }
+  });
+
   // Update sale addresses
   app.put("/api/sales/:saleId/addresses", async (req, res) => {
     try {
