@@ -402,84 +402,102 @@ export default function SalesTable({
           {filtersVisible && (
             <div className="p-6 border-b border-border">
               <div className="flex flex-wrap gap-3">
-                <Select 
-                  value={filters.canal || "all"} 
-                  onValueChange={(value) => handleFilterChange('canal', value)}
-                >
-                  <SelectTrigger className="w-40" data-testid="filter-channel">
-                    <SelectValue placeholder="Todos los canales" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todos los canales</SelectItem>
-                    <SelectItem value="cashea">Cashea</SelectItem>
-                    <SelectItem value="shopify">Shopify</SelectItem>
-                    <SelectItem value="treble">Treble</SelectItem>
-                  </SelectContent>
-                </Select>
+                <div>
+                  <label className="text-sm font-medium mb-1 block">Canal:</label>
+                  <Select 
+                    value={filters.canal || "all"} 
+                    onValueChange={(value) => handleFilterChange('canal', value)}
+                  >
+                    <SelectTrigger className="w-40" data-testid="filter-channel">
+                      <SelectValue placeholder="Todos los canales" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos los canales</SelectItem>
+                      <SelectItem value="cashea">Cashea</SelectItem>
+                      <SelectItem value="shopify">Shopify</SelectItem>
+                      <SelectItem value="treble">Treble</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
 
-                <Select 
-                  value={filters.estadoEntrega || "all"} 
-                  onValueChange={(value) => handleFilterChange('estadoEntrega', value)}
-                >
-                  <SelectTrigger className="w-40" data-testid="filter-status">
-                    <SelectValue placeholder="Todos los estados" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todos los estados</SelectItem>
-                    <SelectItem value="Pendiente">Pendiente</SelectItem>
-                    <SelectItem value="Perdida">Perdida</SelectItem>
-                    <SelectItem value="En proceso">En proceso</SelectItem>
-                    <SelectItem value="A despachar">A despachar</SelectItem>
-                    <SelectItem value="En tránsito">En tránsito</SelectItem>
-                    <SelectItem value="Entregado">Entregado</SelectItem>
-                    <SelectItem value="A devolver">A devolver</SelectItem>
-                    <SelectItem value="Devuelto">Devuelto</SelectItem>
-                    <SelectItem value="Cancelada">Cancelada</SelectItem>
-                  </SelectContent>
-                </Select>
+                <div>
+                  <label className="text-sm font-medium mb-1 block">Estado de Entrega:</label>
+                  <Select 
+                    value={filters.estadoEntrega || "all"} 
+                    onValueChange={(value) => handleFilterChange('estadoEntrega', value)}
+                  >
+                    <SelectTrigger className="w-40" data-testid="filter-status">
+                      <SelectValue placeholder="Todos los estados" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos los estados</SelectItem>
+                      <SelectItem value="Pendiente">Pendiente</SelectItem>
+                      <SelectItem value="Perdida">Perdida</SelectItem>
+                      <SelectItem value="En proceso">En proceso</SelectItem>
+                      <SelectItem value="A despachar">A despachar</SelectItem>
+                      <SelectItem value="En tránsito">En tránsito</SelectItem>
+                      <SelectItem value="Entregado">Entregado</SelectItem>
+                      <SelectItem value="A devolver">A devolver</SelectItem>
+                      <SelectItem value="Devuelto">Devuelto</SelectItem>
+                      <SelectItem value="Cancelada">Cancelada</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
 
-                <Select 
-                  value={filters.asesorId || "all"} 
-                  onValueChange={(value) => handleFilterChange('asesorId', value)}
-                >
-                  <SelectTrigger className="w-40" data-testid="filter-asesor">
-                    <SelectValue placeholder="Todos los asesores" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todos los asesores</SelectItem>
-                    <SelectItem value="none">Sin asesor</SelectItem>
-                    {(asesores as any[]).map((asesor: any) => (
-                      <SelectItem key={asesor.id} value={asesor.id}>
-                        {asesor.nombre}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <div>
+                  <label className="text-sm font-medium mb-1 block">Asesor:</label>
+                  <Select 
+                    value={filters.asesorId || "all"} 
+                    onValueChange={(value) => handleFilterChange('asesorId', value)}
+                  >
+                    <SelectTrigger className="w-40" data-testid="filter-asesor">
+                      <SelectValue placeholder="Todos los asesores" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos los asesores</SelectItem>
+                      <SelectItem value="none">Sin asesor</SelectItem>
+                      {(asesores as any[]).map((asesor: any) => (
+                        <SelectItem key={asesor.id} value={asesor.id}>
+                          {asesor.nombre}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
 
-                <Input 
-                  type="text"
-                  placeholder="Buscar por # orden"
-                  value={filters.orden}
-                  onChange={(e) => handleFilterChange('orden', e.target.value)}
-                  className="w-40"
-                  data-testid="filter-order-number"
-                />
+                <div>
+                  <label className="text-sm font-medium mb-1 block">Orden:</label>
+                  <Input 
+                    type="text"
+                    placeholder="Buscar por # orden"
+                    value={filters.orden}
+                    onChange={(e) => handleFilterChange('orden', e.target.value)}
+                    className="w-40"
+                    data-testid="filter-order-number"
+                  />
+                </div>
 
-                <Input 
-                  type="date" 
-                  value={filters.startDate}
-                  onChange={(e) => handleFilterChange('startDate', e.target.value)}
-                  className="w-40"
-                  data-testid="filter-start-date"
-                />
+                <div>
+                  <label className="text-sm font-medium mb-1 block">Fecha Inicio:</label>
+                  <Input 
+                    type="date" 
+                    value={filters.startDate}
+                    onChange={(e) => handleFilterChange('startDate', e.target.value)}
+                    className="w-40"
+                    data-testid="filter-start-date"
+                  />
+                </div>
 
-                <Input 
-                  type="date" 
-                  value={filters.endDate}
-                  onChange={(e) => handleFilterChange('endDate', e.target.value)}
-                  className="w-40"
-                  data-testid="filter-end-date"
-                />
+                <div>
+                  <label className="text-sm font-medium mb-1 block">Fecha Fin:</label>
+                  <Input 
+                    type="date" 
+                    value={filters.endDate}
+                    onChange={(e) => handleFilterChange('endDate', e.target.value)}
+                    className="w-40"
+                    data-testid="filter-end-date"
+                  />
+                </div>
               </div>
             </div>
           )}
