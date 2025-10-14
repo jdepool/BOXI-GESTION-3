@@ -62,6 +62,7 @@ interface PagosTableProps {
     startDate?: string;
     endDate?: string;
     asesorId?: string;
+    estadoEntrega?: string;
     limit: number;
     offset: number;
   };
@@ -103,8 +104,8 @@ export default function PagosTable({
 
   const handleFilterChange = (key: string, value: string) => {
     if (onFilterChange) {
-      // Normalize "all" to empty string for canal and asesorId filters
-      const normalizedValue = ((key === 'canal' || key === 'asesorId') && value === 'all') ? '' : value;
+      // Normalize "all" to empty string for canal, asesorId, and estadoEntrega filters
+      const normalizedValue = ((key === 'canal' || key === 'asesorId' || key === 'estadoEntrega') && value === 'all') ? '' : value;
       onFilterChange({ [key]: normalizedValue });
     }
   };
@@ -303,6 +304,30 @@ export default function PagosTable({
                         {asesor.nombre}
                       </SelectItem>
                     ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <label className="text-sm font-medium mb-1 block">Estado Entrega:</label>
+              <Select 
+                value={filters?.estadoEntrega || "all"} 
+                onValueChange={(value) => handleFilterChange('estadoEntrega', value)}
+              >
+                <SelectTrigger className="w-40" data-testid="filter-estado-entrega">
+                  <SelectValue placeholder="Todos los estados" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos los estados</SelectItem>
+                  <SelectItem value="Pendiente">Pendiente</SelectItem>
+                  <SelectItem value="En proceso">En proceso</SelectItem>
+                  <SelectItem value="Perdida">Perdida</SelectItem>
+                  <SelectItem value="A despachar">A despachar</SelectItem>
+                  <SelectItem value="En tránsito">En tránsito</SelectItem>
+                  <SelectItem value="Entregado">Entregado</SelectItem>
+                  <SelectItem value="A devolver">A devolver</SelectItem>
+                  <SelectItem value="Devuelto">Devuelto</SelectItem>
+                  <SelectItem value="Cancelada">Cancelada</SelectItem>
                 </SelectContent>
               </Select>
             </div>
