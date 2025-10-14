@@ -15,6 +15,8 @@ export const bancos = pgTable("bancos", {
   banco: text("banco").notNull(),
   numeroCuenta: text("numero_cuenta").notNull(),
   tipo: text("tipo").notNull().default("Receptor"),
+  monedaId: varchar("moneda_id"),
+  metodoPagoId: varchar("metodo_pago_id"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => ({
