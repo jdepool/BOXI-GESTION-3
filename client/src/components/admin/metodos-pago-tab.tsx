@@ -10,23 +10,6 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import type { MetodoPago } from "@shared/schema";
 
-const metodosPagoPredefinidos = [
-  "Cashea",
-  "Efectivo / TC",
-  "Efectivo",
-  "Facebank",
-  "Luka",
-  "Mixto",
-  "Mercado pago",
-  "Otros",
-  "Pago móvil",
-  "Paypall",
-  "Shopify",
-  "Tarjeta Crédito",
-  "Tarjeta Débito",
-  "Zelle"
-];
-
 export function MetodosPagoTab() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingMetodo, setEditingMetodo] = useState<MetodoPago | null>(null);
@@ -79,22 +62,6 @@ export function MetodosPagoTab() {
     },
   });
 
-  const cargarMetodosPredefinidos = useMutation({
-    mutationFn: async () => {
-      const promises = metodosPagoPredefinidos.map(nombre =>
-        apiRequest("POST", "/api/admin/metodos-pago", { nombre })
-      );
-      return Promise.allSettled(promises);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/metodos-pago"] });
-      toast({ title: "Métodos de pago predefinidos cargados exitosamente" });
-    },
-    onError: () => {
-      toast({ title: "Error al cargar métodos predefinidos", variant: "destructive" });
-    },
-  });
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (editingMetodo) {
@@ -126,14 +93,6 @@ export function MetodosPagoTab() {
           </p>
         </div>
         <div className="flex space-x-2">
-          <Button
-            variant="outline"
-            onClick={() => cargarMetodosPredefinidos.mutate()}
-            disabled={cargarMetodosPredefinidos.isPending}
-            data-testid="load-predefined-metodos"
-          >
-            Cargar Predefinidos
-          </Button>
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
               <Button onClick={openCreateDialog} data-testid="add-metodo-pago-button">
@@ -199,7 +158,7 @@ export function MetodosPagoTab() {
             ) : (metodos as MetodoPago[]).length === 0 ? (
               <TableRow>
                 <TableCell colSpan={2} className="text-center py-8 text-muted-foreground">
-                  No hay métodos de pago registrados. Usa "Cargar Predefinidos" para agregar los métodos estándar.
+                  No hay métodos de pago registrados. Usa "Agregar Método" para comenzar.
                 </TableCell>
               </TableRow>
             ) : (

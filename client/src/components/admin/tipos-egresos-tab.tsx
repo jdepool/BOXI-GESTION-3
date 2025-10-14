@@ -10,30 +10,6 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import type { TipoEgreso } from "@shared/schema";
 
-const tiposEgresosPredefinidos = [
-  "Cortesias, obsequios, premios",
-  "Costo lógistica",
-  "Devoluciones",
-  "Diversos",
-  "Diversos Admin",
-  "Diversos Logistica",
-  "Diversos Papeleria",
-  "Financieros",
-  "Flete",
-  "Gasto Logística",
-  "Honorarios",
-  "Importación",
-  "Impuestos",
-  "Legales Admin",
-  "Nómina",
-  "Publicidad Marketing",
-  "RRHH",
-  "Servicios",
-  "Transporte Lógistica",
-  "Ventas Comisiones",
-  "Viajes"
-];
-
 export function TiposEgresosTab() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingTipo, setEditingTipo] = useState<TipoEgreso | null>(null);
@@ -86,22 +62,6 @@ export function TiposEgresosTab() {
     },
   });
 
-  const cargarTiposPredefinidos = useMutation({
-    mutationFn: async () => {
-      const promises = tiposEgresosPredefinidos.map(nombre =>
-        apiRequest("POST", "/api/admin/tipos-egresos", { nombre })
-      );
-      return Promise.allSettled(promises);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/tipos-egresos"] });
-      toast({ title: "Tipos de egresos predefinidos cargados exitosamente" });
-    },
-    onError: () => {
-      toast({ title: "Error al cargar tipos predefinidos", variant: "destructive" });
-    },
-  });
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (editingTipo) {
@@ -133,14 +93,6 @@ export function TiposEgresosTab() {
           </p>
         </div>
         <div className="flex space-x-2">
-          <Button
-            variant="outline"
-            onClick={() => cargarTiposPredefinidos.mutate()}
-            disabled={cargarTiposPredefinidos.isPending}
-            data-testid="load-predefined-tipos"
-          >
-            Cargar Predefinidos
-          </Button>
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
               <Button onClick={openCreateDialog} data-testid="add-tipo-egreso-button">
@@ -206,7 +158,7 @@ export function TiposEgresosTab() {
             ) : (tipos as TipoEgreso[]).length === 0 ? (
               <TableRow>
                 <TableCell colSpan={2} className="text-center py-8 text-muted-foreground">
-                  No hay tipos de egresos registrados. Usa "Cargar Predefinidos" para agregar los tipos estándar.
+                  No hay tipos de egresos registrados. Usa "Agregar Tipo" para comenzar.
                 </TableCell>
               </TableRow>
             ) : (

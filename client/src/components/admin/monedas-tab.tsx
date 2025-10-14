@@ -10,15 +10,6 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import type { Moneda } from "@shared/schema";
 
-const monedasPredefinidas = [
-  { codigo: "USD", nombre: "Dólar Estadounidense" },
-  { codigo: "BS", nombre: "Bolívar Soberano" },
-  { codigo: "COP", nombre: "Peso Colombiano" },
-  { codigo: "BS/USD", nombre: "Bolívar/Dólar" },
-  { codigo: "COP/USD", nombre: "Peso Colombiano/Dólar" },
-  { codigo: "COP/BS", nombre: "Peso Colombiano/Bolívar" }
-];
-
 export function MonedasTab() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingMoneda, setEditingMoneda] = useState<Moneda | null>(null);
@@ -71,22 +62,6 @@ export function MonedasTab() {
     },
   });
 
-  const cargarMonedasPredefinidas = useMutation({
-    mutationFn: async () => {
-      const promises = monedasPredefinidas.map(moneda =>
-        apiRequest("POST", "/api/admin/monedas", moneda)
-      );
-      return Promise.allSettled(promises);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/monedas"] });
-      toast({ title: "Monedas predefinidas cargadas exitosamente" });
-    },
-    onError: () => {
-      toast({ title: "Error al cargar monedas predefinidas", variant: "destructive" });
-    },
-  });
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (editingMoneda) {
@@ -118,14 +93,6 @@ export function MonedasTab() {
           </p>
         </div>
         <div className="flex space-x-2">
-          <Button
-            variant="outline"
-            onClick={() => cargarMonedasPredefinidas.mutate()}
-            disabled={cargarMonedasPredefinidas.isPending}
-            data-testid="load-predefined-monedas"
-          >
-            Cargar Predefinidas
-          </Button>
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
               <Button onClick={openCreateDialog} data-testid="add-moneda-button">
@@ -203,7 +170,7 @@ export function MonedasTab() {
             ) : (monedas as Moneda[]).length === 0 ? (
               <TableRow>
                 <TableCell colSpan={3} className="text-center py-8 text-muted-foreground">
-                  No hay monedas registradas. Usa "Cargar Predefinidas" para agregar las monedas estándar.
+                  No hay monedas registradas. Usa "Agregar Moneda" para comenzar.
                 </TableCell>
               </TableRow>
             ) : (
