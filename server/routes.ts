@@ -1215,6 +1215,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const startDate = req.query.startDate as string | undefined;
       const endDate = req.query.endDate as string | undefined;
       const excludePerdida = req.query.excludePerdida === 'true';
+      
+      // Handle asesorId filter - normalize 'all' to undefined, keep 'none' as 'null' for null filter
+      let asesorId: string | undefined;
+      if (req.query.asesorId && req.query.asesorId !== 'all') {
+        asesorId = req.query.asesorId === 'none' ? 'null' : req.query.asesorId as string;
+      }
 
       const result = await storage.getOrdersForPayments({ 
         limit, 
@@ -1223,6 +1229,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         orden, 
         startDate, 
         endDate,
+        asesorId,
         excludePerdida
       });
       res.json(result);
