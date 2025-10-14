@@ -1214,6 +1214,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const orden = req.query.orden as string | undefined;
       const startDate = req.query.startDate as string | undefined;
       const endDate = req.query.endDate as string | undefined;
+      const estadoEntrega = req.query.estadoEntrega as string | undefined;
       const excludePerdida = req.query.excludePerdida === 'true';
       
       // Handle asesorId filter - normalize 'all' to undefined, keep 'none' as 'null' for null filter
@@ -1230,6 +1231,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         startDate, 
         endDate,
         asesorId,
+        estadoEntrega,
         excludePerdida
       });
       res.json(result);
