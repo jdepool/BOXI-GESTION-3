@@ -4,7 +4,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Download, Package, User, Phone, Mail, ChevronLeft, ChevronRight } from "lucide-react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
@@ -36,6 +36,17 @@ export default function DispatchTable({
   const [editingNotesId, setEditingNotesId] = useState<string | null>(null);
   const [notesValue, setNotesValue] = useState("");
   const [originalNotesValue, setOriginalNotesValue] = useState("");
+
+  // Fetch asesores data for displaying names
+  const { data: asesores = [] } = useQuery<Array<{ id: string; nombre: string; activo?: boolean }>>({
+    queryKey: ["/api/admin/asesores"],
+  });
+
+  // Create asesorMap for quick lookup
+  const asesorMap = asesores.reduce((acc, asesor) => {
+    acc[asesor.id] = asesor.nombre;
+    return acc;
+  }, {} as Record<string, string>);
 
   const getChannelBadgeClass = (canal: string) => {
     switch (canal?.toLowerCase()) {
@@ -243,9 +254,9 @@ export default function DispatchTable({
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[150px]">Teléfono</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[200px]">Email</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[120px]">Cédula</th>
-                    <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[300px]">Dirección de Facturación</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[120px]">Fecha</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[100px]">Canal</th>
+                    <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[150px]">Asesor</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[200px]">Notas</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[150px]">Acciones</th>
                   </tr>
@@ -345,28 +356,6 @@ export default function DispatchTable({
                       
                       <td className="p-2 min-w-[120px] text-xs">{sale.cedula}</td>
                       
-                      <td className="p-2 min-w-[300px] text-xs">
-                        {sale.direccionFacturacionPais ? (
-                          <div className="text-xs space-y-1 max-w-72">
-                            <div className="font-medium">{sale.direccionFacturacionDireccion}</div>
-                            <div>
-                              {sale.direccionFacturacionCiudad}, {sale.direccionFacturacionEstado}
-                            </div>
-                            <div>{sale.direccionFacturacionPais}</div>
-                            {sale.direccionFacturacionUrbanizacion && (
-                              <div className="text-muted-foreground">Urb. {sale.direccionFacturacionUrbanizacion}</div>
-                            )}
-                            {sale.direccionFacturacionReferencia && (
-                              <div className="text-muted-foreground">Ref: {sale.direccionFacturacionReferencia}</div>
-                            )}
-                          </div>
-                        ) : (
-                          <div className="text-xs text-amber-600 bg-amber-50 dark:bg-amber-950/20 p-2 rounded border border-amber-200 dark:border-amber-800 font-medium">
-                            ⚠️ Sin dirección
-                          </div>
-                        )}
-                      </td>
-                      
                       <td className="p-2 min-w-[120px] text-xs">
                         {new Date(sale.fecha).toLocaleDateString('es-ES')}
                       </td>
@@ -375,6 +364,10 @@ export default function DispatchTable({
                         <Badge className={`${getChannelBadgeClass(sale.canal)} text-white text-xs`}>
                           {sale.canal.charAt(0).toUpperCase() + sale.canal.slice(1)}
                         </Badge>
+                      </td>
+                      
+                      <td className="p-2 min-w-[150px] text-xs">
+                        {sale.asesorId ? (asesorMap[sale.asesorId] || '...') : <span className="text-muted-foreground">Sin asesor</span>}
                       </td>
                       
                       <td className="p-2 min-w-[200px] text-xs">
