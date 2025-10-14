@@ -84,9 +84,8 @@ export default function Sales() {
   }>({
     queryKey: ["/api/sales/orders", { 
       ...pagosFilters, 
-      // Only exclude Perdida when filtering for specific non-Perdida status
-      // Show Perdida when: filter is empty ("Todos") OR explicitly "Perdida"
-      excludePerdida: pagosFilters.estadoEntrega !== "" && pagosFilters.estadoEntrega !== "Perdida"
+      // Exclude Perdida by default, only show when explicitly selected
+      excludePerdida: pagosFilters.estadoEntrega !== "Perdida"
     }],
   });
 
