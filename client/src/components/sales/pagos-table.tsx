@@ -229,7 +229,7 @@ export default function PagosTable({
         </div>
       )}
 
-      <div className="flex-1 overflow-auto relative">
+      <div className="overflow-auto relative max-h-[calc(100vh-280px)]">
         <table className="w-full text-sm border-collapse">
           <thead className="sticky top-0 z-10 bg-muted">
               <tr className="border-b border-border">
