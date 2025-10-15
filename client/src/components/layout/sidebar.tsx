@@ -4,11 +4,6 @@ import boxiSleepLogo from "@assets/image_1757033740709.png";
 
 const navigationItems = [
   {
-    href: "/upload", 
-    icon: "fas fa-upload",
-    label: "Cargar Datos",
-  },
-  {
     href: "/sales",
     icon: "fas fa-table", 
     label: "Ventas",
