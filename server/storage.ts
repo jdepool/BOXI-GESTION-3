@@ -8,7 +8,7 @@ import {
   type EgresoPorAprobar, type InsertEgresoPorAprobar, type PaymentInstallment, type InsertPaymentInstallment
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, count, sum, avg, and, gte, lte, or, ne, like, ilike, isNotNull, isNull, sql } from "drizzle-orm";
+import { eq, desc, asc, count, sum, avg, and, gte, lte, or, ne, like, ilike, isNotNull, isNull, sql } from "drizzle-orm";
 
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
@@ -776,7 +776,7 @@ export class DatabaseStorage implements IStorage {
       .select()
       .from(sales)
       .where(dispatchCondition)
-      .orderBy(desc(sales.fecha))
+      .orderBy(asc(sales.fechaEntrega))
       .limit(limit)
       .offset(offset);
 
