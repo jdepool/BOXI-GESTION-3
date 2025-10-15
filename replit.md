@@ -57,7 +57,7 @@ Orders typically move from temporary tabs to permanent tabs upon payment verific
 - **Perdida Status**: Orders that never complete payment can be marked as "Perdida" (Lost) exclusively from the Pagos tab, operating at the order level to mark all sales in an order simultaneously.
 - **Cancelar/Devolver Actions**: Sales in Lista de Ventas can be individually cancelled or marked as returned through action buttons:
   - **Cancelar**: Changes Estado Entrega to "Cancelada" for cancelled sales (visible in all views including Pagos and Despachos)
-  - **Devolver**: Changes Estado Entrega to "Devuelta" for returned products (visible in Lista de Ventas and Pagos, but not in Despachos since returned items are out of the dispatch workflow)
+  - **Devolver**: Changes Estado Entrega to "A devolver" for products to be returned (visible in Lista de Ventas and Pagos, but not in Despachos since returned items are out of the dispatch workflow)
   - Both buttons display with green icon indicator when sale is already in that status, with disabled state to prevent duplicate actions
   - Buttons are positioned in a dedicated column (without header label) separate from the Acciones column for cleaner layout and better visual organization
 - **Transportista Management**: Full CRUD operations for managing transportation companies in the Administración section. Transportistas are tracked with nombre (name), teléfono (phone), and email fields for efficient logistics coordination.
