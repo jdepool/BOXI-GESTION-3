@@ -299,9 +299,6 @@ export interface IStorage {
     estadoVerificacion?: string;
     notasVerificacion?: string;
   }): Promise<any>;
-  
-  // SKU backfill method
-  backfillSKU(): Promise<{ updated: number; message: string }>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -2406,44 +2403,6 @@ export class DatabaseStorage implements IStorage {
     }
 
     return null;
-  }
-  
-  async backfillSKU(): Promise<{ updated: number; message: string }> {
-    // Get all products that have SKU
-    const productosWithSKU = await db
-      .select()
-      .from(productos)
-      .where(isNotNull(productos.sku));
-    
-    if (productosWithSKU.length === 0) {
-      return { updated: 0, message: "No products with SKU found" };
-    }
-    
-    let totalUpdated = 0;
-    
-    // For each product with SKU, update sales records
-    for (const producto of productosWithSKU) {
-      const result = await db
-        .update(sales)
-        .set({
-          sku: producto.sku,
-          updatedAt: new Date(),
-        })
-        .where(
-          and(
-            eq(sales.product, producto.nombre),
-            isNull(sales.sku)
-          )
-        )
-        .returning({ id: sales.id });
-      
-      totalUpdated += result.length;
-    }
-    
-    return { 
-      updated: totalUpdated, 
-      message: `Successfully backfilled SKU for ${totalUpdated} sales records` 
-    };
   }
 }
 
