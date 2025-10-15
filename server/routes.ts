@@ -745,8 +745,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         canal: query.canal,
         estadoEntrega: query.estadoEntrega,
         orden: query.orden,
-        startDate: query.startDate ? new Date(query.startDate) : undefined,
-        endDate: query.endDate ? new Date(query.endDate) : undefined,
+        startDate: query.startDate ? (() => {
+          const [year, month, day] = query.startDate.split('-');
+          return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+        })() : undefined,
+        endDate: query.endDate ? (() => {
+          const [year, month, day] = query.endDate.split('-');
+          return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+        })() : undefined,
         tipo: query.tipo,
         asesorId: normalizedAsesorId,
         excludePendingManual: query.excludePendingManual,
@@ -814,8 +820,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         canal: query.canal,
         estadoEntrega: query.estadoEntrega,
         orden: query.orden,
-        startDate: query.startDate ? new Date(query.startDate) : undefined,
-        endDate: query.endDate ? new Date(query.endDate) : undefined,
+        startDate: query.startDate ? (() => {
+          const [year, month, day] = query.startDate.split('-');
+          return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+        })() : undefined,
+        endDate: query.endDate ? (() => {
+          const [year, month, day] = query.endDate.split('-');
+          return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+        })() : undefined,
         tipo: query.tipo,
         asesorId: normalizedAsesorId,
         excludePendingManual: query.excludePendingManual,
@@ -3242,8 +3254,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         tipoEgresoId: query.tipoEgresoId,
         metodoPagoId: query.metodoPagoId,
         bancoId: query.bancoId,
-        startDate: query.startDate ? new Date(query.startDate) : undefined,
-        endDate: query.endDate ? new Date(query.endDate) : undefined,
+        startDate: query.startDate ? (() => {
+          const [year, month, day] = query.startDate.split('-');
+          return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+        })() : undefined,
+        endDate: query.endDate ? (() => {
+          const [year, month, day] = query.endDate.split('-');
+          return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+        })() : undefined,
         limit: query.limit,
         offset: query.offset,
       };
@@ -3342,8 +3360,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const filters = {
         tipoEgresoId: query.tipoEgresoId,
         metodoPagoId: query.metodoPagoId,
-        startDate: query.startDate ? new Date(query.startDate) : undefined,
-        endDate: query.endDate ? new Date(query.endDate) : undefined,
+        startDate: query.startDate ? (() => {
+          const [year, month, day] = query.startDate.split('-');
+          return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+        })() : undefined,
+        endDate: query.endDate ? (() => {
+          const [year, month, day] = query.endDate.split('-');
+          return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+        })() : undefined,
         limit: query.limit,
         offset: query.offset,
       };
