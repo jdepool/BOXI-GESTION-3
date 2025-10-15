@@ -283,6 +283,7 @@ function parseFile(buffer: Buffer, canal: string, filename: string) {
             'En proceso' : // All Cashea orders start with "En proceso"
             String(row['Estado de entrega'] || 'En proceso'),
           product: String(row.Product || ''),
+          sku: row.SKU || row.sku ? String(row.SKU || row.sku) : null, // Extract SKU from Cashea/Treble uploads
           cantidad: Number(row.Cantidad || 1),
           // New fields for sales system overhaul
           tipo: 'Inmediato', // Default to Inmediato, users can change this later
@@ -3303,6 +3304,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Delete transportista error:", error);
       res.status(500).json({ error: "Failed to delete transportista" });
+    }
+  });
+
+  // SKU backfill endpoint
+  app.post("/api/admin/backfill-sku", async (req, res) => {
+    try {
+      const result = await storage.backfillSKU();
+      res.json(result);
+    } catch (error) {
+      console.error("Backfill SKU error:", error);
+      res.status(500).json({ error: "Failed to backfill SKU" });
     }
   });
 

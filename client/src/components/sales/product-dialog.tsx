@@ -128,6 +128,24 @@ export default function ProductDialog({ isOpen, onClose, onSave, product, index 
 
             <FormField
               control={form.control}
+              name="sku"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>SKU (Opcional)</FormLabel>
+                  <FormControl>
+                    <Input 
+                      placeholder="Código SKU del producto"
+                      {...field} 
+                      data-testid="input-sku"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
               name="cantidad"
               render={({ field }) => (
                 <FormItem>
