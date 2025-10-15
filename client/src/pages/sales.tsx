@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Settings } from "lucide-react";
 import Sidebar from "@/components/layout/sidebar";
 import Header from "@/components/layout/header";
 import SalesTable from "@/components/sales/sales-table";
@@ -40,6 +42,7 @@ export default function Sales() {
   });
 
   const [isManualReservaModalOpen, setIsManualReservaModalOpen] = useState(false);
+  const [isSettingsDialogOpen, setIsSettingsDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("lista");
 
   const { data: salesData, isLoading } = useQuery<{
@@ -183,13 +186,24 @@ export default function Sales() {
         
         <div className="flex-1 overflow-auto p-6">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full">
-            <TabsList className="mb-4">
-              <TabsTrigger value="lista" data-testid="tab-sales-list">Lista de Ventas</TabsTrigger>
-              <TabsTrigger value="manual" data-testid="tab-manual-entry">Ventas por completar</TabsTrigger>
-              <TabsTrigger value="reservas" data-testid="tab-reservas">Reservas</TabsTrigger>
-              <TabsTrigger value="pagos" data-testid="tab-pagos">Pagos</TabsTrigger>
-              <TabsTrigger value="cargar" data-testid="tab-cargar-datos">Cargar Datos</TabsTrigger>
-            </TabsList>
+            <div className="flex items-center justify-between mb-4">
+              <TabsList>
+                <TabsTrigger value="lista" data-testid="tab-sales-list">Lista de Ventas</TabsTrigger>
+                <TabsTrigger value="manual" data-testid="tab-manual-entry">Ventas por completar</TabsTrigger>
+                <TabsTrigger value="reservas" data-testid="tab-reservas">Reservas</TabsTrigger>
+                <TabsTrigger value="pagos" data-testid="tab-pagos">Pagos</TabsTrigger>
+              </TabsList>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => setIsSettingsDialogOpen(true)}
+                data-testid="button-settings"
+                title="Configuración y Cargar Datos"
+                className="h-9 w-9"
+              >
+                <Settings className="h-4 w-4" />
+              </Button>
+            </div>
             
             <TabsContent value="lista" className="h-full">
               <div className="bg-card rounded-lg border border-border h-full">
@@ -259,11 +273,6 @@ export default function Sales() {
               </div>
             </TabsContent>
 
-            <TabsContent value="cargar" className="h-full">
-              <div className="max-w-2xl mx-auto">
-                <UploadZone recentUploads={recentUploads} />
-              </div>
-            </TabsContent>
           </Tabs>
         </div>
       </main>
@@ -276,6 +285,17 @@ export default function Sales() {
           // The modal will handle cache invalidation internally
         }}
       />
+
+      <Dialog open={isSettingsDialogOpen} onOpenChange={setIsSettingsDialogOpen}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto" data-testid="dialog-settings">
+          <DialogHeader>
+            <DialogTitle>Configuración y Cargar Datos</DialogTitle>
+          </DialogHeader>
+          <div className="mt-4">
+            <UploadZone recentUploads={recentUploads} />
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
