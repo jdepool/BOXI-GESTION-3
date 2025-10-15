@@ -16,6 +16,7 @@ import { queryClient } from "@/lib/queryClient";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { format, parse } from "date-fns";
 import { cn } from "@/lib/utils";
+import type { CasheaAutomationConfig, CasheaAutomaticDownload } from "@shared/schema";
 import * as XLSX from 'xlsx';
 
 // Helper function to safely parse YYYY-MM-DD as local date
@@ -49,13 +50,13 @@ export default function UploadZone({ recentUploads, showOnlyCashea = false }: Up
   const { toast } = useToast();
 
   // Automation config query
-  const { data: automationConfig, isLoading: isLoadingConfig, error: configError } = useQuery({
+  const { data: automationConfig, isLoading: isLoadingConfig, error: configError } = useQuery<CasheaAutomationConfig>({
     queryKey: ['/api/cashea/automation/config'],
     enabled: showOnlyCashea || !showOnlyCashea, // Always fetch when CASHEA tab is available
   });
 
   // Automation history query
-  const { data: automationHistory, isLoading: isLoadingHistory, error: historyError } = useQuery({
+  const { data: automationHistory, isLoading: isLoadingHistory, error: historyError } = useQuery<CasheaAutomaticDownload[]>({
     queryKey: ['/api/cashea/automation/history'],
     enabled: showOnlyCashea || !showOnlyCashea,
   });
@@ -63,11 +64,8 @@ export default function UploadZone({ recentUploads, showOnlyCashea = false }: Up
   // Update automation config mutation
   const updateAutomationMutation = useMutation({
     mutationFn: async ({ enabled, frequency }: { enabled: boolean; frequency: string }) => {
-      return apiRequest('/api/cashea/automation/config', {
-        method: 'PUT',
-        body: JSON.stringify({ enabled, frequency }),
-        headers: { 'Content-Type': 'application/json' },
-      });
+      const res = await apiRequest('PUT', '/api/cashea/automation/config', { enabled, frequency });
+      return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/cashea/automation/config'] });
