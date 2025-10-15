@@ -612,13 +612,14 @@ export default function SalesTable({
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[120px]">Direcciones</th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[120px]">Asesor</th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[150px]">Notas</th>
-                <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[200px]">Acciones</th>
+                <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[180px]"></th>
+                <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[150px]">Acciones</th>
               </tr>
             </thead>
             <tbody>
               {data.length === 0 ? (
                 <tr>
-                  <td colSpan={showDeliveryDateColumn ? 23 : 22} className="text-center p-8 text-muted-foreground">
+                  <td colSpan={showDeliveryDateColumn ? 24 : 23} className="text-center p-8 text-muted-foreground">
                     No hay datos disponibles
                   </td>
                 </tr>
@@ -834,37 +835,8 @@ export default function SalesTable({
                         </div>
                       )}
                     </td>
-                    <td className="p-2 min-w-[200px]">
+                    <td className="p-2 min-w-[180px]">
                       <div className="flex gap-1">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            setSelectedSaleForEdit(sale);
-                            setEditSaleModalOpen(true);
-                          }}
-                          data-testid={`edit-sale-${sale.id}`}
-                          className="h-7 text-xs"
-                        >
-                          <Edit className="h-3 w-3 mr-1" />
-                          Editar
-                        </Button>
-                        {sale.canal?.toLowerCase() === "manual" && sale.email ? (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => sendEmailMutation.mutate(sale.id)}
-                            disabled={sendEmailMutation.isPending || !!sale.emailSentAt}
-                            data-testid={`email-sale-${sale.id}`}
-                            className="h-7 text-xs"
-                            title={sale.emailSentAt ? `Email ya enviado` : `Enviar confirmación a ${sale.email}`}
-                          >
-                            <Mail className={cn("h-3 w-3 mr-1", sale.emailSentAt && "text-green-600")} />
-                            {sendEmailMutation.isPending ? "Enviando..." : "Email"}
-                          </Button>
-                        ) : (
-                          <div className="w-16" />
-                        )}
                         <Button
                           variant={sale.estadoEntrega === "Cancelada" ? "outline" : "destructive"}
                           size="sm"
@@ -901,6 +873,37 @@ export default function SalesTable({
                           <RotateCcw className={cn("h-3 w-3 mr-1", sale.estadoEntrega === "Devuelta" && "text-green-400")} />
                           Devolver
                         </Button>
+                      </div>
+                    </td>
+                    <td className="p-2 min-w-[150px]">
+                      <div className="flex gap-1">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setSelectedSaleForEdit(sale);
+                            setEditSaleModalOpen(true);
+                          }}
+                          data-testid={`edit-sale-${sale.id}`}
+                          className="h-7 text-xs"
+                        >
+                          <Edit className="h-3 w-3 mr-1" />
+                          Editar
+                        </Button>
+                        {sale.canal?.toLowerCase() === "manual" && sale.email && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => sendEmailMutation.mutate(sale.id)}
+                            disabled={sendEmailMutation.isPending || !!sale.emailSentAt}
+                            data-testid={`email-sale-${sale.id}`}
+                            className="h-7 text-xs"
+                            title={sale.emailSentAt ? `Email ya enviado` : `Enviar confirmación a ${sale.email}`}
+                          >
+                            <Mail className={cn("h-3 w-3 mr-1", sale.emailSentAt && "text-green-600")} />
+                            {sendEmailMutation.isPending ? "Enviando..." : "Email"}
+                          </Button>
+                        )}
                         <Button
                           variant="ghost"
                           size="sm"
