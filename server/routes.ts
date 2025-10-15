@@ -1130,7 +1130,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // GET /api/sales/orders/export - Export orders for payments tab to Excel
+  // GET /api/sales/orders/export - Export orders for payments tab to Excel (with complete payment details)
   app.get("/api/sales/orders/export", async (req, res) => {
     try {
       const canal = req.query.canal && req.query.canal !== 'all' ? req.query.canal as string : undefined;
@@ -1156,8 +1156,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         asesorId = req.query.asesorId === 'none' ? 'null' : req.query.asesorId as string;
       }
 
-      const result = await storage.getOrdersForPayments({ 
-        limit: 999999, // Get all records for export
+      // Get orders summary data (for metrics)
+      const ordersResult = await storage.getOrdersForPayments({ 
+        limit: 999999,
         offset: 0, 
         canal, 
         orden, 
@@ -1168,24 +1169,104 @@ export async function registerRoutes(app: Express): Promise<Server> {
         excludePerdida
       });
 
-      // Format data for Excel export
-      const excelData = result.data.map(order => ({
-        'Orden': order.orden,
-        'Nombre': order.nombre,
-        'Fecha': order.fecha ? new Date(order.fecha).toLocaleDateString('es-ES') : '-',
-        'Canal': order.canal || '-',
-        'Tipo': order.tipo || '-',
-        'Estado de Entrega': order.estadoEntrega || '-',
-        'Asesor': order.asesorId || '-',
-        'Orden + Flete (USD)': order.ordenPlusFlete ? `$${order.ordenPlusFlete.toFixed(2)}` : '$0.00',
-        'Total Pagado (USD)': order.totalPagado ? `$${order.totalPagado.toFixed(2)}` : '$0.00',
-        'Pendiente (USD)': order.saldoPendiente ? `$${order.saldoPendiente.toFixed(2)}` : '$0.00',
-        'Productos': order.productCount,
-        'Pago Inicial': order.hasPagoInicial ? 'Sí' : 'No',
-        'Flete': order.hasFlete ? 'Sí' : 'No',
-        'Cuotas': order.installmentCount,
-        'Seguimiento Pago': order.seguimientoPago || '-'
-      }));
+      // Fetch bancos for name lookup
+      const bancos = await storage.getBancos();
+      const bancoMap = new Map(bancos.map(banco => [banco.id, banco.banco]));
+      
+      // For each order, get the detailed payment data from sales table and installments
+      const excelData: any[] = [];
+      
+      for (const orderSummary of ordersResult.data) {
+        // Get one sale from this order to get payment details
+        const salesInOrder = await storage.getSalesByOrderNumber(orderSummary.orden);
+        if (salesInOrder.length === 0) continue;
+        
+        // Use the first sale as representative (all sales in same order share payment data)
+        const sale = salesInOrder[0];
+        
+        // Get installments for this order
+        const installments = await storage.getInstallmentsByOrder(orderSummary.orden);
+        
+        // Helper function to get banco name
+        const getBancoName = (bancoId: string | null | undefined) => {
+          if (!bancoId) return 'N/A';
+          if (bancoId === 'otro') return 'Otro($)';
+          return bancoMap.get(bancoId) || 'N/A';
+        };
+        
+        // Base row data (common to all rows for this order)
+        const baseData = {
+          'Orden': orderSummary.orden,
+          'Nombre': orderSummary.nombre,
+          'Fecha': orderSummary.fecha ? new Date(orderSummary.fecha).toLocaleDateString('es-ES') : '',
+          'Canal': orderSummary.canal || '',
+          'Tipo': orderSummary.tipo || '',
+          'Estado de Entrega': orderSummary.estadoEntrega || '',
+          'Asesor': orderSummary.asesorId || '',
+          'Productos': orderSummary.productCount,
+          
+          // Metric card data
+          'Orden + Flete (USD)': orderSummary.ordenPlusFlete || 0,
+          'Total Pagado (USD)': orderSummary.totalPagado || 0,
+          'Pendiente (USD)': orderSummary.saldoPendiente || 0,
+          
+          // Seguimiento Pago notes
+          'Seguimiento Pago': sale.seguimientoPago || '',
+          
+          // Initial Payment details
+          'Pago Inicial USD': sale.pagoInicialUsd || '',
+          'Monto Inicial USD': sale.montoInicialUsd || '',
+          'Monto Inicial Bs': sale.montoInicialBs || '',
+          'Fecha Pago Inicial': sale.fechaPagoInicial ? new Date(sale.fechaPagoInicial).toLocaleDateString('es-ES') : '',
+          'Referencia Inicial': sale.referenciaInicial || '',
+          'Banco Receptor Inicial': getBancoName(sale.bancoReceptorInicial),
+          'Estado Verificación Inicial': sale.estadoVerificacionInicial || '',
+          'Notas Verificación Inicial': sale.notasVerificacionInicial || '',
+          
+          // Flete details
+          'Flete Gratis': sale.fleteGratis ? 'Sí' : 'No',
+          'Pago Flete USD': sale.pagoFleteUsd || '',
+          'Monto Flete USD': sale.montoFleteUsd || '',
+          'Monto Flete Bs': sale.montoFleteBs || '',
+          'Fecha Flete': sale.fechaFlete ? new Date(sale.fechaFlete).toLocaleDateString('es-ES') : '',
+          'Referencia Flete': sale.referenciaFlete || '',
+          'Banco Receptor Flete': getBancoName(sale.bancoReceptorFlete),
+          'Estado Verificación Flete': sale.estadoVerificacionFlete || '',
+          'Notas Verificación Flete': sale.notasVerificacionFlete || '',
+        };
+        
+        // If order has installments, create one row per installment
+        if (installments.length > 0) {
+          for (const installment of installments) {
+            excelData.push({
+              ...baseData,
+              'Cuota #': installment.installmentNumber,
+              'Cuota Fecha': installment.fecha ? new Date(installment.fecha).toLocaleDateString('es-ES') : '',
+              'Pago Cuota USD': installment.pagoCuotaUsd || '',
+              'Monto Cuota USD': installment.montoCuotaUsd || '',
+              'Monto Cuota Bs': installment.montoCuotaBs || '',
+              'Cuota Referencia': installment.referencia || '',
+              'Cuota Banco Receptor': getBancoName(installment.bancoReceptorCuota),
+              'Cuota Estado Verificación': installment.estadoVerificacion || '',
+              'Cuota Notas Verificación': installment.notasVerificacion || '',
+            });
+          }
+        } else {
+          // No installments, create one row with N/A for cuota fields
+          excelData.push({
+            ...baseData,
+            'Cuota #': 'N/A',
+            'Cuota Fecha': '',
+            'Pago Cuota USD': '',
+            'Monto Cuota USD': '',
+            'Monto Cuota Bs': '',
+            'Cuota Referencia': '',
+            'Cuota Banco Receptor': '',
+            'Cuota Estado Verificación': '',
+            'Cuota Notas Verificación': '',
+          });
+        }
+      }
 
       // Convert to Excel format
       const worksheet = XLSX.utils.json_to_sheet(excelData);
