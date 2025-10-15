@@ -273,12 +273,26 @@ export default function DispatchTable({
                       </td>
                       
                       <td className="p-2 min-w-[150px] text-xs sticky left-[100px] bg-background z-10 border-r border-border shadow-[2px_0_5px_rgba(0,0,0,0.1)]">
-                        <Badge 
-                          variant={getStatusBadgeVariant(sale.estadoEntrega)}
-                          className="text-xs"
+                        <Select
+                          value={sale.estadoEntrega || "Pendiente"}
+                          onValueChange={(newStatus) => handleStatusChange(sale.id, newStatus)}
+                          disabled={updateDeliveryStatusMutation.isPending}
                         >
-                          {sale.estadoEntrega}
-                        </Badge>
+                          <SelectTrigger className="w-32 h-8 text-xs" data-testid={`estado-select-${sale.id}`}>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Pendiente">Pendiente</SelectItem>
+                            <SelectItem value="Perdida">Perdida</SelectItem>
+                            <SelectItem value="En proceso">En proceso</SelectItem>
+                            <SelectItem value="A despachar">A despachar</SelectItem>
+                            <SelectItem value="En tránsito">En tránsito</SelectItem>
+                            <SelectItem value="Entregado">Entregado</SelectItem>
+                            <SelectItem value="A devolver">A devolver</SelectItem>
+                            <SelectItem value="Devuelto">Devuelto</SelectItem>
+                            <SelectItem value="Cancelada">Cancelada</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </td>
                       
                       <td className="p-2 min-w-[150px] text-xs sticky left-[250px] bg-background z-10 border-r border-border shadow-[2px_0_5px_rgba(0,0,0,0.1)]">
@@ -396,26 +410,7 @@ export default function DispatchTable({
                       </td>
                       
                       <td className="p-2 min-w-[150px] text-xs">
-                        <Select
-                          value={sale.estadoEntrega}
-                          onValueChange={(newStatus) => handleStatusChange(sale.id, newStatus)}
-                          disabled={updateDeliveryStatusMutation.isPending}
-                        >
-                          <SelectTrigger className="w-32 h-8 text-xs">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="Pendiente">Pendiente</SelectItem>
-                            <SelectItem value="Perdida">Perdida</SelectItem>
-                            <SelectItem value="En proceso">En proceso</SelectItem>
-                            <SelectItem value="A despachar">A despachar</SelectItem>
-                            <SelectItem value="En tránsito">En tránsito</SelectItem>
-                            <SelectItem value="Entregado">Entregado</SelectItem>
-                            <SelectItem value="A devolver">A devolver</SelectItem>
-                            <SelectItem value="Devuelto">Devuelto</SelectItem>
-                            <SelectItem value="Cancelada">Cancelada</SelectItem>
-                          </SelectContent>
-                        </Select>
+                        {/* Empty for future actions */}
                       </td>
                     </tr>
                   ))}
