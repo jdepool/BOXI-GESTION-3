@@ -103,6 +103,15 @@ export const asesores = pgTable("asesores", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+export const transportistas = pgTable("transportistas", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  nombre: text("nombre").notNull(),
+  telefono: text("telefono"),
+  email: text("email"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 export const sales = pgTable("sales", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   nombre: text("nombre").notNull(),
@@ -318,6 +327,12 @@ export const insertAsesorSchema = createInsertSchema(asesores).omit({
   updatedAt: true,
 });
 
+export const insertTransportistaSchema = createInsertSchema(transportistas).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 export const insertEgresoSchema = createInsertSchema(egresos).omit({
   id: true,
   pendienteInfo: true,
@@ -367,6 +382,8 @@ export type Canal = typeof canales.$inferSelect;
 export type InsertCanal = z.infer<typeof insertCanalSchema>;
 export type Asesor = typeof asesores.$inferSelect;
 export type InsertAsesor = z.infer<typeof insertAsesorSchema>;
+export type Transportista = typeof transportistas.$inferSelect;
+export type InsertTransportista = z.infer<typeof insertTransportistaSchema>;
 export type Egreso = typeof egresos.$inferSelect;
 export type InsertEgreso = z.infer<typeof insertEgresoSchema>;
 export type EgresoPorAprobar = typeof egresosPorAprobar.$inferSelect;
