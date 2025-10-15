@@ -146,6 +146,10 @@ export default function Sales() {
                   offset={filters.offset}
                   isLoading={isLoading}
                   filters={filters}
+                  extraExportParams={{
+                    excludePendingManual: 'true',
+                    excludePerdida: filters.estadoEntrega !== "Perdida" ? 'true' : undefined
+                  }}
                   onFilterChange={handleFilterChange}
                   onPageChange={handlePageChange}
                   showDeliveryDateColumn={true}
@@ -170,6 +174,11 @@ export default function Sales() {
                   hidePagination={false}
                   showDeliveryDateColumn={true}
                   activeTab={activeTab}
+                  extraExportParams={{
+                    tipo: 'Reserva',
+                    estadoEntrega: 'Pendiente',
+                    excludePerdida: 'true'
+                  }}
                   onNewReserva={() => setIsManualReservaModalOpen(true)}
                 />
               </div>
