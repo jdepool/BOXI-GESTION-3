@@ -2128,6 +2128,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update sale transportista
+  app.put("/api/sales/:saleId/transportista", async (req, res) => {
+    try {
+      const { saleId } = req.params;
+      const { transportistaId } = req.body;
+
+      // Validate that sale exists
+      const existingSale = await storage.getSaleById(saleId);
+      if (!existingSale) {
+        return res.status(404).json({ error: "Sale not found" });
+      }
+
+      const updatedSale = await storage.updateSaleTransportista(saleId, transportistaId || null);
+      
+      if (!updatedSale) {
+        return res.status(500).json({ error: "Failed to update transportista" });
+      }
+
+      res.json({ success: true, sale: updatedSale });
+    } catch (error) {
+      console.error("Update transportista error:", error);
+      res.status(500).json({ error: "Failed to update transportista" });
+    }
+  });
+
   // Mark all sales in an order as Perdida
   app.put("/api/sales/orders/:orderNumber/mark-perdida", async (req, res) => {
     try {
