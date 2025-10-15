@@ -135,8 +135,8 @@ export default function SalesTable({
         predicate: (query) => Array.isArray(query.queryKey) && typeof query.queryKey[0] === 'string' && query.queryKey[0].startsWith('/api/sales')
       });
       toast({
-        title: "Venta devuelta",
-        description: "La venta ha sido marcada como devuelta",
+        title: "Venta marcada a devolver",
+        description: "La venta ha sido marcada como a devolver",
       });
       setReturnConfirmOpen(false);
       setSelectedSaleForReturn(null);
@@ -144,7 +144,7 @@ export default function SalesTable({
     onError: () => {
       toast({
         title: "Error",
-        description: "No se pudo marcar la venta como devuelta",
+        description: "No se pudo marcar la venta como a devolver",
         variant: "destructive",
       });
     },
