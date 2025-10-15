@@ -475,7 +475,10 @@ export default function UploadZone({ recentUploads, showOnlyCashea = false }: Up
                         <XCircle className="h-3 w-3 text-red-600" />
                       )}
                       <span className="text-muted-foreground">
-                        {format(new Date(download.executedAt), 'dd/MM/yyyy HH:mm')}
+                        {download.executedAt && !isNaN(new Date(download.executedAt).getTime()) 
+                          ? format(new Date(download.executedAt), 'dd/MM/yyyy HH:mm')
+                          : 'Fecha inválida'
+                        }
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
