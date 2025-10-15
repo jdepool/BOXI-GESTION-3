@@ -7,7 +7,7 @@ BoxiSleep is a comprehensive sales management system for a sleep products compan
 Preferred communication style: Simple, everyday language.
 
 ## UI Preferences
-- **Option 1 for Cargar Datos tab**: Convert the "Cargar Datos" tab to a settings/gear icon button positioned in the top-right of the tabs bar, opening a dialog or slide-out panel with upload controls and automation settings. This separates administrative features from regular sales workflow tabs.
+- **Cargar Datos Implementation**: ✅ Implemented as a settings/gear icon button positioned in the top-right of the tabs bar, opening a dialog with upload controls and automation settings. This separates administrative features from regular sales workflow tabs.
 
 # System Architecture
 
@@ -24,7 +24,7 @@ PostgreSQL serves as the primary database, accessed via Drizzle ORM for type-saf
 Basic username/password authentication is implemented, with user sessions managed securely through PostgreSQL session storage using `connect-pg-simple`.
 
 ## UI/UX Design
-The application leverages shadcn/ui and Radix UI for consistent design and accessibility, with Tailwind CSS for styling and Lucide React for icons. The Ventas section features a tabbed interface with "Lista de Ventas", "Ventas por Completar", "Reservas", "Pagos", and "Cargar Datos" tabs for managing sales data and uploads. The Verificación section includes "Ingresos", "Egresos", and "Cashea Pago Inicial" tabs for payment verification. Despachos is a separate page with a directly editable Estado de Entrega dropdown in the sticky column for quick status updates, with customer contact information (Nombre, Teléfono, Cédula, Dirección de Despacho) positioned immediately after the delivery date for efficient dispatch workflow. The interface is optimized for space with compact headers and context-aware action buttons.
+The application leverages shadcn/ui and Radix UI for consistent design and accessibility, with Tailwind CSS for styling and Lucide React for icons. The Ventas section features a tabbed interface with "Lista de Ventas", "Ventas por Completar", "Reservas", and "Pagos" tabs for managing sales data. Administrative features (data upload and automation settings) are accessed via a settings/gear icon button positioned in the top-right of the tabs bar, which opens a dialog containing the UploadZone with upload controls and Cashea automation configuration. This design separates administrative functions from regular sales workflow tabs. The Verificación section includes "Ingresos", "Egresos", and "Cashea Pago Inicial" tabs for payment verification. Despachos is a separate page with a directly editable Estado de Entrega dropdown in the sticky column for quick status updates, with customer contact information (Nombre, Teléfono, Cédula, Dirección de Despacho) positioned immediately after the delivery date for efficient dispatch workflow. The interface is optimized for space with compact headers and context-aware action buttons.
 
 ### Date Filtering
 A reusable DateRangePicker component (`client/src/components/shared/date-range-picker.tsx`) provides consistent date range filtering across all tables (Pagos, Lista de Ventas, Ventas por Completar, Reservas). The component handles timezone correctly by parsing yyyy-MM-dd strings as local dates, preventing the "day before" bug that occurs when JavaScript interprets date strings as UTC.
