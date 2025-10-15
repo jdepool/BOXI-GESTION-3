@@ -2,17 +2,16 @@ import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { format, parse } from "date-fns";
-import { CreditCard, Truck, Banknote, Filter, ChevronUp, ChevronDown, Download, ChevronLeft, ChevronRight, XCircle, CalendarIcon, RotateCcw } from "lucide-react";
+import { format } from "date-fns";
+import { CreditCard, Truck, Banknote, Filter, ChevronUp, ChevronDown, Download, ChevronLeft, ChevronRight, XCircle, RotateCcw } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import PagoInicialModal from "./pago-inicial-modal";
 import FleteModal from "./flete-modal";
 import PaymentInstallmentsModal from "./payment-installments-modal";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { DateRangePicker } from "@/components/shared/date-range-picker";
 import {
   Select,
   SelectContent,
@@ -36,12 +35,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-
-// Helper function to safely parse YYYY-MM-DD as local date
-const parseLocalDate = (dateString: string) => {
-  if (!dateString) return undefined;
-  return parse(dateString, 'yyyy-MM-dd', new Date());
-};
 
 interface Order {
   orden: string;
@@ -399,71 +392,12 @@ export default function PagosTable({
               />
             </div>
 
-            <div>
-              <label className="text-sm font-medium mb-1 block">Fecha Inicio:</label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "w-40 justify-start text-left font-normal",
-                      !filters?.startDate && "text-muted-foreground"
-                    )}
-                    data-testid="filter-start-date"
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {filters?.startDate ? format(parseLocalDate(filters.startDate) || new Date(), "dd/MM/yyyy") : "Seleccionar"}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={filters?.startDate ? parseLocalDate(filters.startDate) : undefined}
-                    onSelect={(date) => {
-                      if (date) {
-                        handleFilterChange('startDate', format(date, 'yyyy-MM-dd'));
-                      } else {
-                        handleFilterChange('startDate', '');
-                      }
-                    }}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-
-            <div>
-              <label className="text-sm font-medium mb-1 block">Fecha Fin:</label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "w-40 justify-start text-left font-normal",
-                      !filters?.endDate && "text-muted-foreground"
-                    )}
-                    data-testid="filter-end-date"
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {filters?.endDate ? format(parseLocalDate(filters.endDate) || new Date(), "dd/MM/yyyy") : "Seleccionar"}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={filters?.endDate ? parseLocalDate(filters.endDate) : undefined}
-                    onSelect={(date) => {
-                      if (date) {
-                        handleFilterChange('endDate', format(date, 'yyyy-MM-dd'));
-                      } else {
-                        handleFilterChange('endDate', '');
-                      }
-                    }}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
+            <DateRangePicker
+              startDate={filters?.startDate}
+              endDate={filters?.endDate}
+              onStartDateChange={(date) => handleFilterChange('startDate', date)}
+              onEndDateChange={(date) => handleFilterChange('endDate', date)}
+            />
           </div>
         </div>
       )}

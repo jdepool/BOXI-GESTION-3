@@ -8,6 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { DateRangePicker } from "@/components/shared/date-range-picker";
 import SaleDetailModal from "./sale-detail-modal";
 import AddressModal from "@/components/addresses/address-modal";
 import EditSaleModal from "./edit-sale-modal";
@@ -17,12 +18,6 @@ import { useToast } from "@/hooks/use-toast";
 import { format, parse } from "date-fns";
 import { cn } from "@/lib/utils";
 import type { Sale } from "@shared/schema";
-
-// Helper function to safely parse YYYY-MM-DD as local date
-const parseLocalDate = (dateString: string) => {
-  if (!dateString) return undefined;
-  return parse(dateString, 'yyyy-MM-dd', new Date());
-};
 
 interface SalesTableProps {
   data: Sale[];
@@ -519,71 +514,12 @@ export default function SalesTable({
                   />
                 </div>
 
-                <div>
-                  <label className="text-sm font-medium mb-1 block">Fecha Inicio:</label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className={cn(
-                          "w-40 justify-start text-left font-normal",
-                          !filters.startDate && "text-muted-foreground"
-                        )}
-                        data-testid="filter-start-date"
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {filters.startDate ? format(parseLocalDate(filters.startDate) || new Date(), "dd/MM/yyyy") : "Seleccionar"}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={parseLocalDate(filters.startDate)}
-                        onSelect={(date) => {
-                          if (date) {
-                            handleFilterChange('startDate', format(date, 'yyyy-MM-dd'));
-                          } else {
-                            handleFilterChange('startDate', '');
-                          }
-                        }}
-                        initialFocus
-                      />
-                    </PopoverContent>
-                  </Popover>
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium mb-1 block">Fecha Fin:</label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className={cn(
-                          "w-40 justify-start text-left font-normal",
-                          !filters.endDate && "text-muted-foreground"
-                        )}
-                        data-testid="filter-end-date"
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {filters.endDate ? format(parseLocalDate(filters.endDate) || new Date(), "dd/MM/yyyy") : "Seleccionar"}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={parseLocalDate(filters.endDate)}
-                        onSelect={(date) => {
-                          if (date) {
-                            handleFilterChange('endDate', format(date, 'yyyy-MM-dd'));
-                          } else {
-                            handleFilterChange('endDate', '');
-                          }
-                        }}
-                        initialFocus
-                      />
-                    </PopoverContent>
-                  </Popover>
-                </div>
+                <DateRangePicker
+                  startDate={filters.startDate}
+                  endDate={filters.endDate}
+                  onStartDateChange={(date) => handleFilterChange('startDate', date)}
+                  onEndDateChange={(date) => handleFilterChange('endDate', date)}
+                />
               </div>
             </div>
           )}

@@ -32,6 +32,13 @@ export default function Sales() {
     offset: 0,
   });
 
+  const [reservasFilters, setReservasFilters] = useState({
+    startDate: "",
+    endDate: "",
+    limit: 20,
+    offset: 0,
+  });
+
   const [isManualReservaModalOpen, setIsManualReservaModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("lista");
 
@@ -48,14 +55,19 @@ export default function Sales() {
     }],
   });
 
-  // Query for Reserva orders that are still pending (excludePerdida always true for this hardcoded query)
+  // Query for Reserva orders that are still pending (excludePerdida always true)
   const { data: reservasData, isLoading: reservasLoading } = useQuery<{
     data: any[];
     total: number;
     limit: number;
     offset: number;
   }>({
-    queryKey: ["/api/sales", { tipo: "Reserva", estadoEntrega: "Pendiente", excludePerdida: true }],
+    queryKey: ["/api/sales", { 
+      ...reservasFilters,
+      tipo: "Reserva", 
+      estadoEntrega: "Pendiente", 
+      excludePerdida: true 
+    }],
   });
 
   // Query for Pagos tab - orders grouped by order number with estadoEntrega Pendiente or En Proceso
@@ -143,6 +155,23 @@ export default function Sales() {
     });
   };
 
+  const handleReservasFilterChange = (newFilters: Partial<typeof reservasFilters>) => {
+    setReservasFilters(prev => ({ ...prev, ...newFilters, offset: 0 }));
+  };
+
+  const handleReservasPageChange = (newOffset: number) => {
+    setReservasFilters(prev => ({ ...prev, offset: newOffset }));
+  };
+
+  const handleClearReservasFilters = () => {
+    setReservasFilters({
+      startDate: "",
+      endDate: "",
+      limit: 20,
+      offset: 0,
+    });
+  };
+
   return (
     <div className="h-screen flex bg-background">
       <Sidebar />
@@ -193,18 +222,22 @@ export default function Sales() {
                 <SalesTable 
                   data={reservasData?.data || []} 
                   total={reservasData?.total || 0}
-                  limit={20}
-                  offset={0}
+                  limit={reservasFilters.limit}
+                  offset={reservasFilters.offset}
                   isLoading={reservasLoading}
                   hideFilters={false}
                   hidePagination={false}
                   showDeliveryDateColumn={true}
                   activeTab={activeTab}
+                  filters={reservasFilters}
                   extraExportParams={{
                     tipo: 'Reserva',
                     estadoEntrega: 'Pendiente',
                     excludePerdida: 'true'
                   }}
+                  onFilterChange={handleReservasFilterChange}
+                  onPageChange={handleReservasPageChange}
+                  onClearFilters={handleClearReservasFilters}
                   onNewReserva={() => setIsManualReservaModalOpen(true)}
                 />
               </div>
