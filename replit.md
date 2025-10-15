@@ -21,7 +21,7 @@ PostgreSQL serves as the primary database, accessed via Drizzle ORM for type-saf
 Basic username/password authentication is implemented, with user sessions managed securely through PostgreSQL session storage using `connect-pg-simple`.
 
 ## UI/UX Design
-The application leverages shadcn/ui and Radix UI for consistent design and accessibility, with Tailwind CSS for styling and Lucide React for icons. It features a tabbed interface for managing sales data across "Lista de Ventas", "Ventas por Completar", "Reservas", "Pagos", and "Despachos". A "Verificación" section includes "Ingresos" and "Egresos" tabs for payment verification. The interface is optimized for space with compact headers and context-aware action buttons.
+The application leverages shadcn/ui and Radix UI for consistent design and accessibility, with Tailwind CSS for styling and Lucide React for icons. It features a tabbed interface for managing sales data across "Lista de Ventas", "Ventas por Completar", "Reservas", "Pagos", and "Despachos". A "Verificación" section includes "Ingresos" and "Egresos" tabs for payment verification. The interface is optimized for space with compact headers and context-aware action buttons. The Despachos tab features a directly editable Estado de Entrega dropdown in the sticky column for quick status updates, with customer contact information (Nombre, Teléfono, Cédula, Dirección de Despacho) positioned immediately after the delivery date for efficient dispatch workflow.
 
 ### Tab Workflow Logic
 Orders progress through tabs based on payment and delivery status:
