@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Download, Package, User, Phone, Mail, ChevronLeft, ChevronRight } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -240,22 +241,24 @@ export default function DispatchTable({
     <>
       <div className="p-6 border-b border-border">
         <div className="flex justify-between items-center">
-          <div>
-            <h2 className="text-lg font-semibold text-foreground">
-              Órdenes para Despacho
-            </h2>
-            <p className="text-sm text-muted-foreground">
-              {total} órdenes con direcciones listas para despacho
-            </p>
-          </div>
-          <Button 
-            onClick={handleExportExcel}
-            className="flex items-center gap-2"
-            data-testid="export-dispatch-excel"
-          >
-            <Download className="h-4 w-4" />
-            Descargar Excel
-          </Button>
+          <h2 className="text-lg font-semibold text-foreground">
+            Despachos
+          </h2>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button 
+                onClick={handleExportExcel}
+                variant="outline"
+                size="icon"
+                data-testid="export-dispatch-excel"
+              >
+                <Download className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Descargar Excel</p>
+            </TooltipContent>
+          </Tooltip>
         </div>
       </div>
 
