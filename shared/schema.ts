@@ -172,6 +172,8 @@ export const sales = pgTable("sales", {
   medidaEspecial: varchar("medida_especial", { length: 10 }),
   // Asesor asignado
   asesorId: varchar("asesor_id"),
+  // Transportista asignado
+  transportistaId: varchar("transportista_id"),
   // Email tracking
   emailSentAt: timestamp("email_sent_at"),
   // Verification fields for Pago Inicial
