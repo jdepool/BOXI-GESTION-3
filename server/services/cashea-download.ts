@@ -198,30 +198,41 @@ async function sendCasheaOrderWebhook(newSales: any[]): Promise<void> {
     return;
   }
 
-  console.log(`📤 Sending ${casheaOrders.length} Cashea orders to webhook...`);
+  console.log(`📤 Sending ${casheaOrders.length} Cashea orders to webhook via GET...`);
 
   try {
-    // Send each order individually to the webhook
-    for (const sale of casheaOrders) {
-      const payload = {
-        orden: sale.orden || '',
+    // Send each order individually to the webhook with GET method
+    for (let i = 0; i < casheaOrders.length; i++) {
+      const sale = casheaOrders[i];
+      
+      // Build URL with query parameters
+      const params = new URLSearchParams({
+        Orden: sale.orden || '',
         nombre_cliente: sale.nombre || '',
         telefono: sale.telefono || '',
         producto: sale.product || ''
-      };
-
-      const response = await fetch(webhookUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
       });
+      
+      const fullUrl = `${webhookUrl}?${params.toString()}`;
 
-      if (!response.ok) {
-        console.error(`Webhook failed for order ${sale.orden}: ${response.status} ${response.statusText}`);
-      } else {
-        console.log(`✅ Webhook sent for order ${sale.orden}`);
+      try {
+        const response = await fetch(fullUrl, {
+          method: 'GET'
+        });
+
+        if (!response.ok) {
+          console.error(`Webhook failed for order ${sale.orden}: ${response.status} ${response.statusText}`);
+        } else {
+          console.log(`✅ Webhook sent for order ${sale.orden}`);
+        }
+      } catch (error) {
+        console.error(`Error sending webhook for order ${sale.orden}:`, error);
+        // Continue processing remaining orders even if one fails
+      }
+
+      // Add 500ms delay between calls (except after the last one)
+      if (i < casheaOrders.length - 1) {
+        await new Promise(resolve => setTimeout(resolve, 500));
       }
     }
     

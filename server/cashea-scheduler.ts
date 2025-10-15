@@ -32,6 +32,14 @@ let currentTask: ScheduledTask | null = null;
 export async function startCasheaScheduler() {
   console.log('🚀 Initializing Cashea automation scheduler...');
   
+  // Log webhook URL status
+  const webhookUrl = process.env.CASHEA_WEBHOOK_URL;
+  if (webhookUrl) {
+    console.log(`✅ Cashea webhook URL loaded: ${webhookUrl.substring(0, 30)}...`);
+  } else {
+    console.log('⚠️  No Cashea webhook URL configured');
+  }
+  
   // Get current config from database
   const config = await getAutomationConfig();
   
