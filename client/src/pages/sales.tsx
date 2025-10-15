@@ -3,7 +3,6 @@ import { useQuery } from "@tanstack/react-query";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Settings } from "lucide-react";
 import Sidebar from "@/components/layout/sidebar";
 import Header from "@/components/layout/header";
 import SalesTable from "@/components/sales/sales-table";
@@ -194,14 +193,13 @@ export default function Sales() {
                 <TabsTrigger value="pagos" data-testid="tab-pagos">Pagos</TabsTrigger>
               </TabsList>
               <Button
-                variant="outline"
-                size="icon"
+                variant="ghost"
+                size="sm"
                 onClick={() => setIsSettingsDialogOpen(true)}
                 data-testid="button-settings"
-                title="Configuración y Cargar Datos"
-                className="h-9 w-9"
+                className="text-muted-foreground hover:text-foreground"
               >
-                <Settings className="h-4 w-4" />
+                Cargar datos
               </Button>
             </div>
             
