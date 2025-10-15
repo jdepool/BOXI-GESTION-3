@@ -2199,6 +2199,66 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Mark a single sale as Cancelada
+  app.put("/api/sales/:saleId/cancel", async (req, res) => {
+    try {
+      const { saleId } = req.params;
+
+      // Validate that sale exists
+      const existingSale = await storage.getSaleById(saleId);
+      if (!existingSale) {
+        return res.status(404).json({ error: "Sale not found" });
+      }
+
+      const updatedSale = await storage.updateSale(saleId, { 
+        estadoEntrega: "Cancelada" 
+      });
+      
+      if (!updatedSale) {
+        return res.status(500).json({ error: "Failed to cancel sale" });
+      }
+
+      res.json({ 
+        success: true, 
+        message: "Sale cancelled successfully",
+        sale: updatedSale 
+      });
+    } catch (error) {
+      console.error("Cancel sale error:", error);
+      res.status(500).json({ error: "Failed to cancel sale" });
+    }
+  });
+
+  // Mark a single sale as Devuelta
+  app.put("/api/sales/:saleId/return", async (req, res) => {
+    try {
+      const { saleId } = req.params;
+
+      // Validate that sale exists
+      const existingSale = await storage.getSaleById(saleId);
+      if (!existingSale) {
+        return res.status(404).json({ error: "Sale not found" });
+      }
+
+      const updatedSale = await storage.updateSale(saleId, { 
+        estadoEntrega: "Devuelta" 
+      });
+      
+      if (!updatedSale) {
+        return res.status(500).json({ error: "Failed to mark sale as returned" });
+      }
+
+      res.json({ 
+        success: true, 
+        message: "Sale marked as returned successfully",
+        sale: updatedSale 
+      });
+    } catch (error) {
+      console.error("Return sale error:", error);
+      res.status(500).json({ error: "Failed to mark sale as returned" });
+    }
+  });
+
   // Update seguimientoPago for all sales in an order
   app.patch("/api/sales/orders/:orderNumber/seguimiento-pago", async (req, res) => {
     try {

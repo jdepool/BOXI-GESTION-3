@@ -12,7 +12,8 @@ import { DateRangePicker } from "@/components/shared/date-range-picker";
 import SaleDetailModal from "./sale-detail-modal";
 import AddressModal from "@/components/addresses/address-modal";
 import EditSaleModal from "./edit-sale-modal";
-import { MapPin, Edit, CalendarIcon, Mail, Filter, ChevronDown, ChevronUp, Download, ChevronLeft, ChevronRight, RotateCcw } from "lucide-react";
+import { MapPin, Edit, CalendarIcon, Mail, Filter, ChevronDown, ChevronUp, Download, ChevronLeft, ChevronRight, RotateCcw, XCircle } from "lucide-react";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { format, parse } from "date-fns";
@@ -97,6 +98,58 @@ export default function SalesTable({
     },
   });
 
+  // Cancel sale mutation
+  const cancelSaleMutation = useMutation({
+    mutationFn: async (saleId: string) => {
+      return apiRequest("PUT", `/api/sales/${saleId}/cancel`, {});
+    },
+    onSuccess: () => {
+      // Invalidate all sales queries to refresh data across all pages
+      queryClient.invalidateQueries({ 
+        predicate: (query) => Array.isArray(query.queryKey) && typeof query.queryKey[0] === 'string' && query.queryKey[0].startsWith('/api/sales')
+      });
+      toast({
+        title: "Venta cancelada",
+        description: "La venta ha sido marcada como cancelada",
+      });
+      setCancelConfirmOpen(false);
+      setSelectedSaleForCancel(null);
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "No se pudo cancelar la venta",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Return sale mutation
+  const returnSaleMutation = useMutation({
+    mutationFn: async (saleId: string) => {
+      return apiRequest("PUT", `/api/sales/${saleId}/return`, {});
+    },
+    onSuccess: () => {
+      // Invalidate all sales queries to refresh data across all pages
+      queryClient.invalidateQueries({ 
+        predicate: (query) => Array.isArray(query.queryKey) && typeof query.queryKey[0] === 'string' && query.queryKey[0].startsWith('/api/sales')
+      });
+      toast({
+        title: "Venta devuelta",
+        description: "La venta ha sido marcada como devuelta",
+      });
+      setReturnConfirmOpen(false);
+      setSelectedSaleForReturn(null);
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "No se pudo marcar la venta como devuelta",
+        variant: "destructive",
+      });
+    },
+  });
+
   const [selectedSale, setSelectedSale] = useState<Sale | null>(null);
   const [addressModalOpen, setAddressModalOpen] = useState(false);
   const [selectedSaleForAddress, setSelectedSaleForAddress] = useState<Sale | null>(null);
@@ -104,6 +157,10 @@ export default function SalesTable({
   const [selectedSaleForEdit, setSelectedSaleForEdit] = useState<Sale | null>(null);
   const [editingNotesId, setEditingNotesId] = useState<string | null>(null);
   const [notesValue, setNotesValue] = useState<string>("");
+  const [cancelConfirmOpen, setCancelConfirmOpen] = useState(false);
+  const [returnConfirmOpen, setReturnConfirmOpen] = useState(false);
+  const [selectedSaleForCancel, setSelectedSaleForCancel] = useState<Sale | null>(null);
+  const [selectedSaleForReturn, setSelectedSaleForReturn] = useState<Sale | null>(null);
   const [filtersVisible, setFiltersVisible] = useState(false);
   const filters = {
     canal: parentFilters?.canal || "",
@@ -792,7 +849,7 @@ export default function SalesTable({
                           <Edit className="h-3 w-3 mr-1" />
                           Editar
                         </Button>
-                        {sale.canal?.toLowerCase() === "manual" && sale.email && (
+                        {sale.canal?.toLowerCase() === "manual" && sale.email ? (
                           <Button
                             variant="outline"
                             size="sm"
@@ -805,7 +862,45 @@ export default function SalesTable({
                             <Mail className={cn("h-3 w-3 mr-1", sale.emailSentAt && "text-green-600")} />
                             {sendEmailMutation.isPending ? "Enviando..." : "Email"}
                           </Button>
+                        ) : (
+                          <div className="w-16" />
                         )}
+                        <Button
+                          variant={sale.estadoEntrega === "Cancelada" ? "outline" : "destructive"}
+                          size="sm"
+                          onClick={() => {
+                            setSelectedSaleForCancel(sale);
+                            setCancelConfirmOpen(true);
+                          }}
+                          disabled={sale.estadoEntrega === "Cancelada" || cancelSaleMutation.isPending}
+                          data-testid={`cancel-sale-${sale.id}`}
+                          className={cn(
+                            "h-7 text-xs",
+                            sale.estadoEntrega === "Cancelada" && "bg-green-800 text-white hover:bg-green-800 opacity-70 cursor-not-allowed border-green-700"
+                          )}
+                          title={sale.estadoEntrega === "Cancelada" ? "Venta ya cancelada" : "Cancelar venta"}
+                        >
+                          <XCircle className={cn("h-3 w-3 mr-1", sale.estadoEntrega === "Cancelada" && "text-green-400")} />
+                          Cancelar
+                        </Button>
+                        <Button
+                          variant={sale.estadoEntrega === "Devuelta" ? "outline" : "secondary"}
+                          size="sm"
+                          onClick={() => {
+                            setSelectedSaleForReturn(sale);
+                            setReturnConfirmOpen(true);
+                          }}
+                          disabled={sale.estadoEntrega === "Devuelta" || returnSaleMutation.isPending}
+                          data-testid={`return-sale-${sale.id}`}
+                          className={cn(
+                            "h-7 text-xs",
+                            sale.estadoEntrega === "Devuelta" && "bg-green-800 text-white hover:bg-green-800 opacity-70 cursor-not-allowed border-green-700"
+                          )}
+                          title={sale.estadoEntrega === "Devuelta" ? "Venta ya devuelta" : "Marcar como devuelta"}
+                        >
+                          <RotateCcw className={cn("h-3 w-3 mr-1", sale.estadoEntrega === "Devuelta" && "text-green-400")} />
+                          Devolver
+                        </Button>
                         <Button
                           variant="ghost"
                           size="sm"
@@ -882,6 +977,68 @@ export default function SalesTable({
         }}
         sale={selectedSaleForEdit}
       />
+
+      {/* Cancel Confirmation Dialog */}
+      <AlertDialog open={cancelConfirmOpen} onOpenChange={setCancelConfirmOpen}>
+        <AlertDialogContent data-testid="cancel-confirm-dialog">
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Confirmar cancelación?</AlertDialogTitle>
+            <AlertDialogDescription>
+              ¿Está seguro que desea cancelar esta venta? El estado de entrega cambiará a "Cancelada" y será visible en todos los registros.
+              {selectedSaleForCancel && (
+                <div className="mt-2 text-sm font-medium">
+                  Orden: {selectedSaleForCancel.orden} - {selectedSaleForCancel.nombre}
+                </div>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel data-testid="cancel-cancel">Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              data-testid="cancel-confirm"
+              onClick={() => {
+                if (selectedSaleForCancel) {
+                  cancelSaleMutation.mutate(selectedSaleForCancel.id);
+                }
+                setCancelConfirmOpen(false);
+              }}
+            >
+              Confirmar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Return Confirmation Dialog */}
+      <AlertDialog open={returnConfirmOpen} onOpenChange={setReturnConfirmOpen}>
+        <AlertDialogContent data-testid="return-confirm-dialog">
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Confirmar devolución?</AlertDialogTitle>
+            <AlertDialogDescription>
+              ¿Está seguro que desea marcar esta venta como devuelta? El estado de entrega cambiará a "Devuelta".
+              {selectedSaleForReturn && (
+                <div className="mt-2 text-sm font-medium">
+                  Orden: {selectedSaleForReturn.orden} - {selectedSaleForReturn.nombre}
+                </div>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel data-testid="return-cancel">Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              data-testid="return-confirm"
+              onClick={() => {
+                if (selectedSaleForReturn) {
+                  returnSaleMutation.mutate(selectedSaleForReturn.id);
+                }
+                setReturnConfirmOpen(false);
+              }}
+            >
+              Confirmar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
