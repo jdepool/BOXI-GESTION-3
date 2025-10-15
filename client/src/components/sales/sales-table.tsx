@@ -1027,20 +1027,32 @@ export default function SalesTable({
 
       {/* Return Confirmation Dialog */}
       <AlertDialog open={returnConfirmOpen} onOpenChange={setReturnConfirmOpen}>
-        <AlertDialogContent data-testid="return-confirm-dialog">
+        <AlertDialogContent data-testid="return-confirm-dialog" className="max-w-2xl">
           <AlertDialogHeader>
-            <AlertDialogTitle>¿Confirmar devolución?</AlertDialogTitle>
-            <AlertDialogDescription>
-              ¿Está seguro que desea marcar esta venta como devuelta? El estado de entrega cambiará a "Devuelta".
+            <AlertDialogTitle className="text-orange-600 dark:text-orange-500 text-xl">⚠️ ADVERTENCIA: Devolución de Producto</AlertDialogTitle>
+            <AlertDialogDescription className="space-y-3 text-base">
               {selectedSaleForReturn && (
-                <div className="mt-2 text-sm font-medium">
-                  Orden: {selectedSaleForReturn.orden} - {selectedSaleForReturn.nombre}
+                <div className="p-3 bg-muted rounded-md">
+                  <div className="font-semibold text-foreground">
+                    Orden: {selectedSaleForReturn.orden} - {selectedSaleForReturn.nombre}
+                  </div>
                 </div>
               )}
+              <div className="p-4 bg-orange-50 dark:bg-orange-950/30 border border-orange-300 dark:border-orange-800 rounded-md">
+                <p className="text-foreground font-medium mb-2">
+                  Esta acción cambiará el estado de entrega a "Devuelta" en todos los registros del sistema.
+                </p>
+                <p className="text-foreground font-semibold">
+                  Por favor, antes de marcar la devolución asegúrate de explicar en la sección de <span className="underline">Notas</span> las razones por las cuales el producto ha sido devuelto.
+                </p>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                <strong>Si no has documentado las razones:</strong> Rechaza esta acción, llena las Notas con la explicación correspondiente y luego vuelve a esta pantalla. <strong>Si ya lo hiciste:</strong> Continúa y confirma la devolución.
+              </p>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel data-testid="return-cancel">Cancelar</AlertDialogCancel>
+            <AlertDialogCancel data-testid="return-cancel">Rechazar</AlertDialogCancel>
             <AlertDialogAction
               data-testid="return-confirm"
               onClick={() => {
@@ -1049,8 +1061,9 @@ export default function SalesTable({
                 }
                 setReturnConfirmOpen(false);
               }}
+              className="bg-orange-600 hover:bg-orange-700 dark:bg-orange-600 dark:hover:bg-orange-700"
             >
-              Confirmar
+              Confirmar Devolución
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
