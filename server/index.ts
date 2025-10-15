@@ -1,6 +1,7 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { startCasheaScheduler, stopCasheaScheduler } from "./cashea-scheduler";
 
 const app = express();
 app.use(express.json());
@@ -66,15 +67,25 @@ app.use((req, res, next) => {
     port,
     host: "0.0.0.0",
     reusePort: true,
-  }, () => {
+  }, async () => {
     log(`serving on port ${port}`);
+    
+    // Start Cashea automation scheduler
+    try {
+      await startCasheaScheduler();
+    } catch (error) {
+      console.error('Failed to start Cashea scheduler:', error);
+    }
   });
 
   // Graceful shutdown handling
   async function gracefulShutdown(signal: string) {
     console.log(`Received ${signal}, shutting down gracefully...`);
     
-    // Close HTTP server first
+    // Stop scheduler first
+    await stopCasheaScheduler();
+    
+    // Close HTTP server
     server.close(async () => {
       console.log('HTTP server closed');
       

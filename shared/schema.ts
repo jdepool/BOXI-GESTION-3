@@ -231,6 +231,24 @@ export const uploadHistory = pgTable("upload_history", {
   uploadedAt: timestamp("uploaded_at").defaultNow(),
 });
 
+export const casheaAutomationConfig = pgTable("cashea_automation_config", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  enabled: boolean("enabled").notNull().default(false),
+  frequency: text("frequency").notNull().default("2 hours"), // 30 minutes, 1 hour, 2 hours, 4 hours, 8 hours, 16 hours, 24 hours
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const casheaAutomaticDownloads = pgTable("cashea_automatic_downloads", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  startDate: timestamp("start_date").notNull(),
+  endDate: timestamp("end_date").notNull(),
+  recordsCount: integer("records_count").notNull(),
+  status: text("status").notNull(), // success, error
+  errorMessage: text("error_message"),
+  downloadedAt: timestamp("downloaded_at").defaultNow(),
+});
+
 export const egresos = pgTable("egresos", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   fecha: timestamp("fecha").notNull(),
@@ -360,12 +378,30 @@ export const insertPaymentInstallmentSchema = createInsertSchema(paymentInstallm
   fecha: z.union([z.date(), z.string().transform((val) => new Date(val))]).optional(),
 });
 
+export const insertCasheaAutomationConfigSchema = createInsertSchema(casheaAutomationConfig).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertCasheaAutomaticDownloadSchema = createInsertSchema(casheaAutomaticDownloads).omit({
+  id: true,
+  downloadedAt: true,
+}).extend({
+  startDate: z.union([z.date(), z.string().transform((val) => new Date(val))]),
+  endDate: z.union([z.date(), z.string().transform((val) => new Date(val))]),
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type Sale = typeof sales.$inferSelect;
 export type InsertSale = z.infer<typeof insertSaleSchema>;
 export type UploadHistory = typeof uploadHistory.$inferSelect;
 export type InsertUploadHistory = z.infer<typeof insertUploadHistorySchema>;
+export type CasheaAutomationConfig = typeof casheaAutomationConfig.$inferSelect;
+export type InsertCasheaAutomationConfig = z.infer<typeof insertCasheaAutomationConfigSchema>;
+export type CasheaAutomaticDownload = typeof casheaAutomaticDownloads.$inferSelect;
+export type InsertCasheaAutomaticDownload = z.infer<typeof insertCasheaAutomaticDownloadSchema>;
 
 // Admin types
 export type Banco = typeof bancos.$inferSelect;

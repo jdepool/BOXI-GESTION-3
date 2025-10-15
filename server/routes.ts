@@ -17,6 +17,7 @@ import MemoryStore from "memorystore";
 import crypto from "crypto";
 import fetch from "node-fetch";
 import { sendOrderConfirmationEmail, type OrderEmailData } from "./services/email-service";
+import { performCasheaDownload } from "./services/cashea-download";
 
 // Configure multer for file uploads
 const upload = multer({
@@ -2021,7 +2022,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     return records;
   }
 
-  // CASHEA API endpoint
+  // CASHEA API endpoint - Manual download
   app.post("/api/cashea/download", async (req, res) => {
     try {
       const { startDate, endDate } = req.body;
@@ -2030,114 +2031,83 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Start date and end date are required" });
       }
 
-      console.log(`📊 CASHEA download request: ${startDate} to ${endDate}`);
+      const result = await performCasheaDownload(startDate, endDate, storage);
 
-      // Call CASHEA API
-      const casheaData = await callCasheaApi(startDate, endDate);
-      
-      // Transform the data
-      const transformedData = transformCasheaData(casheaData);
-      // Validate each row (same as file upload)
-      const validatedSales = [];
-      const errors = [];
-      
-      for (let i = 0; i < transformedData.length; i++) {
-        try {
-          const validatedSale = insertSaleSchema.parse(transformedData[i]);
-          validatedSales.push(validatedSale);
-        } catch (error) {
-          errors.push({
-            row: i + 1,
-            error: error instanceof z.ZodError ? error.errors : String(error)
-          });
-        }
-      }
-
-      if (errors.length > 0) {
-        await storage.createUploadHistory({
-          filename: `cashea_download_${startDate}_to_${endDate}`,
-          canal: 'cashea',
-          recordsCount: 0,
-          status: 'error',
-          errorMessage: `Validation errors in ${errors.length} rows`,
-        });
-
+      if (!result.success) {
         return res.status(400).json({
           error: "Validation errors found",
-          details: errors.slice(0, 10),
-          totalErrors: errors.length
+          details: result.errors.slice(0, 10),
+          totalErrors: result.errors.length
         });
       }
-
-      // Check for existing order numbers to avoid duplicates (same as file upload)
-      const orderNumbers = validatedSales.map(sale => sale.orden).filter(Boolean) as string[];
-      const existingOrders = await storage.getExistingOrderNumbers(orderNumbers);
-      
-      // Filter out sales with existing order numbers
-      const newSales = validatedSales.filter(sale => 
-        !sale.orden || !existingOrders.includes(sale.orden)
-      );
-      
-      const duplicatesCount = validatedSales.length - newSales.length;
-
-      // Save to database only new sales
-      if (newSales.length > 0) {
-        await storage.createSales(newSales);
-      }
-
-      // Log successful download
-      await storage.createUploadHistory({
-        filename: `cashea_download_${startDate}_to_${endDate}`,
-        canal: 'cashea',
-        recordsCount: newSales.length,
-        status: 'success',
-        errorMessage: duplicatesCount > 0 ? `${duplicatesCount} duplicate order(s) ignored` : undefined,
-      });
-
-      // Send webhook notification for Cashea downloads
-      if (newSales.length > 0) {
-        try {
-          await sendWebhookToZapier({
-            recordsProcessed: newSales.length,
-            duplicatesIgnored: duplicatesCount,
-            filename: `cashea_download_${startDate}_to_${endDate}`,
-            salesData: newSales
-          }, 'cashea');
-        } catch (webhookError) {
-          console.error('Webhook notification failed, but download was successful:', webhookError);
-          // Don't fail the download if webhook fails
-        }
-      }
-
-      console.log(`✅ Transformed ${transformedData.length} CASHEA records`);
 
       res.json({
         success: true,
-        data: transformedData,
-        recordsProcessed: newSales.length,
-        duplicatesIgnored: duplicatesCount,
-        message: duplicatesCount > 0 
-          ? `Downloaded ${newSales.length} CASHEA records. ${duplicatesCount} duplicate order(s) were ignored.`
-          : `Downloaded ${newSales.length} CASHEA records successfully`,
-        recordCount: newSales.length
+        recordsProcessed: result.recordsProcessed,
+        duplicatesIgnored: result.duplicatesIgnored,
+        message: result.message,
+        recordCount: result.recordsProcessed
       });
 
     } catch (error) {
       console.error("Error downloading CASHEA data:", error);
-      
-      // Log failed download
-      await storage.createUploadHistory({
-        filename: `cashea_download_${req.body.startDate || 'unknown'}_to_${req.body.endDate || 'unknown'}`,
-        canal: 'cashea',
-        recordsCount: 0,
-        status: 'error',
-        errorMessage: error instanceof Error ? error.message : 'Unknown error',
-      });
 
       res.status(500).json({ 
         error: "Failed to download CASHEA data",
         details: error instanceof Error ? error.message : 'Unknown error'
       });
+    }
+  });
+
+  // Get Cashea automation config
+  app.get("/api/cashea/automation/config", async (req, res) => {
+    try {
+      const config = await storage.getCasheaAutomationConfig();
+      res.json(config);
+    } catch (error) {
+      console.error("Error getting automation config:", error);
+      res.status(500).json({ error: "Failed to get automation config" });
+    }
+  });
+
+  // Update Cashea automation config
+  app.put("/api/cashea/automation/config", async (req, res) => {
+    try {
+      const { enabled, frequency } = req.body;
+
+      if (typeof enabled !== 'boolean') {
+        return res.status(400).json({ error: "enabled must be a boolean" });
+      }
+
+      const validFrequencies = ['30 minutes', '1 hour', '2 hours', '4 hours', '8 hours', '16 hours', '24 hours'];
+      if (!validFrequencies.includes(frequency)) {
+        return res.status(400).json({ 
+          error: "Invalid frequency. Must be one of: " + validFrequencies.join(', ')
+        });
+      }
+
+      const config = await storage.updateCasheaAutomationConfig(enabled, frequency);
+      
+      // Restart scheduler with new config
+      const { restartCasheaScheduler } = await import('./cashea-scheduler');
+      await restartCasheaScheduler();
+
+      res.json(config);
+    } catch (error) {
+      console.error("Error updating automation config:", error);
+      res.status(500).json({ error: "Failed to update automation config" });
+    }
+  });
+
+  // Get Cashea automation download history
+  app.get("/api/cashea/automation/history", async (req, res) => {
+    try {
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 5;
+      const history = await storage.getCasheaAutomaticDownloads(limit);
+      res.json(history);
+    } catch (error) {
+      console.error("Error getting automation history:", error);
+      res.status(500).json({ error: "Failed to get automation history" });
     }
   });
 

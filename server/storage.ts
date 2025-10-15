@@ -119,6 +119,11 @@ export interface IStorage {
   createUploadHistory(uploadData: InsertUploadHistory): Promise<UploadHistory>;
   getRecentUploads(limit?: number): Promise<UploadHistory[]>;
 
+  // Cashea automation methods
+  getCasheaAutomationConfig(): Promise<any>;
+  updateCasheaAutomationConfig(enabled: boolean, frequency: string): Promise<any>;
+  getCasheaAutomaticDownloads(limit?: number): Promise<any[]>;
+
   // Admin configuration methods
   // Bancos
   getBancos(): Promise<Banco[]>;
@@ -1208,6 +1213,45 @@ export class DatabaseStorage implements IStorage {
       .select()
       .from(uploadHistory)
       .orderBy(desc(uploadHistory.uploadedAt))
+      .limit(limit);
+  }
+
+  // Cashea automation methods implementation
+  async getCasheaAutomationConfig(): Promise<any> {
+    const { casheaAutomationConfig } = await import('@shared/schema');
+    const configs = await db.select().from(casheaAutomationConfig).limit(1);
+    
+    if (configs.length === 0) {
+      // Create default config
+      const [newConfig] = await db.insert(casheaAutomationConfig).values({
+        enabled: false,
+        frequency: '2 hours'
+      }).returning();
+      return newConfig;
+    }
+    
+    return configs[0];
+  }
+
+  async updateCasheaAutomationConfig(enabled: boolean, frequency: string): Promise<any> {
+    const { casheaAutomationConfig } = await import('@shared/schema');
+    const existingConfig = await this.getCasheaAutomationConfig();
+    
+    const [updatedConfig] = await db
+      .update(casheaAutomationConfig)
+      .set({ enabled, frequency })
+      .where(eq(casheaAutomationConfig.id, existingConfig.id))
+      .returning();
+    
+    return updatedConfig;
+  }
+
+  async getCasheaAutomaticDownloads(limit = 5): Promise<any[]> {
+    const { casheaAutomaticDownloads } = await import('@shared/schema');
+    return await db
+      .select()
+      .from(casheaAutomaticDownloads)
+      .orderBy(desc(casheaAutomaticDownloads.downloadedAt))
       .limit(limit);
   }
 
