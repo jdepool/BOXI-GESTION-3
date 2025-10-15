@@ -612,8 +612,8 @@ export default function SalesTable({
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[120px]">Direcciones</th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[120px]">Asesor</th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[150px]">Notas</th>
-                <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[180px]"></th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[150px]">Acciones</th>
+                <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[180px]"></th>
               </tr>
             </thead>
             <tbody>
@@ -835,46 +835,6 @@ export default function SalesTable({
                         </div>
                       )}
                     </td>
-                    <td className="p-2 min-w-[180px]">
-                      <div className="flex gap-1">
-                        <Button
-                          variant={sale.estadoEntrega === "Cancelada" ? "outline" : "destructive"}
-                          size="sm"
-                          onClick={() => {
-                            setSelectedSaleForCancel(sale);
-                            setCancelConfirmOpen(true);
-                          }}
-                          disabled={sale.estadoEntrega === "Cancelada" || cancelSaleMutation.isPending}
-                          data-testid={`cancel-sale-${sale.id}`}
-                          className={cn(
-                            "h-7 text-xs",
-                            sale.estadoEntrega === "Cancelada" && "bg-green-800 text-white hover:bg-green-800 opacity-70 cursor-not-allowed border-green-700"
-                          )}
-                          title={sale.estadoEntrega === "Cancelada" ? "Venta ya cancelada" : "Cancelar venta"}
-                        >
-                          <XCircle className={cn("h-3 w-3 mr-1", sale.estadoEntrega === "Cancelada" && "text-green-400")} />
-                          Cancelar
-                        </Button>
-                        <Button
-                          variant={sale.estadoEntrega === "Devuelta" ? "outline" : "secondary"}
-                          size="sm"
-                          onClick={() => {
-                            setSelectedSaleForReturn(sale);
-                            setReturnConfirmOpen(true);
-                          }}
-                          disabled={sale.estadoEntrega === "Devuelta" || returnSaleMutation.isPending}
-                          data-testid={`return-sale-${sale.id}`}
-                          className={cn(
-                            "h-7 text-xs",
-                            sale.estadoEntrega === "Devuelta" && "bg-green-800 text-white hover:bg-green-800 opacity-70 cursor-not-allowed border-green-700"
-                          )}
-                          title={sale.estadoEntrega === "Devuelta" ? "Venta ya devuelta" : "Marcar como devuelta"}
-                        >
-                          <RotateCcw className={cn("h-3 w-3 mr-1", sale.estadoEntrega === "Devuelta" && "text-green-400")} />
-                          Devolver
-                        </Button>
-                      </div>
-                    </td>
                     <td className="p-2 min-w-[150px]">
                       <div className="flex gap-1">
                         <Button
@@ -913,6 +873,46 @@ export default function SalesTable({
                           title="Ver detalles"
                         >
                           <i className="fas fa-eye text-xs"></i>
+                        </Button>
+                      </div>
+                    </td>
+                    <td className="p-2 min-w-[180px]">
+                      <div className="flex gap-1">
+                        <Button
+                          variant={sale.estadoEntrega === "Cancelada" ? "outline" : "destructive"}
+                          size="sm"
+                          onClick={() => {
+                            setSelectedSaleForCancel(sale);
+                            setCancelConfirmOpen(true);
+                          }}
+                          disabled={sale.estadoEntrega === "Cancelada" || cancelSaleMutation.isPending}
+                          data-testid={`cancel-sale-${sale.id}`}
+                          className={cn(
+                            "h-7 text-xs",
+                            sale.estadoEntrega === "Cancelada" && "bg-green-800 text-white hover:bg-green-800 opacity-70 cursor-not-allowed border-green-700"
+                          )}
+                          title={sale.estadoEntrega === "Cancelada" ? "Venta ya cancelada" : "Cancelar venta"}
+                        >
+                          <XCircle className={cn("h-3 w-3 mr-1", sale.estadoEntrega === "Cancelada" && "text-green-400")} />
+                          Cancelar
+                        </Button>
+                        <Button
+                          variant={sale.estadoEntrega === "Devuelta" ? "outline" : "secondary"}
+                          size="sm"
+                          onClick={() => {
+                            setSelectedSaleForReturn(sale);
+                            setReturnConfirmOpen(true);
+                          }}
+                          disabled={sale.estadoEntrega === "Devuelta" || returnSaleMutation.isPending}
+                          data-testid={`return-sale-${sale.id}`}
+                          className={cn(
+                            "h-7 text-xs",
+                            sale.estadoEntrega === "Devuelta" && "bg-green-800 text-white hover:bg-green-800 opacity-70 cursor-not-allowed border-green-700"
+                          )}
+                          title={sale.estadoEntrega === "Devuelta" ? "Venta ya devuelta" : "Marcar como devuelta"}
+                        >
+                          <RotateCcw className={cn("h-3 w-3 mr-1", sale.estadoEntrega === "Devuelta" && "text-green-400")} />
+                          Devolver
                         </Button>
                       </div>
                     </td>
