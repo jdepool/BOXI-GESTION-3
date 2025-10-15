@@ -316,13 +316,19 @@ export default function VerificacionPage() {
                         data-testid="input-start-date"
                       >
                         <CalendarIcon className="mr-2 h-4 w-4" />
-                        {startDate ? format(new Date(startDate), "dd/MM/yyyy") : "Seleccionar"}
+                        {startDate ? (() => {
+                          const [year, month, day] = startDate.split('-');
+                          return `${day}/${month}/${year}`;
+                        })() : "Seleccionar"}
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="start">
                       <Calendar
                         mode="single"
-                        selected={startDate ? new Date(startDate) : undefined}
+                        selected={startDate ? (() => {
+                          const [year, month, day] = startDate.split('-');
+                          return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+                        })() : undefined}
                         onSelect={(date) => {
                           if (date) {
                             const localDate = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
@@ -349,13 +355,19 @@ export default function VerificacionPage() {
                         data-testid="input-end-date"
                       >
                         <CalendarIcon className="mr-2 h-4 w-4" />
-                        {endDate ? format(new Date(endDate), "dd/MM/yyyy") : "Seleccionar"}
+                        {endDate ? (() => {
+                          const [year, month, day] = endDate.split('-');
+                          return `${day}/${month}/${year}`;
+                        })() : "Seleccionar"}
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="start">
                       <Calendar
                         mode="single"
-                        selected={endDate ? new Date(endDate) : undefined}
+                        selected={endDate ? (() => {
+                          const [year, month, day] = endDate.split('-');
+                          return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+                        })() : undefined}
                         onSelect={(date) => {
                           if (date) {
                             const localDate = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
