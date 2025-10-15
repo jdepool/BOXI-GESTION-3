@@ -5,7 +5,6 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/theme-provider";
 import { useAuth } from "@/hooks/useAuth";
-import Upload from "@/pages/upload";
 import Sales from "@/pages/sales";
 import Despachos from "@/pages/despachos";
 import Verificacion from "@/pages/verificacion";
@@ -25,9 +24,6 @@ function Router() {
       <Route path="/login" component={Login} />
       <Route path="/">
         <Redirect to="/sales" />
-      </Route>
-      <Route path="/upload">
-        <ProtectedRoute component={Upload} />
       </Route>
       <Route path="/sales">
         <ProtectedRoute component={Sales} />
