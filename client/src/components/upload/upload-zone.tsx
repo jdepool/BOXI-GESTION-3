@@ -378,13 +378,13 @@ export default function UploadZone({ recentUploads, showOnlyCashea = false }: Up
 
   // Frequency options
   const frequencyOptions = [
-    { value: '30_minutes', label: 'Cada 30 minutos' },
-    { value: '1_hour', label: 'Cada 1 hora' },
-    { value: '2_hours', label: 'Cada 2 horas' },
-    { value: '4_hours', label: 'Cada 4 horas' },
-    { value: '8_hours', label: 'Cada 8 horas' },
-    { value: '16_hours', label: 'Cada 16 horas' },
-    { value: '24_hours', label: 'Cada 24 horas' },
+    { value: '30 minutes', label: 'Cada 30 minutos' },
+    { value: '1 hour', label: 'Cada 1 hora' },
+    { value: '2 hours', label: 'Cada 2 horas' },
+    { value: '4 hours', label: 'Cada 4 horas' },
+    { value: '8 hours', label: 'Cada 8 horas' },
+    { value: '16 hours', label: 'Cada 16 horas' },
+    { value: '24 hours', label: 'Cada 24 horas' },
   ];
 
   // CASHEA Download Content Component
@@ -430,7 +430,7 @@ export default function UploadZone({ recentUploads, showOnlyCashea = false }: Up
               <div className="h-10 bg-muted animate-pulse rounded mt-1" />
             ) : (
               <Select
-                value={automationConfig?.frequency || '2_hours'}
+                value={automationConfig?.frequency || '2 hours'}
                 onValueChange={handleFrequencyChange}
                 disabled={!automationConfig?.enabled || isLoadingConfig || !!configError || updateAutomationMutation.isPending}
               >
