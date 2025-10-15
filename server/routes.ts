@@ -174,7 +174,11 @@ function parseFile(buffer: Buffer, canal: string, filename: string) {
             // Excel date serial number
             fecha = new Date((row['Created at'] - 25569) * 86400 * 1000);
           } else {
-            fecha = new Date(row['Created at']);
+            // Parse date in local timezone to prevent shifts
+            const fechaStr = String(row['Created at']);
+            const dateOnly = fechaStr.includes('T') ? fechaStr.split('T')[0] : fechaStr;
+            // Append local time to force local interpretation (not UTC)
+            fecha = new Date(dateOnly + 'T00:00:00');
           }
         }
       } else {
@@ -184,7 +188,11 @@ function parseFile(buffer: Buffer, canal: string, filename: string) {
             // Excel date serial number
             fecha = new Date((row.Fecha - 25569) * 86400 * 1000);
           } else {
-            fecha = new Date(row.Fecha);
+            // Parse date in local timezone to prevent shifts
+            const fechaStr = String(row.Fecha);
+            const dateOnly = fechaStr.includes('T') ? fechaStr.split('T')[0] : fechaStr;
+            // Append local time to force local interpretation (not UTC)
+            fecha = new Date(dateOnly + 'T00:00:00');
           }
         }
       }
@@ -1948,7 +1956,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     );
     
     for (let i = 0; i < maxLength; i++) {
-      const fecha = fechas[i] ? new Date(fechas[i]) : new Date();
+      // Parse date in local timezone to prevent timezone shifts
+      // If fechas[i] is "2024-09-14T11:35:55.000Z", extract "2024-09-14"
+      // Then append T00:00:00 to create local date (not UTC) so Sept 14 stays Sept 14
+      let fecha = new Date();
+      if (fechas[i]) {
+        const fechaStr = String(fechas[i]);
+        const dateOnly = fechaStr.includes('T') ? fechaStr.split('T')[0] : fechaStr;
+        // Append local time to force local interpretation (not UTC)
+        fecha = new Date(dateOnly + 'T00:00:00');
+      }
       const totalUsdValue = String(totalesUSD[i] || '0');
       
       records.push({
