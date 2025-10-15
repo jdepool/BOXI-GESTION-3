@@ -3627,55 +3627,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Failed to update sale" });
       }
       
-      // Check if we need to update sale status when payment info is filled up
-      if (existingSale.estadoEntrega === "Pendiente" && existingSale.canal?.toLowerCase() === "manual") {
-        // Check if any payment information is being provided
-        const hasPaymentInfo = !!(
-          saleData.referenciaInicial || 
-          saleData.bancoReceptorInicial || 
-          saleData.metodoPagoId ||
-          (saleData.montoInicialUsd && parseFloat(saleData.montoInicialUsd) > 0) ||
-          (saleData.pagoInicialUsd && parseFloat(saleData.pagoInicialUsd) > 0)
-        );
-        
-        if (hasPaymentInfo) {
-          // Update estadoEntrega to move from Ventas por Completar to Lista de Ventas
-          const finalUpdatedSale = await storage.updateSale(id, {
-            estadoEntrega: "En proceso"
-          });
-          res.json(finalUpdatedSale || updatedSale);
-        } else {
-          res.json(updatedSale);
-        }
-      } else {
-        res.json(updatedSale);
-      }
+      // Manual sales stay "Pendiente" until balance = 0, then auto-update to "A despachar"
+      // Only Cashea orders use "En Proceso" status
+      res.json(updatedSale);
     } catch (error) {
       console.error("Error updating sale:", error);
       res.status(500).json({ error: "Failed to update sale" });
     }
   });
 
-  // Verify payment for manual sale
-  app.put("/api/sales/:id/verify-payment", async (req, res) => {
-    try {
-      const { id } = req.params;
-      
-      // Update the sale status from "Pendiente" to "En proceso" to move it from Ventas por Completar to Lista de Ventas
-      const updatedSale = await storage.updateSale(id, { 
-        estadoEntrega: "En proceso"
-      });
-      
-      if (!updatedSale) {
-        return res.status(404).json({ error: "Sale not found" });
-      }
-      
-      res.json(updatedSale);
-    } catch (error) {
-      console.error("Error verifying payment:", error);
-      res.status(500).json({ error: "Failed to verify payment" });
-    }
-  });
+  // Removed: verify-payment endpoint no longer needed
+  // Manual sales stay "Pendiente" until balance = 0, then auto-update to "A despachar"
 
   // Delete sale
   app.delete("/api/sales/:id", async (req, res) => {
@@ -3965,13 +3927,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const installment = await storage.createInstallment(saleId, validatedData);
       
-      // If this is the first payment info for a pending manual sale, move it to Lista de Ventas
-      if (sale.estadoEntrega === "Pendiente" && sale.canal?.toLowerCase() === "manual" && 
-          validatedData.cuotaAmount && parseFloat(validatedData.cuotaAmount) > 0) {
-        await storage.updateSale(saleId, {
-          estadoEntrega: "En proceso"
-        });
-      }
+      // Manual sales stay "Pendiente" until balance = 0 (auto-update to "A despachar")
+      // Only Cashea orders use "En Proceso" status
       
       // Check if Reserva order is now fully paid and verified - move to Lista de Ventas
       if (sale.tipo === "Reserva" && await storage.isPaymentFullyVerified(saleId)) {
@@ -4045,16 +4002,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Installment not found" });
       }
       
-      // Check if we need to update sale status when payment info is filled up
-      const sale = await storage.getSaleById(currentInstallment.saleId);
-      if (sale && sale.estadoEntrega === "Pendiente" && sale.canal?.toLowerCase() === "manual" && 
-          validatedData.cuotaAmount && parseFloat(validatedData.cuotaAmount) > 0) {
-        await storage.updateSale(currentInstallment.saleId, {
-          estadoEntrega: "En proceso"
-        });
-      }
+      // Manual sales stay "Pendiente" until balance = 0 (auto-update to "A despachar")
+      // Only Cashea orders use "En Proceso" status
       
       // Check if Reserva order is now fully paid and verified - move to Lista de Ventas
+      const sale = await storage.getSaleById(currentInstallment.saleId);
       if (sale && sale.tipo === "Reserva" && await storage.isPaymentFullyVerified(currentInstallment.saleId)) {
         // Use proper delivery status update to handle freight initialization and business logic
         await storage.updateSaleDeliveryStatus(currentInstallment.saleId, "A Despachar");
