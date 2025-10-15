@@ -60,6 +60,7 @@ export default function VerificacionPage() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [selectedBanco, setSelectedBanco] = useState("all");
+  const [estadoFilter, setEstadoFilter] = useState("all");
   const [ordenFilter, setOrdenFilter] = useState("");
   const [tipoPagoFilter, setTipoPagoFilter] = useState("all");
   
@@ -73,6 +74,7 @@ export default function VerificacionPage() {
       startDate,
       endDate,
       selectedBanco,
+      estadoFilter,
       ordenFilter,
       tipoPagoFilter,
       limit,
@@ -83,6 +85,7 @@ export default function VerificacionPage() {
       if (startDate) params.append("startDate", startDate);
       if (endDate) params.append("endDate", endDate);
       if (selectedBanco && selectedBanco !== "all") params.append("bancoId", selectedBanco);
+      if (estadoFilter && estadoFilter !== "all") params.append("estadoVerificacion", estadoFilter);
       if (ordenFilter) params.append("orden", ordenFilter);
       if (tipoPagoFilter && tipoPagoFilter !== "all") params.append("tipoPago", tipoPagoFilter);
       params.append("limit", limit.toString());
@@ -178,6 +181,7 @@ export default function VerificacionPage() {
       if (startDate) queryParams.append("startDate", startDate);
       if (endDate) queryParams.append("endDate", endDate);
       if (selectedBanco && selectedBanco !== "all") queryParams.append("bancoId", selectedBanco);
+      if (estadoFilter && estadoFilter !== "all") queryParams.append("estadoVerificacion", estadoFilter);
       if (ordenFilter) queryParams.append("orden", ordenFilter);
       if (tipoPagoFilter && tipoPagoFilter !== "all") queryParams.append("tipoPago", tipoPagoFilter);
 
@@ -290,6 +294,19 @@ export default function VerificacionPage() {
                       <SelectItem value="Inicial/Total">Inicial/Total</SelectItem>
                       <SelectItem value="Flete">Flete</SelectItem>
                       <SelectItem value="Cuota">Cuota</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <label className="text-sm font-medium mb-1 block">Estado:</label>
+                  <Select value={estadoFilter} onValueChange={setEstadoFilter}>
+                    <SelectTrigger className="w-40" data-testid="select-estado">
+                      <SelectValue placeholder="Todos" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos</SelectItem>
+                      <SelectItem value="Verificado">Verificado</SelectItem>
+                      <SelectItem value="Por verificar">Por verificar</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

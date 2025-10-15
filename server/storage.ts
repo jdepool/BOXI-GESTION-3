@@ -289,6 +289,7 @@ export interface IStorage {
     bancoId?: string;
     orden?: string;
     tipoPago?: string;
+    estadoVerificacion?: string;
     limit?: number;
     offset?: number;
   }): Promise<{ data: any[]; total: number }>;
@@ -2126,6 +2127,7 @@ export class DatabaseStorage implements IStorage {
     bancoId?: string;
     orden?: string;
     tipoPago?: string;
+    estadoVerificacion?: string;
     limit?: number;
     offset?: number;
   }): Promise<{ data: any[]; total: number }> {
@@ -2190,6 +2192,10 @@ export class DatabaseStorage implements IStorage {
           if (sale.fechaPagoInicial > endDateTime) continue;
         }
         if (filters?.bancoId && sale.bancoReceptorInicial !== filters.bancoId) continue;
+        
+        // Filter by estadoVerificacion
+        const estadoVerificacionInicial = sale.estadoVerificacionInicial || 'Por verificar';
+        if (filters?.estadoVerificacion && estadoVerificacionInicial !== filters.estadoVerificacion) continue;
 
         payments.push({
           paymentId: sale.saleId,
@@ -2230,6 +2236,10 @@ export class DatabaseStorage implements IStorage {
           if (sale.fechaFlete > endDateTime) continue;
         }
         if (filters?.bancoId && sale.bancoReceptorFlete !== filters.bancoId) continue;
+        
+        // Filter by estadoVerificacion
+        const estadoVerificacionFlete = sale.estadoVerificacionFlete || 'Por verificar';
+        if (filters?.estadoVerificacion && estadoVerificacionFlete !== filters.estadoVerificacion) continue;
 
         payments.push({
           paymentId: sale.saleId,
@@ -2288,6 +2298,10 @@ export class DatabaseStorage implements IStorage {
       if (filters?.startDate && cuota.fecha && cuota.fecha < new Date(filters.startDate)) continue;
       if (filters?.endDate && cuota.fecha && cuota.fecha > new Date(filters.endDate)) continue;
       if (filters?.bancoId && cuota.bancoReceptorCuota !== filters.bancoId) continue;
+      
+      // Filter by estadoVerificacion
+      const estadoVerificacionCuota = cuota.estadoVerificacion || 'Por verificar';
+      if (filters?.estadoVerificacion && estadoVerificacionCuota !== filters.estadoVerificacion) continue;
 
       payments.push({
         paymentId: cuota.installmentId,
