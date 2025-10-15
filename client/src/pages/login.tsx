@@ -38,7 +38,7 @@ export default function Login() {
         title: "Acceso exitoso",
         description: "Bienvenido a BoxiSleep Dashboard",
       });
-      setLocation("/dashboard");
+      setLocation("/sales");
     },
     onError: (error: Error) => {
       toast({
