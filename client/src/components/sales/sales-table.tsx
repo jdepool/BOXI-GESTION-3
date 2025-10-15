@@ -492,13 +492,19 @@ export default function SalesTable({
                         data-testid="filter-start-date"
                       >
                         <CalendarIcon className="mr-2 h-4 w-4" />
-                        {filters.startDate ? format(new Date(filters.startDate), "dd/MM/yyyy") : "Seleccionar"}
+                        {filters.startDate ? (() => {
+                          const [year, month, day] = filters.startDate.split('-');
+                          return `${day}/${month}/${year}`;
+                        })() : "Seleccionar"}
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="start">
                       <Calendar
                         mode="single"
-                        selected={filters.startDate ? new Date(filters.startDate) : undefined}
+                        selected={filters.startDate ? (() => {
+                          const [year, month, day] = filters.startDate.split('-');
+                          return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+                        })() : undefined}
                         onSelect={(date) => {
                           if (date) {
                             const localDate = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
@@ -526,13 +532,19 @@ export default function SalesTable({
                         data-testid="filter-end-date"
                       >
                         <CalendarIcon className="mr-2 h-4 w-4" />
-                        {filters.endDate ? format(new Date(filters.endDate), "dd/MM/yyyy") : "Seleccionar"}
+                        {filters.endDate ? (() => {
+                          const [year, month, day] = filters.endDate.split('-');
+                          return `${day}/${month}/${year}`;
+                        })() : "Seleccionar"}
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="start">
                       <Calendar
                         mode="single"
-                        selected={filters.endDate ? new Date(filters.endDate) : undefined}
+                        selected={filters.endDate ? (() => {
+                          const [year, month, day] = filters.endDate.split('-');
+                          return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+                        })() : undefined}
                         onSelect={(date) => {
                           if (date) {
                             const localDate = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
