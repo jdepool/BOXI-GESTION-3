@@ -48,6 +48,11 @@ export default function DispatchTable({
     return acc;
   }, {} as Record<string, string>);
 
+  // Fetch transportistas data
+  const { data: transportistas = [] } = useQuery<Array<{ id: string; nombre: string; telefono?: string; email?: string }>>({
+    queryKey: ["/api/admin/transportistas"],
+  });
+
   const getChannelBadgeClass = (canal: string) => {
     switch (canal?.toLowerCase()) {
       case 'cashea': return 'bg-blue-600';
@@ -105,6 +110,33 @@ export default function DispatchTable({
 
   const handleStatusChange = (saleId: string, newStatus: string) => {
     updateDeliveryStatusMutation.mutate({ saleId, status: newStatus });
+  };
+
+  const updateTransportistaMutation = useMutation({
+    mutationFn: async ({ saleId, transportistaId }: { saleId: string; transportistaId: string | null }) => {
+      return apiRequest("PUT", `/api/sales/${saleId}/transportista`, { transportistaId });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ 
+        predicate: (query) => Array.isArray(query.queryKey) && typeof query.queryKey[0] === 'string' && query.queryKey[0].startsWith('/api/sales')
+      });
+      toast({
+        title: "Transportista actualizado",
+        description: "El transportista ha sido asignado correctamente.",
+      });
+    },
+    onError: (error) => {
+      console.error('Failed to update transportista:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo actualizar el transportista.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleTransportistaChange = (saleId: string, transportistaId: string | null) => {
+    updateTransportistaMutation.mutate({ saleId, transportistaId });
   };
 
   const updateNotesMutation = useMutation({
@@ -241,7 +273,7 @@ export default function DispatchTable({
         ) : (
           <div className="overflow-x-auto overflow-y-auto max-h-[calc(100vh-280px)] bg-background">
             <div className="min-w-max">
-              <table className="w-full min-w-[2560px] relative">
+              <table className="w-full min-w-[2740px] relative">
                 <thead className="bg-muted sticky top-0 z-10">
                   <tr>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[100px] sticky left-0 bg-muted z-20 border-r border-border shadow-[2px_0_5px_rgba(0,0,0,0.1)]">Orden</th>
@@ -258,6 +290,7 @@ export default function DispatchTable({
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[100px]">Canal</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[150px]">Asesor</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[200px]">Notas</th>
+                    <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[180px]">Transportista</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[150px]">Acciones</th>
                   </tr>
                 </thead>
@@ -407,6 +440,26 @@ export default function DispatchTable({
                             {sale.notas || 'Click para agregar nota'}
                           </div>
                         )}
+                      </td>
+                      
+                      <td className="p-2 min-w-[180px] text-xs">
+                        <Select
+                          value={sale.transportistaId || ""}
+                          onValueChange={(value) => handleTransportistaChange(sale.id, value || null)}
+                          disabled={updateTransportistaMutation.isPending}
+                        >
+                          <SelectTrigger className="w-full h-8 text-xs" data-testid={`transportista-select-${sale.id}`}>
+                            <SelectValue placeholder="Seleccionar..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="">Sin asignar</SelectItem>
+                            {transportistas.map((transportista) => (
+                              <SelectItem key={transportista.id} value={transportista.id}>
+                                {transportista.nombre}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </td>
                       
                       <td className="p-2 min-w-[150px] text-xs">
