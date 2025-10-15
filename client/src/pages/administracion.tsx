@@ -25,7 +25,7 @@ export default function Administracion() {
           <div>
             <h1 className="text-2xl font-bold text-foreground">Administración</h1>
           </div>
-          <Link href="/dashboard">
+          <Link href="/sales">
             <Button variant="outline" className="flex items-center gap-2" data-testid="back-to-dashboard">
               <ArrowLeft className="h-4 w-4" />
               Regresar al Menú Principal
