@@ -577,7 +577,10 @@ export class DatabaseStorage implements IStorage {
       conditions.push(sql`${sales.fecha} >= ${filters.startDate}`);
     }
     if (filters?.endDate) {
-      conditions.push(sql`${sales.fecha} <= ${filters.endDate}`);
+      // Add 23:59:59 to include the entire end date
+      const endDateTime = new Date(filters.endDate);
+      endDateTime.setHours(23, 59, 59, 999);
+      conditions.push(sql`${sales.fecha} <= ${endDateTime}`);
     }
 
     const estadoCondition = and(...conditions);
@@ -1623,7 +1626,10 @@ export class DatabaseStorage implements IStorage {
       conditions.push(gte(egresos.fecha, filters.startDate));
     }
     if (filters?.endDate) {
-      conditions.push(lte(egresos.fecha, filters.endDate));
+      // Add 23:59:59 to include the entire end date
+      const endDateTime = new Date(filters.endDate);
+      endDateTime.setHours(23, 59, 59, 999);
+      conditions.push(lte(egresos.fecha, endDateTime));
     }
     
     // Build the complete query in one go
@@ -1735,7 +1741,10 @@ export class DatabaseStorage implements IStorage {
       conditions.push(gte(egresosPorAprobar.fecha, filters.startDate));
     }
     if (filters?.endDate) {
-      conditions.push(lte(egresosPorAprobar.fecha, filters.endDate));
+      // Add 23:59:59 to include the entire end date
+      const endDateTime = new Date(filters.endDate);
+      endDateTime.setHours(23, 59, 59, 999);
+      conditions.push(lte(egresosPorAprobar.fecha, endDateTime));
     }
     
     // Build the complete query in one go
@@ -2160,7 +2169,11 @@ export class DatabaseStorage implements IStorage {
         // Apply filters
         if (filters?.tipoPago && filters.tipoPago !== 'Inicial/Total') continue;
         if (filters?.startDate && sale.fechaPagoInicial && sale.fechaPagoInicial < new Date(filters.startDate)) continue;
-        if (filters?.endDate && sale.fechaPagoInicial && sale.fechaPagoInicial > new Date(filters.endDate)) continue;
+        if (filters?.endDate && sale.fechaPagoInicial) {
+          const endDateTime = new Date(filters.endDate);
+          endDateTime.setHours(23, 59, 59, 999);
+          if (sale.fechaPagoInicial > endDateTime) continue;
+        }
         if (filters?.bancoId && sale.bancoReceptorInicial !== filters.bancoId) continue;
 
         payments.push({
@@ -2196,7 +2209,11 @@ export class DatabaseStorage implements IStorage {
         // Apply filters
         if (filters?.tipoPago && filters.tipoPago !== 'Flete') continue;
         if (filters?.startDate && sale.fechaFlete && sale.fechaFlete < new Date(filters.startDate)) continue;
-        if (filters?.endDate && sale.fechaFlete && sale.fechaFlete > new Date(filters.endDate)) continue;
+        if (filters?.endDate && sale.fechaFlete) {
+          const endDateTime = new Date(filters.endDate);
+          endDateTime.setHours(23, 59, 59, 999);
+          if (sale.fechaFlete > endDateTime) continue;
+        }
         if (filters?.bancoId && sale.bancoReceptorFlete !== filters.bancoId) continue;
 
         payments.push({
