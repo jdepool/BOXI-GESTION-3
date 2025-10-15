@@ -444,15 +444,15 @@ export default function DispatchTable({
                       
                       <td className="p-2 min-w-[180px] text-xs">
                         <Select
-                          value={sale.transportistaId || ""}
-                          onValueChange={(value) => handleTransportistaChange(sale.id, value || null)}
+                          value={sale.transportistaId || "unassigned"}
+                          onValueChange={(value) => handleTransportistaChange(sale.id, value === "unassigned" ? null : value)}
                           disabled={updateTransportistaMutation.isPending}
                         >
                           <SelectTrigger className="w-full h-8 text-xs" data-testid={`transportista-select-${sale.id}`}>
                             <SelectValue placeholder="Seleccionar..." />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="">Sin asignar</SelectItem>
+                            <SelectItem value="unassigned">Sin asignar</SelectItem>
                             {transportistas.map((transportista) => (
                               <SelectItem key={transportista.id} value={transportista.id}>
                                 {transportista.nombre}
