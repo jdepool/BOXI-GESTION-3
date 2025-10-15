@@ -59,7 +59,7 @@ Orders typically move from temporary tabs to permanent tabs upon payment verific
   - **Cancelar**: Changes Estado Entrega to "Cancelada" for cancelled sales (visible in all views including Pagos and Despachos)
   - **Devolver**: Changes Estado Entrega to "Devuelta" for returned products (visible in Lista de Ventas and Pagos, but not in Despachos since returned items are out of the dispatch workflow)
   - Both buttons display with green icon indicator when sale is already in that status, with disabled state to prevent duplicate actions
-  - Action buttons maintain proper alignment with a spacer element for non-Manual sales (Manual sales have email edit button in the same column)
+  - Buttons are positioned in a dedicated column (without header label) separate from the Acciones column for cleaner layout and better visual organization
 - **Transportista Management**: Full CRUD operations for managing transportation companies in the Administración section. Transportistas are tracked with nombre (name), teléfono (phone), and email fields for efficient logistics coordination.
 - **Automated Cashea Downloads**: Configurable automation system for periodic Cashea order downloads integrated into the Cargar Datos tab. Features:
   - **Enable/Disable Toggle**: Turn automation on/off with visual "Activa" status badge
