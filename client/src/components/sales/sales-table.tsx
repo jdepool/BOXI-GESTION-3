@@ -1043,10 +1043,10 @@ export default function SalesTable({
                 )}
                 <div className="p-4 bg-orange-50 dark:bg-orange-950/30 border border-orange-300 dark:border-orange-800 rounded-md">
                   <div className="text-foreground font-medium mb-2">
-                    Esta acción cambiará el estado de entrega a "Devuelta" en todos los registros del sistema.
+                    Esta acción cambiará el estado de entrega a "A devolver" en todos los registros del sistema.
                   </div>
                   <div className="text-foreground font-semibold">
-                    Por favor, antes de marcar la devolución asegúrate de explicar en la sección de <span className="underline">Notas</span> las razones por las cuales el producto ha sido devuelto.
+                    Por favor, antes de marcar la devolución asegúrate de explicar en la sección de <span className="underline">Notas</span> las razones por las cuales el producto será devuelto.
                   </div>
                 </div>
                 <div className="text-sm text-muted-foreground">
