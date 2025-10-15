@@ -903,15 +903,15 @@ export default function SalesTable({
                             setSelectedSaleForReturn(sale);
                             setReturnConfirmOpen(true);
                           }}
-                          disabled={sale.estadoEntrega === "Devuelta" || returnSaleMutation.isPending}
+                          disabled={sale.estadoEntrega === "A devolver" || returnSaleMutation.isPending}
                           data-testid={`return-sale-${sale.id}`}
                           className={cn(
                             "h-7 text-xs border-gray-400 text-gray-600 hover:bg-gray-100 dark:border-gray-600 dark:text-gray-400 dark:hover:bg-gray-800",
-                            sale.estadoEntrega === "Devuelta" && "bg-green-800 text-white hover:bg-green-800 opacity-70 cursor-not-allowed border-green-700"
+                            sale.estadoEntrega === "A devolver" && "bg-green-800 text-white hover:bg-green-800 opacity-70 cursor-not-allowed border-green-700"
                           )}
-                          title={sale.estadoEntrega === "Devuelta" ? "Venta ya devuelta" : "Marcar como devuelta"}
+                          title={sale.estadoEntrega === "A devolver" ? "Venta ya marcada a devolver" : "Marcar como a devolver"}
                         >
-                          <RotateCcw className={cn("h-3 w-3 mr-1", sale.estadoEntrega === "Devuelta" && "text-green-400")} />
+                          <RotateCcw className={cn("h-3 w-3 mr-1", sale.estadoEntrega === "A devolver" && "text-green-400")} />
                           Devolver
                         </Button>
                       </div>
