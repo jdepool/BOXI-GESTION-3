@@ -1103,10 +1103,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const startDate = req.query.startDate as string | undefined;
       const endDate = req.query.endDate as string | undefined;
       
-      // Validate estadoEntrega against known delivery statuses
+      // Validate estadoEntrega against known delivery statuses (must match database schema)
       const validEstadoEntrega = [
-        "Pendiente", "En espera de pago", "A despachar", "Despachado", 
-        "Entregado", "Devuelto", "Cancelado", "Perdida", "Rechazado"
+        "Pendiente", "Perdida", "En proceso", "A despachar", "En tránsito",
+        "Entregado", "A devolver", "Devuelto", "Cancelada"
       ];
       const estadoEntregaParam = req.query.estadoEntrega as string | undefined;
       const estadoEntrega = estadoEntregaParam && validEstadoEntrega.includes(estadoEntregaParam)
