@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { format } from "date-fns";
+import { format, parse } from "date-fns";
 import { CreditCard, Truck, Banknote, Filter, ChevronUp, ChevronDown, Download, ChevronLeft, ChevronRight, XCircle, CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Calendar } from "@/components/ui/calendar";
@@ -30,6 +30,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+
+// Helper function to safely parse YYYY-MM-DD as local date
+const parseLocalDate = (dateString: string) => {
+  if (!dateString) return undefined;
+  return parse(dateString, 'yyyy-MM-dd', new Date());
+};
 
 interface Order {
   orden: string;
@@ -119,6 +125,13 @@ export default function PagosTable({
     if (filters?.orden) queryParams.append('orden', filters.orden);
     if (filters?.startDate) queryParams.append('startDate', filters.startDate);
     if (filters?.endDate) queryParams.append('endDate', filters.endDate);
+    if (filters?.asesorId) queryParams.append('asesorId', filters.asesorId);
+    if (filters?.estadoEntrega) {
+      queryParams.append('estadoEntrega', filters.estadoEntrega);
+    } else {
+      // When no specific estadoEntrega is selected, exclude Perdida by default
+      queryParams.append('excludePerdida', 'true');
+    }
     
     window.location.href = `/api/sales/orders/export?${queryParams.toString()}`;
   };
@@ -360,19 +373,13 @@ export default function PagosTable({
                     data-testid="filter-start-date"
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {filters?.startDate ? (() => {
-                      const [year, month, day] = filters.startDate.split('-');
-                      return `${day}/${month}/${year}`;
-                    })() : "Seleccionar"}
+                    {filters?.startDate ? format(parseLocalDate(filters.startDate) || new Date(), "dd/MM/yyyy") : "Seleccionar"}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
                   <Calendar
                     mode="single"
-                    selected={filters?.startDate ? (() => {
-                      const [year, month, day] = filters.startDate.split('-');
-                      return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
-                    })() : undefined}
+                    selected={filters?.startDate ? parseLocalDate(filters.startDate) : undefined}
                     onSelect={(date) => {
                       if (date) {
                         handleFilterChange('startDate', format(date, 'yyyy-MM-dd'));
@@ -399,19 +406,13 @@ export default function PagosTable({
                     data-testid="filter-end-date"
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {filters?.endDate ? (() => {
-                      const [year, month, day] = filters.endDate.split('-');
-                      return `${day}/${month}/${year}`;
-                    })() : "Seleccionar"}
+                    {filters?.endDate ? format(parseLocalDate(filters.endDate) || new Date(), "dd/MM/yyyy") : "Seleccionar"}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
                   <Calendar
                     mode="single"
-                    selected={filters?.endDate ? (() => {
-                      const [year, month, day] = filters.endDate.split('-');
-                      return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
-                    })() : undefined}
+                    selected={filters?.endDate ? parseLocalDate(filters.endDate) : undefined}
                     onSelect={(date) => {
                       if (date) {
                         handleFilterChange('endDate', format(date, 'yyyy-MM-dd'));

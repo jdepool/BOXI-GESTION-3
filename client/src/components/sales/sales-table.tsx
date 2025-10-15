@@ -13,9 +13,15 @@ import EditSaleModal from "./edit-sale-modal";
 import { MapPin, Edit, CalendarIcon, Mail, Filter, ChevronDown, ChevronUp, Download, ChevronLeft, ChevronRight } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { format } from "date-fns";
+import { format, parse } from "date-fns";
 import { cn } from "@/lib/utils";
 import type { Sale } from "@shared/schema";
+
+// Helper function to safely parse YYYY-MM-DD as local date
+const parseLocalDate = (dateString: string) => {
+  if (!dateString) return undefined;
+  return parse(dateString, 'yyyy-MM-dd', new Date());
+};
 
 interface SalesTableProps {
   data: Sale[];
@@ -492,19 +498,13 @@ export default function SalesTable({
                         data-testid="filter-start-date"
                       >
                         <CalendarIcon className="mr-2 h-4 w-4" />
-                        {filters.startDate ? (() => {
-                          const [year, month, day] = filters.startDate.split('-');
-                          return `${day}/${month}/${year}`;
-                        })() : "Seleccionar"}
+                        {filters.startDate ? format(parseLocalDate(filters.startDate) || new Date(), "dd/MM/yyyy") : "Seleccionar"}
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="start">
                       <Calendar
                         mode="single"
-                        selected={filters.startDate ? (() => {
-                          const [year, month, day] = filters.startDate.split('-');
-                          return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
-                        })() : undefined}
+                        selected={parseLocalDate(filters.startDate)}
                         onSelect={(date) => {
                           if (date) {
                             handleFilterChange('startDate', format(date, 'yyyy-MM-dd'));
@@ -531,19 +531,13 @@ export default function SalesTable({
                         data-testid="filter-end-date"
                       >
                         <CalendarIcon className="mr-2 h-4 w-4" />
-                        {filters.endDate ? (() => {
-                          const [year, month, day] = filters.endDate.split('-');
-                          return `${day}/${month}/${year}`;
-                        })() : "Seleccionar"}
+                        {filters.endDate ? format(parseLocalDate(filters.endDate) || new Date(), "dd/MM/yyyy") : "Seleccionar"}
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-auto p-0" align="start">
                       <Calendar
                         mode="single"
-                        selected={filters.endDate ? (() => {
-                          const [year, month, day] = filters.endDate.split('-');
-                          return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
-                        })() : undefined}
+                        selected={parseLocalDate(filters.endDate)}
                         onSelect={(date) => {
                           if (date) {
                             handleFilterChange('endDate', format(date, 'yyyy-MM-dd'));

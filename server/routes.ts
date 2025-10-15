@@ -1263,6 +1263,80 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // GET /api/sales/orders/export - Export orders for payments tab to Excel
+  app.get("/api/sales/orders/export", async (req, res) => {
+    try {
+      const canal = req.query.canal && req.query.canal !== 'all' ? req.query.canal as string : undefined;
+      const orden = req.query.orden as string | undefined;
+      const startDate = req.query.startDate as string | undefined;
+      const endDate = req.query.endDate as string | undefined;
+      
+      // Validate estadoEntrega against known delivery statuses - matching the Pagos tab UI
+      const validEstadoEntrega = [
+        "Pendiente", "En proceso", "Perdida", "A despachar", 
+        "En tránsito", "Entregado", "A devolver", "Devuelto", "Cancelada"
+      ];
+      const estadoEntregaParam = req.query.estadoEntrega as string | undefined;
+      const estadoEntrega = estadoEntregaParam && validEstadoEntrega.includes(estadoEntregaParam)
+        ? estadoEntregaParam
+        : undefined;
+      
+      const excludePerdida = req.query.excludePerdida === 'true';
+      
+      // Handle asesorId filter - normalize 'all' to undefined, keep 'none' as 'null' for null filter
+      let asesorId: string | undefined;
+      if (req.query.asesorId && req.query.asesorId !== 'all') {
+        asesorId = req.query.asesorId === 'none' ? 'null' : req.query.asesorId as string;
+      }
+
+      const result = await storage.getOrdersForPayments({ 
+        limit: 999999, // Get all records for export
+        offset: 0, 
+        canal, 
+        orden, 
+        startDate, 
+        endDate,
+        asesorId,
+        estadoEntrega,
+        excludePerdida
+      });
+
+      // Format data for Excel export
+      const excelData = result.data.map(order => ({
+        'Orden': order.orden,
+        'Nombre': order.nombre,
+        'Fecha': order.fecha ? new Date(order.fecha).toLocaleDateString('es-ES') : '-',
+        'Canal': order.canal || '-',
+        'Tipo': order.tipo || '-',
+        'Estado de Entrega': order.estadoEntrega || '-',
+        'Asesor': order.asesorId || '-',
+        'Orden + Flete (USD)': order.ordenPlusFlete ? `$${order.ordenPlusFlete.toFixed(2)}` : '$0.00',
+        'Total Pagado (USD)': order.totalPagado ? `$${order.totalPagado.toFixed(2)}` : '$0.00',
+        'Pendiente (USD)': order.saldoPendiente ? `$${order.saldoPendiente.toFixed(2)}` : '$0.00',
+        'Productos': order.productCount,
+        'Pago Inicial': order.hasPagoInicial ? 'Sí' : 'No',
+        'Flete': order.hasFlete ? 'Sí' : 'No',
+        'Cuotas': order.installmentCount,
+        'Seguimiento Pago': order.seguimientoPago || '-'
+      }));
+
+      // Convert to Excel format
+      const worksheet = XLSX.utils.json_to_sheet(excelData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Pagos');
+
+      const buffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' });
+
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+      res.setHeader('Content-Disposition', `attachment; filename="pagos_boxisleep_${new Date().toISOString().split('T')[0]}.xlsx"`);
+      res.send(buffer);
+
+    } catch (error) {
+      console.error("Error exporting orders for payments:", error);
+      res.status(500).json({ error: "Failed to export orders" });
+    }
+  });
+
   // GET /api/sales/verification-payments - Get all payments flattened for verification
   app.get("/api/sales/verification-payments", async (req, res) => {
     try {
