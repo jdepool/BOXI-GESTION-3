@@ -68,7 +68,7 @@ Orders typically move from temporary tabs to permanent tabs upon payment verific
   - **Backend Scheduler**: Cron-based automation with proper error handling, automatic date range calculation, and deduplication
   - **Safe UI**: Loading states with skeleton loaders, error handling with visual feedback, disabled controls during loading/errors
   - **Database Tables**: `cashea_automation_config` (enabled, frequency) and `cashea_automatic_downloads` (execution history)
-  - **Webhook Integration**: When Cashea orders are successfully downloaded and saved to Lista de Ventas, the system automatically sends order details to a configurable webhook URL (stored in CASHEA_WEBHOOK_URL secret). Each new Cashea order is sent individually with JSON payload containing: orden, nombre_cliente, telefono, producto. The webhook fires ONLY for Cashea channel orders (not Shopify/Treble/Manual sales), ensuring targeted n8n workflow automation.
+  - **Webhook Integration**: When Cashea orders are successfully downloaded and saved to Lista de Ventas, the system automatically sends order details to a configurable webhook URL (stored in CASHEA_WEBHOOK_URL secret). Each new Cashea order is sent individually via GET request with query parameters: Orden, nombre_cliente, telefono, producto. A 500ms delay is enforced between consecutive webhook calls to avoid rate limiting. The webhook fires ONLY for Cashea channel orders (not Shopify/Treble/Manual sales), ensuring targeted n8n workflow automation. Error handling ensures that webhook failures do not prevent order processing.
 
 # External Dependencies
 
