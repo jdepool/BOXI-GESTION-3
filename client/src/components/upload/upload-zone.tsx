@@ -49,13 +49,13 @@ export default function UploadZone({ recentUploads, showOnlyCashea = false }: Up
   const { toast } = useToast();
 
   // Automation config query
-  const { data: automationConfig } = useQuery({
+  const { data: automationConfig, isLoading: isLoadingConfig, error: configError } = useQuery({
     queryKey: ['/api/cashea/automation/config'],
     enabled: showOnlyCashea || !showOnlyCashea, // Always fetch when CASHEA tab is available
   });
 
   // Automation history query
-  const { data: automationHistory } = useQuery({
+  const { data: automationHistory, isLoading: isLoadingHistory, error: historyError } = useQuery({
     queryKey: ['/api/cashea/automation/history'],
     enabled: showOnlyCashea || !showOnlyCashea,
   });
@@ -367,12 +367,14 @@ export default function UploadZone({ recentUploads, showOnlyCashea = false }: Up
 
   // Handlers for automation config
   const handleAutomationToggle = (enabled: boolean) => {
-    const frequency = automationConfig?.frequency || '2_hours';
+    if (!automationConfig) return; // Wait for config to load
+    const frequency = automationConfig.frequency;
     updateAutomationMutation.mutate({ enabled, frequency });
   };
 
   const handleFrequencyChange = (frequency: string) => {
-    const enabled = automationConfig?.enabled || false;
+    if (!automationConfig) return; // Wait for config to load
+    const enabled = automationConfig.enabled;
     updateAutomationMutation.mutate({ enabled, frequency });
   };
 
@@ -398,45 +400,69 @@ export default function UploadZone({ recentUploads, showOnlyCashea = false }: Up
             <h4 className="font-semibold text-foreground">Descarga Automática</h4>
           </div>
           <div className="flex items-center gap-2">
-            {automationConfig?.enabled && (
+            {!isLoadingConfig && automationConfig?.enabled && (
               <Badge variant="default" className="gap-1">
                 <CheckCircle className="h-3 w-3" />
                 Activa
               </Badge>
             )}
-            <Switch
-              checked={automationConfig?.enabled || false}
-              onCheckedChange={handleAutomationToggle}
-              disabled={updateAutomationMutation.isPending}
-              data-testid="automation-toggle"
-            />
+            {isLoadingConfig ? (
+              <div className="h-5 w-10 bg-muted animate-pulse rounded" />
+            ) : (
+              <Switch
+                checked={automationConfig?.enabled || false}
+                onCheckedChange={handleAutomationToggle}
+                disabled={isLoadingConfig || !!configError || updateAutomationMutation.isPending}
+                data-testid="automation-toggle"
+              />
+            )}
           </div>
         </div>
+
+        {configError && (
+          <div className="mb-3 p-2 bg-destructive/10 border border-destructive/20 rounded text-xs text-destructive">
+            Error al cargar configuración: {configError instanceof Error ? configError.message : 'Error desconocido'}
+          </div>
+        )}
 
         <div className="space-y-3">
           <div>
             <Label className="text-sm">Frecuencia de Descarga</Label>
-            <Select
-              value={automationConfig?.frequency || '2_hours'}
-              onValueChange={handleFrequencyChange}
-              disabled={!automationConfig?.enabled || updateAutomationMutation.isPending}
-            >
-              <SelectTrigger className="mt-1" data-testid="frequency-select">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {frequencyOptions.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            {isLoadingConfig ? (
+              <div className="h-10 bg-muted animate-pulse rounded mt-1" />
+            ) : (
+              <Select
+                value={automationConfig?.frequency || '2_hours'}
+                onValueChange={handleFrequencyChange}
+                disabled={!automationConfig?.enabled || isLoadingConfig || !!configError || updateAutomationMutation.isPending}
+              >
+                <SelectTrigger className="mt-1" data-testid="frequency-select">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {frequencyOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
           </div>
 
-          {automationHistory && automationHistory.length > 0 && (
-            <div className="mt-4">
-              <Label className="text-sm mb-2 block">Últimas Descargas Automáticas</Label>
+          <div className="mt-4">
+            <Label className="text-sm mb-2 block">Últimas Descargas Automáticas</Label>
+            {isLoadingHistory ? (
+              <div className="space-y-2">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="h-8 bg-muted animate-pulse rounded" />
+                ))}
+              </div>
+            ) : historyError ? (
+              <div className="p-2 bg-destructive/10 border border-destructive/20 rounded text-xs text-destructive">
+                Error al cargar historial
+              </div>
+            ) : automationHistory && automationHistory.length > 0 ? (
               <div className="space-y-2">
                 {automationHistory.slice(0, 5).map((download: any) => (
                   <div
@@ -458,14 +484,20 @@ export default function UploadZone({ recentUploads, showOnlyCashea = false }: Up
                       {download.status === 'success' ? (
                         <span className="text-foreground">{download.recordCount} registros</span>
                       ) : (
-                        <span className="text-red-600">Error</span>
+                        <span className="text-red-600 truncate max-w-[200px]" title={download.errorMessage}>
+                          {download.errorMessage || 'Error'}
+                        </span>
                       )}
                     </div>
                   </div>
                 ))}
               </div>
-            </div>
-          )}
+            ) : (
+              <div className="p-2 bg-muted/50 rounded text-xs text-muted-foreground text-center">
+                No hay descargas automáticas aún
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
