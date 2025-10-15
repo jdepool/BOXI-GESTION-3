@@ -6,6 +6,9 @@ BoxiSleep is a comprehensive sales management system for a sleep products compan
 
 Preferred communication style: Simple, everyday language.
 
+## UI Preferences
+- **Option 1 for Cargar Datos tab**: Convert the "Cargar Datos" tab to a settings/gear icon button positioned in the top-right of the tabs bar, opening a dialog or slide-out panel with upload controls and automation settings. This separates administrative features from regular sales workflow tabs.
+
 # System Architecture
 
 ## Frontend
@@ -52,6 +55,11 @@ Orders typically move from temporary tabs to permanent tabs upon payment verific
 - **Bank Management**: Differentiates between "Receptor" (receiving) and "Emisor" (issuing) banks, with forms consistently filtering to show only "Receptor" banks.
 - **Automation & Consistency**: Automatic assignment of "Cashea (BNC compartido Bs)" as Banco Receptor and automatic assignment of Fecha Pago Inicial (set to order creation date) for Cashea sales, since Cashea customers pay immediately when creating orders. Consistent naming conventions for bank fields and payment date tracking (`fechaPagoInicial`). Chrome autocomplete suppression is implemented.
 - **Perdida Status**: Orders that never complete payment can be marked as "Perdida" (Lost) exclusively from the Pagos tab, operating at the order level to mark all sales in an order simultaneously.
+- **Cancelar/Devolver Actions**: Sales in Lista de Ventas can be individually cancelled or marked as returned through action buttons:
+  - **Cancelar**: Changes Estado Entrega to "Cancelada" for cancelled sales (visible in all views including Pagos and Despachos)
+  - **Devolver**: Changes Estado Entrega to "Devuelta" for returned products (visible in Lista de Ventas and Pagos, but not in Despachos since returned items are out of the dispatch workflow)
+  - Both buttons display with green icon indicator when sale is already in that status, with disabled state to prevent duplicate actions
+  - Action buttons maintain proper alignment with a spacer element for non-Manual sales (Manual sales have email edit button in the same column)
 - **Transportista Management**: Full CRUD operations for managing transportation companies in the Administración section. Transportistas are tracked with nombre (name), teléfono (phone), and email fields for efficient logistics coordination.
 - **Automated Cashea Downloads**: Configurable automation system for periodic Cashea order downloads integrated into the Cargar Datos tab. Features:
   - **Enable/Disable Toggle**: Turn automation on/off with visual "Activa" status badge
