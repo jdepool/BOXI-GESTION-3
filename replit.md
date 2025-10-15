@@ -50,7 +50,7 @@ Orders typically move from temporary tabs to permanent tabs upon payment verific
 - **Asesor Management**: Automatic asesor propagation ensures one order = one asesor. When an asesor is assigned to any sale in an order, the system automatically assigns that same asesor to all sales in that order, maintaining consistency across multi-product orders.
 - **Installment (Cuotas) Architecture**: Installments are tracked at the order level, with sequential numbering per order.
 - **Bank Management**: Differentiates between "Receptor" (receiving) and "Emisor" (issuing) banks, with forms consistently filtering to show only "Receptor" banks.
-- **Automation & Consistency**: Automatic assignment of "Cashea (BNC compartido Bs)" as Banco Receptor for Cashea sales. Consistent naming conventions for bank fields and payment date tracking (`fechaPagoInicial`). Chrome autocomplete suppression is implemented.
+- **Automation & Consistency**: Automatic assignment of "Cashea (BNC compartido Bs)" as Banco Receptor and automatic assignment of Fecha Pago Inicial (set to order creation date) for Cashea sales, since Cashea customers pay immediately when creating orders. Consistent naming conventions for bank fields and payment date tracking (`fechaPagoInicial`). Chrome autocomplete suppression is implemented.
 - **Perdida Status**: Orders that never complete payment can be marked as "Perdida" (Lost) exclusively from the Pagos tab, operating at the order level to mark all sales in an order simultaneously.
 - **Transportista Management**: Full CRUD operations for managing transportation companies in the Administración section. Transportistas are tracked with nombre (name), teléfono (phone), and email fields for efficient logistics coordination.
 
