@@ -507,8 +507,7 @@ export default function SalesTable({
                         })() : undefined}
                         onSelect={(date) => {
                           if (date) {
-                            const localDate = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-                            handleFilterChange('startDate', localDate);
+                            handleFilterChange('startDate', format(date, 'yyyy-MM-dd'));
                           } else {
                             handleFilterChange('startDate', '');
                           }
@@ -547,8 +546,7 @@ export default function SalesTable({
                         })() : undefined}
                         onSelect={(date) => {
                           if (date) {
-                            const localDate = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-                            handleFilterChange('endDate', localDate);
+                            handleFilterChange('endDate', format(date, 'yyyy-MM-dd'));
                           } else {
                             handleFilterChange('endDate', '');
                           }

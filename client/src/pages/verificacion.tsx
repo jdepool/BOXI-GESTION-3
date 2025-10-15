@@ -331,8 +331,7 @@ export default function VerificacionPage() {
                         })() : undefined}
                         onSelect={(date) => {
                           if (date) {
-                            const localDate = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-                            setStartDate(localDate);
+                            setStartDate(format(date, 'yyyy-MM-dd'));
                           } else {
                             setStartDate('');
                           }
@@ -370,8 +369,7 @@ export default function VerificacionPage() {
                         })() : undefined}
                         onSelect={(date) => {
                           if (date) {
-                            const localDate = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-                            setEndDate(localDate);
+                            setEndDate(format(date, 'yyyy-MM-dd'));
                           } else {
                             setEndDate('');
                           }
