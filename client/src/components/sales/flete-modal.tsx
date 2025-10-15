@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -50,6 +50,7 @@ export default function FleteModal({ open, onOpenChange, sale }: FleteModalProps
     fleteGratis: false
   });
 
+  const prevOpenRef = useRef(false);
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -101,9 +102,12 @@ export default function FleteModal({ open, onOpenChange, sale }: FleteModalProps
     }
   });
 
-  // Initialize form when sale changes
+  // Initialize form only when modal opens (not on sale data updates while open)
   useEffect(() => {
-    if (sale && open) {
+    // Only initialize when modal transitions from closed to open
+    const isOpening = !prevOpenRef.current && open;
+    
+    if (sale && isOpening) {
       const fechaValue = sale.fechaFlete ? format(new Date(sale.fechaFlete), 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd');
       setFleteData({
         montoFleteUsd: sale.montoFleteUsd ? sale.montoFleteUsd.toString() : "",
@@ -115,6 +119,9 @@ export default function FleteModal({ open, onOpenChange, sale }: FleteModalProps
         fleteGratis: sale.fleteGratis || false
       });
     }
+    
+    // Update ref to track current open state
+    prevOpenRef.current = open;
   }, [sale, open]);
 
   const resetForm = () => {
