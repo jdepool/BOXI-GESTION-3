@@ -5,7 +5,7 @@ import { storage } from "./storage";
 import { 
   insertSaleSchema, insertUploadHistorySchema, insertBancoSchema, insertTipoEgresoSchema, 
   insertProductoSchema, insertMetodoPagoSchema, insertMonedaSchema, insertCategoriaSchema,
-  insertEgresoSchema, insertEgresoPorAprobarSchema, insertPaymentInstallmentSchema, insertAsesorSchema
+  insertEgresoSchema, insertEgresoPorAprobarSchema, insertPaymentInstallmentSchema, insertAsesorSchema, insertTransportistaSchema
 } from "@shared/schema";
 import { z } from "zod";
 import multer from "multer";
@@ -3163,6 +3163,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Delete asesor error:", error);
       res.status(500).json({ error: "Failed to delete asesor" });
+    }
+  });
+
+  // TRANSPORTISTAS endpoints
+  app.get("/api/admin/transportistas", async (req, res) => {
+    try {
+      const transportistas = await storage.getTransportistas();
+      res.json(transportistas);
+    } catch (error) {
+      console.error("Fetch transportistas error:", error);
+      res.status(500).json({ error: "Failed to fetch transportistas" });
+    }
+  });
+
+  app.post("/api/admin/transportistas", async (req, res) => {
+    try {
+      const validatedData = insertTransportistaSchema.parse(req.body);
+      const transportista = await storage.createTransportista(validatedData);
+      res.status(201).json(transportista);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Invalid data", details: error.errors });
+      }
+      console.error("Create transportista error:", error);
+      res.status(500).json({ error: "Failed to create transportista" });
+    }
+  });
+
+  app.put("/api/admin/transportistas/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const validatedData = insertTransportistaSchema.partial().parse(req.body);
+      const transportista = await storage.updateTransportista(id, validatedData);
+      if (!transportista) {
+        return res.status(404).json({ error: "Transportista not found" });
+      }
+      res.json(transportista);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Invalid data", details: error.errors });
+      }
+      console.error("Update transportista error:", error);
+      res.status(500).json({ error: "Failed to update transportista" });
+    }
+  });
+
+  app.delete("/api/admin/transportistas/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const deleted = await storage.deleteTransportista(id);
+      if (!deleted) {
+        return res.status(404).json({ error: "Transportista not found" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Delete transportista error:", error);
+      res.status(500).json({ error: "Failed to delete transportista" });
     }
   });
 
