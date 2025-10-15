@@ -8,6 +8,7 @@ import SalesTable from "@/components/sales/sales-table";
 import ManualSalesEntry from "@/components/sales/manual-sales-entry";
 import ManualReservaModal from "@/components/sales/manual-reserva-modal";
 import PagosTable from "@/components/sales/pagos-table";
+import UploadZone from "@/components/upload/upload-zone";
 
 export default function Sales() {
   const [filters, setFilters] = useState({
@@ -89,6 +90,11 @@ export default function Sales() {
     }],
   });
 
+  // Query for recent uploads (Cargar Datos tab)
+  const { data: recentUploads } = useQuery<any[]>({
+    queryKey: ["/api/uploads/recent"],
+  });
+
   const handleFilterChange = (newFilters: Partial<typeof filters>) => {
     const normalized = { ...newFilters };
     if (normalized.canal === "all") normalized.canal = "";
@@ -128,6 +134,7 @@ export default function Sales() {
               <TabsTrigger value="manual" data-testid="tab-manual-entry">Ventas por completar</TabsTrigger>
               <TabsTrigger value="reservas" data-testid="tab-reservas">Reservas</TabsTrigger>
               <TabsTrigger value="pagos" data-testid="tab-pagos">Pagos</TabsTrigger>
+              <TabsTrigger value="cargar" data-testid="tab-cargar-datos">Cargar Datos</TabsTrigger>
             </TabsList>
             
             <TabsContent value="lista" className="h-full">
@@ -180,6 +187,12 @@ export default function Sales() {
                   onFilterChange={handlePagosFilterChange}
                   onPageChange={handlePagosPageChange}
                 />
+              </div>
+            </TabsContent>
+
+            <TabsContent value="cargar" className="h-full">
+              <div className="max-w-2xl mx-auto">
+                <UploadZone recentUploads={recentUploads} />
               </div>
             </TabsContent>
           </Tabs>
