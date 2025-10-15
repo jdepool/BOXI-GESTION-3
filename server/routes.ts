@@ -265,6 +265,7 @@ function parseFile(buffer: Buffer, canal: string, filename: string) {
           pagoInicialUsd: row['Pago inicial usd'] ? String(row['Pago inicial usd']) : null,
           metodoPagoId: null,
           bancoReceptorInicial: isCashea ? '450504fa-8107-477a-b5ce-064cebe6d416' : null, // Auto-assign Cashea banco for Cashea sales
+          fechaPagoInicial: isCashea ? fecha : null, // Auto-assign fecha as fechaPagoInicial for Cashea sales
           orden: row.Orden ? String(row.Orden) : null,
           factura: row.Factura ? String(row.Factura) : null,
           referenciaInicial: row.Referencia ? String(row.Referencia) : null,
@@ -1964,6 +1965,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         pagoInicialUsd: pagosIniciales[i] ? String(pagosIniciales[i]) : null,
         metodoPagoId: null,
         bancoReceptorInicial: 'f3de098b-58c0-4be0-a799-299a643a0018', // Auto-assign Cashea banco for API downloads
+        fechaPagoInicial: fecha, // Auto-assign fecha as fechaPagoInicial for Cashea API downloads
         orden: ordenes[i] ? String(ordenes[i]) : null,
         factura: null,
         referenciaInicial: referencias[i] ? String(referencias[i]) : null,
