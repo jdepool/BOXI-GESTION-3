@@ -897,7 +897,7 @@ export default function SalesTable({
                           Cancelar
                         </Button>
                         <Button
-                          variant={sale.estadoEntrega === "Devuelta" ? "outline" : "secondary"}
+                          variant="outline"
                           size="sm"
                           onClick={() => {
                             setSelectedSaleForReturn(sale);
@@ -906,7 +906,7 @@ export default function SalesTable({
                           disabled={sale.estadoEntrega === "Devuelta" || returnSaleMutation.isPending}
                           data-testid={`return-sale-${sale.id}`}
                           className={cn(
-                            "h-7 text-xs",
+                            "h-7 text-xs border-gray-400 text-gray-600 hover:bg-gray-100 dark:border-gray-600 dark:text-gray-400 dark:hover:bg-gray-800",
                             sale.estadoEntrega === "Devuelta" && "bg-green-800 text-white hover:bg-green-800 opacity-70 cursor-not-allowed border-green-700"
                           )}
                           title={sale.estadoEntrega === "Devuelta" ? "Venta ya devuelta" : "Marcar como devuelta"}
