@@ -499,7 +499,14 @@ export default function SalesTable({
                       <Calendar
                         mode="single"
                         selected={filters.startDate ? new Date(filters.startDate) : undefined}
-                        onSelect={(date) => handleFilterChange('startDate', date ? format(date, 'yyyy-MM-dd') : '')}
+                        onSelect={(date) => {
+                          if (date) {
+                            const localDate = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+                            handleFilterChange('startDate', localDate);
+                          } else {
+                            handleFilterChange('startDate', '');
+                          }
+                        }}
                         initialFocus
                       />
                     </PopoverContent>
@@ -526,7 +533,14 @@ export default function SalesTable({
                       <Calendar
                         mode="single"
                         selected={filters.endDate ? new Date(filters.endDate) : undefined}
-                        onSelect={(date) => handleFilterChange('endDate', date ? format(date, 'yyyy-MM-dd') : '')}
+                        onSelect={(date) => {
+                          if (date) {
+                            const localDate = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+                            handleFilterChange('endDate', localDate);
+                          } else {
+                            handleFilterChange('endDate', '');
+                          }
+                        }}
                         initialFocus
                       />
                     </PopoverContent>
