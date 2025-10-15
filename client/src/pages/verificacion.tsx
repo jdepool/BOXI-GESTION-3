@@ -25,6 +25,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Check, X, Filter, ChevronDown, ChevronUp, Download, ChevronLeft, ChevronRight } from "lucide-react";
 import { format } from "date-fns";
 import Sidebar from "@/components/layout/sidebar";
+import { VerificacionPagosCasheaTab } from "@/components/admin/verificacion-pagos-cashea-tab";
 
 interface VerificationPayment {
   paymentId: string;
@@ -221,6 +222,9 @@ export default function VerificacionPage() {
           </TabsTrigger>
           <TabsTrigger value="egresos" data-testid="tab-egresos">
             Egresos
+          </TabsTrigger>
+          <TabsTrigger value="cashea" data-testid="tab-cashea">
+            Cashea Pago Inicial
           </TabsTrigger>
         </TabsList>
 
@@ -461,6 +465,10 @@ export default function VerificacionPage() {
               La verificación de egresos estará disponible próximamente
             </p>
           </div>
+        </TabsContent>
+
+        <TabsContent value="cashea">
+          <VerificacionPagosCasheaTab />
         </TabsContent>
       </Tabs>
 

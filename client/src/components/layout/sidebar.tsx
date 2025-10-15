@@ -19,11 +19,6 @@ const navigationItems = [
     label: "Despachos",
   },
   {
-    href: "/verificacion-pagos-cashea",
-    icon: "fas fa-credit-card",
-    label: "Verificación Pagos Cashea",
-  },
-  {
     href: "/verificacion",
     icon: "fas fa-check-circle",
     label: "Verificación",
