@@ -3,8 +3,10 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { format } from "date-fns";
-import { CreditCard, Truck, Banknote, Filter, ChevronUp, ChevronDown, Download, ChevronLeft, ChevronRight, XCircle } from "lucide-react";
+import { CreditCard, Truck, Banknote, Filter, ChevronUp, ChevronDown, Download, ChevronLeft, ChevronRight, XCircle, CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import PagoInicialModal from "./pago-inicial-modal";
 import FleteModal from "./flete-modal";
 import PaymentInstallmentsModal from "./payment-installments-modal";
@@ -347,24 +349,56 @@ export default function PagosTable({
 
             <div>
               <label className="text-sm font-medium mb-1 block">Fecha Inicio:</label>
-              <Input 
-                type="date" 
-                value={filters?.startDate || ""}
-                onChange={(e) => handleFilterChange('startDate', e.target.value)}
-                className="w-40"
-                data-testid="filter-start-date"
-              />
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-40 justify-start text-left font-normal",
+                      !filters?.startDate && "text-muted-foreground"
+                    )}
+                    data-testid="filter-start-date"
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {filters?.startDate ? format(new Date(filters.startDate), "dd/MM/yyyy") : "Seleccionar"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={filters?.startDate ? new Date(filters.startDate) : undefined}
+                    onSelect={(date) => handleFilterChange('startDate', date ? format(date, 'yyyy-MM-dd') : '')}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
             </div>
 
             <div>
               <label className="text-sm font-medium mb-1 block">Fecha Fin:</label>
-              <Input 
-                type="date" 
-                value={filters?.endDate || ""}
-                onChange={(e) => handleFilterChange('endDate', e.target.value)}
-                className="w-40"
-                data-testid="filter-end-date"
-              />
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-40 justify-start text-left font-normal",
+                      !filters?.endDate && "text-muted-foreground"
+                    )}
+                    data-testid="filter-end-date"
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {filters?.endDate ? format(new Date(filters.endDate), "dd/MM/yyyy") : "Seleccionar"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={filters?.endDate ? new Date(filters.endDate) : undefined}
+                    onSelect={(date) => handleFilterChange('endDate', date ? format(date, 'yyyy-MM-dd') : '')}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
             </div>
           </div>
         </div>
