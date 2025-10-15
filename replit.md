@@ -53,6 +53,13 @@ Orders typically move from temporary tabs to permanent tabs upon payment verific
 - **Automation & Consistency**: Automatic assignment of "Cashea (BNC compartido Bs)" as Banco Receptor and automatic assignment of Fecha Pago Inicial (set to order creation date) for Cashea sales, since Cashea customers pay immediately when creating orders. Consistent naming conventions for bank fields and payment date tracking (`fechaPagoInicial`). Chrome autocomplete suppression is implemented.
 - **Perdida Status**: Orders that never complete payment can be marked as "Perdida" (Lost) exclusively from the Pagos tab, operating at the order level to mark all sales in an order simultaneously.
 - **Transportista Management**: Full CRUD operations for managing transportation companies in the Administración section. Transportistas are tracked with nombre (name), teléfono (phone), and email fields for efficient logistics coordination.
+- **Automated Cashea Downloads**: Configurable automation system for periodic Cashea order downloads integrated into the Cargar Datos tab. Features:
+  - **Enable/Disable Toggle**: Turn automation on/off with visual "Activa" status badge
+  - **Frequency Options**: 7 configurable intervals (30 min, 1 hour, 2 hours, 4 hours, 8 hours, 16 hours, 24 hours)
+  - **Download History**: Last 5 automatic downloads with status (success/error), timestamp, record count, and error messages
+  - **Backend Scheduler**: Cron-based automation with proper error handling, automatic date range calculation, and deduplication
+  - **Safe UI**: Loading states with skeleton loaders, error handling with visual feedback, disabled controls during loading/errors
+  - **Database Tables**: `cashea_automation_config` (enabled, frequency) and `cashea_automatic_downloads` (execution history)
 
 # External Dependencies
 
