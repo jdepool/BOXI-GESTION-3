@@ -983,20 +983,32 @@ export default function SalesTable({
 
       {/* Cancel Confirmation Dialog */}
       <AlertDialog open={cancelConfirmOpen} onOpenChange={setCancelConfirmOpen}>
-        <AlertDialogContent data-testid="cancel-confirm-dialog">
+        <AlertDialogContent data-testid="cancel-confirm-dialog" className="max-w-2xl">
           <AlertDialogHeader>
-            <AlertDialogTitle>¿Confirmar cancelación?</AlertDialogTitle>
-            <AlertDialogDescription>
-              ¿Está seguro que desea cancelar esta venta? El estado de entrega cambiará a "Cancelada" y será visible en todos los registros.
+            <AlertDialogTitle className="text-destructive text-xl">⚠️ ADVERTENCIA: Cancelación de Orden</AlertDialogTitle>
+            <AlertDialogDescription className="space-y-3 text-base">
               {selectedSaleForCancel && (
-                <div className="mt-2 text-sm font-medium">
-                  Orden: {selectedSaleForCancel.orden} - {selectedSaleForCancel.nombre}
+                <div className="p-3 bg-muted rounded-md">
+                  <div className="font-semibold text-foreground">
+                    Orden: {selectedSaleForCancel.orden} - {selectedSaleForCancel.nombre}
+                  </div>
                 </div>
               )}
+              <div className="p-4 bg-destructive/10 border border-destructive/30 rounded-md">
+                <p className="text-foreground font-medium mb-2">
+                  Esta acción es permanente y cambiará el estado de entrega a "Cancelada" en todos los registros del sistema.
+                </p>
+                <p className="text-foreground font-semibold">
+                  Por favor, antes de cancelar la orden asegúrate de explicar en la sección de <span className="underline">Notas</span> las razones por las cuales la orden ha sido cancelada.
+                </p>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                <strong>Si no has documentado las razones:</strong> Rechaza esta acción, llena las Notas con la explicación correspondiente y luego vuelve a esta pantalla. <strong>Si ya lo hiciste:</strong> Continúa y confirma la cancelación.
+              </p>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel data-testid="cancel-cancel">Cancelar</AlertDialogCancel>
+            <AlertDialogCancel data-testid="cancel-cancel">Rechazar</AlertDialogCancel>
             <AlertDialogAction
               data-testid="cancel-confirm"
               onClick={() => {
@@ -1005,8 +1017,9 @@ export default function SalesTable({
                 }
                 setCancelConfirmOpen(false);
               }}
+              className="bg-destructive hover:bg-destructive/90"
             >
-              Confirmar
+              Confirmar Cancelación
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
