@@ -2229,7 +2229,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Mark a single sale as Devuelta
+  // Mark a single sale as A devolver
   app.put("/api/sales/:saleId/return", async (req, res) => {
     try {
       const { saleId } = req.params;
@@ -2241,7 +2241,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const updatedSale = await storage.updateSale(saleId, { 
-        estadoEntrega: "Devuelta" 
+        estadoEntrega: "A devolver" 
       });
       
       if (!updatedSale) {
