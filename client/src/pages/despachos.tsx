@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import Sidebar from "@/components/layout/sidebar";
 import Header from "@/components/layout/header";
 import DispatchTable from "@/components/dispatch/dispatch-table";
+import type { Sale } from "@shared/schema";
 
 export default function Despachos() {
   const [filters, setFilters] = useState({
@@ -11,7 +12,7 @@ export default function Despachos() {
   });
 
   const { data: dispatchData, isLoading } = useQuery<{
-    data: any[];
+    data: Sale[];
     total: number;
     limit: number;
     offset: number;
