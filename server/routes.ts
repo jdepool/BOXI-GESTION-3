@@ -1198,6 +1198,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const baseData = {
           'Orden': orderSummary.orden,
           'Nombre': orderSummary.nombre,
+          'Teléfono': sale.telefono || '',
+          'Email': sale.email || '',
+          'Dirección de Despacho': sale.direccionDespachoDireccion || '',
           'Fecha': orderSummary.fecha ? new Date(orderSummary.fecha).toLocaleDateString('es-ES') : '',
           'Canal': orderSummary.canal || '',
           'Tipo': orderSummary.tipo || '',
