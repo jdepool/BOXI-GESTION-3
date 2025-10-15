@@ -839,178 +839,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
         offset: 0,
       };
 
-      // Check if we're exporting Reservas with installments
-      const isReservasExport = filters.tipo === 'Reserva';
+      // Get sales data
+      const salesData = await storage.getSales(filters);
       
-      let excelData: any[] = [];
-      
-      if (isReservasExport) {
-        // For Reservas, get sales with installments and create separate rows per installment
-        const salesWithInstallments = await storage.getSalesWithInstallments(filters);
-        
-        // Create one row per installment, or one row if no installments exist
-        excelData = salesWithInstallments.flatMap(sale => {
-          if (sale.installments.length === 0) {
-            // If no installments, create one row with empty installment data
-            return [{
-              'Número de Orden': sale.orden,
-              'Nombre': sale.nombre,
-              'Cédula': sale.cedula,
-              'Teléfono': sale.telefono,
-              'Correo': sale.email,
-              'Producto': sale.product,
-              'Cantidad': sale.cantidad,
-              'Canal': sale.canal,
-              'Estado de Entrega': sale.estadoEntrega,
-              'Tipo': sale.tipo,
-              'Fecha': new Date(sale.fecha).toLocaleDateString('es-ES'),
-              'Total USD': sale.totalUsd,
-              'Pago Inicial USD': sale.pagoInicialUsd,
-              'Referencia': sale.referenciaInicial,
-              'Monto Bs': sale.montoInicialBs,
-              'Asesor': sale.asesorId,
-              
-              // Billing Address
-              'País (Facturación)': sale.direccionFacturacionPais || '',
-              'Estado (Facturación)': sale.direccionFacturacionEstado || '',
-              'Ciudad (Facturación)': sale.direccionFacturacionCiudad || '',
-              'Dirección (Facturación)': sale.direccionFacturacionDireccion || '',
-              'Urbanización (Facturación)': sale.direccionFacturacionUrbanizacion || '',
-              'Referencia (Facturación)': sale.direccionFacturacionReferencia || '',
-              
-              // Shipping Address
-              'Despacho Igual a Facturación': sale.direccionDespachoIgualFacturacion === "true" ? 'Sí' : 'No',
-              'País (Despacho)': sale.direccionDespachoIgualFacturacion === "true" 
-                ? sale.direccionFacturacionPais || '' 
-                : sale.direccionDespachoPais || '',
-              'Estado (Despacho)': sale.direccionDespachoIgualFacturacion === "true" 
-                ? sale.direccionFacturacionEstado || '' 
-                : sale.direccionDespachoEstado || '',
-              'Ciudad (Despacho)': sale.direccionDespachoIgualFacturacion === "true" 
-                ? sale.direccionFacturacionCiudad || '' 
-                : sale.direccionDespachoCiudad || '',
-              'Dirección (Despacho)': sale.direccionDespachoIgualFacturacion === "true" 
-                ? sale.direccionFacturacionDireccion || '' 
-                : sale.direccionDespachoDireccion || '',
-              'Urbanización (Despacho)': sale.direccionDespachoIgualFacturacion === "true" 
-                ? sale.direccionFacturacionUrbanizacion || '' 
-                : sale.direccionDespachoUrbanizacion || '',
-              'Referencia (Despacho)': sale.direccionDespachoIgualFacturacion === "true" 
-                ? sale.direccionFacturacionReferencia || '' 
-                : sale.direccionDespachoReferencia || '',
-              
-              // Flete fields
-              'Monto Flete USD': sale.montoFleteUsd || '',
-              'Fecha Flete': sale.fechaFlete ? new Date(sale.fechaFlete).toLocaleDateString('es-ES') : '',
-              'Referencia Flete': sale.referenciaFlete || '',
-              'Monto Flete Bs': sale.montoFleteBs || '',
-              'Banco Receptor Flete': sale.bancoReceptorFlete || '',
-              'Status Flete': sale.statusFlete || '',
-              'Flete Gratis': sale.fleteGratis ? 'Sí' : 'No',
-              
-              'Notas': sale.notas || '',
-              
-              // Empty installment columns
-              'Número de Cuota': '',
-              'Fecha de Cuota': '',
-              'Monto Cuota USD': '',
-              'Monto Cuota Bs': '',
-              'Referencia Cuota': '',
-              'Banco Cuota': '',
-              'Saldo Restante': '',
-              'Verificado': ''
-            }];
-          } else {
-            // Create one row per installment
-            return sale.installments.map(installment => ({
-              'Número de Orden': sale.orden,
-              'Nombre': sale.nombre,
-              'Cédula': sale.cedula,
-              'Teléfono': sale.telefono,
-              'Correo': sale.email,
-              'Producto': sale.product,
-              'Cantidad': sale.cantidad,
-              'Canal': sale.canal,
-              'Estado de Entrega': sale.estadoEntrega,
-              'Tipo': sale.tipo,
-              'Fecha': new Date(sale.fecha).toLocaleDateString('es-ES'),
-              'Total USD': sale.totalUsd,
-              'Pago Inicial USD': sale.pagoInicialUsd,
-              'Referencia': sale.referenciaInicial,
-              'Monto Bs': sale.montoInicialBs,
-              'Asesor': sale.asesorId,
-              
-              // Billing Address
-              'País (Facturación)': sale.direccionFacturacionPais || '',
-              'Estado (Facturación)': sale.direccionFacturacionEstado || '',
-              'Ciudad (Facturación)': sale.direccionFacturacionCiudad || '',
-              'Dirección (Facturación)': sale.direccionFacturacionDireccion || '',
-              'Urbanización (Facturación)': sale.direccionFacturacionUrbanizacion || '',
-              'Referencia (Facturación)': sale.direccionFacturacionReferencia || '',
-              
-              // Shipping Address
-              'Despacho Igual a Facturación': sale.direccionDespachoIgualFacturacion === "true" ? 'Sí' : 'No',
-              'País (Despacho)': sale.direccionDespachoIgualFacturacion === "true" 
-                ? sale.direccionFacturacionPais || '' 
-                : sale.direccionDespachoPais || '',
-              'Estado (Despacho)': sale.direccionDespachoIgualFacturacion === "true" 
-                ? sale.direccionFacturacionEstado || '' 
-                : sale.direccionDespachoEstado || '',
-              'Ciudad (Despacho)': sale.direccionDespachoIgualFacturacion === "true" 
-                ? sale.direccionFacturacionCiudad || '' 
-                : sale.direccionDespachoCiudad || '',
-              'Dirección (Despacho)': sale.direccionDespachoIgualFacturacion === "true" 
-                ? sale.direccionFacturacionDireccion || '' 
-                : sale.direccionDespachoDireccion || '',
-              'Urbanización (Despacho)': sale.direccionDespachoIgualFacturacion === "true" 
-                ? sale.direccionFacturacionUrbanizacion || '' 
-                : sale.direccionDespachoUrbanizacion || '',
-              'Referencia (Despacho)': sale.direccionDespachoIgualFacturacion === "true" 
-                ? sale.direccionFacturacionReferencia || '' 
-                : sale.direccionDespachoReferencia || '',
-              
-              // Flete fields
-              'Monto Flete USD': sale.montoFleteUsd || '',
-              'Fecha Flete': sale.fechaFlete ? new Date(sale.fechaFlete).toLocaleDateString('es-ES') : '',
-              'Referencia Flete': sale.referenciaFlete || '',
-              'Monto Flete Bs': sale.montoFleteBs || '',
-              'Banco Receptor Flete': sale.bancoReceptorFlete || '',
-              'Status Flete': sale.statusFlete || '',
-              'Flete Gratis': sale.fleteGratis ? 'Sí' : 'No',
-              
-              'Notas': sale.notas || '',
-              
-              // Installment-specific columns
-              'Número de Cuota': installment.installmentNumber || '',
-              'Fecha de Cuota': installment.fecha ? new Date(installment.fecha).toLocaleDateString('es-ES') : '',
-              'Monto Cuota USD': installment.cuotaAmount || '',
-              'Monto Cuota Bs': installment.cuotaAmountBs || '',
-              'Referencia Cuota': installment.referencia || '',
-              'Banco Cuota': installment.bancoReceptorCuota || '',
-              'Saldo Restante': installment.saldoRemaining || '',
-              'Verificado': installment.verificado ? 'Sí' : 'No'
-            }));
-          }
-        });
-      } else {
-        // For regular sales, use the existing logic
-        const salesData = await storage.getSales(filters);
-        excelData = salesData.map(sale => ({
+      // Map to Excel columns
+      const excelData = salesData.map(sale => ({
+        // Basic fields
         'Número de Orden': sale.orden,
         'Nombre': sale.nombre,
         'Cédula': sale.cedula,
         'Teléfono': sale.telefono,
         'Correo': sale.email,
         'Producto': sale.product,
+        'SKU': sale.sku,
         'Cantidad': sale.cantidad,
         'Canal': sale.canal,
         'Estado de Entrega': sale.estadoEntrega,
         'Tipo': sale.tipo,
         'Fecha': new Date(sale.fecha).toLocaleDateString('es-ES'),
+        
+        // Totals
+        'Total Orden USD': sale.totalOrderUsd,
         'Total USD': sale.totalUsd,
+        
+        // Payment fields visible in table
         'Pago Inicial USD': sale.pagoInicialUsd,
         'Referencia': sale.referenciaInicial,
+        'Banco Receptor': sale.bancoReceptorInicial,
         'Monto Bs': sale.montoInicialBs,
+        
+        // Asesor
         'Asesor': sale.asesorId,
         
         // Billing Address
@@ -1042,18 +900,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           ? sale.direccionFacturacionReferencia || '' 
           : sale.direccionDespachoReferencia || '',
         
-        // Flete fields
-        'Monto Flete USD': sale.montoFleteUsd || '',
-        'Fecha Flete': sale.fechaFlete ? new Date(sale.fechaFlete).toLocaleDateString('es-ES') : '',
-        'Referencia Flete': sale.referenciaFlete || '',
-        'Monto Flete Bs': sale.montoFleteBs || '',
-        'Banco Receptor Flete': sale.bancoReceptorFlete || '',
-        'Status Flete': sale.statusFlete || '',
-        'Flete Gratis': sale.fleteGratis ? 'Sí' : 'No',
-        
+        // Notas
         'Notas': sale.notas || '',
-        }));
-      }
+      }));
 
       // Convert to Excel format
       const worksheet = XLSX.utils.json_to_sheet(excelData);
