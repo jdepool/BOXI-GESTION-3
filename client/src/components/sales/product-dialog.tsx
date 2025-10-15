@@ -2,6 +2,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useQuery } from "@tanstack/react-query";
+import { useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -32,10 +33,13 @@ export type ProductFormData = z.infer<typeof productFormSchema>;
 interface ProductDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  onAdd: (product: ProductFormData) => void;
+  onSave: (product: ProductFormData, index?: number) => void;
+  product?: ProductFormData;
+  index?: number;
 }
 
-export default function ProductDialog({ isOpen, onClose, onAdd }: ProductDialogProps) {
+export default function ProductDialog({ isOpen, onClose, onSave, product, index }: ProductDialogProps) {
+  const isEditMode = product !== undefined;
   const form = useForm<ProductFormData>({
     resolver: zodResolver(productFormSchema),
     defaultValues: {
@@ -55,8 +59,23 @@ export default function ProductDialog({ isOpen, onClose, onAdd }: ProductDialogP
 
   const watchHasMedidaEspecial = form.watch("hasMedidaEspecial");
 
+  useEffect(() => {
+    if (isOpen && product) {
+      form.reset(product);
+    } else if (isOpen && !product) {
+      form.reset({
+        producto: "",
+        sku: "",
+        cantidad: 1,
+        totalUsd: 0,
+        hasMedidaEspecial: false,
+        medidaEspecial: "",
+      });
+    }
+  }, [isOpen, product, form]);
+
   const handleSubmit = (data: ProductFormData) => {
-    onAdd(data);
+    onSave(data, index);
     form.reset();
     onClose();
   };
@@ -72,7 +91,7 @@ export default function ProductDialog({ isOpen, onClose, onAdd }: ProductDialogP
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Package className="h-5 w-5" />
-            Agregar Producto
+            {isEditMode ? "Editar Producto" : "Agregar Producto"}
           </DialogTitle>
         </DialogHeader>
 
@@ -200,9 +219,9 @@ export default function ProductDialog({ isOpen, onClose, onAdd }: ProductDialogP
               </Button>
               <Button 
                 type="submit"
-                data-testid="button-add-product"
+                data-testid={isEditMode ? "button-save-product" : "button-add-product"}
               >
-                Agregar Producto
+                {isEditMode ? "Guardar Cambios" : "Agregar Producto"}
               </Button>
             </DialogFooter>
           </form>

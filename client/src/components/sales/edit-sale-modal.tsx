@@ -10,7 +10,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Save, User, Package, Plus, Trash2 } from "lucide-react";
+import { Save, User, Package, Plus, Trash2, Pencil } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { Sale } from "@shared/schema";
@@ -38,6 +38,7 @@ export default function EditSaleModal({ open, onOpenChange, sale }: EditSaleModa
   const { toast } = useToast();
   const [products, setProducts] = useState<ProductFormData[]>([]);
   const [isProductDialogOpen, setIsProductDialogOpen] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<{product: ProductFormData; index: number} | null>(null);
 
   const form = useForm<EditSaleFormData>({
     resolver: zodResolver(editSaleSchema),
@@ -104,12 +105,29 @@ export default function EditSaleModal({ open, onOpenChange, sale }: EditSaleModa
     }
   }, [sale, orderProducts, canales, open, form]);
 
-  const handleAddProduct = (product: ProductFormData) => {
-    setProducts([...products, product]);
+  const handleSaveProduct = (product: ProductFormData, index?: number) => {
+    if (index !== undefined) {
+      const updatedProducts = [...products];
+      updatedProducts[index] = product;
+      setProducts(updatedProducts);
+      setEditingProduct(null);
+    } else {
+      setProducts([...products, product]);
+    }
+  };
+
+  const handleEditProduct = (product: ProductFormData, index: number) => {
+    setEditingProduct({ product, index });
+    setIsProductDialogOpen(true);
   };
 
   const handleRemoveProduct = (index: number) => {
     setProducts(products.filter((_, i) => i !== index));
+  };
+
+  const handleCloseDialog = () => {
+    setIsProductDialogOpen(false);
+    setEditingProduct(null);
   };
 
   const updateSaleMutation = useMutation({
@@ -344,15 +362,26 @@ export default function EditSaleModal({ open, onOpenChange, sale }: EditSaleModa
                               {product.medidaEspecial || "N/A"}
                             </TableCell>
                             <TableCell>
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleRemoveProduct(index)}
-                                data-testid={`button-remove-product-${index}`}
-                              >
-                                <Trash2 className="h-4 w-4 text-destructive" />
-                              </Button>
+                              <div className="flex gap-1">
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleEditProduct(product, index)}
+                                  data-testid={`button-edit-product-${index}`}
+                                >
+                                  <Pencil className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleRemoveProduct(index)}
+                                  data-testid={`button-remove-product-${index}`}
+                                >
+                                  <Trash2 className="h-4 w-4 text-destructive" />
+                                </Button>
+                              </div>
                             </TableCell>
                           </TableRow>
                         ))}
@@ -408,11 +437,13 @@ export default function EditSaleModal({ open, onOpenChange, sale }: EditSaleModa
         </DialogContent>
       </Dialog>
 
-      {/* Product Dialog for adding products */}
+      {/* Product Dialog for adding and editing products */}
       <ProductDialog
         isOpen={isProductDialogOpen}
-        onClose={() => setIsProductDialogOpen(false)}
-        onAdd={handleAddProduct}
+        onClose={handleCloseDialog}
+        onSave={handleSaveProduct}
+        product={editingProduct?.product}
+        index={editingProduct?.index}
       />
     </>
   );

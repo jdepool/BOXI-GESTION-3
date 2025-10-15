@@ -12,7 +12,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { CalendarIcon, MapPin, Package, Plus, Trash2, User } from "lucide-react";
+import { CalendarIcon, MapPin, Package, Plus, Trash2, User, Pencil } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -61,6 +61,7 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
   const { toast } = useToast();
   const [products, setProducts] = useState<ProductFormData[]>([]);
   const [isProductDialogOpen, setIsProductDialogOpen] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<{product: ProductFormData; index: number} | null>(null);
 
   const form = useForm<ManualReservaFormData>({
     resolver: zodResolver(manualReservaSchema),
@@ -97,12 +98,29 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
     form.setValue("totalUsd", total.toFixed(2));
   }, [products, form]);
 
-  const handleAddProduct = (product: ProductFormData) => {
-    setProducts([...products, product]);
+  const handleSaveProduct = (product: ProductFormData, index?: number) => {
+    if (index !== undefined) {
+      const updatedProducts = [...products];
+      updatedProducts[index] = product;
+      setProducts(updatedProducts);
+      setEditingProduct(null);
+    } else {
+      setProducts([...products, product]);
+    }
+  };
+
+  const handleEditProduct = (product: ProductFormData, index: number) => {
+    setEditingProduct({ product, index });
+    setIsProductDialogOpen(true);
   };
 
   const handleRemoveProduct = (index: number) => {
     setProducts(products.filter((_, i) => i !== index));
+  };
+
+  const handleCloseDialog = () => {
+    setIsProductDialogOpen(false);
+    setEditingProduct(null);
   };
 
   // Fetch canales data
@@ -394,15 +412,26 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
                           <TableCell>${product.totalUsd.toFixed(2)}</TableCell>
                           <TableCell>{product.medidaEspecial || "N/A"}</TableCell>
                           <TableCell>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleRemoveProduct(index)}
-                              data-testid={`button-remove-product-reserva-${index}`}
-                            >
-                              <Trash2 className="h-4 w-4 text-destructive" />
-                            </Button>
+                            <div className="flex gap-1">
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleEditProduct(product, index)}
+                                data-testid={`button-edit-product-reserva-${index}`}
+                              >
+                                <Pencil className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleRemoveProduct(index)}
+                                data-testid={`button-remove-product-reserva-${index}`}
+                              >
+                                <Trash2 className="h-4 w-4 text-destructive" />
+                              </Button>
+                            </div>
                           </TableCell>
                         </TableRow>
                       ))}
@@ -766,8 +795,10 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
 
         <ProductDialog
           isOpen={isProductDialogOpen}
-          onClose={() => setIsProductDialogOpen(false)}
-          onAdd={handleAddProduct}
+          onClose={handleCloseDialog}
+          onSave={handleSaveProduct}
+          product={editingProduct?.product}
+          index={editingProduct?.index}
         />
       </DialogContent>
     </Dialog>

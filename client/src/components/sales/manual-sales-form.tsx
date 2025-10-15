@@ -20,7 +20,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Separator } from "@/components/ui/separator";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { Save, User, MapPin, Package, CalendarIcon, Plus, Trash2 } from "lucide-react";
+import { Save, User, MapPin, Package, CalendarIcon, Plus, Trash2, Pencil } from "lucide-react";
 import { insertSaleSchema } from "@shared/schema";
 import ProductDialog, { ProductFormData } from "./product-dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -68,6 +68,7 @@ interface ManualSalesFormProps {
 export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = false }: ManualSalesFormProps) {
   const [products, setProducts] = useState<ProductFormData[]>([]);
   const [isProductDialogOpen, setIsProductDialogOpen] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<{product: ProductFormData; index: number} | null>(null);
 
   const form = useForm<ManualSaleFormData>({
     resolver: zodResolver(manualSaleSchema),
@@ -108,12 +109,29 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
     form.setValue("totalUsd", total.toFixed(2));
   }, [products, form]);
 
-  const handleAddProduct = (product: ProductFormData) => {
-    setProducts([...products, product]);
+  const handleSaveProduct = (product: ProductFormData, index?: number) => {
+    if (index !== undefined) {
+      const updatedProducts = [...products];
+      updatedProducts[index] = product;
+      setProducts(updatedProducts);
+      setEditingProduct(null);
+    } else {
+      setProducts([...products, product]);
+    }
+  };
+
+  const handleEditProduct = (product: ProductFormData, index: number) => {
+    setEditingProduct({ product, index });
+    setIsProductDialogOpen(true);
   };
 
   const handleRemoveProduct = (index: number) => {
     setProducts(products.filter((_, i) => i !== index));
+  };
+
+  const handleCloseDialog = () => {
+    setIsProductDialogOpen(false);
+    setEditingProduct(null);
   };
 
   // Get products, payment methods and banks for dropdowns
@@ -337,15 +355,26 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
                       <TableCell>${product.totalUsd.toFixed(2)}</TableCell>
                       <TableCell>{product.medidaEspecial || "N/A"}</TableCell>
                       <TableCell>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleRemoveProduct(index)}
-                          data-testid={`button-remove-product-${index}`}
-                        >
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
+                        <div className="flex gap-1">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleEditProduct(product, index)}
+                            data-testid={`button-edit-product-${index}`}
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleRemoveProduct(index)}
+                            data-testid={`button-remove-product-${index}`}
+                          >
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -690,8 +719,10 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
       </form>
       <ProductDialog
         isOpen={isProductDialogOpen}
-        onClose={() => setIsProductDialogOpen(false)}
-        onAdd={handleAddProduct}
+        onClose={handleCloseDialog}
+        onSave={handleSaveProduct}
+        product={editingProduct?.product}
+        index={editingProduct?.index}
       />
     </Form>
   );
