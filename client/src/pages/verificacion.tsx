@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Check, X, Filter, ChevronDown, ChevronUp, Download, ChevronLeft, ChevronRight, CalendarIcon } from "lucide-react";
+import { Check, X, Filter, ChevronDown, ChevronUp, Download, ChevronLeft, ChevronRight, CalendarIcon, RotateCcw } from "lucide-react";
 import { format } from "date-fns";
 import Sidebar from "@/components/layout/sidebar";
 import { Calendar } from "@/components/ui/calendar";
@@ -175,6 +175,16 @@ export default function VerificacionPage() {
     return banco?.banco || bancoId;
   };
 
+  const handleResetFilters = () => {
+    setStartDate("");
+    setEndDate("");
+    setSelectedBanco("all");
+    setEstadoFilter("all");
+    setOrdenFilter("");
+    setTipoPagoFilter("all");
+    setOffset(0);
+  };
+
   const handleExport = async () => {
     try {
       const queryParams = new URLSearchParams();
@@ -254,6 +264,17 @@ export default function VerificacionPage() {
               <Button 
                 variant="ghost" 
                 size="sm"
+                onClick={handleResetFilters}
+                data-testid="reset-filters-button"
+                className="text-muted-foreground"
+                title="Limpiar filtros"
+              >
+                <RotateCcw className="h-4 w-4" />
+              </Button>
+              
+              <Button 
+                variant="ghost" 
+                size="sm"
                 onClick={handleExport}
                 data-testid="export-button"
                 className="text-muted-foreground"
@@ -307,6 +328,7 @@ export default function VerificacionPage() {
                       <SelectItem value="all">Todos</SelectItem>
                       <SelectItem value="Verificado">Verificado</SelectItem>
                       <SelectItem value="Por verificar">Por verificar</SelectItem>
+                      <SelectItem value="Rechazado">Rechazado</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
