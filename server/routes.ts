@@ -839,34 +839,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
         offset: 0,
       };
 
-      // Get sales data
-      const salesData = await storage.getSales(filters);
+      // Get sales data and bancos for lookup
+      const [salesData, bancos] = await Promise.all([
+        storage.getSales(filters),
+        storage.getBancos()
+      ]);
+      
+      // Create banco lookup map (ID -> banco name)
+      const bancoMap = new Map(bancos.map(banco => [banco.id, banco.banco]));
       
       // Map to Excel columns
-      const excelData = salesData.map(sale => ({
-        // Basic fields
-        'Número de Orden': sale.orden,
-        'Nombre': sale.nombre,
-        'Cédula': sale.cedula,
-        'Teléfono': sale.telefono,
-        'Correo': sale.email,
-        'Producto': sale.product,
-        'SKU': sale.sku,
-        'Cantidad': sale.cantidad,
-        'Canal': sale.canal,
-        'Estado de Entrega': sale.estadoEntrega,
-        'Tipo': sale.tipo,
-        'Fecha': new Date(sale.fecha).toLocaleDateString('es-ES'),
+      const excelData = salesData.map(sale => {
+        // Get banco name (match SalesTable display logic)
+        let bancoNombre = 'N/A';
+        if (sale.bancoReceptorInicial) {
+          if (sale.bancoReceptorInicial === 'otro') {
+            bancoNombre = 'Otro($)';
+          } else {
+            bancoNombre = bancoMap.get(sale.bancoReceptorInicial) || 'N/A';
+          }
+        }
         
-        // Totals
-        'Total Orden USD': sale.totalOrderUsd,
-        'Total USD': sale.totalUsd,
-        
-        // Payment fields visible in table
-        'Pago Inicial USD': sale.pagoInicialUsd,
-        'Referencia': sale.referenciaInicial,
-        'Banco Receptor': sale.bancoReceptorInicial,
-        'Monto Bs': sale.montoInicialBs,
+        return {
+          // Basic fields
+          'Número de Orden': sale.orden,
+          'Nombre': sale.nombre,
+          'Cédula': sale.cedula,
+          'Teléfono': sale.telefono,
+          'Correo': sale.email,
+          'Producto': sale.product,
+          'SKU': sale.sku,
+          'Cantidad': sale.cantidad,
+          'Canal': sale.canal,
+          'Estado de Entrega': sale.estadoEntrega,
+          'Tipo': sale.tipo,
+          'Fecha': new Date(sale.fecha).toLocaleDateString('es-ES'),
+          
+          // Totals
+          'Total Orden USD': sale.totalOrderUsd,
+          'Total USD': sale.totalUsd,
+          
+          // Payment fields visible in table
+          'Pago Inicial USD': sale.pagoInicialUsd,
+          'Referencia': sale.referenciaInicial,
+          'Banco Receptor': bancoNombre,
+          'Monto Bs': sale.montoInicialBs,
         
         // Asesor
         'Asesor': sale.asesorId,
@@ -900,9 +917,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           ? sale.direccionFacturacionReferencia || '' 
           : sale.direccionDespachoReferencia || '',
         
-        // Notas
-        'Notas': sale.notas || '',
-      }));
+          // Notas
+          'Notas': sale.notas || '',
+        };
+      });
 
       // Convert to Excel format
       const worksheet = XLSX.utils.json_to_sheet(excelData);
