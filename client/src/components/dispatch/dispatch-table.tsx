@@ -276,7 +276,7 @@ export default function DispatchTable({
         ) : (
           <div className="overflow-x-auto overflow-y-auto max-h-[calc(100vh-280px)] bg-background">
             <div className="min-w-max">
-              <table className="w-full min-w-[2740px] relative">
+              <table className="w-full min-w-[2860px] relative">
                 <thead className="bg-muted sticky top-0 z-10">
                   <tr>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[100px] sticky left-0 bg-muted z-20 border-r border-border shadow-[2px_0_5px_rgba(0,0,0,0.1)]">Orden</th>
@@ -287,6 +287,7 @@ export default function DispatchTable({
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[120px]">Cédula</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[300px]">Dirección de Despacho</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[200px]">Producto</th>
+                    <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[120px]">SKU</th>
                     <th className="text-center p-2 text-xs font-medium text-muted-foreground min-w-[80px]">Cant.</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[200px]">Email</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[120px]">Fecha</th>
@@ -394,12 +395,11 @@ export default function DispatchTable({
                       </td>
                       
                       <td className="p-2 min-w-[200px] text-xs">
-                        <div className="text-sm">
-                          <div className="font-medium">{sale.product}</div>
-                          <div className="text-muted-foreground">
-                            ${Number(sale.totalUsd).toLocaleString()} USD
-                          </div>
-                        </div>
+                        <div className="font-medium">{sale.product}</div>
+                      </td>
+                      
+                      <td className="p-2 min-w-[120px] text-xs">
+                        {sale.sku || <span className="text-muted-foreground">—</span>}
                       </td>
                       
                       <td className="p-2 min-w-[80px] text-center text-xs">{sale.cantidad}</td>
