@@ -323,7 +323,14 @@ export default function VerificacionPage() {
                       <Calendar
                         mode="single"
                         selected={startDate ? new Date(startDate) : undefined}
-                        onSelect={(date) => setStartDate(date ? format(date, 'yyyy-MM-dd') : '')}
+                        onSelect={(date) => {
+                          if (date) {
+                            const localDate = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+                            setStartDate(localDate);
+                          } else {
+                            setStartDate('');
+                          }
+                        }}
                         initialFocus
                       />
                     </PopoverContent>
@@ -349,7 +356,14 @@ export default function VerificacionPage() {
                       <Calendar
                         mode="single"
                         selected={endDate ? new Date(endDate) : undefined}
-                        onSelect={(date) => setEndDate(date ? format(date, 'yyyy-MM-dd') : '')}
+                        onSelect={(date) => {
+                          if (date) {
+                            const localDate = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+                            setEndDate(localDate);
+                          } else {
+                            setEndDate('');
+                          }
+                        }}
                         initialFocus
                       />
                     </PopoverContent>
