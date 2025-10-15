@@ -23,6 +23,9 @@ Basic username/password authentication is implemented, with user sessions manage
 ## UI/UX Design
 The application leverages shadcn/ui and Radix UI for consistent design and accessibility, with Tailwind CSS for styling and Lucide React for icons. The Ventas section features a tabbed interface with "Lista de Ventas", "Ventas por Completar", "Reservas", "Pagos", and "Cargar Datos" tabs for managing sales data and uploads. The Verificación section includes "Ingresos", "Egresos", and "Cashea Pago Inicial" tabs for payment verification. Despachos is a separate page with a directly editable Estado de Entrega dropdown in the sticky column for quick status updates, with customer contact information (Nombre, Teléfono, Cédula, Dirección de Despacho) positioned immediately after the delivery date for efficient dispatch workflow. The interface is optimized for space with compact headers and context-aware action buttons.
 
+### Date Filtering
+A reusable DateRangePicker component (`client/src/components/shared/date-range-picker.tsx`) provides consistent date range filtering across all tables (Pagos, Lista de Ventas, Ventas por Completar, Reservas). The component handles timezone correctly by parsing yyyy-MM-dd strings as local dates, preventing the "day before" bug that occurs when JavaScript interprets date strings as UTC.
+
 ### Tab Workflow Logic
 Orders progress through tabs based on payment and delivery status:
 - **Temporary Tabs (`Ventas por Completar`, `Reservas`, `Pagos`):** Hold incomplete or pending orders.
