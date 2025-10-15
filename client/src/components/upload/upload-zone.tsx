@@ -8,10 +8,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, Power, Clock, CheckCircle, XCircle } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { queryClient } from "@/lib/queryClient";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { format, parse } from "date-fns";
 import { cn } from "@/lib/utils";
 import * as XLSX from 'xlsx';
@@ -45,6 +47,44 @@ export default function UploadZone({ recentUploads, showOnlyCashea = false }: Up
   const [isShowingCasheaPreview, setIsShowingCasheaPreview] = useState(false);
   
   const { toast } = useToast();
+
+  // Automation config query
+  const { data: automationConfig } = useQuery({
+    queryKey: ['/api/cashea/automation/config'],
+    enabled: showOnlyCashea || !showOnlyCashea, // Always fetch when CASHEA tab is available
+  });
+
+  // Automation history query
+  const { data: automationHistory } = useQuery({
+    queryKey: ['/api/cashea/automation/history'],
+    enabled: showOnlyCashea || !showOnlyCashea,
+  });
+
+  // Update automation config mutation
+  const updateAutomationMutation = useMutation({
+    mutationFn: async ({ enabled, frequency }: { enabled: boolean; frequency: string }) => {
+      return apiRequest('/api/cashea/automation/config', {
+        method: 'PUT',
+        body: JSON.stringify({ enabled, frequency }),
+        headers: { 'Content-Type': 'application/json' },
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/cashea/automation/config'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/cashea/automation/history'] });
+      toast({
+        title: "Configuración actualizada",
+        description: "La automatización se ha configurado correctamente",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error al actualizar configuración",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
 
   const validateAndSetFile = (file: File) => {
     if (!file.name.endsWith('.xlsx') && !file.name.endsWith('.xls') && !file.name.endsWith('.csv')) {
@@ -325,10 +365,117 @@ export default function UploadZone({ recentUploads, showOnlyCashea = false }: Up
     }
   };
 
+  // Handlers for automation config
+  const handleAutomationToggle = (enabled: boolean) => {
+    const frequency = automationConfig?.frequency || '2_hours';
+    updateAutomationMutation.mutate({ enabled, frequency });
+  };
+
+  const handleFrequencyChange = (frequency: string) => {
+    const enabled = automationConfig?.enabled || false;
+    updateAutomationMutation.mutate({ enabled, frequency });
+  };
+
+  // Frequency options
+  const frequencyOptions = [
+    { value: '30_minutes', label: 'Cada 30 minutos' },
+    { value: '1_hour', label: 'Cada 1 hora' },
+    { value: '2_hours', label: 'Cada 2 horas' },
+    { value: '4_hours', label: 'Cada 4 horas' },
+    { value: '8_hours', label: 'Cada 8 horas' },
+    { value: '16_hours', label: 'Cada 16 horas' },
+    { value: '24_hours', label: 'Cada 24 horas' },
+  ];
+
   // CASHEA Download Content Component
   const casheaContent = (
-    <div className="space-y-4 mt-6">
-      <div className="grid grid-cols-2 gap-4">
+    <div className="space-y-6 mt-6">
+      {/* Automation Section */}
+      <div className="bg-muted/30 rounded-lg p-4 border border-border">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <Power className="h-5 w-5 text-primary" />
+            <h4 className="font-semibold text-foreground">Descarga Automática</h4>
+          </div>
+          <div className="flex items-center gap-2">
+            {automationConfig?.enabled && (
+              <Badge variant="default" className="gap-1">
+                <CheckCircle className="h-3 w-3" />
+                Activa
+              </Badge>
+            )}
+            <Switch
+              checked={automationConfig?.enabled || false}
+              onCheckedChange={handleAutomationToggle}
+              disabled={updateAutomationMutation.isPending}
+              data-testid="automation-toggle"
+            />
+          </div>
+        </div>
+
+        <div className="space-y-3">
+          <div>
+            <Label className="text-sm">Frecuencia de Descarga</Label>
+            <Select
+              value={automationConfig?.frequency || '2_hours'}
+              onValueChange={handleFrequencyChange}
+              disabled={!automationConfig?.enabled || updateAutomationMutation.isPending}
+            >
+              <SelectTrigger className="mt-1" data-testid="frequency-select">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {frequencyOptions.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {automationHistory && automationHistory.length > 0 && (
+            <div className="mt-4">
+              <Label className="text-sm mb-2 block">Últimas Descargas Automáticas</Label>
+              <div className="space-y-2">
+                {automationHistory.slice(0, 5).map((download: any) => (
+                  <div
+                    key={download.id}
+                    className="flex items-center justify-between p-2 bg-background rounded border border-border text-xs"
+                    data-testid={`auto-download-${download.id}`}
+                  >
+                    <div className="flex items-center gap-2">
+                      {download.status === 'success' ? (
+                        <CheckCircle className="h-3 w-3 text-green-600" />
+                      ) : (
+                        <XCircle className="h-3 w-3 text-red-600" />
+                      )}
+                      <span className="text-muted-foreground">
+                        {format(new Date(download.executedAt), 'dd/MM/yyyy HH:mm')}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {download.status === 'success' ? (
+                        <span className="text-foreground">{download.recordCount} registros</span>
+                      ) : (
+                        <span className="text-red-600">Error</span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Manual Download Section */}
+      <div className="space-y-4">
+        <div className="flex items-center gap-2 mb-2">
+          <Clock className="h-5 w-5 text-primary" />
+          <h4 className="font-semibold text-foreground">Descarga Manual</h4>
+        </div>
+        <div className="grid grid-cols-2 gap-4">
         <div>
           <Label>Fecha de Inicio</Label>
           <Popover>
@@ -415,24 +562,25 @@ export default function UploadZone({ recentUploads, showOnlyCashea = false }: Up
         </div>
       )}
 
-      <div className="space-y-3">
-        <Button 
-          onClick={downloadCasheaData}
-          disabled={!startDate || !endDate || isDownloadingCashea}
-          className="w-full"
-          data-testid="cashea-download-button"
-        >
-          {isDownloadingCashea ? "Descargando..." : "Descargar Datos CASHEA"}
-        </Button>
-        <Button 
-          variant="outline" 
-          onClick={resetCashea}
-          disabled={isDownloadingCashea}
-          className="w-full"
-          data-testid="reset-cashea-button"
-        >
-          Limpiar
-        </Button>
+        <div className="space-y-3">
+          <Button 
+            onClick={downloadCasheaData}
+            disabled={!startDate || !endDate || isDownloadingCashea}
+            className="w-full"
+            data-testid="cashea-download-button"
+          >
+            {isDownloadingCashea ? "Descargando..." : "Descargar Datos CASHEA"}
+          </Button>
+          <Button 
+            variant="outline" 
+            onClick={resetCashea}
+            disabled={isDownloadingCashea}
+            className="w-full"
+            data-testid="reset-cashea-button"
+          >
+            Limpiar
+          </Button>
+        </div>
       </div>
     </div>
   );
