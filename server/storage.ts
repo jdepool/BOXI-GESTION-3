@@ -1,10 +1,10 @@
 import { 
-  sales, uploadHistory, users, bancos, bancosBackup, tiposEgresos, productos, productosBackup, metodosPago, monedas, categorias, canales, asesores, egresos, egresosPorAprobar, paymentInstallments,
+  sales, uploadHistory, users, bancos, bancosBackup, tiposEgresos, productos, productosBackup, metodosPago, monedas, categorias, canales, asesores, transportistas, egresos, egresosPorAprobar, paymentInstallments,
   type User, type InsertUser, type Sale, type InsertSale, type UploadHistory, type InsertUploadHistory,
   type Banco, type InsertBanco, type TipoEgreso, type InsertTipoEgreso,
   type Producto, type InsertProducto, type MetodoPago, type InsertMetodoPago,
   type Moneda, type InsertMoneda, type Categoria, type InsertCategoria,
-  type Canal, type InsertCanal, type Asesor, type InsertAsesor, type Egreso, type InsertEgreso,
+  type Canal, type InsertCanal, type Asesor, type InsertAsesor, type Transportista, type InsertTransportista, type Egreso, type InsertEgreso,
   type EgresoPorAprobar, type InsertEgresoPorAprobar, type PaymentInstallment, type InsertPaymentInstallment
 } from "@shared/schema";
 import { db } from "./db";
@@ -174,6 +174,12 @@ export interface IStorage {
   createAsesor(asesor: InsertAsesor): Promise<Asesor>;
   updateAsesor(id: string, asesor: Partial<InsertAsesor>): Promise<Asesor | undefined>;
   deleteAsesor(id: string): Promise<boolean>;
+
+  // Transportistas
+  getTransportistas(): Promise<Transportista[]>;
+  createTransportista(transportista: InsertTransportista): Promise<Transportista>;
+  updateTransportista(id: string, transportista: Partial<InsertTransportista>): Promise<Transportista | undefined>;
+  deleteTransportista(id: string): Promise<boolean>;
 
   // Egresos
   getEgresos(filters?: {
@@ -1562,6 +1568,34 @@ export class DatabaseStorage implements IStorage {
 
   async deleteAsesor(id: string): Promise<boolean> {
     const result = await db.delete(asesores).where(eq(asesores.id, id));
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  // Transportistas methods implementation
+  async getTransportistas(): Promise<Transportista[]> {
+    return await db.select().from(transportistas).orderBy(transportistas.nombre);
+  }
+
+  async createTransportista(transportista: InsertTransportista): Promise<Transportista> {
+    const [newTransportista] = await db.insert(transportistas).values({
+      ...transportista,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }).returning();
+    return newTransportista;
+  }
+
+  async updateTransportista(id: string, transportista: Partial<InsertTransportista>): Promise<Transportista | undefined> {
+    const [updated] = await db
+      .update(transportistas)
+      .set({ ...transportista, updatedAt: new Date() })
+      .where(eq(transportistas.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteTransportista(id: string): Promise<boolean> {
+    const result = await db.delete(transportistas).where(eq(transportistas.id, id));
     return (result.rowCount ?? 0) > 0;
   }
 
