@@ -182,34 +182,52 @@ function transformCasheaData(rawData: any[]): any[] {
   return records;
 }
 
-async function sendWebhookToZapier(data: any, canal: string): Promise<void> {
-  const webhookUrl = process.env.ZAPIER_WEBHOOK_URL;
+async function sendCasheaOrderWebhook(newSales: any[]): Promise<void> {
+  const webhookUrl = process.env.CASHEA_WEBHOOK_URL;
   
   if (!webhookUrl) {
-    console.log('No Zapier webhook URL configured, skipping webhook notification');
+    console.log('No Cashea webhook URL configured, skipping webhook notification');
     return;
   }
 
+  // Filter to ensure only Cashea orders are sent
+  const casheaOrders = newSales.filter(sale => sale.canal === 'cashea');
+  
+  if (casheaOrders.length === 0) {
+    console.log('No Cashea orders to send to webhook');
+    return;
+  }
+
+  console.log(`📤 Sending ${casheaOrders.length} Cashea orders to webhook...`);
+
   try {
-    const response = await fetch(webhookUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        ...data,
-        canal,
-        timestamp: new Date().toISOString(),
-      }),
-    });
+    // Send each order individually to the webhook
+    for (const sale of casheaOrders) {
+      const payload = {
+        orden: sale.orden || '',
+        nombre_cliente: sale.nombre || '',
+        telefono: sale.telefono || '',
+        producto: sale.product || ''
+      };
 
-    if (!response.ok) {
-      throw new Error(`Webhook failed with status ${response.status}`);
+      const response = await fetch(webhookUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        console.error(`Webhook failed for order ${sale.orden}: ${response.status} ${response.statusText}`);
+      } else {
+        console.log(`✅ Webhook sent for order ${sale.orden}`);
+      }
     }
-
-    console.log(`✅ Webhook notification sent successfully for ${canal}`);
+    
+    console.log(`✅ All ${casheaOrders.length} Cashea order webhooks sent successfully`);
   } catch (error) {
-    console.error('Webhook notification failed:', error);
+    console.error('Error sending Cashea order webhook:', error);
     throw error;
   }
 }
@@ -282,14 +300,9 @@ export async function performCasheaDownload(
 
     if (newSales.length > 0) {
       try {
-        await sendWebhookToZapier({
-          recordsProcessed: newSales.length,
-          duplicatesIgnored: duplicatesCount,
-          filename: `cashea_download_${startDate}_to_${endDate}`,
-          salesData: newSales
-        }, 'cashea');
+        await sendCasheaOrderWebhook(newSales);
       } catch (webhookError) {
-        console.error('Webhook notification failed, but download was successful:', webhookError);
+        console.error('Cashea webhook notification failed, but download was successful:', webhookError);
       }
     }
 
