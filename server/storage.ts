@@ -543,15 +543,36 @@ export class DatabaseStorage implements IStorage {
       isNotNull(sales.orden)
     ];
 
-    // Add estadoEntrega filter if provided
+    // PAGOS TABLE LOGIC: Only show Pendiente and En proceso orders (temporary workspace)
+    // When estadoEntrega filter is explicitly provided, validate it's one of the allowed statuses
     if (filters?.estadoEntrega) {
-      // Filter by specific status (route layer ensures this is never 'all' or empty)
-      conditions.push(eq(sales.estadoEntrega, filters.estadoEntrega));
+      // Only allow Pendiente, En proceso, or Perdida in the filter
+      const allowedStatuses = ['Pendiente', 'En proceso', 'Perdida'];
+      if (allowedStatuses.includes(filters.estadoEntrega)) {
+        conditions.push(eq(sales.estadoEntrega, filters.estadoEntrega));
+      } else {
+        // If invalid status selected, default to showing Pendiente and En proceso
+        conditions.push(or(
+          eq(sales.estadoEntrega, 'Pendiente'),
+          eq(sales.estadoEntrega, 'En proceso')
+        ));
+      }
     } else {
-      // When no specific status is selected, show all statuses
-      // but exclude Perdida if requested
+      // Default behavior: Only show Pendiente and En proceso orders
+      // Exclude Perdida unless explicitly selected
       if (filters?.excludePerdida) {
-        conditions.push(ne(sales.estadoEntrega, "Perdida"));
+        // Show Pendiente and En proceso only (exclude Perdida)
+        conditions.push(or(
+          eq(sales.estadoEntrega, 'Pendiente'),
+          eq(sales.estadoEntrega, 'En proceso')
+        ));
+      } else {
+        // Show Pendiente, En proceso, and Perdida (Perdida filter selected)
+        conditions.push(or(
+          eq(sales.estadoEntrega, 'Pendiente'),
+          eq(sales.estadoEntrega, 'En proceso'),
+          eq(sales.estadoEntrega, 'Perdida')
+        ));
       }
     }
 
