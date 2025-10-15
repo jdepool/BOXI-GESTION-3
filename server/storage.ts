@@ -378,7 +378,10 @@ export class DatabaseStorage implements IStorage {
       conditions.push(gte(sales.fecha, filters.startDate));
     }
     if (filters?.endDate) {
-      conditions.push(lte(sales.fecha, filters.endDate));
+      // Add 23:59:59.999 to include the entire end date
+      const endDateTime = new Date(filters.endDate);
+      endDateTime.setHours(23, 59, 59, 999);
+      conditions.push(lte(sales.fecha, endDateTime));
     }
     if (filters?.tipo) {
       conditions.push(eq(sales.tipo, filters.tipo));
@@ -1108,7 +1111,10 @@ export class DatabaseStorage implements IStorage {
       conditions.push(gte(sales.fecha, filters.startDate));
     }
     if (filters?.endDate) {
-      conditions.push(lte(sales.fecha, filters.endDate));
+      // Add 23:59:59.999 to include the entire end date
+      const endDateTime = new Date(filters.endDate);
+      endDateTime.setHours(23, 59, 59, 999);
+      conditions.push(lte(sales.fecha, endDateTime));
     }
     if (filters?.tipo) {
       conditions.push(eq(sales.tipo, filters.tipo));
