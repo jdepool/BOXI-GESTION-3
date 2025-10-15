@@ -106,6 +106,18 @@ export default function Sales() {
     setFilters(prev => ({ ...prev, offset: newOffset }));
   };
 
+  const handleClearFilters = () => {
+    setFilters({
+      canal: "",
+      estadoEntrega: "",
+      orden: "",
+      startDate: "",
+      endDate: "",
+      limit: 20,
+      offset: 0,
+    });
+  };
+
   const handlePagosFilterChange = (newFilters: Partial<typeof pagosFilters>) => {
     const normalized = { ...newFilters };
     if (normalized.canal === "all") normalized.canal = "";
@@ -116,6 +128,19 @@ export default function Sales() {
 
   const handlePagosPageChange = (newOffset: number) => {
     setPagosFilters(prev => ({ ...prev, offset: newOffset }));
+  };
+
+  const handleClearPagosFilters = () => {
+    setPagosFilters({
+      canal: "",
+      orden: "",
+      startDate: "",
+      endDate: "",
+      asesorId: "",
+      estadoEntrega: "",
+      limit: 20,
+      offset: 0,
+    });
   };
 
   return (
@@ -152,6 +177,7 @@ export default function Sales() {
                   }}
                   onFilterChange={handleFilterChange}
                   onPageChange={handlePageChange}
+                  onClearFilters={handleClearFilters}
                   showDeliveryDateColumn={true}
                   activeTab={activeTab}
                 />
@@ -195,6 +221,7 @@ export default function Sales() {
                   filters={pagosFilters}
                   onFilterChange={handlePagosFilterChange}
                   onPageChange={handlePagosPageChange}
+                  onClearFilters={handleClearPagosFilters}
                 />
               </div>
             </TabsContent>

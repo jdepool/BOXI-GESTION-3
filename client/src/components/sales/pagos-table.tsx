@@ -3,7 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { format, parse } from "date-fns";
-import { CreditCard, Truck, Banknote, Filter, ChevronUp, ChevronDown, Download, ChevronLeft, ChevronRight, XCircle, CalendarIcon } from "lucide-react";
+import { CreditCard, Truck, Banknote, Filter, ChevronUp, ChevronDown, Download, ChevronLeft, ChevronRight, XCircle, CalendarIcon, RotateCcw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -30,6 +30,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 // Helper function to safely parse YYYY-MM-DD as local date
 const parseLocalDate = (dateString: string) => {
@@ -77,6 +83,7 @@ interface PagosTableProps {
   };
   onFilterChange?: (filters: any) => void;
   onPageChange?: (newOffset: number) => void;
+  onClearFilters?: () => void;
 }
 
 export default function PagosTable({
@@ -88,9 +95,20 @@ export default function PagosTable({
   filters,
   onFilterChange,
   onPageChange,
+  onClearFilters,
 }: PagosTableProps) {
   const currentPage = Math.floor(offset / limit) + 1;
   const { toast } = useToast();
+  
+  // Check if any filters are active
+  const hasActiveFilters = !!(
+    filters?.canal || 
+    filters?.orden || 
+    filters?.startDate || 
+    filters?.endDate || 
+    filters?.asesorId || 
+    filters?.estadoEntrega
+  );
   
   const [filtersVisible, setFiltersVisible] = useState(false);
   const [pagoInicialModalOpen, setPagoInicialModalOpen] = useState(false);
@@ -266,6 +284,27 @@ export default function PagosTable({
           <Filter className="h-4 w-4 mr-2" />
           {filtersVisible ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
         </Button>
+        
+        {hasActiveFilters && onClearFilters && (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={onClearFilters}
+                  data-testid="clear-filters-button"
+                  className="text-muted-foreground"
+                >
+                  <RotateCcw className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Limpiar Filtros</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        )}
         
         <Button 
           variant="ghost" 

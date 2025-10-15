@@ -7,10 +7,11 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import SaleDetailModal from "./sale-detail-modal";
 import AddressModal from "@/components/addresses/address-modal";
 import EditSaleModal from "./edit-sale-modal";
-import { MapPin, Edit, CalendarIcon, Mail, Filter, ChevronDown, ChevronUp, Download, ChevronLeft, ChevronRight } from "lucide-react";
+import { MapPin, Edit, CalendarIcon, Mail, Filter, ChevronDown, ChevronUp, Download, ChevronLeft, ChevronRight, RotateCcw } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { format, parse } from "date-fns";
@@ -41,6 +42,7 @@ interface SalesTableProps {
   activeTab?: string;
   onNewManualSale?: () => void;
   onNewReserva?: () => void;
+  onClearFilters?: () => void;
 }
 
 export default function SalesTable({ 
@@ -60,9 +62,20 @@ export default function SalesTable({
   onEditSale,
   activeTab,
   onNewManualSale,
-  onNewReserva
+  onNewReserva,
+  onClearFilters
 }: SalesTableProps) {
   const { toast } = useToast();
+  
+  // Check if any filters are active
+  const hasActiveFilters = !!(
+    parentFilters?.canal || 
+    parentFilters?.estadoEntrega || 
+    parentFilters?.asesorId || 
+    parentFilters?.orden || 
+    parentFilters?.startDate || 
+    parentFilters?.endDate
+  );
   
   // Email sending mutation
   const sendEmailMutation = useMutation({
@@ -392,6 +405,27 @@ export default function SalesTable({
                 <Filter className="h-4 w-4 mr-2" />
                 {filtersVisible ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
               </Button>
+              
+              {hasActiveFilters && onClearFilters && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button 
+                        variant="ghost" 
+                        size="sm"
+                        onClick={onClearFilters}
+                        data-testid="clear-filters-button"
+                        className="text-muted-foreground"
+                      >
+                        <RotateCcw className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Limpiar Filtros</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
               
               <Button 
                 variant="ghost" 

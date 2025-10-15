@@ -78,6 +78,19 @@ export default function ManualSalesEntry() {
     setFilters(prev => ({ ...prev, offset: newOffset }));
   };
 
+  const handleClearFilters = () => {
+    setFilters({
+      canal: "",
+      estadoEntrega: "",
+      asesorId: "",
+      orden: "",
+      startDate: "",
+      endDate: "",
+      limit: 20,
+      offset: 0,
+    });
+  };
+
   if (showForm) {
     return (
       <div className="h-full">
@@ -121,6 +134,7 @@ export default function ManualSalesEntry() {
             extraExportParams={{ estadoEntrega: "Pendiente", excludeReservas: true }}
             onFilterChange={handleFilterChange}
             onPageChange={handlePageChange}
+            onClearFilters={handleClearFilters}
             onEditSale={(sale) => setEditSale(sale)}
             activeTab="manual"
             onNewManualSale={() => setShowForm(true)}
