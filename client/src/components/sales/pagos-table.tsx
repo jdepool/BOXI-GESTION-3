@@ -449,8 +449,11 @@ export default function PagosTable({
                 <th className="p-2 text-center text-xs font-medium text-muted-foreground min-w-[100px]">
                   Cuotas
                 </th>
-                <th className="p-2 text-center text-xs font-medium text-muted-foreground min-w-[140px] bg-blue-50 dark:bg-blue-950">
-                  Orden + Flete
+                <th className="p-2 text-center text-xs font-medium text-muted-foreground min-w-[120px] bg-blue-50 dark:bg-blue-950">
+                  Orden
+                </th>
+                <th className="p-2 text-center text-xs font-medium text-muted-foreground min-w-[120px] bg-purple-50 dark:bg-purple-950">
+                  Flete
                 </th>
                 <th className="p-2 text-center text-xs font-medium text-muted-foreground min-w-[120px] bg-gray-100 dark:bg-gray-800">
                   Total Pagado
@@ -472,13 +475,13 @@ export default function PagosTable({
             <tbody>
               {isLoading ? (
                 <tr>
-                  <td colSpan={16} className="p-4 text-center text-muted-foreground">
+                  <td colSpan={18} className="p-4 text-center text-muted-foreground">
                     Cargando...
                   </td>
                 </tr>
               ) : data.length === 0 ? (
                 <tr>
-                  <td colSpan={16} className="p-4 text-center text-muted-foreground">
+                  <td colSpan={18} className="p-4 text-center text-muted-foreground">
                     No hay órdenes pendientes o en proceso
                   </td>
                 </tr>
@@ -637,10 +640,17 @@ export default function PagosTable({
                         {order.installmentCount > 0 ? 'Editar' : 'Agregar'}
                       </Button>
                     </td>
-                    <td className="p-2 min-w-[140px] bg-blue-50 dark:bg-blue-950">
+                    <td className="p-2 min-w-[120px] bg-blue-50 dark:bg-blue-950">
                       <div className="flex justify-center">
-                        <div className="bg-blue-100 dark:bg-blue-900 text-blue-900 dark:text-blue-100 px-3 py-1 rounded-md text-xs" data-testid={`metric-orden-flete-${order.orden}`}>
-                          {formatCurrency(order.ordenPlusFlete)}
+                        <div className="bg-blue-100 dark:bg-blue-900 text-blue-900 dark:text-blue-100 px-3 py-1 rounded-md text-xs" data-testid={`metric-orden-${order.orden}`}>
+                          {formatCurrency(order.totalOrderUsd)}
+                        </div>
+                      </div>
+                    </td>
+                    <td className="p-2 min-w-[120px] bg-purple-50 dark:bg-purple-950">
+                      <div className="flex justify-center">
+                        <div className="bg-purple-100 dark:bg-purple-900 text-purple-900 dark:text-purple-100 px-3 py-1 rounded-md text-xs" data-testid={`metric-flete-${order.orden}`}>
+                          {formatCurrency(order.pagoFleteUsd)}
                         </div>
                       </div>
                     </td>
