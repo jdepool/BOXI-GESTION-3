@@ -7,6 +7,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { useAuth } from "@/hooks/useAuth";
 import Sales from "@/pages/sales";
 import Despachos from "@/pages/despachos";
+import Devoluciones from "@/pages/devoluciones";
 import Verificacion from "@/pages/verificacion";
 import Egresos from "@/pages/egresos";
 import Administracion from "@/pages/administracion";
@@ -30,6 +31,9 @@ function Router() {
       </Route>
       <Route path="/despachos">
         <ProtectedRoute component={Despachos} />
+      </Route>
+      <Route path="/devoluciones">
+        <ProtectedRoute component={Devoluciones} />
       </Route>
       <Route path="/verificacion">
         <ProtectedRoute component={Verificacion} />
