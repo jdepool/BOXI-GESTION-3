@@ -442,7 +442,7 @@ export function VerificacionPagosCasheaTab() {
         <Card className="border-green-200 bg-green-50/50">
           <CardHeader className="flex flex-col space-y-1.5 p-6 bg-[#4285fb]">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-base flex items-center gap-2 text-green-700">
+              <CardTitle className="text-base flex items-center gap-2 text-[#07085b]">
                 <CheckCircle className="h-4 w-4" />
                 Pagos Verificados Exitosamente
               </CardTitle>
