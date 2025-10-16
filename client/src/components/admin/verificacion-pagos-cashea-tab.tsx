@@ -441,10 +441,22 @@ export function VerificacionPagosCasheaTab() {
       {verifiedMatches.length > 0 && (
         <Card className="border-green-200 bg-green-50/50">
           <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2 text-green-700">
-              <CheckCircle className="h-4 w-4" />
-              Pagos Verificados Exitosamente
-            </CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-base flex items-center gap-2 text-green-700">
+                <CheckCircle className="h-4 w-4" />
+                Pagos Verificados Exitosamente
+              </CardTitle>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleReset}
+                data-testid="clear-verified-results"
+                className="flex items-center gap-1"
+              >
+                <RotateCcw className="h-3 w-3" />
+                Limpiar Resultados
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
