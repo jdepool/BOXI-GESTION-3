@@ -630,6 +630,7 @@ export class DatabaseStorage implements IStorage {
         nombre: sql<string>`MAX(${sales.nombre})`.as('nombre'),
         fecha: sql<Date>`MAX(${sales.fecha})`.as('fecha'),
         canal: sql<string | null>`MAX(${sales.canal})`.as('canal'),
+        isCasheaOrder: sql<boolean>`BOOL_OR(LOWER(TRIM(${sales.canal})) = 'cashea')`.as('isCasheaOrder'),
         tipo: sql<string | null>`MAX(${sales.tipo})`.as('tipo'),
         estadoEntrega: sql<string | null>`MAX(${sales.estadoEntrega})`.as('estadoEntrega'),
         asesorId: sql<string | null>`MAX(${sales.asesorId})`.as('asesorId'),
@@ -701,7 +702,11 @@ export class DatabaseStorage implements IStorage {
         const pagoInicial = Number(order.pagoInicialUsd) || 0;
         const pagoFlete = Number(order.pagoFleteUsd) || 0;
         const totalOrderUsd = Number(order.totalOrderUsd) || 0;
-        const ordenPlusFlete = totalOrderUsd + (pagoFlete === 0 || order.fleteGratis ? 0 : pagoFlete);
+        
+        // For Cashea orders, use pagoInicialUsd; for others, use totalOrderUsd
+        // Use the aggregated boolean flag from the query (BOOL_OR) which is true if ANY sale in the order is from Cashea
+        const baseAmount = order.isCasheaOrder ? pagoInicial : totalOrderUsd;
+        const ordenPlusFlete = baseAmount + (pagoFlete === 0 || order.fleteGratis ? 0 : pagoFlete);
         const totalCuotas = totalCuotasMap.get(order.orden!) || 0;
         
         // Calculate Total Pagado (Por verificar payments) and Total Verificado (Verificado payments)
