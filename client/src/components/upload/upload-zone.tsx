@@ -49,6 +49,11 @@ export default function UploadZone({ recentUploads, showOnlyCashea = false }: Up
   
   const { toast } = useToast();
 
+  // Fetch canales data for the dropdown
+  const { data: canales = [] } = useQuery<Array<{ id: string; nombre: string; activo: boolean }>>({
+    queryKey: ["/api/admin/canales"],
+  });
+
   // Automation config query
   const { data: automationConfig, isLoading: isLoadingConfig, error: configError } = useQuery<CasheaAutomationConfig>({
     queryKey: ['/api/cashea/automation/config'],
@@ -714,9 +719,13 @@ export default function UploadZone({ recentUploads, showOnlyCashea = false }: Up
                   <SelectValue placeholder="Seleccionar canal..." />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="cashea">Cashea</SelectItem>
-                  <SelectItem value="shopify">Shopify</SelectItem>
-                  <SelectItem value="treble">Treble</SelectItem>
+                  {canales
+                    .filter(canal => canal.activo !== false)
+                    .map(canal => (
+                      <SelectItem key={canal.id} value={canal.nombre.toLowerCase()}>
+                        {canal.nombre}
+                      </SelectItem>
+                    ))}
                 </SelectContent>
               </Select>
             </div>

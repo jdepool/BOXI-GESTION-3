@@ -120,6 +120,11 @@ export default function PagosTable({
     queryKey: ["/api/admin/asesores"],
   });
 
+  // Fetch canales data for the dropdown
+  const { data: canales = [] } = useQuery<Array<{ id: string; nombre: string; activo: boolean }>>({
+    queryKey: ["/api/admin/canales"],
+  });
+
   // Create a map of asesor IDs to names for quick lookup
   const asesorMap = new Map(asesores.map((a) => [a.id, a.nombre]));
 
@@ -327,9 +332,13 @@ export default function PagosTable({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todos los canales</SelectItem>
-                  <SelectItem value="cashea">Cashea</SelectItem>
-                  <SelectItem value="shopify">Shopify</SelectItem>
-                  <SelectItem value="treble">Treble</SelectItem>
+                  {canales
+                    .filter(canal => canal.activo !== false)
+                    .map(canal => (
+                      <SelectItem key={canal.id} value={canal.nombre.toLowerCase()}>
+                        {canal.nombre}
+                      </SelectItem>
+                    ))}
                 </SelectContent>
               </Select>
             </div>
