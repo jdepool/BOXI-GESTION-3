@@ -443,7 +443,7 @@ export default function PagosTable({
                 <th className="p-2 text-center text-xs font-medium text-muted-foreground min-w-[140px] bg-blue-50 dark:bg-blue-950">
                   Orden + Flete
                 </th>
-                <th className="p-2 text-center text-xs font-medium text-muted-foreground min-w-[120px] bg-gray-50 dark:bg-gray-950">
+                <th className="p-2 text-center text-xs font-medium text-muted-foreground min-w-[120px] bg-gray-100 dark:bg-gray-800">
                   Total Pagado
                 </th>
                 <th className="p-2 text-center text-xs font-medium text-muted-foreground min-w-[120px] bg-teal-50 dark:bg-teal-950">
