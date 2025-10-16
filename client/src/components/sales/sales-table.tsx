@@ -741,7 +741,10 @@ export default function SalesTable({
                                 data-testid={`fecha-entrega-picker-${sale.id}`}
                                 disabled={updateFechaEntregaMutation.isPending}
                               >
-                                <CalendarIcon className="mr-2 h-3 w-3" />
+                                <CalendarIcon className={cn(
+                                  "mr-2 h-3 w-3",
+                                  !sale.fechaEntrega && "text-amber-500"
+                                )} />
                                 {sale.fechaEntrega 
                                   ? format(new Date(sale.fechaEntrega), "dd/MM/yyyy")
                                   : "Seleccionar fecha"
