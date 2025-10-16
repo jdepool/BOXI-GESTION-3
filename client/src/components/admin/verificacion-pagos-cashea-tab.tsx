@@ -10,7 +10,6 @@ import { Separator } from "@/components/ui/separator";
 import { Upload, FileText, CheckCircle, AlertCircle, DollarSign, Hash, RotateCcw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import type { Sale } from "@shared/schema";
 
 interface BankTransaction {
   referencia: string;
@@ -19,8 +18,22 @@ interface BankTransaction {
   descripcion?: string;
 }
 
+interface PendingPayment {
+  paymentId: string;
+  paymentType: string;
+  orden: string;
+  tipoPago: string;
+  montoBs: number | null;
+  montoUsd: number | null;
+  referencia: string | null;
+  bancoId: string | null;
+  estadoVerificacion: string;
+  notasVerificacion: string | null;
+  fecha: Date | null;
+}
+
 interface PaymentMatch {
-  sale: Sale;
+  payment: PendingPayment;
   bankTransaction: BankTransaction;
   matchType: 'exact' | 'partial' | 'amount' | 'reference_amount';
   confidence: number;
@@ -34,20 +47,22 @@ export function VerificacionPagosCasheaTab() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Get Cashea orders that are in En proceso status
-  const { data: casheaOrders = [], isLoading } = useQuery({
-    queryKey: ["/api/sales", { canal: "cashea", estadoEntrega: "En proceso" }],
+  // Get all payments that are pending verification
+  const { data: pendingPaymentsData, isLoading } = useQuery<{ data: any[]; total: number }>({
+    queryKey: ["/api/sales/verification-payments", { estadoVerificacion: "Por verificar" }],
     queryFn: () => 
-      fetch("/api/sales?canal=cashea&estadoEntrega=En proceso")
-        .then(res => res.json())
-        .then(data => data.data || []),
+      fetch("/api/sales/verification-payments?estadoVerificacion=Por%20verificar&limit=9999")
+        .then(res => res.json()),
   });
+  
+  const pendingPayments = pendingPaymentsData?.data || [];
 
   const verifyPaymentsMutation = useMutation({
     mutationFn: (matches: PaymentMatch[]) =>
       apiRequest("POST", "/api/admin/verify-cashea-payments", { matches }),
     onSuccess: (data: any) => {
       queryClient.invalidateQueries({ queryKey: ["/api/sales"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/sales/verification-payments"] });
       toast({ 
         title: "Pagos verificados automáticamente", 
         description: `Se verificaron ${data?.verified || 0} pagos y se actualizaron a A despachar.` 
@@ -108,8 +123,8 @@ export function VerificacionPagosCasheaTab() {
       const data = await response.json();
       setBankTransactions(data.transactions);
       
-      // Compare with Cashea orders
-      const matches = findPaymentMatches(data.transactions, casheaOrders);
+      // Compare with pending payments
+      const matches = findPaymentMatches(data.transactions, pendingPayments);
       setPaymentMatches(matches);
 
       // Automatically verify high-confidence matches (>=80%)
@@ -135,60 +150,75 @@ export function VerificacionPagosCasheaTab() {
     }
   };
 
-  const findPaymentMatches = (transactions: BankTransaction[], orders: Sale[]): PaymentMatch[] => {
+  const findPaymentMatches = (transactions: BankTransaction[], payments: PendingPayment[]): PaymentMatch[] => {
     const matches: PaymentMatch[] = [];
 
     console.log('Buscando matches...', {
       transactions: transactions.length,
-      orders: orders.length
+      payments: payments.length
     });
 
     for (const transaction of transactions) {
-      for (const order of orders) {
-        if (!order.referenciaInicial) continue;
+      for (const payment of payments) {
+        if (!payment.referencia) continue;
 
         console.log('Comparando:', {
           transactionRef: transaction.referencia,
-          orderRef: order.referenciaInicial,
+          paymentRef: payment.referencia,
           transactionAmount: transaction.monto,
-          orderAmount: order.montoInicialBs,
-          orden: order.orden
+          paymentAmount: payment.montoBs,
+          orden: payment.orden,
+          tipoPago: payment.tipoPago
         });
 
-        const match = compareReferences(transaction.referencia, order.referenciaInicial);
+        const match = compareReferences(transaction.referencia, payment.referencia);
         console.log('Match result:', match);
         
         if (match.type === 'exact') {
-          console.log('Match exacto encontrado para orden:', order.orden);
+          console.log('Match exacto encontrado para pago:', payment.orden, payment.tipoPago);
           matches.push({
-            sale: order,
+            payment: payment,
             bankTransaction: transaction,
             matchType: 'exact',
             confidence: 100
           });
         } else if (match.type === 'partial' && match.matchingDigits >= 6) {
-          // Si coinciden 6+ dígitos (menos restrictivo), verificar monto
-          const orderAmountVES = parseFloat(order.montoInicialBs || '0');
+          // For partial matches, verify amount only if montoBs is available (VES payment)
+          const paymentAmountVES = payment.montoBs;
           const bankAmount = transaction.monto;
           
-          console.log('Verificando montos para partial match:', {
-            orderAmountVES,
-            bankAmount,
-            difference: Math.abs(bankAmount - orderAmountVES),
-            matchingDigits: match.matchingDigits
-          });
-          
-          // Para matches con menos dígitos, ser más estricto con el monto
-          const amountTolerance = match.matchingDigits >= 8 ? 1000 : 100; // Mayor tolerancia para matches largos
-          if (Math.abs(bankAmount - orderAmountVES) < amountTolerance) {
-            console.log('Match por referencia + monto encontrado para orden:', order.orden);
-            const confidence = match.matchingDigits >= 8 ? 95 : 85; // Confianza basada en dígitos
-            matches.push({
-              sale: order,
-              bankTransaction: transaction,
-              matchType: 'reference_amount',
-              confidence
+          // If the payment has VES amount, check amount tolerance
+          if (paymentAmountVES !== null && paymentAmountVES !== undefined) {
+            console.log('Verificando montos para partial match:', {
+              paymentAmountVES,
+              bankAmount,
+              difference: Math.abs(bankAmount - paymentAmountVES),
+              matchingDigits: match.matchingDigits
             });
+            
+            // Para matches con menos dígitos, ser más estricto con el monto
+            const amountTolerance = match.matchingDigits >= 8 ? 1000 : 100; // Mayor tolerancia para matches largos
+            if (Math.abs(bankAmount - paymentAmountVES) < amountTolerance) {
+              console.log('Match por referencia + monto encontrado para pago:', payment.orden, payment.tipoPago);
+              const confidence = match.matchingDigits >= 8 ? 95 : 85; // Confianza basada en dígitos
+              matches.push({
+                payment: payment,
+                bankTransaction: transaction,
+                matchType: 'reference_amount',
+                confidence
+              });
+            }
+          } else {
+            // For USD-only payments (no VES amount), rely on strong reference match alone
+            if (match.matchingDigits >= 8) {
+              console.log('Match por referencia fuerte (sin monto VES) para pago USD:', payment.orden, payment.tipoPago);
+              matches.push({
+                payment: payment,
+                bankTransaction: transaction,
+                matchType: 'reference_amount',
+                confidence: 90 // High confidence for strong reference even without amount check
+              });
+            }
           }
         }
       }
@@ -313,16 +343,16 @@ export function VerificacionPagosCasheaTab() {
         <div>
           <h3 className="text-lg font-semibold flex items-center gap-2">
             <CheckCircle className="h-5 w-5" />
-            Verificación de Pagos Cashea
+            Verificación Automática de Pagos
           </h3>
           <p className="text-sm text-muted-foreground">
-            Carga el estado de cuenta del banco para verificar automáticamente los pagos de Cashea
+            Carga el estado de cuenta del banco para verificar automáticamente todos los pagos pendientes
           </p>
         </div>
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Badge variant="outline" className="flex items-center gap-1">
             <AlertCircle className="h-3 w-3" />
-            {casheaOrders.length} órdenes pendientes
+            {pendingPayments.length} pagos pendientes
           </Badge>
           {(bankTransactions.length > 0 || paymentMatches.length > 0) && (
             <Button 
@@ -423,10 +453,10 @@ export function VerificacionPagosCasheaTab() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Orden</TableHead>
-                    <TableHead>Cliente</TableHead>
-                    <TableHead>Ref. Venta</TableHead>
+                    <TableHead>Tipo de Pago</TableHead>
+                    <TableHead>Ref. Pago</TableHead>
                     <TableHead>Ref. Banco</TableHead>
-                    <TableHead>Monto Venta</TableHead>
+                    <TableHead>Monto Pago</TableHead>
                     <TableHead>Monto Banco</TableHead>
                     <TableHead>Coincidencia</TableHead>
                   </TableRow>
@@ -434,11 +464,13 @@ export function VerificacionPagosCasheaTab() {
                 <TableBody>
                   {paymentMatches.map((match, index) => (
                     <TableRow key={index}>
-                      <TableCell className="font-medium">{match.sale.orden}</TableCell>
-                      <TableCell>{match.sale.nombre}</TableCell>
-                      <TableCell className="font-mono text-xs">{match.sale.referenciaInicial}</TableCell>
+                      <TableCell className="font-medium">{match.payment.orden}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline">{match.payment.tipoPago}</Badge>
+                      </TableCell>
+                      <TableCell className="font-mono text-xs">{match.payment.referencia}</TableCell>
                       <TableCell className="font-mono text-xs">{match.bankTransaction.referencia}</TableCell>
-                      <TableCell>{formatCurrency(parseFloat(match.sale.montoInicialBs || '0'))}</TableCell>
+                      <TableCell>{formatCurrency(match.payment.montoBs || 0)}</TableCell>
                       <TableCell>{formatCurrency(match.bankTransaction.monto)}</TableCell>
                       <TableCell>
                         <Badge variant={getMatchBadgeVariant(match.matchType, match.confidence)}>
@@ -456,44 +488,51 @@ export function VerificacionPagosCasheaTab() {
         </Card>
       )}
 
-      {/* Cashea Orders Waiting for Verification */}
+      {/* All Pending Payments Waiting for Verification */}
       <Card>
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
             <AlertCircle className="h-4 w-4" />
-            Órdenes Cashea Pendientes de Verificación
+            Pagos Pendientes de Verificación
           </CardTitle>
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <p className="text-sm text-muted-foreground">Cargando órdenes...</p>
-          ) : casheaOrders.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No hay órdenes de Cashea pendientes de verificación.</p>
+            <p className="text-sm text-muted-foreground">Cargando pagos...</p>
+          ) : pendingPayments.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No hay pagos pendientes de verificación.</p>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Orden</TableHead>
-                  <TableHead>Cliente</TableHead>
+                  <TableHead>Tipo de Pago</TableHead>
                   <TableHead>Referencia</TableHead>
                   <TableHead>Monto Bs</TableHead>
-                  <TableHead>Estado</TableHead>
+                  <TableHead>Fecha</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {casheaOrders.slice(0, 10).map((order: Sale) => (
-                  <TableRow key={order.id}>
-                    <TableCell className="font-medium">{order.orden}</TableCell>
-                    <TableCell>{order.nombre}</TableCell>
-                    <TableCell className="font-mono text-xs">{order.referenciaInicial || 'N/A'}</TableCell>
-                    <TableCell>{formatCurrency(parseFloat(order.montoInicialBs || '0'))}</TableCell>
+                {pendingPayments.slice(0, 20).map((payment: PendingPayment) => (
+                  <TableRow key={`${payment.paymentId}-${payment.paymentType}`}>
+                    <TableCell className="font-medium">{payment.orden}</TableCell>
                     <TableCell>
-                      <Badge variant="outline">{order.estadoEntrega}</Badge>
+                      <Badge variant="outline">{payment.tipoPago}</Badge>
+                    </TableCell>
+                    <TableCell className="font-mono text-xs">{payment.referencia || 'N/A'}</TableCell>
+                    <TableCell>{formatCurrency(payment.montoBs || 0)}</TableCell>
+                    <TableCell className="text-xs text-muted-foreground">
+                      {payment.fecha ? new Date(payment.fecha).toLocaleDateString('es-ES') : '-'}
                     </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
             </Table>
+          )}
+          {pendingPayments.length > 20 && (
+            <p className="text-sm text-muted-foreground mt-2">
+              Mostrando 20 de {pendingPayments.length} pagos pendientes
+            </p>
           )}
         </CardContent>
       </Card>

@@ -3999,18 +3999,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
           try {
             // Only update payment verification status to "Verificado"
             await storage.updatePaymentVerification({
-              paymentId: match.paymentId,
-              paymentType: match.paymentType,
+              paymentId: match.payment.paymentId,
+              paymentType: match.payment.paymentType,
               estadoVerificacion: 'Verificado'
             });
             verifiedCount++;
             
             // Track order for Pendiente check
-            if (match.sale?.orden) {
-              ordersToCheck.add(match.sale.orden);
+            if (match.payment?.orden) {
+              ordersToCheck.add(match.payment.orden);
             }
           } catch (error) {
-            console.error(`Error updating payment ${match.paymentId}:`, error);
+            console.error(`Error updating payment ${match.payment?.paymentId}:`, error);
           }
         }
       }
