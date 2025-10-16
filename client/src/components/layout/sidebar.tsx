@@ -14,6 +14,11 @@ const navigationItems = [
     label: "Despachos",
   },
   {
+    href: "/devoluciones",
+    icon: "fas fa-undo",
+    label: "Devoluciones",
+  },
+  {
     href: "/verificacion",
     icon: "fas fa-check-circle",
     label: "Verificación",
