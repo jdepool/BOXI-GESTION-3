@@ -3982,7 +3982,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Verify Cashea payments and update status to A Despachar
+  // Verify Cashea payments - only updates payment status to Verificado
   app.post('/api/admin/verify-cashea-payments', async (req, res) => {
     try {
       const { matches } = req.body;
@@ -3992,15 +3992,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       let verifiedCount = 0;
+      const ordersToCheck = new Set<string>();
       
       for (const match of matches) {
         if (match.confidence >= 80) {
           try {
-            await storage.updateSaleDeliveryStatus(match.sale.id, 'A despachar');
+            // Only update payment verification status to "Verificado"
+            await storage.updatePaymentVerification({
+              paymentId: match.paymentId,
+              paymentType: match.paymentType,
+              estadoVerificacion: 'Verificado'
+            });
             verifiedCount++;
+            
+            // Track order for Pendiente check
+            if (match.sale?.orden) {
+              ordersToCheck.add(match.sale.orden);
+            }
           } catch (error) {
-            console.error(`Error updating sale ${match.sale.id}:`, error);
+            console.error(`Error updating payment ${match.paymentId}:`, error);
           }
+        }
+      }
+      
+      // Check each order if Pendiente = 0 and auto-update Estado Entrega to "A despachar"
+      for (const orden of Array.from(ordersToCheck)) {
+        try {
+          const salesInOrder = await storage.getSalesByOrderNumber(orden);
+          
+          if (salesInOrder.length > 0) {
+            const firstSale = salesInOrder[0];
+            const totalOrderUsd = Number(firstSale.totalOrderUsd || 0);
+            const pagoFleteUsd = Number(firstSale.pagoFleteUsd || 0);
+            const fleteGratis = firstSale.fleteGratis || false;
+            const ordenPlusFlete = totalOrderUsd + (fleteGratis ? 0 : pagoFleteUsd);
+
+            // Calculate total verified payments
+            const pagoInicialVerificado = firstSale.estadoVerificacionInicial === 'Verificado' ? Number(firstSale.pagoInicialUsd || 0) : 0;
+            const hasFletePayment = pagoFleteUsd > 0 && !fleteGratis;
+            const fleteVerificado = hasFletePayment && firstSale.estadoVerificacionFlete === 'Verificado' ? Number(firstSale.pagoFleteUsd || 0) : 0;
+            
+            const installments = await storage.getInstallmentsByOrder(orden);
+            const cuotasVerificadas = installments
+              .filter(inst => inst.estadoVerificacion === 'Verificado')
+              .reduce((sum, inst) => sum + Number(inst.montoCuotaUsd || inst.cuotaAmount || 0), 0);
+            
+            const totalPagado = pagoInicialVerificado + fleteVerificado + cuotasVerificadas;
+            const saldoPendiente = ordenPlusFlete - totalPagado;
+
+            // Only auto-update if Pendiente = 0 and current status is "Pendiente" or "En proceso"
+            if (Math.abs(saldoPendiente) < 0.01 && (firstSale.estadoEntrega === 'Pendiente' || firstSale.estadoEntrega === 'En proceso')) {
+              const updatePromises = salesInOrder.map(sale => 
+                storage.updateSaleDeliveryStatus(sale.id, 'A despachar')
+              );
+              await Promise.all(updatePromises);
+              console.log(`✅ Auto-updated order ${orden} to "A despachar" (Pendiente = $${saldoPendiente.toFixed(2)})`);
+            }
+          }
+        } catch (error) {
+          console.error(`Error checking Pendiente for order ${orden}:`, error);
         }
       }
       
