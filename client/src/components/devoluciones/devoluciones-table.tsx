@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -89,6 +90,10 @@ export default function DevolucionesTable({
 
   const handleMarkAsDevuelto = (saleId: string) => {
     updateDeliveryStatusMutation.mutate({ saleId, status: "Devuelto" });
+  };
+
+  const handleStatusChange = (saleId: string, newStatus: string) => {
+    updateDeliveryStatusMutation.mutate({ saleId, status: newStatus });
   };
 
   const updateNotesMutation = useMutation({
@@ -226,9 +231,26 @@ export default function DevolucionesTable({
                       </td>
                       
                       <td className="p-2 min-w-[120px] text-xs sticky left-[100px] bg-background z-10 border-r border-border shadow-[2px_0_5px_rgba(0,0,0,0.1)]">
-                        <Badge variant={getStatusBadgeVariant(sale.estadoEntrega || "A devolver")}>
-                          {sale.estadoEntrega || "A devolver"}
-                        </Badge>
+                        <Select
+                          value={sale.estadoEntrega || "A devolver"}
+                          onValueChange={(newStatus) => handleStatusChange(sale.id, newStatus)}
+                          disabled={updateDeliveryStatusMutation.isPending}
+                        >
+                          <SelectTrigger className="w-32 h-8 text-xs" data-testid={`estado-select-${sale.id}`}>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Pendiente">Pendiente</SelectItem>
+                            <SelectItem value="Perdida">Perdida</SelectItem>
+                            <SelectItem value="En proceso">En proceso</SelectItem>
+                            <SelectItem value="A despachar">A despachar</SelectItem>
+                            <SelectItem value="En tránsito">En tránsito</SelectItem>
+                            <SelectItem value="Entregado">Entregado</SelectItem>
+                            <SelectItem value="A devolver">A devolver</SelectItem>
+                            <SelectItem value="Devuelto">Devuelto</SelectItem>
+                            <SelectItem value="Cancelada">Cancelada</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </td>
                       
                       <td className="p-2 min-w-[200px] text-xs">
