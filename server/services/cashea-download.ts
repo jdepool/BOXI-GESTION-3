@@ -162,7 +162,7 @@ function transformCasheaData(rawData: any[]): any[] {
       orden: ordenes[i] ? String(ordenes[i]) : null,
       pagoInicialUsd: pagosIniciales[i] ? String(pagosIniciales[i]) : null,
       fechaPagoInicial: fecha,
-      bancoReceptorInicial: 'd7bf28fc-a3f4-4e6d-ae09-c9cf6b67c1b8',
+      bancoReceptorInicial: 'f3de098b-58c0-4be0-a799-299a643a0018', // Cashea (BNC compartido Bs)
       montoInicialBs: montosBs[i] ? String(montosBs[i]) : null,
       montoInicialUsd: pagosIniciales[i] ? String(pagosIniciales[i]) : null,
       referenciaInicial: referencias[i] ? String(referencias[i]) : null,
