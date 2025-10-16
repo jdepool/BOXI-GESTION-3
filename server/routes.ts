@@ -813,6 +813,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get sales with "A devolver" status for devoluciones
+  app.get("/api/sales/devoluciones", async (req, res) => {
+    try {
+      const limit = parseInt(req.query.limit as string) || 20;
+      const offset = parseInt(req.query.offset as string) || 0;
+
+      const filters = {
+        estadoEntrega: "A devolver",
+        limit,
+        offset,
+      };
+
+      const [salesData, totalCount] = await Promise.all([
+        storage.getSales(filters),
+        storage.getTotalSalesCount(filters),
+      ]);
+
+      res.json({
+        data: salesData,
+        total: totalCount,
+        limit,
+        offset
+      });
+    } catch (error) {
+      console.error("Get devoluciones error:", error);
+      res.status(500).json({ error: "Failed to get devoluciones" });
+    }
+  });
+
   // Export sales data to Excel
   app.get("/api/sales/export", async (req, res) => {
     try {
