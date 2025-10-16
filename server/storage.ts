@@ -2226,12 +2226,28 @@ export class DatabaseStorage implements IStorage {
     orden?: string;
     tipoPago?: string;
     estadoVerificacion?: string;
+    estadoEntrega?: string[];
     limit?: number;
     offset?: number;
   }): Promise<{ data: any[]; total: number }> {
     const payments: any[] = [];
 
     // Build the base query with filters
+    const whereConditions = [];
+    
+    // Optional estado_entrega filter - if provided, filter by those statuses
+    // If not provided, show all orders regardless of delivery status
+    if (filters?.estadoEntrega && filters.estadoEntrega.length > 0) {
+      whereConditions.push(
+        or(...filters.estadoEntrega.map(status => eq(sales.estadoEntrega, status)))
+      );
+    }
+    
+    // Order filter
+    if (filters?.orden) {
+      whereConditions.push(eq(sales.orden, filters.orden));
+    }
+
     let salesQuery = db
       .select({
         orden: sales.orden,
@@ -2255,13 +2271,7 @@ export class DatabaseStorage implements IStorage {
         estadoEntrega: sales.estadoEntrega,
       })
       .from(sales)
-      .where(and(
-        or(
-          eq(sales.estadoEntrega, 'Pendiente'),
-          eq(sales.estadoEntrega, 'En proceso')
-        ),
-        filters?.orden ? eq(sales.orden, filters.orden) : undefined
-      ));
+      .where(whereConditions.length > 0 ? and(...whereConditions) : undefined);
 
     const salesData = await salesQuery;
 
