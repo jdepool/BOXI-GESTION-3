@@ -4003,20 +4003,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
       for (const match of matches) {
         if (match.confidence >= 80) {
           try {
+            console.log(`🔄 Verifying payment:`, {
+              paymentId: match.payment.paymentId,
+              paymentType: match.payment.paymentType,
+              orden: match.payment.orden,
+              confidence: match.confidence
+            });
+            
             // Only update payment verification status to "Verificado"
-            await storage.updatePaymentVerification({
+            const updated = await storage.updatePaymentVerification({
               paymentId: match.payment.paymentId,
               paymentType: match.payment.paymentType,
               estadoVerificacion: 'Verificado'
             });
-            verifiedCount++;
             
-            // Track order for Pendiente check
-            if (match.payment?.orden) {
-              ordersToCheck.add(match.payment.orden);
+            if (updated) {
+              console.log(`✅ Payment verification SUCCESS - database updated`);
+              verifiedCount++;
+              
+              // Track order for Pendiente check
+              if (match.payment?.orden) {
+                ordersToCheck.add(match.payment.orden);
+              }
+            } else {
+              console.log(`❌ Payment verification FAILED - 0 rows affected (paymentId doesn't exist or is composite)`);
             }
           } catch (error) {
-            console.error(`Error updating payment ${match.payment?.paymentId}:`, error);
+            console.error(`❌ Error updating payment ${match.payment?.paymentId}:`, error);
           }
         }
       }

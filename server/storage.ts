@@ -2441,11 +2441,11 @@ export class DatabaseStorage implements IStorage {
     paymentType: string;
     estadoVerificacion?: string;
     notasVerificacion?: string;
-  }): Promise<any> {
+  }): Promise<boolean> {
     const { paymentId, paymentType, estadoVerificacion, notasVerificacion } = data;
 
     if (paymentType === 'Inicial/Total') {
-      const [updated] = await db
+      const updated = await db
         .update(sales)
         .set({
           estadoVerificacionInicial: estadoVerificacion,
@@ -2454,9 +2454,9 @@ export class DatabaseStorage implements IStorage {
         })
         .where(eq(sales.id, paymentId))
         .returning();
-      return updated;
+      return updated.length > 0;
     } else if (paymentType === 'Flete') {
-      const [updated] = await db
+      const updated = await db
         .update(sales)
         .set({
           estadoVerificacionFlete: estadoVerificacion,
@@ -2465,9 +2465,9 @@ export class DatabaseStorage implements IStorage {
         })
         .where(eq(sales.id, paymentId))
         .returning();
-      return updated;
+      return updated.length > 0;
     } else if (paymentType === 'Cuota') {
-      const [updated] = await db
+      const updated = await db
         .update(paymentInstallments)
         .set({
           estadoVerificacion: estadoVerificacion,
@@ -2476,10 +2476,10 @@ export class DatabaseStorage implements IStorage {
         })
         .where(eq(paymentInstallments.id, paymentId))
         .returning();
-      return updated;
+      return updated.length > 0;
     }
 
-    return null;
+    return false;
   }
 }
 
