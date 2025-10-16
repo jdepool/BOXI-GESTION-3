@@ -55,7 +55,10 @@ export function VerificacionPagosCasheaTab() {
         .then(res => res.json()),
   });
   
-  const pendingPayments = pendingPaymentsData?.data || [];
+  // Filter out payments with no Bs amount (0 or null/empty)
+  const pendingPayments = (pendingPaymentsData?.data || []).filter(
+    (payment: PendingPayment) => payment.montoBs && payment.montoBs > 0
+  );
 
   // Get bancos for display
   const { data: bancos = [] } = useQuery<Array<{ id: string; banco: string }>>({
