@@ -48,10 +48,11 @@ export function VerificacionPagosCasheaTab() {
   const queryClient = useQueryClient();
 
   // Get all payments that are pending verification
+  // Filter by estadoVerificacion AND estadoEntrega (only Pendiente/En proceso orders)
   const { data: pendingPaymentsData, isLoading } = useQuery<{ data: any[]; total: number }>({
-    queryKey: ["/api/sales/verification-payments", { estadoVerificacion: "Por verificar" }],
+    queryKey: ["/api/sales/verification-payments", { estadoVerificacion: "Por verificar", estadoEntrega: "Pendiente,En proceso" }],
     queryFn: () => 
-      fetch("/api/sales/verification-payments?estadoVerificacion=Por%20verificar&limit=9999")
+      fetch("/api/sales/verification-payments?estadoVerificacion=Por%20verificar&estadoEntrega=Pendiente,En%20proceso&limit=9999")
         .then(res => res.json()),
     staleTime: 0, // Always fetch fresh data
     gcTime: 0, // Don't cache data
