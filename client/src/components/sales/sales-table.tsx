@@ -791,7 +791,10 @@ export default function SalesTable({
                         data-testid={`add-address-${sale.id}`}
                         className="h-7 text-xs"
                       >
-                        <MapPin className="h-3 w-3 mr-1" />
+                        <MapPin className={cn(
+                          "h-3 w-3 mr-1",
+                          !sale.direccionFacturacionPais && "text-amber-500"
+                        )} />
                         {sale.direccionFacturacionPais ? 'Editar' : 'Agregar'}
                       </Button>
                     </td>
