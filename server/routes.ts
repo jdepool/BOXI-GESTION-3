@@ -457,17 +457,38 @@ function parseBancosFile(buffer: Buffer, filename: string) {
   }
 }
 
+function parseSpanishNumber(value: any): number {
+  if (typeof value === 'number') return value;
+  
+  const str = String(value).trim();
+  if (!str) return 0;
+  
+  if (str.includes(',') && str.includes('.')) {
+    const lastComma = str.lastIndexOf(',');
+    const lastPeriod = str.lastIndexOf('.');
+    
+    if (lastComma > lastPeriod) {
+      return parseFloat(str.replace(/\./g, '').replace(',', '.')) || 0;
+    } else {
+      return parseFloat(str.replace(/,/g, '')) || 0;
+    }
+  } else if (str.includes(',')) {
+    return parseFloat(str.replace(',', '.')) || 0;
+  } else {
+    return parseFloat(str.replace(/[^\d.-]/g, '')) || 0;
+  }
+}
+
 function parseBankStatementFile(buffer: Buffer) {
   try {
     const workbook = XLSX.read(buffer, { type: 'buffer' });
     const sheetName = workbook.SheetNames[0];
     const worksheet = workbook.Sheets[sheetName];
     
-    // Get the raw data without headers first
     const rawData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+    console.log('=== BANK STATEMENT PARSER ===');
     console.log('Total rows in spreadsheet:', rawData.length);
     
-    // Find the header row by looking for common banking terms
     let headerRowIndex = -1;
     const bankingTerms = [
       'referencia', 'reference', 'ref', 'numero', 'número', 'no.', 'nro',
@@ -475,63 +496,61 @@ function parseBankStatementFile(buffer: Buffer) {
       'fecha', 'date', 'dia'
     ];
     
-    for (let i = 0; i < Math.min(rawData.length, 30); i++) { // Check first 30 rows
+    for (let i = 0; i < Math.min(rawData.length, 30); i++) {
       const row = rawData[i] as any[];
       if (!row || row.length === 0) continue;
       
       const rowText = row.join('|').toLowerCase();
       const foundTerms = bankingTerms.filter(term => rowText.includes(term));
       
-      console.log(`Row ${i + 1}:`, row.slice(0, 5)); // Log first 5 columns
-      console.log(`Found ${foundTerms.length} banking terms:`, foundTerms);
-      
-      if (foundTerms.length >= 2) { // Need at least 2 banking terms to consider it a header
+      if (foundTerms.length >= 2) {
         headerRowIndex = i;
-        console.log(`Found potential header row at index ${i + 1}`);
+        console.log(`✓ Found header row at index ${i + 1}:`, row);
         break;
       }
     }
     
     if (headerRowIndex === -1) {
-      throw new Error('Could not find header row in bank statement. Headers should contain terms like "Referencia", "Monto", "Fecha"');
+      console.log('First 10 rows for debugging:');
+      rawData.slice(0, 10).forEach((row, i) => {
+        console.log(`Row ${i + 1}:`, row);
+      });
+      throw new Error('Could not find header row in bank statement. Headers should contain terms like "Referencia", "Monto", "Fecha", or "Haber"');
     }
     
-    // Parse data starting from the header row
     const dataWithHeaders = XLSX.utils.sheet_to_json(worksheet, { 
       header: headerRowIndex, 
       range: headerRowIndex 
     });
     
-    console.log('Bank statement columns found:', headerRowIndex >= 0 && dataWithHeaders.length > 0 ? Object.keys(dataWithHeaders[0] as Record<string, unknown>) : 'No headers found');
-    console.log('Number of data rows found:', dataWithHeaders.length);
+    const columnNames = dataWithHeaders.length > 0 ? Object.keys(dataWithHeaders[0] as Record<string, unknown>) : [];
+    console.log('📋 Column names found:', columnNames);
+    console.log('Number of data rows:', dataWithHeaders.length);
 
-    // Filter out empty rows and the header row itself
     const filteredData = dataWithHeaders.filter((row: any, index: number) => {
-      if (index === 0) return false; // Skip the header row itself
-      
-      // Check if row has meaningful data
+      if (index === 0) return false;
       const values = Object.values(row || {});
       const hasData = values.some(val => val !== null && val !== undefined && String(val).trim() !== '');
       return hasData;
     });
     
     console.log('Filtered data rows:', filteredData.length);
+    
+    if (filteredData.length > 0) {
+      console.log('Sample row data:', filteredData[0]);
+    }
 
-    // Expected columns: Fecha, Referencia, Monto, Descripcion
-    const transactions = filteredData.map((row: any) => {
-      // Parse date
+    const transactions = filteredData.map((row: any, index: number) => {
       let fecha = new Date();
       if (row.Fecha || row.fecha) {
         const dateValue = row.Fecha || row.fecha;
         if (typeof dateValue === 'number') {
-          // Excel date serial number
           fecha = new Date((dateValue - 25569) * 86400 * 1000);
         } else {
           fecha = new Date(dateValue);
         }
       }
 
-      // Handle multiple possible reference column names
       const referencia = String(
         row.Referencia || 
         row.referencia || 
@@ -544,9 +563,8 @@ function parseBankStatementFile(buffer: Buffer) {
         row['Reference'] ||
         row['REFERENCIA'] ||
         ''
-      );
+      ).trim();
 
-      // Handle multiple possible amount column names
       const montoValue = 
         row.Monto || 
         row.monto || 
@@ -571,9 +589,8 @@ function parseBankStatementFile(buffer: Buffer) {
         row.HABER ||
         '0';
 
-      const monto = parseFloat(String(montoValue).replace(/[^\d.-]/g, '')) || 0;
+      const monto = parseSpanishNumber(montoValue);
 
-      // Handle multiple possible description column names
       const descripcion = String(
         row.Descripcion || 
         row.descripcion || 
@@ -586,9 +603,16 @@ function parseBankStatementFile(buffer: Buffer) {
         row.Observaciones ||
         row.observaciones ||
         ''
-      );
+      ).trim();
 
-      console.log('Parsed transaction:', { referencia, monto, fecha: fecha.toISOString().split('T')[0], descripcion });
+      if (index < 3) {
+        console.log(`Transaction ${index + 1}:`, { 
+          referencia, 
+          monto, 
+          rawMonto: montoValue,
+          fecha: fecha.toISOString().split('T')[0]
+        });
+      }
 
       return {
         referencia,
@@ -598,9 +622,12 @@ function parseBankStatementFile(buffer: Buffer) {
       };
     });
 
-    console.log(`Parsed ${transactions.length} transactions from bank statement`);
+    const validTransactions = transactions.filter(t => t.referencia && t.monto > 0);
+    console.log(`✓ Parsed ${transactions.length} total rows, ${validTransactions.length} valid transactions`);
+    
     return transactions;
   } catch (error) {
+    console.error('Bank statement parsing error:', error);
     throw new Error(`Error parsing bank statement file: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 }
