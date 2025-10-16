@@ -145,17 +145,17 @@ export function VerificacionPagosCasheaTab() {
 
     for (const transaction of transactions) {
       for (const order of orders) {
-        if (!order.referencia) continue;
+        if (!order.referenciaInicial) continue;
 
         console.log('Comparando:', {
           transactionRef: transaction.referencia,
-          orderRef: order.referencia,
+          orderRef: order.referenciaInicial,
           transactionAmount: transaction.monto,
-          orderAmount: order.montoBs,
+          orderAmount: order.montoInicialBs,
           orden: order.orden
         });
 
-        const match = compareReferences(transaction.referencia, order.referencia);
+        const match = compareReferences(transaction.referencia, order.referenciaInicial);
         console.log('Match result:', match);
         
         if (match.type === 'exact') {
@@ -168,7 +168,7 @@ export function VerificacionPagosCasheaTab() {
           });
         } else if (match.type === 'partial' && match.matchingDigits >= 6) {
           // Si coinciden 6+ dígitos (menos restrictivo), verificar monto
-          const orderAmountVES = parseFloat(order.montoBs || '0');
+          const orderAmountVES = parseFloat(order.montoInicialBs || '0');
           const bankAmount = transaction.monto;
           
           console.log('Verificando montos para partial match:', {
@@ -436,9 +436,9 @@ export function VerificacionPagosCasheaTab() {
                     <TableRow key={index}>
                       <TableCell className="font-medium">{match.sale.orden}</TableCell>
                       <TableCell>{match.sale.nombre}</TableCell>
-                      <TableCell className="font-mono text-xs">{match.sale.referencia}</TableCell>
+                      <TableCell className="font-mono text-xs">{match.sale.referenciaInicial}</TableCell>
                       <TableCell className="font-mono text-xs">{match.bankTransaction.referencia}</TableCell>
-                      <TableCell>{formatCurrency(parseFloat(match.sale.montoBs || '0'))}</TableCell>
+                      <TableCell>{formatCurrency(parseFloat(match.sale.montoInicialBs || '0'))}</TableCell>
                       <TableCell>{formatCurrency(match.bankTransaction.monto)}</TableCell>
                       <TableCell>
                         <Badge variant={getMatchBadgeVariant(match.matchType, match.confidence)}>
@@ -476,7 +476,7 @@ export function VerificacionPagosCasheaTab() {
                   <TableHead>Orden</TableHead>
                   <TableHead>Cliente</TableHead>
                   <TableHead>Referencia</TableHead>
-                  <TableHead>Monto VES</TableHead>
+                  <TableHead>Monto Bs</TableHead>
                   <TableHead>Estado</TableHead>
                 </TableRow>
               </TableHeader>
@@ -485,8 +485,8 @@ export function VerificacionPagosCasheaTab() {
                   <TableRow key={order.id}>
                     <TableCell className="font-medium">{order.orden}</TableCell>
                     <TableCell>{order.nombre}</TableCell>
-                    <TableCell className="font-mono text-xs">{order.referencia || 'N/A'}</TableCell>
-                    <TableCell>{formatCurrency(parseFloat(order.montoBs || '0'))}</TableCell>
+                    <TableCell className="font-mono text-xs">{order.referenciaInicial || 'N/A'}</TableCell>
+                    <TableCell>{formatCurrency(parseFloat(order.montoInicialBs || '0'))}</TableCell>
                     <TableCell>
                       <Badge variant="outline">{order.estadoEntrega}</Badge>
                     </TableCell>
