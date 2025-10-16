@@ -480,17 +480,17 @@ export function VerificacionPagosCasheaTab() {
                 <TableBody>
                   {verifiedMatches.map((match, index) => (
                     <TableRow key={index} data-testid={`verified-match-${index}`}>
-                      <TableCell className="font-medium text-[#242527]">{match.payment.orden}</TableCell>
-                      <TableCell>
+                      <TableCell className="font-medium text-sm text-white">{match.payment.orden}</TableCell>
+                      <TableCell className="text-sm text-white">
                         <Badge variant="outline" className="bg-white">{match.payment.tipoPago}</Badge>
                       </TableCell>
                       <TableCell className="text-sm">{getBancoName(match.payment.bancoId)}</TableCell>
-                      <TableCell className="font-mono text-xs">{match.payment.referencia}</TableCell>
-                      <TableCell className="font-mono text-xs font-semibold text-green-700">
+                      <TableCell className="font-mono text-xs text-white">{match.payment.referencia}</TableCell>
+                      <TableCell className="font-mono text-xs font-semibold text-white">
                         {match.bankTransaction.referencia}
                       </TableCell>
-                      <TableCell>{formatCurrency(match.payment.montoBs || 0)}</TableCell>
-                      <TableCell className="font-semibold">{formatCurrency(match.bankTransaction.monto)}</TableCell>
+                      <TableCell className="text-sm text-white">{formatCurrency(match.payment.montoBs || 0)}</TableCell>
+                      <TableCell className="font-semibold text-sm text-white">{formatCurrency(match.bankTransaction.monto)}</TableCell>
                       <TableCell>
                         <Badge variant="default" className="bg-green-600">
                           {match.matchType === 'exact' ? 'Exacta' : 
