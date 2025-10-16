@@ -450,7 +450,7 @@ export default function PagosTable({
                   Cuotas
                 </th>
                 <th className="p-2 text-center text-xs font-medium text-muted-foreground min-w-[120px] bg-blue-50 dark:bg-blue-950">
-                  Orden
+                  A Pagar
                 </th>
                 <th className="p-2 text-center text-xs font-medium text-muted-foreground min-w-[120px] bg-purple-50 dark:bg-purple-950">
                   Flete
