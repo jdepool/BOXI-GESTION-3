@@ -467,14 +467,14 @@ export function VerificacionPagosCasheaTab() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Orden</TableHead>
-                    <TableHead>Tipo de Pago</TableHead>
-                    <TableHead>Banco</TableHead>
-                    <TableHead>Ref. Sistema</TableHead>
-                    <TableHead>Ref. Banco</TableHead>
-                    <TableHead>Monto Sistema</TableHead>
-                    <TableHead>Monto Banco</TableHead>
-                    <TableHead>Confianza</TableHead>
+                    <TableHead className="text-[#07085b]">Orden</TableHead>
+                    <TableHead className="text-[#07085b]">Tipo de Pago</TableHead>
+                    <TableHead className="text-[#07085b]">Banco</TableHead>
+                    <TableHead className="text-[#07085b]">Ref. Sistema</TableHead>
+                    <TableHead className="text-[#07085b]">Ref. Banco</TableHead>
+                    <TableHead className="text-[#07085b]">Monto Sistema</TableHead>
+                    <TableHead className="text-[#07085b]">Monto Banco</TableHead>
+                    <TableHead className="text-[#07085b]">Confianza</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
