@@ -5,17 +5,15 @@ BoxiSleep is a comprehensive sales management system for a sleep products compan
 # User Preferences
 
 Preferred communication style: Simple, everyday language.
-
-## UI Preferences
-- **Cargar Datos Implementation**: ✅ Implemented as a settings/gear icon button positioned in the top-right of the tabs bar, opening a dialog with upload controls and automation settings. This separates administrative features from regular sales workflow tabs.
+Cargar Datos Implementation: Implemented as a settings/gear icon button positioned in the top-right of the tabs bar, opening a dialog with upload controls and automation settings. This separates administrative features from regular sales workflow tabs.
 
 # System Architecture
 
 ## Frontend
-The frontend is a React 18 and TypeScript single-page application. It uses Wouter for routing, TanStack Query for server state management, and shadcn/ui components (based on Radix UI) styled with Tailwind CSS for an accessible and customizable user interface.
+The frontend is a React 18 and TypeScript single-page application, utilizing Wouter for routing, TanStack Query for server state management, and shadcn/ui components (based on Radix UI) styled with Tailwind CSS for an accessible and customizable user interface.
 
 ## Backend
-The backend is a RESTful API built with Express.js and TypeScript, featuring a modular structure for sales, file uploads, and analytics. A storage abstraction layer separates business logic from data access, and Multer handles Excel file uploads.
+The backend is a RESTful API built with Express.js and TypeScript, featuring a modular structure for sales, file uploads, and analytics. It includes a storage abstraction layer and Multer for Excel file uploads.
 
 ## Data Storage
 PostgreSQL serves as the primary database, accessed via Drizzle ORM for type-safe operations. Key tables include `users`, `sales`, and `upload_history`. Neon's serverless PostgreSQL client manages database connections.
@@ -24,59 +22,22 @@ PostgreSQL serves as the primary database, accessed via Drizzle ORM for type-saf
 Basic username/password authentication is implemented, with user sessions managed securely through PostgreSQL session storage using `connect-pg-simple`.
 
 ## UI/UX Design
-The application leverages shadcn/ui and Radix UI for consistent design and accessibility, with Tailwind CSS for styling and Lucide React for icons. The Ventas section features a tabbed interface with "Lista de Ventas", "Ventas por Completar", "Reservas", and "Pagos" tabs for managing sales data. Administrative features (data upload and automation settings) are accessed via a settings/gear icon button positioned in the top-right of the tabs bar, which opens a dialog containing the UploadZone with upload controls and Cashea automation configuration. This design separates administrative functions from regular sales workflow tabs. The Verificación section includes "Ingresos", "Egresos", and "Cashea Pago Inicial" tabs for payment verification. Despachos is a separate page with a directly editable Estado de Entrega dropdown in the sticky column for quick status updates, with customer contact information (Nombre, Teléfono, Cédula, Dirección de Despacho) positioned immediately after the delivery date for efficient dispatch workflow. Devoluciones is a dedicated page showing only sales with "A devolver" status, serving as a temporary workspace to manage returns until they reach "Devuelto" status, with columns for order details, customer contact info, product info, and a "Devuelto" action button. The interface is optimized for space with compact headers and context-aware action buttons.
-
-### Date Filtering
-A reusable DateRangePicker component (`client/src/components/shared/date-range-picker.tsx`) provides consistent date range filtering across all tables (Pagos, Lista de Ventas, Ventas por Completar, Reservas). The component handles timezone correctly by parsing yyyy-MM-dd strings as local dates, preventing the "day before" bug that occurs when JavaScript interprets date strings as UTC.
-
-### Tab Workflow Logic
-Orders progress through tabs based on payment and delivery status:
-- **Temporary Tabs (`Ventas por Completar`, `Reservas`, `Pagos`):** Hold incomplete or pending orders.
-- **Permanent/Working Tabs (`Lista de Ventas`, `Despachos`):** Display processed or ready-for-delivery sales.
-Orders typically move from temporary tabs to permanent tabs upon payment verification and status updates. Cashea orders have a unique workflow, appearing directly in "Lista de Ventas" and "Pagos".
+The application leverages shadcn/ui, Radix UI, Tailwind CSS, and Lucide React for a consistent, accessible design. The interface features a tabbed structure for sales management ("Lista de Ventas", "Ventas por Completar", "Reservas", "Pagos"), payment verification ("Ingresos", "Egresos", "Cashea Pago Inicial"), and specialized pages for "Despachos" and "Devoluciones". Administrative functions like data upload and automation are accessed via a dedicated settings icon. Date filtering is handled by a reusable `DateRangePicker` component, ensuring timezone correctness. Orders progress through tabs based on payment and delivery status, with temporary tabs for pending orders and permanent tabs for processed sales.
 
 ## Feature Specifications
-- **Sales Data Upload & Management**: Supports Excel uploads from multiple channels with complete replacement logic for Administración items (products and bank accounts) - uploads delete existing data then insert from file, preserving row order via position field. Includes automatic backup and undo mechanism. Features comprehensive filtering, searching, and export.
-- **Excel Export Functionality**: Each table (Lista de Ventas, Ventas por Completar, Reservas, Pagos) has tailored exports showing only data visible/accessible in that specific tab:
-  - **Lista de Ventas/Ventas por Completar/Reservas** (`/api/sales/export`): Exports table columns (order info, product details, customer info, basic payment fields with Pago Inicial, Referencia, Banco Receptor showing bank names, Monto Bs) plus accessible modal data (billing/shipping addresses, notas). Excludes Flete and Cuotas columns (only in Pagos tab).
-  - **Pagos** (`/api/sales/orders/export`): Exports complete payment records with one row per installment (or one row if no installments). Includes order info, customer contact data (Nombre, Teléfono, Email, Dirección de Despacho), metric card data (Orden + Flete, Total Pagado, Total Verificado, Pendiente - all without "USD" suffix for cleaner presentation), Seguimiento Pago notes, full Initial Payment details (pago/monto USD/Bs, fecha, referencia, banco, verificación, notas), full Flete details (pago/monto USD/Bs, fecha, referencia, banco, verificación, notas, gratis), and per-row Installment details (cuota #, fecha, pago/monto USD/Bs, referencia, banco, verificación, notas). Orders without installments show "N/A" in cuota fields.
-  - Bank fields display human-readable names instead of UUIDs through banco lookup (fetches bancos catalog, creates lookup map, handles special case "otro" → "Otro($)").
-- **Order & Payment Tracking**: Detailed tracking of sales, delivery statuses (nine states), and channel-specific metrics. Supports multi-product orders, manual sales, and reservations. The Pagos tab displays orders with an Asesor column showing assigned sales representatives and includes filtering by Asesor (Todos los asesores, Sin asesor, or specific asesor), Estado Entrega (all nine delivery statuses), and Canal. By default, Perdida orders are excluded from the view; they only appear when "Perdida" is explicitly selected in the Estado Entrega filter, allowing for recovery when needed. The Perdida button displays a green icon indicator when an order is already marked as Perdida. Filter implementation uses whitelist validation in the route layer to ensure only valid delivery statuses are processed, with defensive normalization converting any invalid values to undefined.
-- **Advanced Payment System**: Manages initial payments, freight, and installments with distinct fields for "agreed payment" (pago*) and "actual payment" (monto*). Includes a "Verificación" section for tracking and updating payment verification statuses, with Estado filter ("Verificado", "Por verificar", "Rechazado") for quick filtering of payment verification status across all payment types, plus a reset filters button to clear all applied filters. The Pagos tab displays four key metric cards (without "USD" suffix for clean presentation): **Orden + Flete** (blue) shows order total plus freight, **Total Pagado** (grey) sums only "Por verificar" payments (unverified initial + flete + cuotas), **Total Verificado** (green) sums only "Verificado" payments, and **Pendiente** (orange) shows remaining balance (Orden + Flete minus Total Verificado). Automatically updates `estadoEntrega` to "A despachar" when balances reach zero. Supports manual status control.
-- **Estado Entrega Workflow**: Channel-specific delivery status progression ensures accurate order tracking:
-  - **Manual/Shopify orders**: Stay "Pendiente" until fully paid (balance = 0), then automatically transition to "A despachar" - they never use "En Proceso" status
-  - **Cashea orders only**: Use "En Proceso" → "A despachar" workflow when fully paid
-  - Automatic status updates preserve business logic while preventing incorrect status assignments for Manual sales
-- **Payment Tracking Notes**: Two separate note fields serve different purposes:
-  - **Notas** (sales level): General notes about products, customer preferences, and sale details
-  - **Seguimiento Pago** (order level in Pagos tab): Payment follow-up notes, communication logs, and payment method issues specific to tracking payment collection
-- **Asesor Management**: Automatic asesor propagation ensures one order = one asesor. When an asesor is assigned to any sale in an order, the system automatically assigns that same asesor to all sales in that order, maintaining consistency across multi-product orders.
-- **Installment (Cuotas) Architecture**: Installments are tracked at the order level, with sequential numbering per order.
-- **Bank Management**: Differentiates between "Receptor" (receiving) and "Emisor" (issuing) banks, with forms consistently filtering to show only "Receptor" banks.
-- **Automation & Consistency**: Automatic assignment of "Cashea (BNC compartido Bs)" as Banco Receptor and automatic assignment of Fecha Pago Inicial (set to order creation date) for Cashea sales, since Cashea customers pay immediately when creating orders. Consistent naming conventions for bank fields and payment date tracking (`fechaPagoInicial`). Chrome autocomplete suppression is implemented.
-- **Perdida Status**: Orders that never complete payment can be marked as "Perdida" (Lost) exclusively from the Pagos tab, operating at the order level to mark all sales in an order simultaneously.
-- **Cancelar/Devolver Actions**: Sales in Lista de Ventas can be individually cancelled or marked as returned through action buttons:
-  - **Cancelar**: Changes Estado Entrega to "Cancelada" for cancelled sales (visible in all views including Pagos and Despachos)
-  - **Devolver**: Changes Estado Entrega to "A devolver" for products to be returned (visible in Lista de Ventas and Pagos, but not in Despachos since returned items are out of the dispatch workflow)
-  - Both buttons display with green icon indicator when sale is already in that status, with disabled state to prevent duplicate actions
-  - Buttons are positioned in a dedicated column (without header label) separate from the Acciones column for cleaner layout and better visual organization
-- **Devoluciones Management**: Dedicated page for managing returns workflow with specialized features:
-  - **Filtered View**: Automatically displays only sales with "A devolver" status, serving as a temporary workspace until returns are completed
-  - **Table Columns**: Order, Estado Entrega, Nombre, Teléfono, Cédula, Dirección de Despacho, Producto, SKU, Cantidad, Email, Notas
-  - **Devuelto Action**: Action button to mark sales as "Devuelto" when return is complete, removing them from the Devoluciones view
-  - **Sticky Columns**: Order and Estado Entrega columns remain fixed while scrolling for easy reference
-  - **Notes Editing**: Click-to-edit notes functionality for tracking return details and customer communication
-  - **Pagination**: Standard pagination controls for navigating through multiple return records
-  - Sales remain visible in Lista de Ventas with their "A devolver" or "Devuelto" status, maintaining full history
-- **Transportista Management**: Full CRUD operations for managing transportation companies in the Administración section. Transportistas are tracked with nombre (name), teléfono (phone), and email fields for efficient logistics coordination.
-- **Automated Cashea Downloads**: Configurable automation system for periodic Cashea order downloads integrated into the Cargar Datos tab. Features:
-  - **Enable/Disable Toggle**: Turn automation on/off with visual "Activa" status badge
-  - **Frequency Options**: 7 configurable intervals (30 min, 1 hour, 2 hours, 4 hours, 8 hours, 16 hours, 24 hours)
-  - **Download History**: Last 5 automatic downloads with status (success/error), timestamp, record count, and error messages
-  - **Backend Scheduler**: Cron-based automation with proper error handling, automatic date range calculation, and deduplication
-  - **Safe UI**: Loading states with skeleton loaders, error handling with visual feedback, disabled controls during loading/errors
-  - **Database Tables**: `cashea_automation_config` (enabled, frequency) and `cashea_automatic_downloads` (execution history)
-  - **Webhook Integration**: When Cashea orders are successfully downloaded and saved to Lista de Ventas, the system automatically sends order details to a configurable webhook URL (stored in CASHEA_WEBHOOK_URL secret). Each new Cashea order is sent individually via GET request with query parameters: Orden, nombre_cliente, telefono, producto. A 500ms delay is enforced between consecutive webhook calls to avoid rate limiting. The webhook fires ONLY for Cashea channel orders (not Shopify/Treble/Manual sales), ensuring targeted n8n workflow automation. Error handling ensures that webhook failures do not prevent order processing.
+- **Sales Data Upload & Management**: Supports Excel uploads from multiple channels with complete replacement logic for administration items, including automatic backup and undo. Features comprehensive filtering, searching, and tailored export functionalities for different views.
+- **Order & Payment Tracking**: Detailed tracking of sales, nine delivery statuses, and channel-specific metrics. Supports multi-product orders, manual sales, and reservations. The Pagos tab includes asesor filtering, delivery status filtering, and metric cards for "Orden + Flete", "Total Pagado", "Total Verificado", and "Pendiente".
+- **Advanced Payment System**: Manages initial payments, freight, and installments, differentiating between "agreed payment" and "actual payment". Includes a "Verificación" section with status filters. Automatically updates `estadoEntrega` to "A despachar" when balances reach zero.
+- **Estado Entrega Workflow**: Channel-specific delivery status progression (e.g., Manual/Shopify orders go from "Pendiente" to "A despachar"; Cashea orders use "En Proceso" → "A despachar").
+- **Payment Tracking Notes**: Separate fields for general `Notas` (sales level) and `Seguimiento Pago` (order level, for payment follow-up).
+- **Asesor Management**: Automatic asesor propagation ensures consistency across multi-product orders.
+- **Installment (Cuotas) Architecture**: Installments are tracked at the order level with sequential numbering.
+- **Bank Management**: Differentiates between "Receptor" and "Emisor" banks.
+- **Automation & Consistency**: Automatic assignment of "Cashea (BNC compartido Bs)" as Banco Receptor and `Fecha Pago Inicial` for Cashea sales. Chrome autocomplete suppression is implemented.
+- **Perdida Status**: Orders can be marked as "Perdida" (Lost) from the Pagos tab, affecting all sales within an order.
+- **Cancelar/Devolver Actions**: Individual sales in "Lista de Ventas" can be marked as "Cancelada" or "A devolver", with "Devoluciones" having a dedicated management page with confirmation for marking as "Devuelto".
+- **Transportista Management**: Full CRUD operations for transportation companies in the Administración section.
+- **Automated Cashea Downloads**: Configurable automation system for periodic Cashea order downloads, including enable/disable toggle, frequency options, download history, backend scheduler, and webhook integration for new Cashea orders.
 
 # External Dependencies
 
