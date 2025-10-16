@@ -542,8 +542,8 @@ function parseBankStatementFile(buffer: Buffer) {
 
     const transactions = filteredData.map((row: any, index: number) => {
       let fecha = new Date();
-      if (row.Fecha || row.fecha) {
-        const dateValue = row.Fecha || row.fecha;
+      if (row.Fecha || row.fecha || row.__EMPTY) {
+        const dateValue = row.Fecha || row.fecha || row.__EMPTY;
         if (typeof dateValue === 'number') {
           fecha = new Date((dateValue - 25569) * 86400 * 1000);
         } else {
@@ -562,6 +562,7 @@ function parseBankStatementFile(buffer: Buffer) {
         row['Ref'] ||
         row['Reference'] ||
         row['REFERENCIA'] ||
+        row.__EMPTY_11 ||
         ''
       ).trim();
 
@@ -587,6 +588,7 @@ function parseBankStatementFile(buffer: Buffer) {
         row.MONTO ||
         row.IMPORTE ||
         row.HABER ||
+        row.__EMPTY_14 ||
         '0';
 
       const monto = parseSpanishNumber(montoValue);
@@ -602,6 +604,7 @@ function parseBankStatementFile(buffer: Buffer) {
         row.detalle ||
         row.Observaciones ||
         row.observaciones ||
+        row.__EMPTY_6 ||
         ''
       ).trim();
 
