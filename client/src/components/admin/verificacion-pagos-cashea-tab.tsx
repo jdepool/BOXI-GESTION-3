@@ -57,6 +57,17 @@ export function VerificacionPagosCasheaTab() {
   
   const pendingPayments = pendingPaymentsData?.data || [];
 
+  // Get bancos for display
+  const { data: bancos = [] } = useQuery<Array<{ id: string; banco: string }>>({
+    queryKey: ["/api/admin/bancos"],
+  });
+
+  const getBancoName = (bancoId: string | null) => {
+    if (!bancoId) return '-';
+    const banco = bancos.find(b => b.id === bancoId);
+    return banco?.banco || bancoId;
+  };
+
   const verifyPaymentsMutation = useMutation({
     mutationFn: (matches: PaymentMatch[]) =>
       apiRequest("POST", "/api/admin/verify-cashea-payments", { matches }),
@@ -454,6 +465,7 @@ export function VerificacionPagosCasheaTab() {
                   <TableRow>
                     <TableHead>Orden</TableHead>
                     <TableHead>Tipo de Pago</TableHead>
+                    <TableHead>Banco</TableHead>
                     <TableHead>Ref. Pago</TableHead>
                     <TableHead>Ref. Banco</TableHead>
                     <TableHead>Monto Pago</TableHead>
@@ -468,6 +480,7 @@ export function VerificacionPagosCasheaTab() {
                       <TableCell>
                         <Badge variant="outline">{match.payment.tipoPago}</Badge>
                       </TableCell>
+                      <TableCell className="text-sm">{getBancoName(match.payment.bancoId)}</TableCell>
                       <TableCell className="font-mono text-xs">{match.payment.referencia}</TableCell>
                       <TableCell className="font-mono text-xs">{match.bankTransaction.referencia}</TableCell>
                       <TableCell>{formatCurrency(match.payment.montoBs || 0)}</TableCell>
@@ -507,6 +520,7 @@ export function VerificacionPagosCasheaTab() {
                 <TableRow>
                   <TableHead>Orden</TableHead>
                   <TableHead>Tipo de Pago</TableHead>
+                  <TableHead>Banco</TableHead>
                   <TableHead>Referencia</TableHead>
                   <TableHead>Monto Bs</TableHead>
                   <TableHead>Fecha</TableHead>
@@ -519,6 +533,7 @@ export function VerificacionPagosCasheaTab() {
                     <TableCell>
                       <Badge variant="outline">{payment.tipoPago}</Badge>
                     </TableCell>
+                    <TableCell className="text-sm">{getBancoName(payment.bancoId)}</TableCell>
                     <TableCell className="font-mono text-xs">{payment.referencia || 'N/A'}</TableCell>
                     <TableCell>{formatCurrency(payment.montoBs || 0)}</TableCell>
                     <TableCell className="text-xs text-muted-foreground">
