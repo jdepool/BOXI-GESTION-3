@@ -30,6 +30,14 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { cn } from "@/lib/utils";
 import { VerificacionPagosCasheaTab } from "@/components/admin/verificacion-pagos-cashea-tab";
 
+// Helper function to format Date to YYYY-MM-DD in local timezone (prevents timezone shift)
+const formatLocalDate = (date: Date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 interface VerificationPayment {
   paymentId: string;
   paymentType: string;
@@ -359,7 +367,7 @@ export default function VerificacionPage() {
                         })() : undefined}
                         onSelect={(date) => {
                           if (date) {
-                            setStartDate(format(date, 'yyyy-MM-dd'));
+                            setStartDate(formatLocalDate(date));
                           } else {
                             setStartDate('');
                           }
@@ -397,7 +405,7 @@ export default function VerificacionPage() {
                         })() : undefined}
                         onSelect={(date) => {
                           if (date) {
-                            setEndDate(format(date, 'yyyy-MM-dd'));
+                            setEndDate(formatLocalDate(date));
                           } else {
                             setEndDate('');
                           }
