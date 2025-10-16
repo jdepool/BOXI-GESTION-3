@@ -79,11 +79,16 @@ export function VerificacionPagosCasheaTab() {
     onSuccess: (data: any) => {
       queryClient.invalidateQueries({ queryKey: ["/api/sales"] });
       queryClient.invalidateQueries({ queryKey: ["/api/sales/verification-payments"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/sales/orders"] });
+      
+      // Clear matches and bank transactions after successful verification
+      setPaymentMatches([]);
+      setBankTransactions([]);
+      
       toast({ 
         title: "Pagos verificados automáticamente", 
-        description: `Se verificaron ${data?.verified || 0} pagos y se actualizaron a A despachar.` 
+        description: `Se verificaron ${data?.verified || 0} pagos. Los pagos verificados desaparecieron de la lista.` 
       });
-      // NO limpiar los matches automáticamente - mantener hasta reset manual
     },
     onError: () => {
       toast({ 
