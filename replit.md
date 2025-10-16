@@ -26,7 +26,7 @@ The application leverages shadcn/ui, Radix UI, Tailwind CSS, and Lucide React fo
 
 ## Feature Specifications
 - **Sales Data Upload & Management**: Supports Excel uploads from multiple channels with complete replacement logic for administration items, including automatic backup and undo. Features comprehensive filtering, searching, and tailored export functionalities for different views.
-- **Order & Payment Tracking**: Detailed tracking of sales, nine delivery statuses, and channel-specific metrics. Supports multi-product orders, manual sales, and reservations. The Pagos tab includes asesor filtering, delivery status filtering, and metric cards for "Orden + Flete", "Total Pagado", "Total Verificado", and "Pendiente".
+- **Order & Payment Tracking**: Detailed tracking of sales, nine delivery statuses, and channel-specific metrics. Supports multi-product orders, manual sales, and reservations. The Pagos tab includes asesor filtering, delivery status filtering, and separate metric columns for "Orden" (totalOrderUsd) and "Flete" (pagoFleteUsd), plus "Total Pagado", "Total Verificado", and "Pendiente".
 - **Advanced Payment System**: Manages initial payments, freight, and installments, differentiating between "agreed payment" and "actual payment". Includes a "Verificación" section with status filters. Automatically updates `estadoEntrega` to "A despachar" when balances reach zero.
 - **Estado Entrega Workflow**: Channel-specific delivery status progression (e.g., Manual/Shopify orders go from "Pendiente" to "A despachar"; Cashea orders use "En Proceso" → "A despachar").
 - **Payment Tracking Notes**: Separate fields for general `Notas` (sales level) and `Seguimiento Pago` (order level, for payment follow-up).
