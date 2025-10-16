@@ -576,7 +576,16 @@ function parseBankStatementFile(buffer: Buffer) {
         ''
       ).trim();
 
-      const montoValue = 
+      // For BNC statements: __EMPTY_12 is Debe (debits), __EMPTY_14 is Haber (credits)
+      // Check both columns and use the non-zero one
+      const debeValue = row.Debe || row.debe || row.DEBE || row.__EMPTY_12 || 0;
+      const haberValue = row.Haber || row.haber || row.HABER || row.__EMPTY_14 || 0;
+      
+      const debeMonto = parseSpanishNumber(debeValue);
+      const haberMonto = parseSpanishNumber(haberValue);
+      
+      // Use the non-zero value (prefer Haber for incoming payments)
+      const montoValue = haberMonto > 0 ? haberValue : (debeMonto > 0 ? debeValue : (
         row.Monto || 
         row.monto || 
         row.Importe || 
@@ -587,8 +596,6 @@ function parseBankStatementFile(buffer: Buffer) {
         row.amount ||
         row.Valor || 
         row.valor ||
-        row.Haber || 
-        row.haber ||
         row.Crédito || 
         row.credito ||
         row['Crédito'] ||
@@ -597,9 +604,8 @@ function parseBankStatementFile(buffer: Buffer) {
         row['Débito'] ||
         row.MONTO ||
         row.IMPORTE ||
-        row.HABER ||
-        row.__EMPTY_14 ||
-        '0';
+        '0'
+      ));
 
       const monto = parseSpanishNumber(montoValue);
 
