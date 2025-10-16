@@ -21,6 +21,14 @@ const parseLocalDate = (dateString: string) => {
   if (!dateString) return undefined;
   return parse(dateString, 'yyyy-MM-dd', new Date());
 };
+
+// Helper function to format Date to YYYY-MM-DD in local timezone
+const formatLocalDate = (date: Date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
 import type { Sale, Banco } from "@shared/schema";
 
 interface FleteData {
@@ -108,7 +116,7 @@ export default function FleteModal({ open, onOpenChange, sale }: FleteModalProps
     const isOpening = !prevOpenRef.current && open;
     
     if (sale && isOpening) {
-      const fechaValue = sale.fechaFlete ? format(new Date(sale.fechaFlete), 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd');
+      const fechaValue = sale.fechaFlete ? formatLocalDate(new Date(sale.fechaFlete)) : formatLocalDate(new Date());
       setFleteData({
         montoFleteUsd: sale.montoFleteUsd ? sale.montoFleteUsd.toString() : "",
         fechaFlete: fechaValue,
@@ -265,7 +273,7 @@ export default function FleteModal({ open, onOpenChange, sale }: FleteModalProps
                       selected={parseLocalDate(fleteData.fechaFlete)}
                       onSelect={(date) => {
                         if (date) {
-                          setFleteData({ ...fleteData, fechaFlete: format(date, "yyyy-MM-dd") });
+                          setFleteData({ ...fleteData, fechaFlete: formatLocalDate(date) });
                         }
                       }}
                       initialFocus
