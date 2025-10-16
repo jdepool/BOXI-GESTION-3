@@ -94,6 +94,11 @@ async function callCasheaApi(startDate: string, endDate: string): Promise<any[]>
   const data = await response.json();
   console.log(`🎉 CASHEA API SUCCESS! Status: ${response.status}`);
   console.log(`📊 Response size: ${JSON.stringify(data).length} bytes`);
+  
+  // Log the actual field names from the API to debug missing payment data
+  if (data && typeof data === 'object' && 'queryData' in data) {
+    console.log(`🔍 Available fields in API response:`, Object.keys(data.queryData));
+  }
 
   return [data];
 }
