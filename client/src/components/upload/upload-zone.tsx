@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { CalendarIcon, Power, Clock, CheckCircle, XCircle } from "lucide-react";
+import { CalendarIcon, Power, Clock, CheckCircle, XCircle, Download } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
@@ -78,6 +78,30 @@ export default function UploadZone({ recentUploads, showOnlyCashea = false }: Up
     onError: (error: Error) => {
       toast({
         title: "Error al actualizar configuración",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Manual 24-hour download mutation
+  const downloadNowMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest('POST', '/api/cashea/automation/download-now', {});
+      return res.json();
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/cashea/automation/history'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/sales'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/sales/orders'] });
+      toast({
+        title: "Descarga completada",
+        description: `${data.recordsProcessed} nuevos registros procesados${data.duplicatesIgnored > 0 ? `, ${data.duplicatesIgnored} duplicados ignorados` : ''}`,
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error en la descarga",
         description: error.message,
         variant: "destructive",
       });
@@ -446,6 +470,22 @@ export default function UploadZone({ recentUploads, showOnlyCashea = false }: Up
                 </SelectContent>
               </Select>
             )}
+          </div>
+
+          <div className="mt-4">
+            <Button
+              onClick={() => downloadNowMutation.mutate()}
+              disabled={downloadNowMutation.isPending}
+              className="w-full"
+              variant="outline"
+              data-testid="button-download-now"
+            >
+              <Download className="h-4 w-4 mr-2" />
+              {downloadNowMutation.isPending ? 'Descargando...' : 'Descarga ahora'}
+            </Button>
+            <p className="text-xs text-muted-foreground mt-2">
+              Descarga pedidos de las últimas 24 horas (sin esperar el periodo programado)
+            </p>
           </div>
 
           <div className="mt-4">

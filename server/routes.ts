@@ -2141,6 +2141,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Manual 24-hour download (bypasses schedule)
+  app.post("/api/cashea/automation/download-now", async (req, res) => {
+    try {
+      console.log('📥 Manual 24-hour download requested...');
+      
+      // Always look back 24 hours (same logic as scheduler)
+      const endDate = new Date();
+      const startDate = new Date(endDate.getTime() - 24 * 60 * 60 * 1000);
+      
+      // Use full ISO timestamps for precise 24-hour window
+      const startDateStr = startDate.toISOString();
+      const endDateStr = endDate.toISOString();
+      
+      console.log(`📥 Downloading Cashea data (24hr lookback): ${startDateStr} to ${endDateStr}`);
+      
+      const result = await performCasheaDownload(startDateStr, endDateStr, storage);
+      
+      if (!result.success) {
+        return res.status(400).json({
+          success: false,
+          error: result.message,
+          details: result.errors.slice(0, 10)
+        });
+      }
+      
+      res.json({
+        success: true,
+        recordsProcessed: result.recordsProcessed,
+        duplicatesIgnored: result.duplicatesIgnored,
+        message: result.message
+      });
+    } catch (error) {
+      console.error("Manual 24-hour download failed:", error);
+      res.status(500).json({ 
+        success: false,
+        error: "Failed to download data",
+        details: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
   // Update sale delivery status
   app.put("/api/sales/:saleId/delivery-status", async (req, res) => {
     try {
