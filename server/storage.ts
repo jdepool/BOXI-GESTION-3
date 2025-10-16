@@ -1248,11 +1248,19 @@ export class DatabaseStorage implements IStorage {
 
   async getCasheaAutomaticDownloads(limit = 5): Promise<any[]> {
     const { casheaAutomaticDownloads } = await import('@shared/schema');
-    return await db
+    const downloads = await db
       .select()
       .from(casheaAutomaticDownloads)
       .orderBy(desc(casheaAutomaticDownloads.downloadedAt))
       .limit(limit);
+    
+    // Convert timestamps to ISO format for proper frontend parsing
+    return downloads.map(download => ({
+      ...download,
+      downloadedAt: download.downloadedAt ? new Date(download.downloadedAt).toISOString() : null,
+      startDate: download.startDate ? new Date(download.startDate).toISOString() : null,
+      endDate: download.endDate ? new Date(download.endDate).toISOString() : null,
+    }));
   }
 
   // Admin configuration methods implementation

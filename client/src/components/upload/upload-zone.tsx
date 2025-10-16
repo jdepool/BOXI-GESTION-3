@@ -475,15 +475,15 @@ export default function UploadZone({ recentUploads, showOnlyCashea = false }: Up
                         <XCircle className="h-3 w-3 text-red-600" />
                       )}
                       <span className="text-muted-foreground">
-                        {download.executedAt && !isNaN(new Date(download.executedAt).getTime()) 
-                          ? format(new Date(download.executedAt), 'dd/MM/yyyy HH:mm')
+                        {download.downloadedAt && !isNaN(new Date(download.downloadedAt).getTime()) 
+                          ? format(new Date(download.downloadedAt), 'dd/MM/yyyy HH:mm')
                           : 'Fecha inválida'
                         }
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
                       {download.status === 'success' ? (
-                        <span className="text-foreground">{download.recordCount} registros</span>
+                        <span className="text-foreground">{download.recordsCount} registros</span>
                       ) : (
                         <span className="text-red-600 truncate max-w-[200px]" title={download.errorMessage}>
                           {download.errorMessage || 'Error'}
