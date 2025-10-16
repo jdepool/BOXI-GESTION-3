@@ -153,17 +153,6 @@ export default function VerificacionPage() {
     });
   };
 
-  const getStatusBadgeVariant = (status: string) => {
-    switch (status) {
-      case "Verificado":
-        return "default"; // green
-      case "Rechazado":
-        return "destructive"; // red
-      default:
-        return "secondary"; // yellow/gray
-    }
-  };
-
   const formatCurrency = (amount: number | null) => {
     if (amount === null || amount === undefined) return "-";
     return `$${amount.toFixed(2)}`;
