@@ -456,7 +456,7 @@ export function VerificacionPagosCasheaTab() {
               </Button>
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="bg-[#5883f7]">
             <div className="space-y-4">
               <p className="text-sm font-medium text-[#07080a]">
                 ✓ Se verificaron {verifiedMatches.length} pagos automáticamente
