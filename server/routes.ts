@@ -460,23 +460,33 @@ function parseBancosFile(buffer: Buffer, filename: string) {
 function parseSpanishNumber(value: any): number {
   if (typeof value === 'number') return value;
   
-  const str = String(value).trim();
+  let str = String(value).trim();
   if (!str) return 0;
   
+  const isNegative = str.startsWith('(') && str.endsWith(')');
+  if (isNegative) {
+    str = str.slice(1, -1).trim();
+  }
+  
+  str = str.replace(/[^\d.,-]/g, '');
+  
+  let result = 0;
   if (str.includes(',') && str.includes('.')) {
     const lastComma = str.lastIndexOf(',');
     const lastPeriod = str.lastIndexOf('.');
     
     if (lastComma > lastPeriod) {
-      return parseFloat(str.replace(/\./g, '').replace(',', '.')) || 0;
+      result = parseFloat(str.replace(/\./g, '').replace(',', '.')) || 0;
     } else {
-      return parseFloat(str.replace(/,/g, '')) || 0;
+      result = parseFloat(str.replace(/,/g, '')) || 0;
     }
   } else if (str.includes(',')) {
-    return parseFloat(str.replace(',', '.')) || 0;
+    result = parseFloat(str.replace(',', '.')) || 0;
   } else {
-    return parseFloat(str.replace(/[^\d.-]/g, '')) || 0;
+    result = parseFloat(str) || 0;
   }
+  
+  return isNegative ? -result : result;
 }
 
 function parseBankStatementFile(buffer: Buffer) {
