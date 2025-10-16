@@ -629,7 +629,7 @@ export default function PagosTable({
                         </div>
                       </div>
                     </td>
-                    <td className="p-2 min-w-[120px] bg-gray-50 dark:bg-gray-900">
+                    <td className="p-2 min-w-[120px] bg-gray-100 dark:bg-gray-800">
                       <div className="flex justify-center">
                         <div className="bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100 px-3 py-1 rounded-md text-xs" data-testid={`metric-total-pagado-${order.orden}`}>
                           {formatCurrency(order.totalPagado)}
