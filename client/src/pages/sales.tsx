@@ -103,6 +103,8 @@ export default function Sales() {
       // Exclude Perdida by default, only show when explicitly selected
       excludePerdida: pagosFilters.estadoEntrega !== "Perdida"
     }],
+    staleTime: 0, // Always fetch fresh data
+    gcTime: 0, // Don't cache data
   });
 
   // Query for recent uploads (Cargar Datos tab)
