@@ -2,7 +2,18 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
-import { CheckCircle, Package, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { CheckCircle, Package, ChevronLeft, ChevronRight, AlertTriangle } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -302,21 +313,50 @@ export default function DevolucionesTable({
                       </td>
                       
                       <td className="p-2 min-w-[120px] text-xs">
-                        <Button
-                          onClick={() => handleMarkAsDevuelto(sale.id)}
-                          disabled={updateDeliveryStatusMutation.isPending || sale.estadoEntrega === "Devuelto"}
-                          size="sm"
-                          variant="outline"
-                          className={cn(
-                            "w-full h-8 text-xs",
-                            sale.estadoEntrega === "Devuelto" && "bg-green-800 text-white hover:bg-green-800 opacity-70 cursor-not-allowed border-green-700"
-                          )}
-                          title={sale.estadoEntrega === "Devuelto" ? "Ya marcada como devuelta" : "Marcar como devuelta"}
-                          data-testid={`button-devuelto-${sale.id}`}
-                        >
-                          <CheckCircle className={cn("h-3 w-3 mr-1", sale.estadoEntrega === "Devuelto" && "text-green-400")} />
-                          Devuelto
-                        </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button
+                              disabled={updateDeliveryStatusMutation.isPending || sale.estadoEntrega === "Devuelto"}
+                              size="sm"
+                              variant="outline"
+                              className={cn(
+                                "w-full h-8 text-xs",
+                                sale.estadoEntrega === "Devuelto" && "bg-green-800 text-white hover:bg-green-800 opacity-70 cursor-not-allowed border-green-700"
+                              )}
+                              title={sale.estadoEntrega === "Devuelto" ? "Ya marcada como devuelta" : "Marcar como devuelta"}
+                              data-testid={`button-devuelto-${sale.id}`}
+                            >
+                              <CheckCircle className={cn("h-3 w-3 mr-1", sale.estadoEntrega === "Devuelto" && "text-green-400")} />
+                              Devuelto
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle className="flex items-center gap-2">
+                                <AlertTriangle className="h-5 w-5 text-yellow-600" />
+                                Confirmar Devolución
+                              </AlertDialogTitle>
+                              <AlertDialogDescription className="space-y-2">
+                                <p>
+                                  ¿Confirma que el proceso de devolución fue completado exitosamente?
+                                </p>
+                                <p className="font-medium text-foreground">
+                                  Esta acción marcará la venta <span className="font-mono">#{sale.orden}</span> como "Devuelto" y la removerá de esta lista.
+                                </p>
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel data-testid="dialog-cancel-devuelto">Cancelar</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() => handleMarkAsDevuelto(sale.id)}
+                                data-testid="dialog-confirm-devuelto"
+                                className="bg-green-600 hover:bg-green-700"
+                              >
+                                Sí, confirmar devolución
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       </td>
                     </tr>
                   ))}
