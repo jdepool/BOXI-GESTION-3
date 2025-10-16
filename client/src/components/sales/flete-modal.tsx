@@ -29,6 +29,15 @@ const formatLocalDate = (date: Date) => {
   const day = String(date.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
 };
+
+// Helper function to extract YYYY-MM-DD from database timestamp (prevents timezone shift)
+const extractDateFromTimestamp = (timestamp: string | Date) => {
+  if (!timestamp) return '';
+  // If it's a string like "2025-10-16T00:00:00.000Z", extract just the date part
+  const dateStr = timestamp.toString();
+  const match = dateStr.match(/^(\d{4}-\d{2}-\d{2})/);
+  return match ? match[1] : '';
+};
 import type { Sale, Banco } from "@shared/schema";
 
 interface FleteData {
@@ -116,7 +125,7 @@ export default function FleteModal({ open, onOpenChange, sale }: FleteModalProps
     const isOpening = !prevOpenRef.current && open;
     
     if (sale && isOpening) {
-      const fechaValue = sale.fechaFlete ? formatLocalDate(new Date(sale.fechaFlete)) : formatLocalDate(new Date());
+      const fechaValue = sale.fechaFlete ? extractDateFromTimestamp(sale.fechaFlete) : formatLocalDate(new Date());
       setFleteData({
         montoFleteUsd: sale.montoFleteUsd ? sale.montoFleteUsd.toString() : "",
         fechaFlete: fechaValue,
