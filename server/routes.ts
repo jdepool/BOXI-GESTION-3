@@ -1219,9 +1219,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           'Productos': orderSummary.productCount,
           
           // Metric card data
-          'Orden + Flete (USD)': orderSummary.ordenPlusFlete || 0,
-          'Total Pagado (USD)': orderSummary.totalPagado || 0,
-          'Pendiente (USD)': orderSummary.saldoPendiente || 0,
+          'Orden + Flete': orderSummary.ordenPlusFlete || 0,
+          'Total Pagado': orderSummary.totalPagado || 0,
+          'Total Verificado': orderSummary.totalVerificado || 0,
+          'Pendiente': orderSummary.saldoPendiente || 0,
           
           // Seguimiento Pago notes
           'Seguimiento Pago': sale.seguimientoPago || '',

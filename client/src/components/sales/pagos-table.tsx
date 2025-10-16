@@ -54,6 +54,7 @@ interface Order {
   ordenPlusFlete: number;
   totalCuotas: number;
   totalPagado: number;
+  totalVerificado: number;
   saldoPendiente: number;
   seguimientoPago: string | null;
 }
@@ -442,8 +443,11 @@ export default function PagosTable({
                 <th className="p-2 text-center text-xs font-medium text-muted-foreground min-w-[140px] bg-blue-50 dark:bg-blue-950">
                   Orden + Flete
                 </th>
-                <th className="p-2 text-center text-xs font-medium text-muted-foreground min-w-[120px] bg-teal-50 dark:bg-teal-950">
+                <th className="p-2 text-center text-xs font-medium text-muted-foreground min-w-[120px] bg-gray-50 dark:bg-gray-900">
                   Total Pagado
+                </th>
+                <th className="p-2 text-center text-xs font-medium text-muted-foreground min-w-[120px] bg-teal-50 dark:bg-teal-950">
+                  Total Verificado
                 </th>
                 <th className="p-2 text-center text-xs font-medium text-muted-foreground min-w-[120px] bg-orange-50 dark:bg-orange-950">
                   Pendiente
@@ -625,10 +629,17 @@ export default function PagosTable({
                         </div>
                       </div>
                     </td>
+                    <td className="p-2 min-w-[120px] bg-gray-50 dark:bg-gray-900">
+                      <div className="flex justify-center">
+                        <div className="bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-100 px-3 py-1 rounded-md text-xs" data-testid={`metric-total-pagado-${order.orden}`}>
+                          {formatCurrency(order.totalPagado)}
+                        </div>
+                      </div>
+                    </td>
                     <td className="p-2 min-w-[120px] bg-teal-50 dark:bg-teal-950">
                       <div className="flex justify-center">
-                        <div className="bg-teal-100 dark:bg-teal-900 text-teal-900 dark:text-teal-100 px-3 py-1 rounded-md text-xs" data-testid={`metric-total-pagado-${order.orden}`}>
-                          {formatCurrency(order.totalPagado)}
+                        <div className="bg-teal-100 dark:bg-teal-900 text-teal-900 dark:text-teal-100 px-3 py-1 rounded-md text-xs" data-testid={`metric-total-verificado-${order.orden}`}>
+                          {formatCurrency(order.totalVerificado)}
                         </div>
                       </div>
                     </td>

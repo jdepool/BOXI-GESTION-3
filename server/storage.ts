@@ -696,25 +696,36 @@ export class DatabaseStorage implements IStorage {
         const ordenPlusFlete = totalOrderUsd + (pagoFlete === 0 || order.fleteGratis ? 0 : pagoFlete);
         const totalCuotas = totalCuotasMap.get(order.orden!) || 0;
         
-        // Calculate Total Pagado as sum of VERIFIED payments only
-        let totalPagado = 0;
+        // Calculate Total Pagado (Por verificar payments) and Total Verificado (Verificado payments)
+        let totalPagado = 0; // Por verificar payments
+        let totalVerificado = 0; // Verificado payments
         
-        // Add verified Pago Inicial
-        if (order.estadoVerificacionInicial === 'Verificado') {
+        // Check Pago Inicial
+        if (order.estadoVerificacionInicial === 'Por verificar') {
           totalPagado += pagoInicial;
+        } else if (order.estadoVerificacionInicial === 'Verificado') {
+          totalVerificado += pagoInicial;
         }
         
-        // Add verified Pago Flete (only if Flete is not $0 or gratis)
+        // Check Pago Flete (only if Flete is not $0 or gratis)
         const hasFletePayment = pagoFlete > 0 && !order.fleteGratis;
-        if (hasFletePayment && order.estadoVerificacionFlete === 'Verificado') {
-          totalPagado += pagoFlete;
+        if (hasFletePayment) {
+          if (order.estadoVerificacionFlete === 'Por verificar') {
+            totalPagado += pagoFlete;
+          } else if (order.estadoVerificacionFlete === 'Verificado') {
+            totalVerificado += pagoFlete;
+          }
         }
         
-        // Add verified Cuotas
+        // Add Cuotas (need to fetch por verificar separately)
         const totalCuotasVerificadas = totalCuotasVerificadasMap.get(order.orden!) || 0;
-        totalPagado += totalCuotasVerificadas;
+        const totalCuotasTodas = totalCuotasMap.get(order.orden!) || 0;
+        const totalCuotasPorVerificar = totalCuotasTodas - totalCuotasVerificadas;
         
-        const saldoPendiente = ordenPlusFlete - totalPagado;
+        totalPagado += totalCuotasPorVerificar;
+        totalVerificado += totalCuotasVerificadas;
+        
+        const saldoPendiente = ordenPlusFlete - totalVerificado;
         
         return {
           orden: order.orden!, // Non-null assertion safe because we filter isNotNull(sales.orden)
@@ -734,6 +745,7 @@ export class DatabaseStorage implements IStorage {
           ordenPlusFlete,
           totalCuotas,
           totalPagado,
+          totalVerificado,
           saldoPendiente,
           seguimientoPago: order.seguimientoPago,
         };
