@@ -399,7 +399,6 @@ export function VerificacionPagosCasheaTab() {
           )}
         </div>
       </div>
-
       {/* File Upload Section */}
       <Card>
         <CardHeader>
@@ -436,7 +435,6 @@ export function VerificacionPagosCasheaTab() {
           )}
         </CardContent>
       </Card>
-
       {/* Verification Results */}
       {verifiedMatches.length > 0 && (
         <Card className="border-green-200 bg-green-50/50">
@@ -460,7 +458,7 @@ export function VerificacionPagosCasheaTab() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <p className="text-sm text-green-700 font-medium">
+              <p className="text-sm font-medium text-[#07080a]">
                 ✓ Se verificaron {verifiedMatches.length} pagos automáticamente
               </p>
 
@@ -508,7 +506,6 @@ export function VerificacionPagosCasheaTab() {
           </CardContent>
         </Card>
       )}
-
       {/* Bank Transactions Summary */}
       {bankTransactions.length > 0 && (
         <Card>
@@ -525,7 +522,6 @@ export function VerificacionPagosCasheaTab() {
           </CardContent>
         </Card>
       )}
-
       {/* Payment Matches */}
       {paymentMatches.length > 0 && (
         <Card>
@@ -592,7 +588,6 @@ export function VerificacionPagosCasheaTab() {
           </CardContent>
         </Card>
       )}
-
       {/* All Pending Payments Waiting for Verification */}
       <Card>
         <CardHeader>
