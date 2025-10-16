@@ -83,11 +83,16 @@ export function VerificacionPagosCasheaTab() {
       queryClient.invalidateQueries({ queryKey: ["/api/sales/verification-payments"] });
       queryClient.invalidateQueries({ queryKey: ["/api/sales/orders"] });
       
-      // Store verified matches for display instead of clearing them
-      setVerifiedMatches(variables);
+      // Append newly verified matches to existing ones (accumulate results)
+      setVerifiedMatches(prev => [...prev, ...variables]);
       
-      // Clear the payment matches since they've been verified
-      setPaymentMatches([]);
+      // Remove only the verified matches from paymentMatches, keep unverified ones
+      setPaymentMatches(prev => 
+        prev.filter(match => !variables.some(v => 
+          v.payment.paymentId === match.payment.paymentId && 
+          v.payment.paymentType === match.payment.paymentType
+        ))
+      );
       
       toast({ 
         title: "Pagos verificados", 
