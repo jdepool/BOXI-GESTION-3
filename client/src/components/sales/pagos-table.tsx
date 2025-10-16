@@ -3,7 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { format } from "date-fns";
-import { CreditCard, Truck, Banknote, Filter, ChevronUp, ChevronDown, Download, ChevronLeft, ChevronRight, XCircle, RotateCcw } from "lucide-react";
+import { CreditCard, Truck, Banknote, Filter, ChevronUp, ChevronDown, Download, ChevronLeft, ChevronRight, XCircle, Ban, RotateCcw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import PagoInicialModal from "./pago-inicial-modal";
 import FleteModal from "./flete-modal";
@@ -696,7 +696,7 @@ export default function PagosTable({
                           )}
                           title={order.estadoEntrega === "Perdida" ? "Orden ya marcada como perdida" : "Marcar orden como perdida"}
                         >
-                          <XCircle className={cn("h-3 w-3 mr-1", order.estadoEntrega === "Perdida" && "text-green-400")} />
+                          <Ban className={cn("h-3 w-3 mr-1", order.estadoEntrega === "Perdida" && "text-green-400")} />
                           Perdida
                         </Button>
                       </div>
