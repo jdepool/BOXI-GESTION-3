@@ -38,6 +38,20 @@ const formatLocalDate = (date: Date) => {
   return `${year}-${month}-${day}`;
 };
 
+// Helper function to safely display dates from database without timezone shifts
+const formatDisplayDate = (dateValue: string | Date | null) => {
+  if (!dateValue) return '-';
+  const dateStr = dateValue.toString();
+  // Extract just the date part (YYYY-MM-DD) from ISO timestamp
+  const match = dateStr.match(/^(\d{4}-\d{2}-\d{2})/);
+  if (match) {
+    const [year, month, day] = match[1].split('-');
+    return `${day}/${month}/${year}`;
+  }
+  // Fallback to date-fns format if not ISO format
+  return format(new Date(dateValue), "dd/MM/yyyy");
+};
+
 interface VerificationPayment {
   paymentId: string;
   paymentType: string;
@@ -482,7 +496,7 @@ export default function VerificacionPage() {
                         {payment.tipoPago}
                       </td>
                       <td className="p-2 text-xs" data-testid={`text-fecha-pago-${index}`}>
-                        {payment.fecha ? format(new Date(payment.fecha), "dd/MM/yyyy") : "-"}
+                        {formatDisplayDate(payment.fecha)}
                       </td>
                       <td className="p-2 text-xs" data-testid={`text-monto-bs-${index}`}>
                         {payment.montoBs ? `Bs ${payment.montoBs.toFixed(2)}` : "-"}
