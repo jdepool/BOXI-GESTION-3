@@ -482,7 +482,7 @@ export function VerificacionPagosCasheaTab() {
                     <TableRow key={index} data-testid={`verified-match-${index}`}>
                       <TableCell className="font-medium text-sm text-white">{match.payment.orden}</TableCell>
                       <TableCell className="text-sm text-white">
-                        <Badge variant="outline" className="bg-white">{match.payment.tipoPago}</Badge>
+                        <Badge variant="outline" className="bg-white text-[#242527]">{match.payment.tipoPago}</Badge>
                       </TableCell>
                       <TableCell className="text-sm">{getBancoName(match.payment.bancoId)}</TableCell>
                       <TableCell className="font-mono text-xs text-white">{match.payment.referencia}</TableCell>
