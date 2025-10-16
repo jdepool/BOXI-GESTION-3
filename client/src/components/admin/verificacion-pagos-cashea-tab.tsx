@@ -480,7 +480,7 @@ export function VerificacionPagosCasheaTab() {
                 <TableBody>
                   {verifiedMatches.map((match, index) => (
                     <TableRow key={index} data-testid={`verified-match-${index}`}>
-                      <TableCell className="font-medium">{match.payment.orden}</TableCell>
+                      <TableCell className="font-medium text-[#242527]">{match.payment.orden}</TableCell>
                       <TableCell>
                         <Badge variant="outline" className="bg-white">{match.payment.tipoPago}</Badge>
                       </TableCell>
