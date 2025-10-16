@@ -608,19 +608,28 @@ function parseBankStatementFile(buffer: Buffer) {
         ''
       ).trim();
 
+      let fechaStr = new Date().toISOString().split('T')[0];
+      try {
+        if (fecha && !isNaN(fecha.getTime())) {
+          fechaStr = fecha.toISOString().split('T')[0];
+        }
+      } catch (e) {
+        console.warn(`Invalid date for row ${index + 1}, using current date`);
+      }
+
       if (index < 3) {
         console.log(`Transaction ${index + 1}:`, { 
           referencia, 
           monto, 
           rawMonto: montoValue,
-          fecha: fecha.toISOString().split('T')[0]
+          fecha: fechaStr
         });
       }
 
       return {
         referencia,
         monto,
-        fecha: fecha.toISOString().split('T')[0],
+        fecha: fechaStr,
         descripcion,
       };
     });
