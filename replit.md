@@ -35,7 +35,7 @@ The application leverages shadcn/ui, Radix UI, Tailwind CSS, and Lucide React fo
 - **Bank Management**: Differentiates between "Receptor" and "Emisor" banks.
 - **Automation & Consistency**: Automatic assignment of "Cashea (BNC compartido Bs)" as Banco Receptor and `Fecha Pago Inicial` for Cashea sales. Chrome autocomplete suppression is implemented.
 - **Perdida Status**: Orders can be marked as "Perdida" (Lost) from the Pagos tab, affecting all sales within an order.
-- **Cancelar/Devolver Actions**: Individual sales in "Lista de Ventas" can be marked as "Cancelada" or "A devolver", with "Devoluciones" having a dedicated management page with confirmation for marking as "Devuelto".
+- **Cancelar/Devolver Actions**: Individual sales in "Lista de Ventas" can be marked as "Cancelada" or "A devolver", with "Devoluciones" having a dedicated management page featuring a dropdown menu in the Estado Entrega column for quick status updates and a confirmation dialog when marking as "Devuelto" to ensure the return process was successfully completed.
 - **Transportista Management**: Full CRUD operations for transportation companies in the Administración section.
 - **Automated Cashea Downloads**: Configurable automation system for periodic Cashea order downloads, including enable/disable toggle, frequency options, download history, backend scheduler, and webhook integration for new Cashea orders.
 
