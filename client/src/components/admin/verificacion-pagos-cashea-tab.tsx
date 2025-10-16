@@ -53,6 +53,8 @@ export function VerificacionPagosCasheaTab() {
     queryFn: () => 
       fetch("/api/sales/verification-payments?estadoVerificacion=Por%20verificar&limit=9999")
         .then(res => res.json()),
+    staleTime: 0, // Always fetch fresh data
+    gcTime: 0, // Don't cache data
   });
   
   // Filter out payments with no Bs amount (0 or null/empty)
