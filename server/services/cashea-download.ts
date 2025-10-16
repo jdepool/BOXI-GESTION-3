@@ -96,8 +96,8 @@ async function callCasheaApi(startDate: string, endDate: string): Promise<any[]>
   console.log(`📊 Response size: ${JSON.stringify(data).length} bytes`);
   
   // Log the actual field names from the API to debug missing payment data
-  if (data && typeof data === 'object' && 'queryData' in data) {
-    console.log(`🔍 Available fields in API response:`, Object.keys(data.queryData));
+  if (data && typeof data === 'object' && 'queryData' in data && data.queryData && typeof data.queryData === 'object') {
+    console.log(`🔍 Available fields in API response:`, Object.keys(data.queryData as Record<string, unknown>));
   }
 
   return [data];
@@ -123,9 +123,9 @@ function transformCasheaData(rawData: any[]): any[] {
   const totalesUSD = queryData['Total (USD)'] || [];
   const fechas = queryData.Fecha || [];
   const canales = queryData.Canal || [];
-  const pagosIniciales = queryData['Pago Inicial (USD)'] || [];
-  const referencias = queryData['# Referencia'] || [];
-  const montosBs = queryData['Monto en Bs'] || [];
+  const pagosIniciales = queryData['Pago inicial usd'] || queryData['Pago Inicial (USD)'] || [];
+  const referencias = queryData['Referencia'] || queryData['# Referencia'] || [];
+  const montosBs = queryData['Monto en bs'] || queryData['Monto en Bs'] || [];
   const estadosEntrega = queryData['Estado de Entrega'] || [];
   const productos = queryData.Product || [];
   const cantidades = queryData.Cantidad || [];
