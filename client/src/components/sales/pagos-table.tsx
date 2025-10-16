@@ -572,7 +572,10 @@ export default function PagosTable({
                         className="h-7 text-xs"
                         data-testid={`button-pago-inicial-${order.orden}`}
                       >
-                        <Banknote className="h-3 w-3 mr-1" />
+                        <Banknote className={cn(
+                          "h-3 w-3 mr-1",
+                          !order.hasPagoInicial && "text-amber-500"
+                        )} />
                         {order.hasPagoInicial ? 'Editar' : 'Agregar'}
                       </Button>
                     </td>
@@ -595,7 +598,10 @@ export default function PagosTable({
                         className="h-7 text-xs"
                         data-testid={`button-flete-${order.orden}`}
                       >
-                        <Truck className="h-3 w-3 mr-1" />
+                        <Truck className={cn(
+                          "h-3 w-3 mr-1",
+                          !order.hasFlete && "text-amber-500"
+                        )} />
                         {order.hasFlete ? 'Editar' : 'Agregar'}
                       </Button>
                     </td>
