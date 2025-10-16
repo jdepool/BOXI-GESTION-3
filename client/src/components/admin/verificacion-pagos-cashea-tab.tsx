@@ -43,6 +43,7 @@ export function VerificacionPagosCasheaTab() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [bankTransactions, setBankTransactions] = useState<BankTransaction[]>([]);
   const [paymentMatches, setPaymentMatches] = useState<PaymentMatch[]>([]);
+  const [verifiedMatches, setVerifiedMatches] = useState<PaymentMatch[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -77,18 +78,20 @@ export function VerificacionPagosCasheaTab() {
   const verifyPaymentsMutation = useMutation({
     mutationFn: (matches: PaymentMatch[]) =>
       apiRequest("POST", "/api/admin/verify-cashea-payments", { matches }),
-    onSuccess: (data: any) => {
+    onSuccess: (data: any, variables: PaymentMatch[]) => {
       queryClient.invalidateQueries({ queryKey: ["/api/sales"] });
       queryClient.invalidateQueries({ queryKey: ["/api/sales/verification-payments"] });
       queryClient.invalidateQueries({ queryKey: ["/api/sales/orders"] });
       
-      // Clear matches and bank transactions after successful verification
+      // Store verified matches for display instead of clearing them
+      setVerifiedMatches(variables);
+      
+      // Clear the payment matches since they've been verified
       setPaymentMatches([]);
-      setBankTransactions([]);
       
       toast({ 
-        title: "Pagos verificados automáticamente", 
-        description: `Se verificaron ${data?.verified || 0} pagos. Los pagos verificados desaparecieron de la lista.` 
+        title: "Pagos verificados", 
+        description: `Se verificaron ${data?.verified || 0} de ${variables.length} pagos exitosamente.` 
       });
     },
     onError: () => {
@@ -112,9 +115,10 @@ export function VerificacionPagosCasheaTab() {
     setSelectedFile(null);
     setBankTransactions([]);
     setPaymentMatches([]);
+    setVerifiedMatches([]);
     toast({
       title: "Reset completado",
-      description: "Se limpiaron todas las transacciones y matches."
+      description: "Se limpiaron todas las transacciones y resultados."
     });
   };
 
@@ -376,7 +380,7 @@ export function VerificacionPagosCasheaTab() {
             <AlertCircle className="h-3 w-3" />
             {pendingPayments.length} pagos pendientes
           </Badge>
-          {(bankTransactions.length > 0 || paymentMatches.length > 0) && (
+          {(bankTransactions.length > 0 || paymentMatches.length > 0 || verifiedMatches.length > 0) && (
             <Button 
               variant="outline" 
               size="sm" 
@@ -427,6 +431,66 @@ export function VerificacionPagosCasheaTab() {
           )}
         </CardContent>
       </Card>
+
+      {/* Verification Results */}
+      {verifiedMatches.length > 0 && (
+        <Card className="border-green-200 bg-green-50/50">
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2 text-green-700">
+              <CheckCircle className="h-4 w-4" />
+              Pagos Verificados Exitosamente
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <p className="text-sm text-green-700 font-medium">
+                ✓ Se verificaron {verifiedMatches.length} pagos automáticamente
+              </p>
+
+              <Separator />
+
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Orden</TableHead>
+                    <TableHead>Tipo de Pago</TableHead>
+                    <TableHead>Banco</TableHead>
+                    <TableHead>Ref. Sistema</TableHead>
+                    <TableHead>Ref. Banco</TableHead>
+                    <TableHead>Monto Sistema</TableHead>
+                    <TableHead>Monto Banco</TableHead>
+                    <TableHead>Confianza</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {verifiedMatches.map((match, index) => (
+                    <TableRow key={index} data-testid={`verified-match-${index}`}>
+                      <TableCell className="font-medium">{match.payment.orden}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className="bg-white">{match.payment.tipoPago}</Badge>
+                      </TableCell>
+                      <TableCell className="text-sm">{getBancoName(match.payment.bancoId)}</TableCell>
+                      <TableCell className="font-mono text-xs">{match.payment.referencia}</TableCell>
+                      <TableCell className="font-mono text-xs font-semibold text-green-700">
+                        {match.bankTransaction.referencia}
+                      </TableCell>
+                      <TableCell>{formatCurrency(match.payment.montoBs || 0)}</TableCell>
+                      <TableCell className="font-semibold">{formatCurrency(match.bankTransaction.monto)}</TableCell>
+                      <TableCell>
+                        <Badge variant="default" className="bg-green-600">
+                          {match.matchType === 'exact' ? 'Exacta' : 
+                           match.matchType === 'amount' ? 'Por monto' : 'Parcial'} 
+                          ({Math.round(match.confidence)}%)
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Bank Transactions Summary */}
       {bankTransactions.length > 0 && (
