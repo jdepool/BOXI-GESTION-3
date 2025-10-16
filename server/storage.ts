@@ -110,6 +110,13 @@ export interface IStorage {
       hasPagoInicial: boolean;
       hasFlete: boolean;
       installmentCount: number;
+      pagoInicialUsd: number;
+      pagoFleteUsd: number;
+      ordenPlusFlete: number;
+      totalCuotas: number;
+      totalPagado: number;
+      totalVerificado: number;
+      saldoPendiente: number;
       seguimientoPago: string | null;
     }>;
     total: number;
@@ -533,11 +540,12 @@ export class DatabaseStorage implements IStorage {
       hasPagoInicial: boolean;
       hasFlete: boolean;
       installmentCount: number;
-      pagoInicialUsd: number | null;
-      pagoFleteUsd: number | null;
+      pagoInicialUsd: number;
+      pagoFleteUsd: number;
       ordenPlusFlete: number;
       totalCuotas: number;
       totalPagado: number;
+      totalVerificado: number;
       saldoPendiente: number;
       seguimientoPago: string | null;
     }>;

@@ -49,8 +49,8 @@ interface Order {
   hasPagoInicial: boolean;
   hasFlete: boolean;
   installmentCount: number;
-  pagoInicialUsd: number | null;
-  pagoFleteUsd: number | null;
+  pagoInicialUsd: number;
+  pagoFleteUsd: number;
   ordenPlusFlete: number;
   totalCuotas: number;
   totalPagado: number;
