@@ -86,22 +86,16 @@ export async function restartCasheaScheduler() {
 }
 
 async function runAutomaticDownload(frequency: string) {
-  const minutes = frequencyToMinutes[frequency];
-  
-  if (!minutes) {
-    console.error(`❌ Invalid frequency for download: ${frequency}`);
-    return;
-  }
-  
-  // Calculate date range: from (now - frequency) to now
+  // Always look back 24 hours regardless of frequency
+  // This ensures we catch all orders while the duplicate filter prevents re-downloading
   const endDate = new Date();
-  const startDate = new Date(endDate.getTime() - minutes * 60 * 1000);
+  const startDate = new Date(endDate.getTime() - 24 * 60 * 60 * 1000); // 24 hours ago
   
-  // Format dates as YYYY-MM-DD for API
-  const startDateStr = startDate.toISOString().split('T')[0];
-  const endDateStr = endDate.toISOString().split('T')[0];
+  // Use full ISO timestamps for precise 24-hour window
+  const startDateStr = startDate.toISOString();
+  const endDateStr = endDate.toISOString();
   
-  console.log(`📥 Auto-downloading Cashea data: ${startDateStr} to ${endDateStr}`);
+  console.log(`📥 Auto-downloading Cashea data (24hr lookback): ${startDateStr} to ${endDateStr}`);
   
   try {
     const result = await performCasheaDownload(startDateStr, endDateStr, storage);
