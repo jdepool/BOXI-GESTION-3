@@ -237,7 +237,6 @@ export default function VerificacionPage() {
   return (
     <div className="h-screen flex bg-background">
       <Sidebar />
-      
       <main className="flex-1 flex flex-col overflow-hidden">
         <div className="flex-1 overflow-auto">
           <div className="container mx-auto p-6">
@@ -251,9 +250,7 @@ export default function VerificacionPage() {
           <TabsTrigger value="egresos" data-testid="tab-egresos">
             Egresos
           </TabsTrigger>
-          <TabsTrigger value="cashea" data-testid="tab-cashea">
-            Cashea Pago Inicial
-          </TabsTrigger>
+          <TabsTrigger value="cashea" data-testid="tab-cashea">Conciliación</TabsTrigger>
         </TabsList>
 
         <TabsContent value="ingresos">
