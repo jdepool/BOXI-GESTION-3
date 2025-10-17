@@ -1491,7 +1491,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         } else if (paymentType === 'Cuota') {
           const installment = await storage.getInstallmentById(paymentId);
           orden = installment?.orden || null;
-          currentPaymentAmount = Number(installment?.cuotaAmount || 0);
+          currentPaymentAmount = Number(installment?.pagoCuotaUsd || 0); // Use agreed amount (Pago USD)
         }
 
         if (orden) {
@@ -1530,28 +1530,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
               }
             }
             
-            // Get verified cuotas
+            // Get verified cuotas (use agreed amounts - Pago USD)
             const installments = await storage.getInstallmentsByOrder(orden);
             let cuotasVerificadas = 0;
             if (paymentType === 'Cuota') {
               // Include all previously verified cuotas PLUS the one being verified now
               cuotasVerificadas = installments
                 .filter(inst => inst.estadoVerificacion === 'Verificado' || inst.id === paymentId)
-                .reduce((sum, inst) => sum + Number(inst.montoCuotaUsd || inst.cuotaAmount || 0), 0);
+                .reduce((sum, inst) => sum + Number(inst.pagoCuotaUsd || 0), 0); // Use agreed amount (Pago USD)
             } else {
               // Just get previously verified cuotas
               cuotasVerificadas = installments
                 .filter(inst => inst.estadoVerificacion === 'Verificado')
-                .reduce((sum, inst) => sum + Number(inst.montoCuotaUsd || inst.cuotaAmount || 0), 0);
+                .reduce((sum, inst) => sum + Number(inst.pagoCuotaUsd || 0), 0); // Use agreed amount (Pago USD)
             }
             
-            const totalPagado = pagoInicialVerificado + fleteVerificado + cuotasVerificadas;
-            const saldoPendiente = ordenPlusFlete - totalPagado;
+            const totalVerificado = pagoInicialVerificado + fleteVerificado + cuotasVerificadas;
+            const saldoPendiente = ordenPlusFlete - totalVerificado;
 
-            console.log(`Order ${orden} - Orden+Flete: $${ordenPlusFlete}, Total Pagado: $${totalPagado}, Pendiente: $${saldoPendiente}`);
+            console.log(`Order ${orden} - A pagar + Flete: $${ordenPlusFlete}, Total Verificado: $${totalVerificado}, Pendiente: $${saldoPendiente}`);
 
-            // Only auto-update if Pendiente = 0 (within tolerance for floating point) and current status is "Pendiente" or "En proceso"
-            // Use tolerance of 0.01 to handle floating point rounding errors
+            // Only auto-update if Pendiente = 0 (exactly 0, with tolerance for floating point) and current status is "Pendiente" or "En proceso"
+            // CRITICAL: Balance must be exactly 0 (within 0.01 tolerance for floating point rounding errors)
             if (Math.abs(saldoPendiente) < 0.01 && (firstSale.estadoEntrega === 'Pendiente' || firstSale.estadoEntrega === 'En proceso')) {
               const updatePromises = salesInOrder.map(sale => 
                 storage.updateSaleDeliveryStatus(sale.id, 'A despachar')
