@@ -285,7 +285,7 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
               name="canal"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Canal</FormLabel>
+                  <FormLabel>Canal *</FormLabel>
                   <Select onValueChange={field.onChange} value={field.value} data-testid="select-canal">
                     <FormControl>
                       <SelectTrigger>

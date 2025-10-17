@@ -342,7 +342,7 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
                   name="canal"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Canal</FormLabel>
+                      <FormLabel>Canal *</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value} data-testid="select-canal-reserva">
                         <FormControl>
                           <SelectTrigger>
