@@ -4413,7 +4413,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const totalCuotas = installments.reduce((sum, inst) => {
           return sum + parseFloat(inst.pagoCuotaUsd?.toString() || '0');
         }, 0);
-        const pendiente = totalUsd - (pagoInicialUsd + pagoFleteUsd + totalCuotas);
+        const pendiente = Math.max(0, totalUsd - (pagoInicialUsd + pagoFleteUsd + totalCuotas));
 
         return {
           orden: sale.orden,
@@ -4497,7 +4497,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const totalCuotas = installments.reduce((sum, inst) => {
           return sum + parseFloat(inst.pagoCuotaUsd?.toString() || '0');
         }, 0);
-        const pendiente = totalUsd - (pagoInicialUsd + pagoFleteUsd + totalCuotas);
+        const pendiente = Math.max(0, totalUsd - (pagoInicialUsd + pagoFleteUsd + totalCuotas));
 
         const rowData = [
           sale.orden || '',
