@@ -304,7 +304,7 @@ export default function PaymentInstallmentsModal({ sale, open, onOpenChange }: P
                       name="pagoCuotaUsd"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Pago Cuota USD</FormLabel>
+                          <FormLabel>Pago Cuota USD *</FormLabel>
                           <FormControl>
                             <Input
                               placeholder="0.00"
