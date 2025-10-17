@@ -51,7 +51,7 @@ const manualSaleSchema = z.object({
   direccionDespachoDireccion: z.string().optional(),
   direccionDespachoUrbanizacion: z.string().optional(),
   direccionDespachoReferencia: z.string().optional(),
-  canal: z.string().optional(),
+  canal: z.string().min(1, "Canal es requerido"),
   asesorId: z.string().optional(),
 });
 
@@ -96,7 +96,7 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
       direccionDespachoDireccion: "",
       direccionDespachoUrbanizacion: "",
       direccionDespachoReferencia: "",
-      canal: "Manual",
+      canal: "",
       products: [],
     },
   });

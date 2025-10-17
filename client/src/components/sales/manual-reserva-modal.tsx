@@ -50,7 +50,7 @@ const manualReservaSchema = z.object({
   direccionDespachoDireccion: z.string().optional(),
   direccionDespachoUrbanizacion: z.string().optional(),
   direccionDespachoReferencia: z.string().optional(),
-  canal: z.string().optional(),
+  canal: z.string().min(1, "Canal es requerido"),
 });
 
 type ManualReservaFormData = z.infer<typeof manualReservaSchema> & {
@@ -85,7 +85,7 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
       direccionDespachoUrbanizacion: "",
       direccionDespachoReferencia: "",
       fechaEntrega: undefined,
-      canal: "Manual",
+      canal: "",
       products: [],
     },
   });
