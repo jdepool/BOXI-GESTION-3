@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -162,6 +162,10 @@ export default function SalesTable({
   const [selectedSaleForCancel, setSelectedSaleForCancel] = useState<Sale | null>(null);
   const [selectedSaleForReturn, setSelectedSaleForReturn] = useState<Sale | null>(null);
   const [filtersVisible, setFiltersVisible] = useState(false);
+  
+  // Debounced order filter - local state for immediate UI updates
+  const [orderInputValue, setOrderInputValue] = useState(parentFilters?.orden || "");
+  
   const filters = {
     canal: parentFilters?.canal || "",
     estadoEntrega: parentFilters?.estadoEntrega || "",
@@ -170,6 +174,22 @@ export default function SalesTable({
     startDate: parentFilters?.startDate || "",
     endDate: parentFilters?.endDate || ""
   };
+
+  // Debounce order filter - trigger API call 500ms after user stops typing
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (orderInputValue !== parentFilters?.orden) {
+        handleFilterChange('orden', orderInputValue);
+      }
+    }, 500);
+
+    return () => clearTimeout(timeoutId);
+  }, [orderInputValue]);
+
+  // Sync input value when parent filter changes (e.g., on clear filters)
+  useEffect(() => {
+    setOrderInputValue(parentFilters?.orden || "");
+  }, [parentFilters?.orden]);
 
   // Fetch banks data to display bank names
   const { data: banks = [] } = useQuery({
@@ -573,8 +593,8 @@ export default function SalesTable({
                   <Input 
                     type="text"
                     placeholder="Buscar por # orden"
-                    value={filters.orden}
-                    onChange={(e) => handleFilterChange('orden', e.target.value)}
+                    value={orderInputValue}
+                    onChange={(e) => setOrderInputValue(e.target.value)}
                     className="w-40"
                     data-testid="filter-order-number"
                   />
