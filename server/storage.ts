@@ -392,17 +392,6 @@ export class DatabaseStorage implements IStorage {
       // Parse yyyy-MM-dd as local date to avoid timezone shifts
       const [year, month, day] = filters.startDate.split('-').map(Number);
       const startDateTime = new Date(year, month - 1, day, 0, 0, 0, 0);
-      
-      // DEBUG: Log the actual Date object being used
-      console.log('[DEBUG getSales] Start date comparison:', {
-        filterString: filters.startDate,
-        dateObject: startDateTime,
-        dateISO: startDateTime.toISOString(),
-        excludePendingManual: filters?.excludePendingManual,
-        tipo: filters?.tipo,
-        estadoEntrega: filters?.estadoEntrega
-      });
-      
       conditions.push(gte(sales.fecha, startDateTime));
     }
     if (filters?.endDate) {

@@ -666,11 +666,16 @@ export default function SalesTable({
                       {sale.nombre}
                     </td>
                     <td className="p-2 min-w-[90px] text-xs text-muted-foreground">
-                      {new Date(sale.fecha).toLocaleDateString('es-ES', { 
-                        day: '2-digit', 
-                        month: '2-digit', 
-                        year: '2-digit' 
-                      })}
+                      {(() => {
+                        // Extract date part from ISO timestamp to avoid timezone shifts
+                        const dateStr = sale.fecha.toString();
+                        const match = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})/);
+                        if (match) {
+                          const [, year, month, day] = match;
+                          return `${day}/${month}/${year.slice(2)}`;
+                        }
+                        return dateStr;
+                      })()}
                     </td>
                     <td className="p-2 min-w-[80px]">
                       <Badge className={`${getChannelBadgeClass(sale.canal)} text-white text-xs`}>

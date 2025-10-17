@@ -28,17 +28,7 @@ pool.on('connect', () => {
 });
 
 // Create database instance with correct adapter and schema
-export const db = drizzle(pool, { 
-  schema,
-  logger: {
-    logQuery(query: string, params: unknown[]) {
-      if (query.includes('fecha')) {
-        console.log('[DEBUG SQL]', query);
-        console.log('[DEBUG SQL PARAMS]', params);
-      }
-    },
-  }
-});
+export const db = drizzle(pool, { schema });
 
 // Utility function to retry database operations on transient errors
 export async function withRetry<T>(

@@ -798,17 +798,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const query = getSalesQuerySchema.parse(req.query);
       
-      // DEBUG: Log date filters to trace the issue
-      if (query.startDate || query.endDate) {
-        console.log('[DEBUG /api/sales] Date filters received:', {
-          startDate: query.startDate,
-          endDate: query.endDate,
-          excludePendingManual: query.excludePendingManual,
-          tipo: query.tipo,
-          estadoEntrega: query.estadoEntrega
-        });
-      }
-      
       // Normalize asesorId filter values
       let normalizedAsesorId = query.asesorId;
       if (query.asesorId === 'all') {
