@@ -29,6 +29,11 @@ const navigationItems = [
     label: "Egresos",
   },
   {
+    href: "/reportes",
+    icon: "fas fa-chart-bar",
+    label: "Reportes",
+  },
+  {
     href: "/administracion",
     icon: "fas fa-cogs",
     label: "Administración",
