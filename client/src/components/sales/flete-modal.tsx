@@ -171,14 +171,14 @@ export default function FleteModal({ open, onOpenChange, sale }: FleteModalProps
 
 
   const validateFleteFields = () => {
-    // Validate: pagoFleteUsd must be filled (any value including "0") OR fleteGratis must be checked
+    // Only Pago Flete USD is mandatory OR fleteGratis must be checked
     const hasPagoFleteUsd = fleteData.pagoFleteUsd !== "" && fleteData.pagoFleteUsd !== null && fleteData.pagoFleteUsd !== undefined;
     const isFleteGratis = fleteData.fleteGratis === true;
     
     if (!hasPagoFleteUsd && !isFleteGratis) {
       toast({
-        title: "Campos obligatorios incompletos",
-        description: "Debes ingresar un Pago Flete USD (incluso si es $0) o marcar Flete Gratis",
+        title: "Campo obligatorio incompleto",
+        description: "Debes ingresar Pago Flete USD o marcar Flete Gratis",
         variant: "destructive",
       });
       return false;
@@ -291,9 +291,9 @@ export default function FleteModal({ open, onOpenChange, sale }: FleteModalProps
                 </Popover>
               </div>
 
-              {/* 2. Pago Flete USD (NEW) */}
+              {/* 2. Pago Flete USD (MANDATORY) */}
               <div className="space-y-2">
-                <Label htmlFor="pagoFleteUsd">Pago Flete USD</Label>
+                <Label htmlFor="pagoFleteUsd">Pago Flete USD *</Label>
                 <div className="relative">
                   <DollarSign className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input
