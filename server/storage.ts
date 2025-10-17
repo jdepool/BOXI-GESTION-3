@@ -696,8 +696,8 @@ export class DatabaseStorage implements IStorage {
       );
     }
 
-    return {
-      data: ordersData.map(order => {
+    const processedOrders = await Promise.all(
+      ordersData.map(async (order) => {
         // Convert decimal strings to numbers for calculations
         const pagoInicial = Number(order.pagoInicialUsd) || 0;
         const pagoFlete = Number(order.pagoFleteUsd) || 0;
@@ -710,33 +710,33 @@ export class DatabaseStorage implements IStorage {
         const totalCuotas = totalCuotasMap.get(order.orden!) || 0;
         
         // Calculate Total Pagado (Por verificar payments) and Total Verificado (Verificado payments)
+        // Use getVerificationPayments to ensure only complete payments (with banco + referencia) are counted
         let totalPagado = 0; // Por verificar payments
         let totalVerificado = 0; // Verificado payments
         
-        // Check Pago Inicial
-        if (order.estadoVerificacionInicial === 'Por verificar') {
-          totalPagado += pagoInicial;
-        } else if (order.estadoVerificacionInicial === 'Verificado') {
-          totalVerificado += pagoInicial;
-        }
+        // Get payments "Por verificar" for this order (only complete payments with USD + Banco + Referencia)
+        const porVerificarPayments = await this.getVerificationPayments({
+          orden: order.orden!,
+          estadoVerificacion: 'Por verificar',
+          limit: 9999
+        });
         
-        // Check Pago Flete (only if Flete is not $0 or gratis)
-        const hasFletePayment = pagoFlete > 0 && !order.fleteGratis;
-        if (hasFletePayment) {
-          if (order.estadoVerificacionFlete === 'Por verificar') {
-            totalPagado += pagoFlete;
-          } else if (order.estadoVerificacionFlete === 'Verificado') {
-            totalVerificado += pagoFlete;
-          }
-        }
+        // Sum all "Por verificar" payments (already filtered for complete payments)
+        totalPagado = porVerificarPayments.data.reduce((sum, payment) => {
+          return sum + (payment.montoUsd || 0);
+        }, 0);
         
-        // Add Cuotas (need to fetch por verificar separately)
-        const totalCuotasVerificadas = totalCuotasVerificadasMap.get(order.orden!) || 0;
-        const totalCuotasTodas = totalCuotasMap.get(order.orden!) || 0;
-        const totalCuotasPorVerificar = totalCuotasTodas - totalCuotasVerificadas;
+        // Get payments "Verificado" for this order (only complete payments with USD + Banco + Referencia)
+        const verificadoPayments = await this.getVerificationPayments({
+          orden: order.orden!,
+          estadoVerificacion: 'Verificado',
+          limit: 9999
+        });
         
-        totalPagado += totalCuotasPorVerificar;
-        totalVerificado += totalCuotasVerificadas;
+        // Sum all "Verificado" payments (already filtered for complete payments)
+        totalVerificado = verificadoPayments.data.reduce((sum, payment) => {
+          return sum + (payment.montoUsd || 0);
+        }, 0);
         
         const saldoPendiente = ordenPlusFlete - totalVerificado;
         
@@ -762,7 +762,11 @@ export class DatabaseStorage implements IStorage {
           saldoPendiente,
           seguimientoPago: order.seguimientoPago,
         };
-      }),
+      })
+    );
+
+    return {
+      data: processedOrders,
       total: Number(totalCount),
     };
   }
@@ -2282,10 +2286,12 @@ export class DatabaseStorage implements IStorage {
 
     // Process Pago Inicial payments
     for (const sale of salesData) {
-      // Show payment if agreed payment (pagoInicialUsd) exists
-      // This is the required field to save the modal
-      if (sale.pagoInicialUsd && parseFloat(sale.pagoInicialUsd) > 0) {
-        // NEW CRITERIA: Only show payments with both Banco Receptor AND Referencia filled
+      // COMPLETE PAYMENT CRITERIA: Must have actual USD payment (montoInicialUsd) + Banco + Referencia
+      // Check for actual USD payment amount (not just agreed amount)
+      const hasActualUsdPayment = sale.montoInicialUsd && parseFloat(sale.montoInicialUsd) > 0;
+      
+      if (hasActualUsdPayment) {
+        // Only show payments with both Banco Receptor AND Referencia filled
         if (!sale.bancoReceptorInicial || !sale.referenciaInicial) continue;
         
         // Skip if we've already processed Pago Inicial for this order (prevents duplicates)
@@ -2324,12 +2330,12 @@ export class DatabaseStorage implements IStorage {
       }
 
       // Process Flete payments
-      // Show payment if there's an amount in USD OR Bs
-      const hasFleteAmount = (sale.pagoFleteUsd && parseFloat(sale.pagoFleteUsd) > 0) || 
-                             (sale.montoFleteBs && parseFloat(sale.montoFleteBs) > 0);
+      // COMPLETE PAYMENT CRITERIA: Must have actual USD payment (montoFleteUsd) + Banco + Referencia
+      // Check for actual USD payment amount (not just agreed amount or Bs amount)
+      const hasActualFleteUsd = sale.montoFleteUsd && parseFloat(sale.montoFleteUsd) > 0;
       
-      if (hasFleteAmount) {
-        // NEW CRITERIA: Only show payments with both Banco Receptor AND Referencia filled
+      if (hasActualFleteUsd) {
+        // Only show payments with both Banco Receptor AND Referencia filled
         if (!sale.bancoReceptorFlete || !sale.referenciaFlete) continue;
         
         // Skip if we've already processed Flete for this order (prevents duplicates)
@@ -2394,11 +2400,14 @@ export class DatabaseStorage implements IStorage {
     const cuotasData = await cuotasQuery;
 
     for (const cuota of cuotasData) {
-      // Show payment if agreed payment (pagoCuotaUsd) exists
-      // This is the required field to save the modal
-      if (!(cuota.pagoCuotaUsd && parseFloat(cuota.pagoCuotaUsd) > 0)) continue;
+      // COMPLETE PAYMENT CRITERIA: Must have actual USD payment + Banco + Referencia
+      // Check for actual USD payment amount (montoCuotaUsd or legacy cuotaAmount)
+      const actualUsdAmount = cuota.montoCuotaUsd || cuota.cuotaAmount;
+      const hasActualCuotaUsd = actualUsdAmount && parseFloat(actualUsdAmount) > 0;
       
-      // NEW CRITERIA: Only show payments with both Banco Receptor AND Referencia filled
+      if (!hasActualCuotaUsd) continue;
+      
+      // Only show payments with both Banco Receptor AND Referencia filled
       if (!cuota.bancoReceptorCuota || !cuota.referencia) continue;
       
       // Apply filters
