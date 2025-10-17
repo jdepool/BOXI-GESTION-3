@@ -28,6 +28,7 @@ The application leverages shadcn/ui, Radix UI, Tailwind CSS, and Lucide React fo
 - **Sales Data Upload & Management**: Supports Excel uploads from multiple channels with complete replacement logic for administration items, including automatic backup and undo. Features comprehensive filtering, searching, and tailored export functionalities for different views.
 - **Order & Payment Tracking**: Detailed tracking of sales, nine delivery statuses, and channel-specific metrics. Supports multi-product orders, manual sales, and reservations. The Pagos tab includes asesor filtering, delivery status filtering, and separate metric columns for "Orden" (totalOrderUsd) and "Flete" (pagoFleteUsd), plus "Total Pagado", "Total Verificado", and "Pendiente".
 - **Advanced Payment System**: Manages initial payments, freight, and installments, differentiating between "agreed payment" and "actual payment". Includes a "Verificación" section with status filters. Automatically updates `estadoEntrega` to "A despachar" when balances reach zero.
+- **Centralized Pendiente Calculation**: The Pendiente (balance) calculation is centralized in `getOrdersForPayments()` using the formula: Pendiente = ordenPlusFlete - totalVerificado. This ensures consistency across the Pagos tab and Reporte de Ordenes. Since Pendiente is calculated at the order level, all products within the same order display the same Pendiente value.
 - **Estado Entrega Workflow**: Channel-specific delivery status progression (e.g., Manual/Shopify orders go from "Pendiente" to "A despachar"; Cashea orders use "En Proceso" → "A despachar").
 - **Payment Tracking Notes**: Separate fields for general `Notas` (sales level) and `Seguimiento Pago` (order level, for payment follow-up).
 - **Asesor Management**: Automatic asesor propagation ensures consistency across multi-product orders.
@@ -38,6 +39,7 @@ The application leverages shadcn/ui, Radix UI, Tailwind CSS, and Lucide React fo
 - **Cancelar/Devolver Actions**: Individual sales in "Lista de Ventas" can be marked as "Cancelada" or "A devolver", with "Devoluciones" having a dedicated management page featuring a dropdown menu in the Estado Entrega column for quick status updates and a confirmation dialog when marking as "Devuelto" to ensure the return process was successfully completed.
 - **Transportista Management**: Full CRUD operations for transportation companies in the Administración section.
 - **Automated Cashea Downloads**: Configurable automation system for periodic Cashea order downloads, including enable/disable toggle, frequency options, download history, backend scheduler, and webhook integration for new Cashea orders.
+- **Reporte de Ordenes**: Comprehensive sales report with date filtering, sticky headers, dual-axis scrolling, Excel download with dynamic installment columns, and centralized Pendiente calculation matching the Pagos tab for consistency.
 
 # External Dependencies
 
