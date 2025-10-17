@@ -103,7 +103,29 @@ async function callCasheaApi(startDate: string, endDate: string): Promise<any[]>
   return [data];
 }
 
-function transformCasheaData(rawData: any[]): any[] {
+async function findCasheaBankId(storage: IStorage): Promise<string | null> {
+  try {
+    const allBancos = await storage.getBancos();
+    
+    // Search for any bank containing "Cashea" (case-insensitive)
+    const casheaBank = allBancos.find(banco => 
+      banco.banco.toLowerCase().includes('cashea')
+    );
+    
+    if (casheaBank) {
+      console.log(`✅ Found Cashea bank: "${casheaBank.banco}" (ID: ${casheaBank.id})`);
+      return casheaBank.id;
+    }
+    
+    console.warn('⚠️ No bank containing "Cashea" found in database. bancoReceptorInicial will be null.');
+    return null;
+  } catch (error) {
+    console.error('Error looking up Cashea bank:', error);
+    return null;
+  }
+}
+
+async function transformCasheaData(rawData: any[], storage: IStorage): Promise<any[]> {
   if (!Array.isArray(rawData) || rawData.length === 0) {
     return [];
   }
@@ -113,6 +135,9 @@ function transformCasheaData(rawData: any[]): any[] {
   if (!casheaEntry || !casheaEntry.__retoolWrappedQuery__ || !casheaEntry.queryData) {
     return rawData;
   }
+  
+  // Lookup Cashea bank dynamically
+  const casheaBankId = await findCasheaBankId(storage);
   
   const queryData = casheaEntry.queryData;
   const ordenes = queryData['# Orden'] || [];
@@ -162,7 +187,7 @@ function transformCasheaData(rawData: any[]): any[] {
       orden: ordenes[i] ? String(ordenes[i]) : null,
       pagoInicialUsd: pagosIniciales[i] ? String(pagosIniciales[i]) : null,
       fechaPagoInicial: fecha,
-      bancoReceptorInicial: 'f3de098b-58c0-4be0-a799-299a643a0018', // Cashea (BNC compartido Bs)
+      bancoReceptorInicial: casheaBankId,
       montoInicialBs: montosBs[i] ? String(montosBs[i]) : null,
       montoInicialUsd: pagosIniciales[i] ? String(pagosIniciales[i]) : null,
       referenciaInicial: referencias[i] ? String(referencias[i]) : null,
@@ -267,7 +292,7 @@ export async function performCasheaDownload(
 
   try {
     const casheaData = await callCasheaApi(startDate, endDate);
-    const transformedData = transformCasheaData(casheaData);
+    const transformedData = await transformCasheaData(casheaData, storage);
     
     const validatedSales = [];
     const errors = [];
