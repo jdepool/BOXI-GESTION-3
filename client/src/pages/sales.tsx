@@ -116,6 +116,16 @@ export default function Sales() {
     const normalized = { ...newFilters };
     if (normalized.canal === "all") normalized.canal = "";
     if (normalized.estadoEntrega === "all") normalized.estadoEntrega = "";
+    
+    // DEBUG: Log date changes for Lista de Ventas
+    if (newFilters.startDate !== undefined || newFilters.endDate !== undefined) {
+      console.log('[DEBUG Lista de Ventas] Date filter changed:', {
+        startDate: newFilters.startDate,
+        endDate: newFilters.endDate,
+        normalized
+      });
+    }
+    
     setFilters(prev => ({ ...prev, ...normalized, offset: 0 }));
   };
 
@@ -161,6 +171,15 @@ export default function Sales() {
   };
 
   const handleReservasFilterChange = (newFilters: Partial<typeof reservasFilters>) => {
+    // DEBUG: Log date changes for Reservas (this one works correctly)
+    if (newFilters.startDate !== undefined || newFilters.endDate !== undefined) {
+      console.log('[DEBUG Reservas] Date filter changed:', {
+        startDate: newFilters.startDate,
+        endDate: newFilters.endDate,
+        newFilters
+      });
+    }
+    
     setReservasFilters(prev => ({ ...prev, ...newFilters, offset: 0 }));
   };
 
