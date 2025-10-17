@@ -48,19 +48,21 @@ export function VerificacionPagosCasheaTab() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Get all payments (show all verification statuses and delivery statuses)
-  // No filters - show everything so verified payments remain visible after status change
+  // Get payments for automatic verification (Conciliación tab)
+  // Filter: Por verificar status, Pendiente/En proceso orders, with Bs amounts (for bank statement matching)
   const { data: pendingPaymentsData, isLoading } = useQuery<{ data: any[]; total: number }>({
-    queryKey: ["/api/sales/verification-payments"],
+    queryKey: ["/api/sales/verification-payments", { estadoVerificacion: "Por verificar", estadoEntrega: "Pendiente,En proceso" }],
     queryFn: () => 
-      fetch("/api/sales/verification-payments?limit=9999")
+      fetch("/api/sales/verification-payments?estadoVerificacion=Por%20verificar&estadoEntrega=Pendiente,En%20proceso&limit=9999")
         .then(res => res.json()),
     staleTime: 0, // Always fetch fresh data
     gcTime: 0, // Don't cache data
   });
   
-  // Show ALL payments (no filtering)
-  const pendingPayments = pendingPaymentsData?.data || [];
+  // Filter to only show payments with Bs amounts (can be matched with bank statements)
+  const pendingPayments = (pendingPaymentsData?.data || []).filter(
+    (payment: PendingPayment) => payment.montoBs && payment.montoBs > 0
+  );
 
   // Get bancos for display
   const { data: bancos = [] } = useQuery<Array<{ id: string; banco: string }>>({
@@ -586,19 +588,19 @@ export function VerificacionPagosCasheaTab() {
           </CardContent>
         </Card>
       )}
-      {/* All Payments (Ingresos Table) */}
+      {/* Payments Pending Verification (for bank statement matching) */}
       <Card>
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
             <AlertCircle className="h-4 w-4" />
-            Ingresos - Todos los Pagos
+            Pagos Pendientes por Verificación
           </CardTitle>
         </CardHeader>
         <CardContent>
           {isLoading ? (
             <p className="text-sm text-muted-foreground">Cargando pagos...</p>
           ) : pendingPayments.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No hay pagos registrados.</p>
+            <p className="text-sm text-muted-foreground">No hay pagos pendientes de verificación.</p>
           ) : (
             <Table>
               <TableHeader>
@@ -609,7 +611,6 @@ export function VerificacionPagosCasheaTab() {
                   <TableHead>Referencia</TableHead>
                   <TableHead>Monto Bs</TableHead>
                   <TableHead>Fecha</TableHead>
-                  <TableHead>Estado</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -624,22 +625,6 @@ export function VerificacionPagosCasheaTab() {
                     <TableCell>{formatCurrency(payment.montoBs || 0)}</TableCell>
                     <TableCell className="text-xs text-muted-foreground">
                       {payment.fecha ? new Date(payment.fecha).toLocaleDateString('es-ES') : '-'}
-                    </TableCell>
-                    <TableCell>
-                      <Badge 
-                        variant={
-                          payment.estadoVerificacion === 'Verificado' ? 'default' :
-                          payment.estadoVerificacion === 'Rechazado' ? 'destructive' : 
-                          'secondary'
-                        }
-                        className={
-                          payment.estadoVerificacion === 'Verificado' ? 'bg-green-600 hover:bg-green-700' :
-                          payment.estadoVerificacion === 'Rechazado' ? '' :
-                          'bg-yellow-500 hover:bg-yellow-600'
-                        }
-                      >
-                        {payment.estadoVerificacion}
-                      </Badge>
                     </TableCell>
                   </TableRow>
                 ))}
