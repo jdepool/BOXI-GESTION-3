@@ -4406,14 +4406,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const sale = row.sale;
         const installments = row.installments;
 
-        // Calculate pendiente (Total USD - all payments)
+        // Use centralized Pendiente calculation from Pagos tab (saldoPendiente)
+        // This ensures consistency between Pagos and Reporte de Ordenes
         const totalUsd = parseFloat(sale.totalUsd?.toString() || '0');
         const pagoInicialUsd = parseFloat(sale.pagoInicialUsd?.toString() || '0');
         const pagoFleteUsd = parseFloat(sale.pagoFleteUsd?.toString() || '0');
-        const totalCuotas = installments.reduce((sum, inst) => {
-          return sum + parseFloat(inst.pagoCuotaUsd?.toString() || '0');
-        }, 0);
-        const pendiente = totalUsd - (pagoInicialUsd + pagoFleteUsd + totalCuotas);
 
         return {
           orden: sale.orden,
@@ -4441,7 +4438,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             installmentNumber: inst.installmentNumber,
             pagoCuotaUsd: parseFloat(inst.pagoCuotaUsd?.toString() || '0'),
           })),
-          pendiente: pendiente,
+          pendiente: row.saldoPendiente,
           canal: sale.canal,
           asesor: row.asesorNombre,
           flete: pagoFleteUsd,
@@ -4490,14 +4487,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const sale = row.sale;
         const installments = row.installments;
 
-        // Calculate pendiente
+        // Use centralized Pendiente calculation from Pagos tab (saldoPendiente)
+        // This ensures consistency between Pagos and Reporte de Ordenes
         const totalUsd = parseFloat(sale.totalUsd?.toString() || '0');
         const pagoInicialUsd = parseFloat(sale.pagoInicialUsd?.toString() || '0');
         const pagoFleteUsd = parseFloat(sale.pagoFleteUsd?.toString() || '0');
-        const totalCuotas = installments.reduce((sum, inst) => {
-          return sum + parseFloat(inst.pagoCuotaUsd?.toString() || '0');
-        }, 0);
-        const pendiente = totalUsd - (pagoInicialUsd + pagoFleteUsd + totalCuotas);
 
         const rowData = [
           sale.orden || '',
@@ -4530,7 +4524,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
 
         rowData.push(
-          pendiente,
+          row.saldoPendiente,
           sale.canal || '',
           row.asesorNombre || '',
           pagoFleteUsd || '',
