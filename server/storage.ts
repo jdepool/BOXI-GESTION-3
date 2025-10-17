@@ -264,6 +264,18 @@ export interface IStorage {
     saldoPendiente: number;
   }>;
   isPaymentFullyVerified(saleId: string): Promise<boolean>;
+
+  // Reports
+  getReporteOrdenes(filters?: {
+    startDate?: string;
+    endDate?: string;
+  }): Promise<Array<{
+    sale: Sale;
+    categoria: string | null;
+    bancoNombre: string | null;
+    asesorNombre: string | null;
+    installments: PaymentInstallment[];
+  }>>;
   
   // Sale update methods
   updateSaleFlete(saleId: string, flete: {
@@ -2229,6 +2241,75 @@ export class DatabaseStorage implements IStorage {
     // Consider a payment fully verified if the remaining balance is $5 or less
     // This allows for business flexibility in completing orders
     return summary.saldoPendiente <= 5.00;
+  }
+
+  // Reports
+  async getReporteOrdenes(filters?: {
+    startDate?: string;
+    endDate?: string;
+  }): Promise<Array<{
+    sale: Sale;
+    categoria: string | null;
+    bancoNombre: string | null;
+    asesorNombre: string | null;
+    installments: PaymentInstallment[];
+  }>> {
+    const whereConditions = [];
+
+    // Date filtering
+    if (filters?.startDate) {
+      whereConditions.push(gte(sales.fecha, new Date(filters.startDate)));
+    }
+    if (filters?.endDate) {
+      const endDate = new Date(filters.endDate);
+      endDate.setHours(23, 59, 59, 999);
+      whereConditions.push(lte(sales.fecha, endDate));
+    }
+
+    // Fetch all sales with date filter
+    const salesData = await db
+      .select()
+      .from(sales)
+      .where(whereConditions.length > 0 ? and(...whereConditions) : undefined)
+      .orderBy(desc(sales.fecha));
+
+    // Fetch all necessary lookup data
+    const productosData = await db.select().from(productos);
+    const bancosData = await db.select().from(bancos);
+    const asesoresData = await db.select().from(asesores);
+
+    // Create lookup maps
+    const productoMap = new Map(productosData.map(p => [p.nombre, p.categoria]));
+    const bancoMap = new Map(bancosData.map(b => [b.id, b.banco]));
+    const asesorMap = new Map(asesoresData.map(a => [a.id, a.nombre]));
+
+    // Get all installments for these sales
+    const saleIds = salesData.map(s => s.id);
+    const allInstallments = saleIds.length > 0 
+      ? await db
+          .select()
+          .from(paymentInstallments)
+          .where(sql`${paymentInstallments.saleId} IN ${saleIds}`)
+          .orderBy(paymentInstallments.installmentNumber)
+      : [];
+
+    // Group installments by saleId
+    const installmentsBySaleId = new Map<string, PaymentInstallment[]>();
+    for (const installment of allInstallments) {
+      if (!installmentsBySaleId.has(installment.saleId)) {
+        installmentsBySaleId.set(installment.saleId, []);
+      }
+      installmentsBySaleId.get(installment.saleId)!.push(installment);
+    }
+
+    // Build result array
+    return salesData.map(sale => ({
+      sale,
+      categoria: productoMap.get(sale.product) || null,
+      bancoNombre: sale.bancoReceptorInicial ? bancoMap.get(sale.bancoReceptorInicial) || null : null,
+      asesorNombre: sale.asesorId ? asesorMap.get(sale.asesorId) || null : null,
+      installments: installmentsBySaleId.get(sale.id) || [],
+    }));
   }
 
   /**

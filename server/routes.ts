@@ -4389,6 +4389,179 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ==================== REPORTS ====================
+  
+  // GET /api/reports/ordenes - Get Reporte de Ordenes data
+  app.get("/api/reports/ordenes", async (req, res) => {
+    try {
+      const startDate = req.query.startDate as string | undefined;
+      const endDate = req.query.endDate as string | undefined;
+
+      const reportData = await storage.getReporteOrdenes({ startDate, endDate });
+
+      // Transform data for frontend
+      const transformedData = reportData.map(row => {
+        const sale = row.sale;
+        const installments = row.installments;
+
+        // Calculate pendiente (Total USD - all payments)
+        const totalUsd = parseFloat(sale.totalUsd?.toString() || '0');
+        const pagoInicialUsd = parseFloat(sale.pagoInicialUsd?.toString() || '0');
+        const pagoFleteUsd = parseFloat(sale.pagoFleteUsd?.toString() || '0');
+        const totalCuotas = installments.reduce((sum, inst) => {
+          return sum + parseFloat(inst.pagoCuotaUsd?.toString() || '0');
+        }, 0);
+        const pendiente = totalUsd - (pagoInicialUsd + pagoFleteUsd + totalCuotas);
+
+        return {
+          orden: sale.orden,
+          fecha: sale.fecha,
+          notas: sale.notas,
+          fechaEntrega: sale.fechaEntrega,
+          estadoEntrega: sale.estadoEntrega,
+          nombre: sale.nombre,
+          telefono: sale.telefono,
+          cedula: sale.cedula,
+          email: sale.email,
+          estado: sale.direccionDespachoEstado,
+          ciudad: sale.direccionDespachoCiudad,
+          direccion: sale.direccionDespachoDireccion,
+          urbanizacion: sale.direccionDespachoUrbanizacion,
+          referencia: sale.direccionDespachoReferencia,
+          categoria: row.categoria,
+          producto: sale.product,
+          sku: sale.sku,
+          cantidad: sale.cantidad,
+          banco: row.bancoNombre,
+          pagoInicialUsd: pagoInicialUsd,
+          totalUsd: totalUsd,
+          installments: installments.map(inst => ({
+            installmentNumber: inst.installmentNumber,
+            pagoCuotaUsd: parseFloat(inst.pagoCuotaUsd?.toString() || '0'),
+          })),
+          pendiente: pendiente,
+          canal: sale.canal,
+          asesor: row.asesorNombre,
+          flete: pagoFleteUsd,
+          tipo: sale.tipo,
+        };
+      });
+
+      res.json(transformedData);
+    } catch (error) {
+      console.error("Error fetching reporte de ordenes:", error);
+      res.status(500).json({ error: "Failed to fetch report" });
+    }
+  });
+
+  // GET /api/reports/ordenes/download - Download Reporte de Ordenes as Excel
+  app.get("/api/reports/ordenes/download", async (req, res) => {
+    try {
+      const startDate = req.query.startDate as string | undefined;
+      const endDate = req.query.endDate as string | undefined;
+
+      const reportData = await storage.getReporteOrdenes({ startDate, endDate });
+
+      // Find max number of installments to create dynamic columns
+      const maxInstallments = Math.max(
+        ...reportData.map(row => row.installments.length),
+        0
+      );
+
+      // Build headers array (allowing duplicate "Pago Cuota USD" columns)
+      const headers = [
+        'Orden', 'Fecha', 'Notas', 'Fecha Entrega', 'Estado Entrega', 'Nombre', 
+        'Telefono', 'Cedula', 'Email', 'Estado', 'Ciudad', 'Dirección', 
+        'Urbanización', 'Referencia', 'Categoria', 'Producto', 'SKU', 'Cantidad', 
+        'Banco', 'Pago Inicial/Total USD', 'Total USD'
+      ];
+      
+      // Add duplicate "Pago Cuota USD" headers for each installment
+      for (let i = 0; i < maxInstallments; i++) {
+        headers.push('Pago Cuota USD');
+      }
+      
+      headers.push('Pendiente', 'Canal', 'Asesor', 'Flete', 'Tipo');
+
+      // Build data rows
+      const dataRows = reportData.map(row => {
+        const sale = row.sale;
+        const installments = row.installments;
+
+        // Calculate pendiente
+        const totalUsd = parseFloat(sale.totalUsd?.toString() || '0');
+        const pagoInicialUsd = parseFloat(sale.pagoInicialUsd?.toString() || '0');
+        const pagoFleteUsd = parseFloat(sale.pagoFleteUsd?.toString() || '0');
+        const totalCuotas = installments.reduce((sum, inst) => {
+          return sum + parseFloat(inst.pagoCuotaUsd?.toString() || '0');
+        }, 0);
+        const pendiente = totalUsd - (pagoInicialUsd + pagoFleteUsd + totalCuotas);
+
+        const rowData = [
+          sale.orden || '',
+          sale.fecha ? sale.fecha.toISOString().match(/(\d{4}-\d{2}-\d{2})/)?.[1] || '' : '',
+          sale.notas || '',
+          sale.fechaEntrega ? sale.fechaEntrega.toISOString().match(/(\d{4}-\d{2}-\d{2})/)?.[1] || '' : '',
+          sale.estadoEntrega || '',
+          sale.nombre || '',
+          sale.telefono || '',
+          sale.cedula || '',
+          sale.email || '',
+          sale.direccionDespachoEstado || '',
+          sale.direccionDespachoCiudad || '',
+          sale.direccionDespachoDireccion || '',
+          sale.direccionDespachoUrbanizacion || '',
+          sale.direccionDespachoReferencia || '',
+          row.categoria || '',
+          sale.product || '',
+          sale.sku || '',
+          sale.cantidad || '',
+          row.bancoNombre || '',
+          pagoInicialUsd || '',
+          totalUsd || '',
+        ];
+
+        // Add installment values
+        for (let i = 0; i < maxInstallments; i++) {
+          const installment = installments.find(inst => inst.installmentNumber === i + 1);
+          rowData.push(installment ? parseFloat(installment.pagoCuotaUsd?.toString() || '0') : '');
+        }
+
+        rowData.push(
+          pendiente,
+          sale.canal || '',
+          row.asesorNombre || '',
+          pagoFleteUsd || '',
+          sale.tipo || ''
+        );
+
+        return rowData;
+      });
+
+      // Combine headers and data rows
+      const sheetData = [headers, ...dataRows];
+
+      // Create workbook and worksheet using array-of-arrays to support duplicate headers
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.aoa_to_sheet(sheetData);
+
+      // Add worksheet to workbook
+      XLSX.utils.book_append_sheet(wb, ws, "Reporte de Ordenes");
+
+      // Generate Excel file buffer
+      const excelBuffer = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
+
+      // Set response headers for file download
+      const filename = `Reporte_Ordenes_${new Date().toISOString().split('T')[0]}.xlsx`;
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+      res.send(excelBuffer);
+    } catch (error) {
+      console.error("Error downloading reporte de ordenes:", error);
+      res.status(500).json({ error: "Failed to download report" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
