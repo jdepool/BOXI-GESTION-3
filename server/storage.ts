@@ -2286,11 +2286,11 @@ export class DatabaseStorage implements IStorage {
 
     // Process Pago Inicial payments
     for (const sale of salesData) {
-      // COMPLETE PAYMENT CRITERIA: Must have actual USD payment (montoInicialUsd) + Banco + Referencia
-      // Check for actual USD payment amount (not just agreed amount)
-      const hasActualUsdPayment = sale.montoInicialUsd && parseFloat(sale.montoInicialUsd) > 0;
+      // COMPLETE PAYMENT CRITERIA: Must have agreed amount (pagoInicialUsd) + Banco + Referencia
+      // Note: Customers can pay in Bs or USD, so we check agreed amount, not actual Monto USD
+      const hasAgreedAmount = sale.pagoInicialUsd && parseFloat(sale.pagoInicialUsd) > 0;
       
-      if (hasActualUsdPayment) {
+      if (hasAgreedAmount) {
         // Only show payments with both Banco Receptor AND Referencia filled
         if (!sale.bancoReceptorInicial || !sale.referenciaInicial) continue;
         
@@ -2330,11 +2330,11 @@ export class DatabaseStorage implements IStorage {
       }
 
       // Process Flete payments
-      // COMPLETE PAYMENT CRITERIA: Must have actual USD payment (montoFleteUsd) + Banco + Referencia
-      // Check for actual USD payment amount (not just agreed amount or Bs amount)
-      const hasActualFleteUsd = sale.montoFleteUsd && parseFloat(sale.montoFleteUsd) > 0;
+      // COMPLETE PAYMENT CRITERIA: Must have agreed amount (pagoFleteUsd) + Banco + Referencia
+      // Note: Customers can pay in Bs or USD, so we check agreed amount, not actual Monto USD
+      const hasAgreedFleteAmount = sale.pagoFleteUsd && parseFloat(sale.pagoFleteUsd) > 0;
       
-      if (hasActualFleteUsd) {
+      if (hasAgreedFleteAmount) {
         // Only show payments with both Banco Receptor AND Referencia filled
         if (!sale.bancoReceptorFlete || !sale.referenciaFlete) continue;
         
@@ -2400,12 +2400,11 @@ export class DatabaseStorage implements IStorage {
     const cuotasData = await cuotasQuery;
 
     for (const cuota of cuotasData) {
-      // COMPLETE PAYMENT CRITERIA: Must have actual USD payment + Banco + Referencia
-      // Check for actual USD payment amount (montoCuotaUsd or legacy cuotaAmount)
-      const actualUsdAmount = cuota.montoCuotaUsd || cuota.cuotaAmount;
-      const hasActualCuotaUsd = actualUsdAmount && parseFloat(actualUsdAmount) > 0;
+      // COMPLETE PAYMENT CRITERIA: Must have agreed amount (pagoCuotaUsd) + Banco + Referencia
+      // Note: Customers can pay in Bs or USD, so we check agreed amount, not actual Monto USD
+      const hasAgreedCuotaAmount = cuota.pagoCuotaUsd && parseFloat(cuota.pagoCuotaUsd) > 0;
       
-      if (!hasActualCuotaUsd) continue;
+      if (!hasAgreedCuotaAmount) continue;
       
       // Only show payments with both Banco Receptor AND Referencia filled
       if (!cuota.bancoReceptorCuota || !cuota.referencia) continue;
