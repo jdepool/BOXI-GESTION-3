@@ -25,8 +25,8 @@ export interface IStorage {
     canal?: string;
     estadoEntrega?: string;
     orden?: string;
-    startDate?: Date;
-    endDate?: Date;
+    startDate?: string;
+    endDate?: string;
     tipo?: string;
     asesorId?: string;
     excludePendingManual?: boolean;
@@ -60,8 +60,9 @@ export interface IStorage {
   getTotalSalesCount(filters?: {
     canal?: string;
     estadoEntrega?: string;
-    startDate?: Date;
-    endDate?: Date;
+    orden?: string;
+    startDate?: string;
+    endDate?: string;
     tipo?: string;
     asesorId?: string;
     excludePendingManual?: boolean;
@@ -75,8 +76,8 @@ export interface IStorage {
     canal?: string;
     estadoEntrega?: string;
     orden?: string;
-    startDate?: Date;
-    endDate?: Date;
+    startDate?: string;
+    endDate?: string;
     tipo?: string;
     asesorId?: string;
     excludePendingManual?: boolean;
@@ -366,8 +367,8 @@ export class DatabaseStorage implements IStorage {
     canal?: string;
     estadoEntrega?: string;
     orden?: string;
-    startDate?: Date;
-    endDate?: Date;
+    startDate?: string;
+    endDate?: string;
     tipo?: string;
     asesorId?: string;
     excludePendingManual?: boolean;
@@ -388,12 +389,15 @@ export class DatabaseStorage implements IStorage {
       conditions.push(like(sales.orden, `%${filters.orden}%`));
     }
     if (filters?.startDate) {
-      conditions.push(gte(sales.fecha, filters.startDate));
+      // Parse yyyy-MM-dd as local date to avoid timezone shifts
+      const [year, month, day] = filters.startDate.split('-').map(Number);
+      const startDateTime = new Date(year, month - 1, day, 0, 0, 0, 0);
+      conditions.push(gte(sales.fecha, startDateTime));
     }
     if (filters?.endDate) {
-      // Add 23:59:59.999 to include the entire end date
-      const endDateTime = new Date(filters.endDate);
-      endDateTime.setHours(23, 59, 59, 999);
+      // Parse yyyy-MM-dd as local date and set to end of day
+      const [year, month, day] = filters.endDate.split('-').map(Number);
+      const endDateTime = new Date(year, month - 1, day, 23, 59, 59, 999);
       conditions.push(lte(sales.fecha, endDateTime));
     }
     if (filters?.tipo) {
@@ -492,13 +496,14 @@ export class DatabaseStorage implements IStorage {
     canal?: string;
     estadoEntrega?: string;
     orden?: string;
-    startDate?: Date;
-    endDate?: Date;
+    startDate?: string;
+    endDate?: string;
     tipo?: string;
     asesorId?: string;
     excludePendingManual?: boolean;
     excludeReservas?: boolean;
     excludeADespachar?: boolean;
+    excludePerdida?: boolean;
     limit?: number;
     offset?: number;
   }): Promise<Array<Sale & { installments: PaymentInstallment[] }>> {
@@ -1153,8 +1158,8 @@ export class DatabaseStorage implements IStorage {
     canal?: string;
     estadoEntrega?: string;
     orden?: string;
-    startDate?: Date;
-    endDate?: Date;
+    startDate?: string;
+    endDate?: string;
     tipo?: string;
     asesorId?: string;
     excludePendingManual?: boolean;
@@ -1173,12 +1178,15 @@ export class DatabaseStorage implements IStorage {
       conditions.push(like(sales.orden, `%${filters.orden}%`));
     }
     if (filters?.startDate) {
-      conditions.push(gte(sales.fecha, filters.startDate));
+      // Parse yyyy-MM-dd as local date to avoid timezone shifts
+      const [year, month, day] = filters.startDate.split('-').map(Number);
+      const startDateTime = new Date(year, month - 1, day, 0, 0, 0, 0);
+      conditions.push(gte(sales.fecha, startDateTime));
     }
     if (filters?.endDate) {
-      // Add 23:59:59.999 to include the entire end date
-      const endDateTime = new Date(filters.endDate);
-      endDateTime.setHours(23, 59, 59, 999);
+      // Parse yyyy-MM-dd as local date and set to end of day
+      const [year, month, day] = filters.endDate.split('-').map(Number);
+      const endDateTime = new Date(year, month - 1, day, 23, 59, 59, 999);
       conditions.push(lte(sales.fecha, endDateTime));
     }
     if (filters?.tipo) {

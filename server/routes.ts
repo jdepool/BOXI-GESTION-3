@@ -810,14 +810,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         canal: query.canal,
         estadoEntrega: query.estadoEntrega,
         orden: query.orden,
-        startDate: query.startDate ? (() => {
-          const [year, month, day] = query.startDate.split('-');
-          return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
-        })() : undefined,
-        endDate: query.endDate ? (() => {
-          const [year, month, day] = query.endDate.split('-');
-          return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
-        })() : undefined,
+        startDate: query.startDate,
+        endDate: query.endDate,
         tipo: query.tipo,
         asesorId: normalizedAsesorId,
         excludePendingManual: query.excludePendingManual,
@@ -914,14 +908,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         canal: query.canal,
         estadoEntrega: query.estadoEntrega,
         orden: query.orden,
-        startDate: query.startDate ? (() => {
-          const [year, month, day] = query.startDate.split('-');
-          return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
-        })() : undefined,
-        endDate: query.endDate ? (() => {
-          const [year, month, day] = query.endDate.split('-');
-          return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
-        })() : undefined,
+        startDate: query.startDate,
+        endDate: query.endDate,
         tipo: query.tipo,
         asesorId: normalizedAsesorId,
         excludePendingManual: query.excludePendingManual,
