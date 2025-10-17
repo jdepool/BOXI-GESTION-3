@@ -140,37 +140,37 @@ export default function Reportes() {
                 ) : (
                   <div className="max-h-[600px] overflow-auto border rounded-md">
                     <Table>
-                      <TableHeader className="sticky top-0 bg-background z-10">
+                      <TableHeader>
                         <TableRow>
-                          <TableHead className="bg-muted">Orden</TableHead>
-                          <TableHead className="bg-muted">Fecha</TableHead>
-                          <TableHead className="bg-muted">Notas</TableHead>
-                          <TableHead className="bg-muted">Fecha Entrega</TableHead>
-                          <TableHead className="bg-muted">Estado Entrega</TableHead>
-                          <TableHead className="bg-muted">Nombre</TableHead>
-                          <TableHead className="bg-muted">Telefono</TableHead>
-                          <TableHead className="bg-muted">Cedula</TableHead>
-                          <TableHead className="bg-muted">Email</TableHead>
-                          <TableHead className="bg-muted">Estado</TableHead>
-                          <TableHead className="bg-muted">Ciudad</TableHead>
-                          <TableHead className="bg-muted">Dirección</TableHead>
-                          <TableHead className="bg-muted">Urbanización</TableHead>
-                          <TableHead className="bg-muted">Referencia</TableHead>
-                          <TableHead className="bg-muted">Categoria</TableHead>
-                          <TableHead className="bg-muted">Producto</TableHead>
-                          <TableHead className="bg-muted">SKU</TableHead>
-                          <TableHead className="bg-muted">Cantidad</TableHead>
-                          <TableHead className="bg-muted">Banco</TableHead>
-                          <TableHead className="bg-muted">Pago Inicial USD</TableHead>
-                          <TableHead className="bg-muted">Total USD</TableHead>
+                          <TableHead className="sticky top-0 bg-muted z-10">Orden</TableHead>
+                          <TableHead className="sticky top-0 bg-muted z-10">Fecha</TableHead>
+                          <TableHead className="sticky top-0 bg-muted z-10">Notas</TableHead>
+                          <TableHead className="sticky top-0 bg-muted z-10">Fecha Entrega</TableHead>
+                          <TableHead className="sticky top-0 bg-muted z-10">Estado Entrega</TableHead>
+                          <TableHead className="sticky top-0 bg-muted z-10">Nombre</TableHead>
+                          <TableHead className="sticky top-0 bg-muted z-10">Telefono</TableHead>
+                          <TableHead className="sticky top-0 bg-muted z-10">Cedula</TableHead>
+                          <TableHead className="sticky top-0 bg-muted z-10">Email</TableHead>
+                          <TableHead className="sticky top-0 bg-muted z-10">Estado</TableHead>
+                          <TableHead className="sticky top-0 bg-muted z-10">Ciudad</TableHead>
+                          <TableHead className="sticky top-0 bg-muted z-10">Dirección</TableHead>
+                          <TableHead className="sticky top-0 bg-muted z-10">Urbanización</TableHead>
+                          <TableHead className="sticky top-0 bg-muted z-10">Referencia</TableHead>
+                          <TableHead className="sticky top-0 bg-muted z-10">Categoria</TableHead>
+                          <TableHead className="sticky top-0 bg-muted z-10">Producto</TableHead>
+                          <TableHead className="sticky top-0 bg-muted z-10">SKU</TableHead>
+                          <TableHead className="sticky top-0 bg-muted z-10">Cantidad</TableHead>
+                          <TableHead className="sticky top-0 bg-muted z-10">Banco</TableHead>
+                          <TableHead className="sticky top-0 bg-muted z-10">Pago Inicial USD</TableHead>
+                          <TableHead className="sticky top-0 bg-muted z-10">Total USD</TableHead>
                           {Array.from({ length: maxInstallments }).map((_, i) => (
-                            <TableHead key={i} className="bg-muted">Pago Cuota USD</TableHead>
+                            <TableHead key={i} className="sticky top-0 bg-muted z-10">Pago Cuota USD</TableHead>
                           ))}
-                          <TableHead className="bg-muted">Pendiente</TableHead>
-                          <TableHead className="bg-muted">Canal</TableHead>
-                          <TableHead className="bg-muted">Asesor</TableHead>
-                          <TableHead className="bg-muted">Flete</TableHead>
-                          <TableHead className="bg-muted">Tipo</TableHead>
+                          <TableHead className="sticky top-0 bg-muted z-10">Pendiente</TableHead>
+                          <TableHead className="sticky top-0 bg-muted z-10">Canal</TableHead>
+                          <TableHead className="sticky top-0 bg-muted z-10">Asesor</TableHead>
+                          <TableHead className="sticky top-0 bg-muted z-10">Flete</TableHead>
+                          <TableHead className="sticky top-0 bg-muted z-10">Tipo</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
