@@ -138,39 +138,39 @@ export default function Reportes() {
                     <p>No hay datos disponibles para el rango de fechas seleccionado</p>
                   </div>
                 ) : (
-                  <div className="overflow-x-auto">
+                  <div className="max-h-[600px] overflow-auto border rounded-md">
                     <Table>
-                      <TableHeader>
+                      <TableHeader className="sticky top-0 bg-background z-10">
                         <TableRow>
-                          <TableHead>Orden</TableHead>
-                          <TableHead>Fecha</TableHead>
-                          <TableHead>Notas</TableHead>
-                          <TableHead>Fecha Entrega</TableHead>
-                          <TableHead>Estado Entrega</TableHead>
-                          <TableHead>Nombre</TableHead>
-                          <TableHead>Telefono</TableHead>
-                          <TableHead>Cedula</TableHead>
-                          <TableHead>Email</TableHead>
-                          <TableHead>Estado</TableHead>
-                          <TableHead>Ciudad</TableHead>
-                          <TableHead>Dirección</TableHead>
-                          <TableHead>Urbanización</TableHead>
-                          <TableHead>Referencia</TableHead>
-                          <TableHead>Categoria</TableHead>
-                          <TableHead>Producto</TableHead>
-                          <TableHead>SKU</TableHead>
-                          <TableHead>Cantidad</TableHead>
-                          <TableHead>Banco</TableHead>
-                          <TableHead>Pago Inicial USD</TableHead>
-                          <TableHead>Total USD</TableHead>
+                          <TableHead className="bg-muted">Orden</TableHead>
+                          <TableHead className="bg-muted">Fecha</TableHead>
+                          <TableHead className="bg-muted">Notas</TableHead>
+                          <TableHead className="bg-muted">Fecha Entrega</TableHead>
+                          <TableHead className="bg-muted">Estado Entrega</TableHead>
+                          <TableHead className="bg-muted">Nombre</TableHead>
+                          <TableHead className="bg-muted">Telefono</TableHead>
+                          <TableHead className="bg-muted">Cedula</TableHead>
+                          <TableHead className="bg-muted">Email</TableHead>
+                          <TableHead className="bg-muted">Estado</TableHead>
+                          <TableHead className="bg-muted">Ciudad</TableHead>
+                          <TableHead className="bg-muted">Dirección</TableHead>
+                          <TableHead className="bg-muted">Urbanización</TableHead>
+                          <TableHead className="bg-muted">Referencia</TableHead>
+                          <TableHead className="bg-muted">Categoria</TableHead>
+                          <TableHead className="bg-muted">Producto</TableHead>
+                          <TableHead className="bg-muted">SKU</TableHead>
+                          <TableHead className="bg-muted">Cantidad</TableHead>
+                          <TableHead className="bg-muted">Banco</TableHead>
+                          <TableHead className="bg-muted">Pago Inicial USD</TableHead>
+                          <TableHead className="bg-muted">Total USD</TableHead>
                           {Array.from({ length: maxInstallments }).map((_, i) => (
-                            <TableHead key={i}>Pago Cuota USD</TableHead>
+                            <TableHead key={i} className="bg-muted">Pago Cuota USD</TableHead>
                           ))}
-                          <TableHead>Pendiente</TableHead>
-                          <TableHead>Canal</TableHead>
-                          <TableHead>Asesor</TableHead>
-                          <TableHead>Flete</TableHead>
-                          <TableHead>Tipo</TableHead>
+                          <TableHead className="bg-muted">Pendiente</TableHead>
+                          <TableHead className="bg-muted">Canal</TableHead>
+                          <TableHead className="bg-muted">Asesor</TableHead>
+                          <TableHead className="bg-muted">Flete</TableHead>
+                          <TableHead className="bg-muted">Tipo</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
