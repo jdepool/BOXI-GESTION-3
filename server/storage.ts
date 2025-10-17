@@ -275,6 +275,7 @@ export interface IStorage {
     bancoNombre: string | null;
     asesorNombre: string | null;
     installments: PaymentInstallment[];
+    saldoPendiente: number;
   }>>;
   
   // Sale update methods
@@ -2253,6 +2254,7 @@ export class DatabaseStorage implements IStorage {
     bancoNombre: string | null;
     asesorNombre: string | null;
     installments: PaymentInstallment[];
+    saldoPendiente: number;
   }>> {
     const whereConditions = [];
 
@@ -2302,6 +2304,29 @@ export class DatabaseStorage implements IStorage {
       installmentsBySaleId.get(installment.saleId)!.push(installment);
     }
 
+    // Get unique order numbers from the sales data
+    const uniqueOrders = [...new Set(salesData.map(s => s.orden).filter(o => o !== null))] as string[];
+
+    // Fetch saldoPendiente from Pagos calculation for all orders
+    // This ensures consistency with the Pagos tab
+    const saldoPendienteMap = new Map<string, number>();
+    
+    if (uniqueOrders.length > 0) {
+      // Get payment summary for all orders (no filters other than orders themselves)
+      const ordersData = await this.getOrdersForPayments({
+        limit: 999999,
+        offset: 0,
+        excludePerdida: false, // Include all orders regardless of status for report
+      });
+
+      // Build map of orden -> saldoPendiente
+      for (const order of ordersData.data) {
+        if (uniqueOrders.includes(order.orden)) {
+          saldoPendienteMap.set(order.orden, order.saldoPendiente);
+        }
+      }
+    }
+
     // Build result array
     return salesData.map(sale => ({
       sale,
@@ -2309,6 +2334,7 @@ export class DatabaseStorage implements IStorage {
       bancoNombre: sale.bancoReceptorInicial ? bancoMap.get(sale.bancoReceptorInicial) || null : null,
       asesorNombre: sale.asesorId ? asesorMap.get(sale.asesorId) || null : null,
       installments: installmentsBySaleId.get(sale.id) || [],
+      saldoPendiente: sale.orden ? (saldoPendienteMap.get(sale.orden) ?? 0) : 0,
     }));
   }
 
