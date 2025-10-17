@@ -2317,7 +2317,7 @@ export class DatabaseStorage implements IStorage {
           orden: sale.orden,
           tipoPago: 'Inicial/Total',
           montoBs: sale.montoInicialBs ? parseFloat(sale.montoInicialBs) : null,
-          montoUsd: sale.montoInicialUsd ? parseFloat(sale.montoInicialUsd) : null,
+          montoUsd: sale.pagoInicialUsd ? parseFloat(sale.pagoInicialUsd) : null, // Use agreed amount (Pago USD) for calculations
           referencia: sale.referenciaInicial,
           bancoId: sale.bancoReceptorInicial,
           estadoVerificacion: sale.estadoVerificacionInicial || 'Por verificar',
@@ -2361,7 +2361,7 @@ export class DatabaseStorage implements IStorage {
           orden: sale.orden,
           tipoPago: 'Flete',
           montoBs: sale.montoFleteBs ? parseFloat(sale.montoFleteBs) : null,
-          montoUsd: sale.montoFleteUsd ? parseFloat(sale.montoFleteUsd) : null,
+          montoUsd: sale.pagoFleteUsd ? parseFloat(sale.pagoFleteUsd) : null, // Use agreed amount (Pago USD) for calculations
           referencia: sale.referenciaFlete,
           bancoId: sale.bancoReceptorFlete,
           estadoVerificacion: sale.estadoVerificacionFlete || 'Por verificar',
@@ -2424,9 +2424,8 @@ export class DatabaseStorage implements IStorage {
         paymentType: 'Cuota',
         orden: cuota.orden,
         tipoPago: `Cuota ${cuota.installmentNumber}`,
-        // Use new fields (montoCuotaBs, montoCuotaUsd) with fallback to legacy fields (cuotaAmountBs, cuotaAmount)
         montoBs: cuota.montoCuotaBs ? parseFloat(cuota.montoCuotaBs) : (cuota.cuotaAmountBs ? parseFloat(cuota.cuotaAmountBs) : null),
-        montoUsd: cuota.montoCuotaUsd ? parseFloat(cuota.montoCuotaUsd) : (cuota.cuotaAmount ? parseFloat(cuota.cuotaAmount) : null),
+        montoUsd: cuota.pagoCuotaUsd ? parseFloat(cuota.pagoCuotaUsd) : null, // Use agreed amount (Pago USD) for calculations
         referencia: cuota.referencia,
         bancoId: cuota.bancoReceptorCuota,
         estadoVerificacion: cuota.estadoVerificacion || 'Por verificar',
