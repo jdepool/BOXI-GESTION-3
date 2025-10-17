@@ -2,7 +2,6 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DateRangePicker } from "@/components/shared/date-range-picker";
 import Sidebar from "@/components/layout/sidebar";
 import Header from "@/components/layout/header";
@@ -138,82 +137,84 @@ export default function Reportes() {
                     <p>No hay datos disponibles para el rango de fechas seleccionado</p>
                   </div>
                 ) : (
-                  <div className="max-h-[600px] overflow-auto border rounded-md">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead className="sticky top-0 bg-muted z-10">Orden</TableHead>
-                          <TableHead className="sticky top-0 bg-muted z-10">Fecha</TableHead>
-                          <TableHead className="sticky top-0 bg-muted z-10">Notas</TableHead>
-                          <TableHead className="sticky top-0 bg-muted z-10">Fecha Entrega</TableHead>
-                          <TableHead className="sticky top-0 bg-muted z-10">Estado Entrega</TableHead>
-                          <TableHead className="sticky top-0 bg-muted z-10">Nombre</TableHead>
-                          <TableHead className="sticky top-0 bg-muted z-10">Telefono</TableHead>
-                          <TableHead className="sticky top-0 bg-muted z-10">Cedula</TableHead>
-                          <TableHead className="sticky top-0 bg-muted z-10">Email</TableHead>
-                          <TableHead className="sticky top-0 bg-muted z-10">Estado</TableHead>
-                          <TableHead className="sticky top-0 bg-muted z-10">Ciudad</TableHead>
-                          <TableHead className="sticky top-0 bg-muted z-10">Dirección</TableHead>
-                          <TableHead className="sticky top-0 bg-muted z-10">Urbanización</TableHead>
-                          <TableHead className="sticky top-0 bg-muted z-10">Referencia</TableHead>
-                          <TableHead className="sticky top-0 bg-muted z-10">Categoria</TableHead>
-                          <TableHead className="sticky top-0 bg-muted z-10">Producto</TableHead>
-                          <TableHead className="sticky top-0 bg-muted z-10">SKU</TableHead>
-                          <TableHead className="sticky top-0 bg-muted z-10">Cantidad</TableHead>
-                          <TableHead className="sticky top-0 bg-muted z-10">Banco</TableHead>
-                          <TableHead className="sticky top-0 bg-muted z-10">Pago Inicial USD</TableHead>
-                          <TableHead className="sticky top-0 bg-muted z-10">Total USD</TableHead>
-                          {Array.from({ length: maxInstallments }).map((_, i) => (
-                            <TableHead key={i} className="sticky top-0 bg-muted z-10">Pago Cuota USD</TableHead>
+                  <div className="relative border rounded-md">
+                    <div className="max-h-[600px] overflow-auto">
+                      <table className="w-full text-sm">
+                        <thead className="text-left">
+                          <tr>
+                            <th className="sticky top-0 bg-muted p-4 font-medium border-b z-10">Orden</th>
+                            <th className="sticky top-0 bg-muted p-4 font-medium border-b z-10">Fecha</th>
+                            <th className="sticky top-0 bg-muted p-4 font-medium border-b z-10">Notas</th>
+                            <th className="sticky top-0 bg-muted p-4 font-medium border-b z-10">Fecha Entrega</th>
+                            <th className="sticky top-0 bg-muted p-4 font-medium border-b z-10">Estado Entrega</th>
+                            <th className="sticky top-0 bg-muted p-4 font-medium border-b z-10">Nombre</th>
+                            <th className="sticky top-0 bg-muted p-4 font-medium border-b z-10">Telefono</th>
+                            <th className="sticky top-0 bg-muted p-4 font-medium border-b z-10">Cedula</th>
+                            <th className="sticky top-0 bg-muted p-4 font-medium border-b z-10">Email</th>
+                            <th className="sticky top-0 bg-muted p-4 font-medium border-b z-10">Estado</th>
+                            <th className="sticky top-0 bg-muted p-4 font-medium border-b z-10">Ciudad</th>
+                            <th className="sticky top-0 bg-muted p-4 font-medium border-b z-10">Dirección</th>
+                            <th className="sticky top-0 bg-muted p-4 font-medium border-b z-10">Urbanización</th>
+                            <th className="sticky top-0 bg-muted p-4 font-medium border-b z-10">Referencia</th>
+                            <th className="sticky top-0 bg-muted p-4 font-medium border-b z-10">Categoria</th>
+                            <th className="sticky top-0 bg-muted p-4 font-medium border-b z-10">Producto</th>
+                            <th className="sticky top-0 bg-muted p-4 font-medium border-b z-10">SKU</th>
+                            <th className="sticky top-0 bg-muted p-4 font-medium border-b z-10">Cantidad</th>
+                            <th className="sticky top-0 bg-muted p-4 font-medium border-b z-10">Banco</th>
+                            <th className="sticky top-0 bg-muted p-4 font-medium border-b z-10">Pago Inicial USD</th>
+                            <th className="sticky top-0 bg-muted p-4 font-medium border-b z-10">Total USD</th>
+                            {Array.from({ length: maxInstallments }).map((_, i) => (
+                              <th key={i} className="sticky top-0 bg-muted p-4 font-medium border-b z-10">Pago Cuota USD</th>
+                            ))}
+                            <th className="sticky top-0 bg-muted p-4 font-medium border-b z-10">Pendiente</th>
+                            <th className="sticky top-0 bg-muted p-4 font-medium border-b z-10">Canal</th>
+                            <th className="sticky top-0 bg-muted p-4 font-medium border-b z-10">Asesor</th>
+                            <th className="sticky top-0 bg-muted p-4 font-medium border-b z-10">Flete</th>
+                            <th className="sticky top-0 bg-muted p-4 font-medium border-b z-10">Tipo</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {reportData.map((row, index) => (
+                            <tr key={index} className="border-b hover:bg-muted/50" data-testid={`row-report-${index}`}>
+                              <td className="p-4">{row.orden}</td>
+                              <td className="p-4">{formatDate(row.fecha)}</td>
+                              <td className="p-4">{row.notas || '-'}</td>
+                              <td className="p-4">{formatDate(row.fechaEntrega)}</td>
+                              <td className="p-4">{row.estadoEntrega}</td>
+                              <td className="p-4">{row.nombre}</td>
+                              <td className="p-4">{row.telefono || '-'}</td>
+                              <td className="p-4">{row.cedula || '-'}</td>
+                              <td className="p-4">{row.email || '-'}</td>
+                              <td className="p-4">{row.estado || '-'}</td>
+                              <td className="p-4">{row.ciudad || '-'}</td>
+                              <td className="p-4">{row.direccion || '-'}</td>
+                              <td className="p-4">{row.urbanizacion || '-'}</td>
+                              <td className="p-4">{row.referencia || '-'}</td>
+                              <td className="p-4">{row.categoria || '-'}</td>
+                              <td className="p-4">{row.producto}</td>
+                              <td className="p-4">{row.sku || '-'}</td>
+                              <td className="p-4">{row.cantidad}</td>
+                              <td className="p-4">{row.banco || '-'}</td>
+                              <td className="p-4">{row.pagoInicialUsd.toFixed(2)}</td>
+                              <td className="p-4">{row.totalUsd.toFixed(2)}</td>
+                              {Array.from({ length: maxInstallments }).map((_, i) => {
+                                const installment = row.installments.find(inst => inst.installmentNumber === i + 1);
+                                return (
+                                  <td key={i} className="p-4">
+                                    {installment ? installment.pagoCuotaUsd.toFixed(2) : '-'}
+                                  </td>
+                                );
+                              })}
+                              <td className="p-4">{row.pendiente.toFixed(2)}</td>
+                              <td className="p-4">{row.canal}</td>
+                              <td className="p-4">{row.asesor || '-'}</td>
+                              <td className="p-4">{row.flete.toFixed(2)}</td>
+                              <td className="p-4">{row.tipo || '-'}</td>
+                            </tr>
                           ))}
-                          <TableHead className="sticky top-0 bg-muted z-10">Pendiente</TableHead>
-                          <TableHead className="sticky top-0 bg-muted z-10">Canal</TableHead>
-                          <TableHead className="sticky top-0 bg-muted z-10">Asesor</TableHead>
-                          <TableHead className="sticky top-0 bg-muted z-10">Flete</TableHead>
-                          <TableHead className="sticky top-0 bg-muted z-10">Tipo</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {reportData.map((row, index) => (
-                          <TableRow key={index} data-testid={`row-report-${index}`}>
-                            <TableCell>{row.orden}</TableCell>
-                            <TableCell>{formatDate(row.fecha)}</TableCell>
-                            <TableCell>{row.notas || '-'}</TableCell>
-                            <TableCell>{formatDate(row.fechaEntrega)}</TableCell>
-                            <TableCell>{row.estadoEntrega}</TableCell>
-                            <TableCell>{row.nombre}</TableCell>
-                            <TableCell>{row.telefono || '-'}</TableCell>
-                            <TableCell>{row.cedula || '-'}</TableCell>
-                            <TableCell>{row.email || '-'}</TableCell>
-                            <TableCell>{row.estado || '-'}</TableCell>
-                            <TableCell>{row.ciudad || '-'}</TableCell>
-                            <TableCell>{row.direccion || '-'}</TableCell>
-                            <TableCell>{row.urbanizacion || '-'}</TableCell>
-                            <TableCell>{row.referencia || '-'}</TableCell>
-                            <TableCell>{row.categoria || '-'}</TableCell>
-                            <TableCell>{row.producto}</TableCell>
-                            <TableCell>{row.sku || '-'}</TableCell>
-                            <TableCell>{row.cantidad}</TableCell>
-                            <TableCell>{row.banco || '-'}</TableCell>
-                            <TableCell>{row.pagoInicialUsd.toFixed(2)}</TableCell>
-                            <TableCell>{row.totalUsd.toFixed(2)}</TableCell>
-                            {Array.from({ length: maxInstallments }).map((_, i) => {
-                              const installment = row.installments.find(inst => inst.installmentNumber === i + 1);
-                              return (
-                                <TableCell key={i}>
-                                  {installment ? installment.pagoCuotaUsd.toFixed(2) : '-'}
-                                </TableCell>
-                              );
-                            })}
-                            <TableCell>{row.pendiente.toFixed(2)}</TableCell>
-                            <TableCell>{row.canal}</TableCell>
-                            <TableCell>{row.asesor || '-'}</TableCell>
-                            <TableCell>{row.flete.toFixed(2)}</TableCell>
-                            <TableCell>{row.tipo || '-'}</TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
                 )}
               </CardContent>
