@@ -2223,6 +2223,14 @@ export class DatabaseStorage implements IStorage {
     return summary.saldoPendiente <= 5.00;
   }
 
+  /**
+   * Get verification payments for Ingresos table
+   * 
+   * CRITICAL BUSINESS RULE - Payment Amount Calculations:
+   * - Returns PAGO USD fields (agreed amounts) for metric calculations: pagoInicialUsd, pagoFleteUsd, pagoCuotaUsd
+   * - MONTO USD/BS fields are ONLY for verification purposes with bank statements, NOT for calculations
+   * - A payment is counted only if it has: Pago USD + Banco Receptor + Referencia
+   */
   async getVerificationPayments(filters?: {
     startDate?: string;
     endDate?: string;
