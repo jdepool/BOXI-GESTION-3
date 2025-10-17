@@ -4399,6 +4399,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const reportData = await storage.getReporteOrdenes({ startDate, endDate });
 
+      console.log(`📊 Report data count: ${reportData.length}`);
+
       // Transform data for frontend
       const transformedData = reportData.map(row => {
         const sale = row.sale;
@@ -4415,9 +4417,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         return {
           orden: sale.orden,
-          fecha: sale.fecha,
+          fecha: sale.fecha?.toISOString() || '',
           notas: sale.notas,
-          fechaEntrega: sale.fechaEntrega,
+          fechaEntrega: sale.fechaEntrega?.toISOString() || null,
           estadoEntrega: sale.estadoEntrega,
           nombre: sale.nombre,
           telefono: sale.telefono,

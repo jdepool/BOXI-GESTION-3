@@ -44,7 +44,17 @@ export default function Reportes() {
 
   // Fetch report data
   const { data: reportData, isLoading } = useQuery<ReporteOrdenesRow[]>({
-    queryKey: ["/api/reports/ordenes", { startDate, endDate }],
+    queryKey: ["/api/reports/ordenes", startDate, endDate],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (startDate) params.append('startDate', startDate);
+      if (endDate) params.append('endDate', endDate);
+      
+      const url = `/api/reports/ordenes?${params.toString()}`;
+      const response = await fetch(url);
+      if (!response.ok) throw new Error('Failed to fetch report');
+      return response.json();
+    },
   });
 
   // Find max number of installments for table headers
