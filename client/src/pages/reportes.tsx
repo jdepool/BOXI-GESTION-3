@@ -138,8 +138,8 @@ export default function Reportes() {
                   </div>
                 ) : (
                   <div className="relative border rounded-md">
-                    <div className="max-h-[600px] overflow-auto">
-                      <table className="w-full text-sm">
+                    <div className="max-h-[600px] overflow-x-auto overflow-y-auto">
+                      <table className="w-full text-sm whitespace-nowrap">
                         <thead className="text-left">
                           <tr>
                             <th className="sticky top-0 bg-muted p-4 font-medium border-b z-10">Orden</th>
