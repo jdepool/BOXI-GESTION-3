@@ -87,10 +87,10 @@ export default function SimpleSalesList({
 
   const getChannelColor = (channel: string) => {
     switch (channel) {
-      case "cashea": return "bg-purple-100 text-purple-800";
-      case "shopify": return "bg-green-100 text-green-800";
-      case "treble": return "bg-blue-100 text-blue-800";
-      case "tienda": return "bg-yellow-100 text-yellow-800";
+      case "cashea": return "channel-badge-cashea";
+      case "shopify": return "channel-badge-shopify";
+      case "treble": return "channel-badge-treble";
+      case "tienda": return "channel-badge-tienda";
       case "manual": return "bg-orange-100 text-orange-800";
       default: return "bg-gray-100 text-gray-800";
     }
@@ -217,7 +217,7 @@ export default function SimpleSalesList({
                     </p>
                   </div>
                   <div className="flex gap-1">
-                    <Badge className={getChannelColor(sale.canal)} variant="secondary">
+                    <Badge className={`${getChannelColor(sale.canal)} text-xs`}>
                       {sale.canal}
                     </Badge>
                   </div>

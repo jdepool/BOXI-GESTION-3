@@ -16,6 +16,7 @@ export default function SaleDetailModal({ sale, onClose }: SaleDetailModalProps)
       case 'cashea': return 'channel-badge-cashea';
       case 'shopify': return 'channel-badge-shopify';
       case 'treble': return 'channel-badge-treble';
+      case 'tienda': return 'channel-badge-tienda';
       default: return 'bg-gray-500';
     }
   };
