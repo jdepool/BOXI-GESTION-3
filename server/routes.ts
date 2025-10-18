@@ -3874,7 +3874,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Order information - totalUsd will be set per product, totalOrderUsd is the overall order total
         totalOrderUsd: body.totalUsd ? body.totalUsd.toString() : null, // Store the total order amount from main form
         fecha: body.fecha ? new Date(body.fecha) : new Date(),
-        canal: "manual",
+        canal: body.canal || "manual",
         estadoEntrega: body.estadoEntrega || "Pendiente", // Manual sales start as Pendiente
         orden: newOrderNumber,
         
