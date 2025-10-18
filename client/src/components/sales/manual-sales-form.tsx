@@ -39,18 +39,18 @@ const manualSaleSchema = z.object({
   montoBs: z.string().optional(),
   referencia: z.string().optional(),
   direccionDespachoIgualFacturacion: z.boolean().default(true),
-  direccionFacturacionPais: z.string().min(1, "País es requerido"),
-  direccionFacturacionEstado: z.string().min(1, "Estado es requerido"),
-  direccionFacturacionCiudad: z.string().min(1, "Ciudad es requerida"),
-  direccionFacturacionDireccion: z.string().min(1, "Dirección es requerida"),
-  direccionFacturacionUrbanizacion: z.string().optional(),
-  direccionFacturacionReferencia: z.string().optional(),
-  direccionDespachoPais: z.string().optional(),
-  direccionDespachoEstado: z.string().optional(),
-  direccionDespachoCiudad: z.string().optional(),
-  direccionDespachoDireccion: z.string().optional(),
+  direccionDespachoPais: z.string().min(1, "País de despacho es requerido"),
+  direccionDespachoEstado: z.string().min(1, "Estado de despacho es requerido"),
+  direccionDespachoCiudad: z.string().min(1, "Ciudad de despacho es requerida"),
+  direccionDespachoDireccion: z.string().min(1, "Dirección de despacho es requerida"),
   direccionDespachoUrbanizacion: z.string().optional(),
   direccionDespachoReferencia: z.string().optional(),
+  direccionFacturacionPais: z.string().optional(),
+  direccionFacturacionEstado: z.string().optional(),
+  direccionFacturacionCiudad: z.string().optional(),
+  direccionFacturacionDireccion: z.string().optional(),
+  direccionFacturacionUrbanizacion: z.string().optional(),
+  direccionFacturacionReferencia: z.string().optional(),
   canal: z.string().min(1, "Canal es requerido"),
   asesorId: z.string().optional(),
 });
@@ -90,7 +90,7 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
       direccionFacturacionUrbanizacion: "",
       direccionFacturacionReferencia: "",
       direccionDespachoIgualFacturacion: true,
-      direccionDespachoPais: "",
+      direccionDespachoPais: "Venezuela",
       direccionDespachoEstado: "",
       direccionDespachoCiudad: "",
       direccionDespachoDireccion: "",
@@ -102,12 +102,30 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
   });
 
   const watchDespachoIgual = form.watch("direccionDespachoIgualFacturacion");
+  const watchDespachoPais = form.watch("direccionDespachoPais");
+  const watchDespachoEstado = form.watch("direccionDespachoEstado");
+  const watchDespachoCiudad = form.watch("direccionDespachoCiudad");
+  const watchDespachoDireccion = form.watch("direccionDespachoDireccion");
+  const watchDespachoUrbanizacion = form.watch("direccionDespachoUrbanizacion");
+  const watchDespachoReferencia = form.watch("direccionDespachoReferencia");
 
   // Auto-calculate Total Orden USD from sum of products
   useEffect(() => {
     const total = products.reduce((sum, product) => sum + product.totalUsd, 0);
     form.setValue("totalUsd", total.toFixed(2));
   }, [products, form]);
+
+  // Copy shipping address to billing address when checkbox is checked
+  useEffect(() => {
+    if (watchDespachoIgual) {
+      form.setValue("direccionFacturacionPais", watchDespachoPais);
+      form.setValue("direccionFacturacionEstado", watchDespachoEstado);
+      form.setValue("direccionFacturacionCiudad", watchDespachoCiudad);
+      form.setValue("direccionFacturacionDireccion", watchDespachoDireccion);
+      form.setValue("direccionFacturacionUrbanizacion", watchDespachoUrbanizacion);
+      form.setValue("direccionFacturacionReferencia", watchDespachoReferencia);
+    }
+  }, [watchDespachoIgual, watchDespachoPais, watchDespachoEstado, watchDespachoCiudad, watchDespachoDireccion, watchDespachoUrbanizacion, watchDespachoReferencia, form]);
 
   const handleSaveProduct = (product: ProductFormData, index?: number) => {
     if (index !== undefined) {
@@ -404,18 +422,18 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
           </CardContent>
         </Card>
 
-        {/* Billing Address */}
+        {/* Shipping Address */}
         <Card>
           <CardHeader>
             <CardTitle className="text-base flex items-center gap-2">
               <MapPin className="h-4 w-4" />
-              Dirección de Facturación
+              Dirección de Despacho
             </CardTitle>
           </CardHeader>
           <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <FormField
               control={form.control}
-              name="direccionFacturacionPais"
+              name="direccionDespachoPais"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>País *</FormLabel>
@@ -423,10 +441,10 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
                     <Input 
                       placeholder="Venezuela" 
                       {...field} 
-
-                      autoComplete="nope-country-billing" 
-
-
+  
+                      autoComplete="nope-country-shipping" 
+  
+  
                     />
                   </FormControl>
                   <FormMessage />
@@ -436,7 +454,7 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
 
             <FormField
               control={form.control}
-              name="direccionFacturacionEstado"
+              name="direccionDespachoEstado"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Estado *</FormLabel>
@@ -444,10 +462,10 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
                     <Input 
                       placeholder="Distrito Capital" 
                       {...field} 
-
-                      autoComplete="nope-state-billing" 
-
-
+  
+                      autoComplete="nope-state-shipping" 
+  
+  
                     />
                   </FormControl>
                   <FormMessage />
@@ -457,7 +475,7 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
 
             <FormField
               control={form.control}
-              name="direccionFacturacionCiudad"
+              name="direccionDespachoCiudad"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Ciudad *</FormLabel>
@@ -465,10 +483,10 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
                     <Input 
                       placeholder="Caracas" 
                       {...field} 
-
-                      autoComplete="nope-city-billing" 
-
-
+  
+                      autoComplete="nope-city-shipping" 
+  
+  
                     />
                   </FormControl>
                   <FormMessage />
@@ -478,7 +496,7 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
 
             <FormField
               control={form.control}
-              name="direccionFacturacionDireccion"
+              name="direccionDespachoDireccion"
               render={({ field }) => (
                 <FormItem className="md:col-span-2 lg:col-span-3">
                   <FormLabel>Dirección *</FormLabel>
@@ -486,10 +504,10 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
                     <Input 
                       placeholder="Calle, número, apartamento, etc." 
                       {...field} 
-
-                      autoComplete="nope-address-billing" 
-
-
+  
+                      autoComplete="nope-address-shipping" 
+  
+  
                     />
                   </FormControl>
                   <FormMessage />
@@ -499,7 +517,7 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
 
             <FormField
               control={form.control}
-              name="direccionFacturacionUrbanizacion"
+              name="direccionDespachoUrbanizacion"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Urbanización</FormLabel>
@@ -507,10 +525,10 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
                     <Input 
                       placeholder="Nombre de la urbanización" 
                       {...field} 
-
-                      autoComplete="nope-neighborhood-billing" 
-
-
+  
+                      autoComplete="nope-neighborhood-shipping" 
+  
+  
                     />
                   </FormControl>
                   <FormMessage />
@@ -520,7 +538,7 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
 
             <FormField
               control={form.control}
-              name="direccionFacturacionReferencia"
+              name="direccionDespachoReferencia"
               render={({ field }) => (
                 <FormItem className="md:col-span-2">
                   <FormLabel>Referencia</FormLabel>
@@ -528,10 +546,10 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
                     <Input 
                       placeholder="Punto de referencia cercano" 
                       {...field} 
-
-                      autoComplete="nope-reference-billing" 
-
-
+  
+                      autoComplete="nope-reference-shipping" 
+  
+  
                     />
                   </FormControl>
                   <FormMessage />
@@ -541,15 +559,9 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
           </CardContent>
         </Card>
 
-        {/* Shipping Address */}
+        {/* Same Address Checkbox */}
         <Card>
-          <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2">
-              <MapPin className="h-4 w-4" />
-              Dirección de Despacho
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="pt-6">
             <FormField
               control={form.control}
               name="direccionDespachoIgualFacturacion"
@@ -563,27 +575,37 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
                   </FormControl>
                   <div className="space-y-1 leading-none">
                     <FormLabel>
-                      La dirección de despacho es igual a la de facturación
+                      La dirección de facturación es igual a la de despacho
                     </FormLabel>
                   </div>
                 </FormItem>
               )}
             />
+          </CardContent>
+        </Card>
 
-            {!watchDespachoIgual && (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pt-4">
+        {/* Billing Address */}
+        {watchDespachoIgual && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2">
+                <MapPin className="h-4 w-4" />
+                Dirección de Facturación
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <FormField
                   control={form.control}
-                  name="direccionDespachoPais"
+                  name="direccionFacturacionPais"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>País</FormLabel>
+                      <FormLabel>País *</FormLabel>
                       <FormControl>
                         <Input 
                           placeholder="Venezuela" 
                           {...field} 
     
-                          autoComplete="nope-country-shipping" 
+                          autoComplete="nope-country-billing" 
     
     
                         />
@@ -595,16 +617,16 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
 
                 <FormField
                   control={form.control}
-                  name="direccionDespachoEstado"
+                  name="direccionFacturacionEstado"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Estado</FormLabel>
+                      <FormLabel>Estado *</FormLabel>
                       <FormControl>
                         <Input 
                           placeholder="Distrito Capital" 
                           {...field} 
     
-                          autoComplete="nope-state-shipping" 
+                          autoComplete="nope-state-billing" 
     
     
                         />
@@ -616,16 +638,16 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
 
                 <FormField
                   control={form.control}
-                  name="direccionDespachoCiudad"
+                  name="direccionFacturacionCiudad"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Ciudad</FormLabel>
+                      <FormLabel>Ciudad *</FormLabel>
                       <FormControl>
                         <Input 
                           placeholder="Caracas" 
                           {...field} 
     
-                          autoComplete="nope-city-shipping" 
+                          autoComplete="nope-city-billing" 
     
     
                         />
@@ -637,16 +659,16 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
 
                 <FormField
                   control={form.control}
-                  name="direccionDespachoDireccion"
+                  name="direccionFacturacionDireccion"
                   render={({ field }) => (
                     <FormItem className="md:col-span-2 lg:col-span-3">
-                      <FormLabel>Dirección</FormLabel>
+                      <FormLabel>Dirección *</FormLabel>
                       <FormControl>
                         <Input 
                           placeholder="Calle, número, apartamento, etc." 
                           {...field} 
     
-                          autoComplete="nope-address-shipping" 
+                          autoComplete="nope-address-billing" 
     
     
                         />
@@ -658,7 +680,7 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
 
                 <FormField
                   control={form.control}
-                  name="direccionDespachoUrbanizacion"
+                  name="direccionFacturacionUrbanizacion"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Urbanización</FormLabel>
@@ -667,7 +689,7 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
                           placeholder="Nombre de la urbanización" 
                           {...field} 
     
-                          autoComplete="nope-neighborhood-shipping" 
+                          autoComplete="nope-neighborhood-billing" 
     
     
                         />
@@ -679,7 +701,7 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
 
                 <FormField
                   control={form.control}
-                  name="direccionDespachoReferencia"
+                  name="direccionFacturacionReferencia"
                   render={({ field }) => (
                     <FormItem className="md:col-span-2">
                       <FormLabel>Referencia</FormLabel>
@@ -688,7 +710,7 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
                           placeholder="Punto de referencia cercano" 
                           {...field} 
     
-                          autoComplete="nope-reference-shipping" 
+                          autoComplete="nope-reference-billing" 
     
     
                         />
@@ -697,10 +719,9 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
                     </FormItem>
                   )}
                 />
-              </div>
-            )}
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Form Actions */}
         <div className="flex justify-end space-x-4">

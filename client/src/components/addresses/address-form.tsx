@@ -30,7 +30,7 @@ interface AddressData {
 
 export default function AddressForm() {
   const [selectedOrder, setSelectedOrder] = useState<Sale | null>(null);
-  const [showShippingForm, setShowShippingForm] = useState(false);
+  const [showBillingForm, setShowBillingForm] = useState(false);
   const [addressData, setAddressData] = useState<AddressData>({
     direccionFacturacionPais: "Venezuela",
     direccionFacturacionEstado: "",
@@ -90,7 +90,7 @@ export default function AddressForm() {
 
   const resetForm = () => {
     setSelectedOrder(null);
-    setShowShippingForm(false);
+    setShowBillingForm(false);
     setAddressData({
       direccionFacturacionPais: "Venezuela",
       direccionFacturacionEstado: "",
@@ -132,37 +132,70 @@ export default function AddressForm() {
       direccionDespachoUrbanizacion: order.direccionDespachoUrbanizacion || "",
       direccionDespachoReferencia: order.direccionDespachoReferencia || ""
     });
-    setShowShippingForm(!sameAddressDefault);
+    setShowBillingForm(!sameAddressDefault);
   };
 
   const handleAddressChange = (field: keyof AddressData, value: string | boolean) => {
-    setAddressData(prev => ({
-      ...prev,
-      [field]: value
-    }));
+    setAddressData(prev => {
+      const updates: Partial<AddressData> = { [field]: value };
+      
+      // If checkbox is checked and a despacho field is being changed, mirror to facturación
+      if (prev.direccionDespachoIgualFacturacion && typeof value === 'string') {
+        const fieldMapping: Record<string, keyof AddressData> = {
+          'direccionDespachoPais': 'direccionFacturacionPais',
+          'direccionDespachoEstado': 'direccionFacturacionEstado',
+          'direccionDespachoCiudad': 'direccionFacturacionCiudad',
+          'direccionDespachoDireccion': 'direccionFacturacionDireccion',
+          'direccionDespachoUrbanizacion': 'direccionFacturacionUrbanizacion',
+          'direccionDespachoReferencia': 'direccionFacturacionReferencia'
+        };
+        
+        const mirrorField = fieldMapping[field as string];
+        if (mirrorField) {
+          updates[mirrorField] = value;
+        }
+      }
+      
+      return { ...prev, ...updates };
+    });
   };
 
   const handleSameAddressChange = (checked: boolean) => {
-    setAddressData(prev => ({
-      ...prev,
-      direccionDespachoIgualFacturacion: checked
-    }));
-    setShowShippingForm(!checked);
+    if (checked) {
+      // When checked, copy shipping address to billing address
+      setAddressData(prev => ({
+        ...prev,
+        direccionDespachoIgualFacturacion: checked,
+        direccionFacturacionPais: prev.direccionDespachoPais,
+        direccionFacturacionEstado: prev.direccionDespachoEstado,
+        direccionFacturacionCiudad: prev.direccionDespachoCiudad,
+        direccionFacturacionDireccion: prev.direccionDespachoDireccion,
+        direccionFacturacionUrbanizacion: prev.direccionDespachoUrbanizacion,
+        direccionFacturacionReferencia: prev.direccionDespachoReferencia
+      }));
+    } else {
+      // When unchecked, just update the flag
+      setAddressData(prev => ({
+        ...prev,
+        direccionDespachoIgualFacturacion: checked
+      }));
+    }
+    setShowBillingForm(!checked);
   };
 
   const validateForm = (): boolean => {
-    const requiredBillingFields = [
-      'direccionFacturacionPais',
-      'direccionFacturacionEstado', 
-      'direccionFacturacionCiudad',
-      'direccionFacturacionDireccion'
+    const requiredShippingFields = [
+      'direccionDespachoPais',
+      'direccionDespachoEstado',
+      'direccionDespachoCiudad', 
+      'direccionDespachoDireccion'
     ];
 
-    for (const field of requiredBillingFields) {
+    for (const field of requiredShippingFields) {
       if (!addressData[field as keyof AddressData]) {
         toast({
           title: "Campos requeridos",
-          description: "Por favor complete todos los campos de la dirección de facturación",
+          description: "Por favor complete todos los campos de la dirección de despacho",
           variant: "destructive"
         });
         return false;
@@ -170,18 +203,18 @@ export default function AddressForm() {
     }
 
     if (!addressData.direccionDespachoIgualFacturacion) {
-      const requiredShippingFields = [
-        'direccionDespachoPais',
-        'direccionDespachoEstado',
-        'direccionDespachoCiudad', 
-        'direccionDespachoDireccion'
+      const requiredBillingFields = [
+        'direccionFacturacionPais',
+        'direccionFacturacionEstado', 
+        'direccionFacturacionCiudad',
+        'direccionFacturacionDireccion'
       ];
 
-      for (const field of requiredShippingFields) {
+      for (const field of requiredBillingFields) {
         if (!addressData[field as keyof AddressData]) {
           toast({
             title: "Campos requeridos",
-            description: "Por favor complete todos los campos de la dirección de despacho",
+            description: "Por favor complete todos los campos de la dirección de facturación",
             variant: "destructive"
           });
           return false;
@@ -333,76 +366,76 @@ export default function AddressForm() {
             </CardContent>
           </Card>
 
-          {/* Billing Address */}
+          {/* Shipping Address */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <MapPin className="h-5 w-5" />
-                Dirección de Facturación
+                Dirección de Despacho
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="billing-country">País *</Label>
+                  <Label htmlFor="shipping-country">País *</Label>
                   <Input
-                    id="billing-country"
-                    value={addressData.direccionFacturacionPais}
-                    onChange={(e) => handleAddressChange('direccionFacturacionPais', e.target.value)}
-                    data-testid="input-billing-country"
+                    id="shipping-country"
+                    value={addressData.direccionDespachoPais}
+                    onChange={(e) => handleAddressChange('direccionDespachoPais', e.target.value)}
+                    data-testid="input-shipping-country"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="billing-state">Estado *</Label>
+                  <Label htmlFor="shipping-state">Estado *</Label>
                   <Input
-                    id="billing-state"
-                    value={addressData.direccionFacturacionEstado}
-                    onChange={(e) => handleAddressChange('direccionFacturacionEstado', e.target.value)}
-                    data-testid="input-billing-state"
+                    id="shipping-state"
+                    value={addressData.direccionDespachoEstado}
+                    onChange={(e) => handleAddressChange('direccionDespachoEstado', e.target.value)}
+                    data-testid="input-shipping-state"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="billing-city">Ciudad *</Label>
+                  <Label htmlFor="shipping-city">Ciudad *</Label>
                   <Input
-                    id="billing-city"
-                    value={addressData.direccionFacturacionCiudad}
-                    onChange={(e) => handleAddressChange('direccionFacturacionCiudad', e.target.value)}
-                    data-testid="input-billing-city"
+                    id="shipping-city"
+                    value={addressData.direccionDespachoCiudad}
+                    onChange={(e) => handleAddressChange('direccionDespachoCiudad', e.target.value)}
+                    data-testid="input-shipping-city"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="billing-urbanization">Urbanización</Label>
+                  <Label htmlFor="shipping-urbanization">Urbanización</Label>
                   <Input
-                    id="billing-urbanization"
-                    value={addressData.direccionFacturacionUrbanizacion}
-                    onChange={(e) => handleAddressChange('direccionFacturacionUrbanizacion', e.target.value)}
-                    data-testid="input-billing-urbanization"
+                    id="shipping-urbanization"
+                    value={addressData.direccionDespachoUrbanizacion}
+                    onChange={(e) => handleAddressChange('direccionDespachoUrbanizacion', e.target.value)}
+                    data-testid="input-shipping-urbanization"
                   />
                 </div>
               </div>
 
               <div>
-                <Label htmlFor="billing-address">Dirección *</Label>
+                <Label htmlFor="shipping-address">Dirección *</Label>
                 <Input
-                  id="billing-address"
-                  value={addressData.direccionFacturacionDireccion}
-                  onChange={(e) => handleAddressChange('direccionFacturacionDireccion', e.target.value)}
+                  id="shipping-address"
+                  value={addressData.direccionDespachoDireccion}
+                  onChange={(e) => handleAddressChange('direccionDespachoDireccion', e.target.value)}
                   placeholder="Calle, número, edificio, apartamento..."
-                  data-testid="input-billing-address"
+                  data-testid="input-shipping-address"
                 />
               </div>
 
               <div>
-                <Label htmlFor="billing-reference">Referencia</Label>
+                <Label htmlFor="shipping-reference">Referencia</Label>
                 <Input
-                  id="billing-reference"
-                  value={addressData.direccionFacturacionReferencia}
-                  onChange={(e) => handleAddressChange('direccionFacturacionReferencia', e.target.value)}
+                  id="shipping-reference"
+                  value={addressData.direccionDespachoReferencia}
+                  onChange={(e) => handleAddressChange('direccionDespachoReferencia', e.target.value)}
                   placeholder="Punto de referencia..."
-                  data-testid="input-billing-reference"
+                  data-testid="input-shipping-reference"
                 />
               </div>
             </CardContent>
@@ -419,83 +452,83 @@ export default function AddressForm() {
                   data-testid="checkbox-same-address"
                 />
                 <Label htmlFor="same-address">
-                  La dirección de despacho es igual a la de facturación
+                  La dirección de facturación es igual a la de despacho
                 </Label>
               </div>
             </CardContent>
           </Card>
 
-          {/* Shipping Address */}
-          {showShippingForm && (
+          {/* Billing Address */}
+          {showBillingForm && (
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <MapPin className="h-5 w-5" />
-                  Dirección de Despacho
+                  Dirección de Facturación
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="shipping-country">País *</Label>
+                    <Label htmlFor="billing-country">País *</Label>
                     <Input
-                      id="shipping-country"
-                      value={addressData.direccionDespachoPais}
-                      onChange={(e) => handleAddressChange('direccionDespachoPais', e.target.value)}
-                      data-testid="input-shipping-country"
+                      id="billing-country"
+                      value={addressData.direccionFacturacionPais}
+                      onChange={(e) => handleAddressChange('direccionFacturacionPais', e.target.value)}
+                      data-testid="input-billing-country"
                     />
                   </div>
                   <div>
-                    <Label htmlFor="shipping-state">Estado *</Label>
+                    <Label htmlFor="billing-state">Estado *</Label>
                     <Input
-                      id="shipping-state"
-                      value={addressData.direccionDespachoEstado}
-                      onChange={(e) => handleAddressChange('direccionDespachoEstado', e.target.value)}
-                      data-testid="input-shipping-state"
+                      id="billing-state"
+                      value={addressData.direccionFacturacionEstado}
+                      onChange={(e) => handleAddressChange('direccionFacturacionEstado', e.target.value)}
+                      data-testid="input-billing-state"
                     />
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="shipping-city">Ciudad *</Label>
+                    <Label htmlFor="billing-city">Ciudad *</Label>
                     <Input
-                      id="shipping-city"
-                      value={addressData.direccionDespachoCiudad}
-                      onChange={(e) => handleAddressChange('direccionDespachoCiudad', e.target.value)}
-                      data-testid="input-shipping-city"
+                      id="billing-city"
+                      value={addressData.direccionFacturacionCiudad}
+                      onChange={(e) => handleAddressChange('direccionFacturacionCiudad', e.target.value)}
+                      data-testid="input-billing-city"
                     />
                   </div>
                   <div>
-                    <Label htmlFor="shipping-urbanization">Urbanización</Label>
+                    <Label htmlFor="billing-urbanization">Urbanización</Label>
                     <Input
-                      id="shipping-urbanization"
-                      value={addressData.direccionDespachoUrbanizacion}
-                      onChange={(e) => handleAddressChange('direccionDespachoUrbanizacion', e.target.value)}
-                      data-testid="input-shipping-urbanization"
+                      id="billing-urbanization"
+                      value={addressData.direccionFacturacionUrbanizacion}
+                      onChange={(e) => handleAddressChange('direccionFacturacionUrbanizacion', e.target.value)}
+                      data-testid="input-billing-urbanization"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <Label htmlFor="shipping-address">Dirección *</Label>
+                  <Label htmlFor="billing-address">Dirección *</Label>
                   <Input
-                    id="shipping-address"
-                    value={addressData.direccionDespachoDireccion}
-                    onChange={(e) => handleAddressChange('direccionDespachoDireccion', e.target.value)}
+                    id="billing-address"
+                    value={addressData.direccionFacturacionDireccion}
+                    onChange={(e) => handleAddressChange('direccionFacturacionDireccion', e.target.value)}
                     placeholder="Calle, número, edificio, apartamento..."
-                    data-testid="input-shipping-address"
+                    data-testid="input-billing-address"
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="shipping-reference">Referencia</Label>
+                  <Label htmlFor="billing-reference">Referencia</Label>
                   <Input
-                    id="shipping-reference"
-                    value={addressData.direccionDespachoReferencia}
-                    onChange={(e) => handleAddressChange('direccionDespachoReferencia', e.target.value)}
+                    id="billing-reference"
+                    value={addressData.direccionFacturacionReferencia}
+                    onChange={(e) => handleAddressChange('direccionFacturacionReferencia', e.target.value)}
                     placeholder="Punto de referencia..."
-                    data-testid="input-shipping-reference"
+                    data-testid="input-billing-reference"
                   />
                 </div>
               </CardContent>

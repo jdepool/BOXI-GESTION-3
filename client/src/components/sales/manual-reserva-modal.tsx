@@ -38,18 +38,18 @@ const manualReservaSchema = z.object({
   totalUsd: z.string().min(1, "Total Orden USD es requerido"),
   fechaEntrega: z.date({ required_error: "Fecha de entrega es requerida" }),
   direccionDespachoIgualFacturacion: z.boolean().default(true),
+  direccionDespachoPais: z.string().min(1, "País de despacho es requerido"),
+  direccionDespachoEstado: z.string().min(1, "Estado de despacho es requerido"),
+  direccionDespachoCiudad: z.string().min(1, "Ciudad de despacho es requerida"),
+  direccionDespachoDireccion: z.string().min(1, "Dirección de despacho es requerida"),
+  direccionDespachoUrbanizacion: z.string().optional(),
+  direccionDespachoReferencia: z.string().optional(),
   direccionFacturacionPais: z.string().optional(),
   direccionFacturacionEstado: z.string().optional(),
   direccionFacturacionCiudad: z.string().optional(),
   direccionFacturacionDireccion: z.string().optional(),
   direccionFacturacionUrbanizacion: z.string().optional(),
   direccionFacturacionReferencia: z.string().optional(),
-  direccionDespachoPais: z.string().optional(),
-  direccionDespachoEstado: z.string().optional(),
-  direccionDespachoCiudad: z.string().optional(),
-  direccionDespachoDireccion: z.string().optional(),
-  direccionDespachoUrbanizacion: z.string().optional(),
-  direccionDespachoReferencia: z.string().optional(),
   canal: z.string().min(1, "Canal es requerido"),
 });
 
@@ -78,7 +78,7 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
       direccionFacturacionUrbanizacion: "",
       direccionFacturacionReferencia: "",
       direccionDespachoIgualFacturacion: true,
-      direccionDespachoPais: "",
+      direccionDespachoPais: "Venezuela",
       direccionDespachoEstado: "",
       direccionDespachoCiudad: "",
       direccionDespachoDireccion: "",
@@ -91,12 +91,30 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
   });
 
   const watchDespachoIgual = form.watch("direccionDespachoIgualFacturacion");
+  const watchDespachoPais = form.watch("direccionDespachoPais");
+  const watchDespachoEstado = form.watch("direccionDespachoEstado");
+  const watchDespachoCiudad = form.watch("direccionDespachoCiudad");
+  const watchDespachoDireccion = form.watch("direccionDespachoDireccion");
+  const watchDespachoUrbanizacion = form.watch("direccionDespachoUrbanizacion");
+  const watchDespachoReferencia = form.watch("direccionDespachoReferencia");
 
   // Auto-calculate Total Orden USD from sum of products
   useEffect(() => {
     const total = products.reduce((sum, product) => sum + product.totalUsd, 0);
     form.setValue("totalUsd", total.toFixed(2));
   }, [products, form]);
+
+  // Copy shipping address to billing address when checkbox is checked
+  useEffect(() => {
+    if (watchDespachoIgual) {
+      form.setValue("direccionFacturacionPais", watchDespachoPais);
+      form.setValue("direccionFacturacionEstado", watchDespachoEstado);
+      form.setValue("direccionFacturacionCiudad", watchDespachoCiudad);
+      form.setValue("direccionFacturacionDireccion", watchDespachoDireccion);
+      form.setValue("direccionFacturacionUrbanizacion", watchDespachoUrbanizacion);
+      form.setValue("direccionFacturacionReferencia", watchDespachoReferencia);
+    }
+  }, [watchDespachoIgual, watchDespachoPais, watchDespachoEstado, watchDespachoCiudad, watchDespachoDireccion, watchDespachoUrbanizacion, watchDespachoReferencia, form]);
 
   const handleSaveProduct = (product: ProductFormData, index?: number) => {
     if (index !== undefined) {
@@ -461,149 +479,6 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
               </CardContent>
             </Card>
 
-            {/* Billing Address */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base flex items-center gap-2">
-                  <MapPin className="h-4 w-4" />
-                  Dirección de Facturación
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <FormField
-                  control={form.control}
-                  name="direccionFacturacionPais"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>País *</FormLabel>
-                      <FormControl>
-                        <Input 
-                          placeholder="Venezuela" 
-                          {...field} 
-                          data-testid="input-facturacion-pais" 
-
-                          autoComplete="nope-country-billing" 
-
-
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="direccionFacturacionEstado"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Estado *</FormLabel>
-                      <FormControl>
-                        <Input 
-                          placeholder="Distrito Capital" 
-                          {...field} 
-                          data-testid="input-facturacion-estado" 
-
-                          autoComplete="nope-state-billing" 
-
-
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="direccionFacturacionCiudad"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Ciudad *</FormLabel>
-                      <FormControl>
-                        <Input 
-                          placeholder="Caracas" 
-                          {...field} 
-                          data-testid="input-facturacion-ciudad" 
-
-                          autoComplete="nope-city-billing" 
-
-
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="direccionFacturacionDireccion"
-                  render={({ field }) => (
-                    <FormItem className="md:col-span-2 lg:col-span-3">
-                      <FormLabel>Dirección *</FormLabel>
-                      <FormControl>
-                        <Input 
-                          placeholder="Calle, número, apartamento, etc." 
-                          {...field} 
-                          data-testid="input-facturacion-direccion" 
-
-                          autoComplete="nope-address-billing" 
-
-
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="direccionFacturacionUrbanizacion"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Urbanización</FormLabel>
-                      <FormControl>
-                        <Input 
-                          placeholder="Nombre de la urbanización" 
-                          {...field} 
-                          data-testid="input-facturacion-urbanizacion" 
-
-                          autoComplete="nope-neighborhood-billing" 
-
-
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="direccionFacturacionReferencia"
-                  render={({ field }) => (
-                    <FormItem className="md:col-span-2">
-                      <FormLabel>Referencia</FormLabel>
-                      <FormControl>
-                        <Input 
-                          placeholder="Punto de referencia" 
-                          {...field} 
-                          data-testid="input-facturacion-referencia" 
-
-                          autoComplete="nope-reference-billing" 
-
-
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </CardContent>
-            </Card>
-
             {/* Shipping Address */}
             <Card>
               <CardHeader>
@@ -612,30 +487,7 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
                   Dirección de Despacho
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-              <FormField
-                control={form.control}
-                name="direccionDespachoIgualFacturacion"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                    <FormControl>
-                      <Checkbox
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                        data-testid="checkbox-same-address"
-                      />
-                    </FormControl>
-                    <div className="space-y-1 leading-none">
-                      <FormLabel>
-                        La dirección de despacho es igual a la de facturación
-                      </FormLabel>
-                    </div>
-                  </FormItem>
-                )}
-              />
-
-              {!watchDespachoIgual && (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pt-4">
+              <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <FormField
                   control={form.control}
                   name="direccionDespachoPais"
@@ -767,10 +619,179 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
                     </FormItem>
                   )}
                 />
-              </div>
-              )}
               </CardContent>
             </Card>
+
+            {/* Same Address Checkbox */}
+            <Card>
+              <CardContent className="pt-6">
+                <FormField
+                  control={form.control}
+                  name="direccionDespachoIgualFacturacion"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                          data-testid="checkbox-same-address"
+                        />
+                      </FormControl>
+                      <div className="space-y-1 leading-none">
+                        <FormLabel>
+                          La dirección de facturación es igual a la de despacho
+                        </FormLabel>
+                      </div>
+                    </FormItem>
+                  )}
+                />
+              </CardContent>
+            </Card>
+
+            {/* Billing Address */}
+            {!watchDespachoIgual && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <MapPin className="h-4 w-4" />
+                    Dirección de Facturación
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="direccionFacturacionPais"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>País *</FormLabel>
+                        <FormControl>
+                          <Input 
+                            placeholder="Venezuela" 
+                            {...field} 
+                            data-testid="input-facturacion-pais" 
+
+                            autoComplete="nope-country-billing" 
+
+
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="direccionFacturacionEstado"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Estado *</FormLabel>
+                        <FormControl>
+                          <Input 
+                            placeholder="Distrito Capital" 
+                            {...field} 
+                            data-testid="input-facturacion-estado" 
+
+                            autoComplete="nope-state-billing" 
+
+
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="direccionFacturacionCiudad"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Ciudad *</FormLabel>
+                        <FormControl>
+                          <Input 
+                            placeholder="Caracas" 
+                            {...field} 
+                            data-testid="input-facturacion-ciudad" 
+
+                            autoComplete="nope-city-billing" 
+
+
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="direccionFacturacionDireccion"
+                    render={({ field }) => (
+                      <FormItem className="md:col-span-2 lg:col-span-3">
+                        <FormLabel>Dirección *</FormLabel>
+                        <FormControl>
+                          <Input 
+                            placeholder="Calle, número, apartamento, etc." 
+                            {...field} 
+                            data-testid="input-facturacion-direccion" 
+
+                            autoComplete="nope-address-billing" 
+
+
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="direccionFacturacionUrbanizacion"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Urbanización</FormLabel>
+                        <FormControl>
+                          <Input 
+                            placeholder="Nombre de la urbanización" 
+                            {...field} 
+                            data-testid="input-facturacion-urbanizacion" 
+
+                            autoComplete="nope-neighborhood-billing" 
+
+
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="direccionFacturacionReferencia"
+                    render={({ field }) => (
+                      <FormItem className="md:col-span-2">
+                        <FormLabel>Referencia</FormLabel>
+                        <FormControl>
+                          <Input 
+                            placeholder="Punto de referencia" 
+                            {...field} 
+                            data-testid="input-facturacion-referencia" 
+
+                            autoComplete="nope-reference-billing" 
+
+
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </CardContent>
+              </Card>
+            )}
 
             {/* Actions */}
             <div className="flex justify-end gap-3">
