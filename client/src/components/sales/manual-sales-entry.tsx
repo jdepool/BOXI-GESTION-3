@@ -67,8 +67,6 @@ export default function ManualSalesEntry() {
   });
 
   const handleFormSubmit = (data: any) => {
-    console.log('ManualSalesEntry handleFormSubmit - canal value:', data.canal);
-    console.log('ManualSalesEntry handleFormSubmit - full data:', data);
     createManualSaleMutation.mutate(data);
   };
 

@@ -170,8 +170,6 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
   });
 
   const handleSubmit = (data: ManualSaleFormData) => {
-    console.log('Manual sale form submit - canal value:', data.canal);
-    console.log('Manual sale form submit - full data:', { ...data, products });
     onSubmit({ ...data, products });
   };
 
