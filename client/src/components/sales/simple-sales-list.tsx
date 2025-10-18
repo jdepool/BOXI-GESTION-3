@@ -86,7 +86,7 @@ export default function SimpleSalesList({
   };
 
   const getChannelColor = (channel: string) => {
-    switch (channel) {
+    switch (channel?.toLowerCase()) {
       case "cashea": return "channel-badge-cashea";
       case "shopify": return "channel-badge-shopify";
       case "treble": return "channel-badge-treble";
