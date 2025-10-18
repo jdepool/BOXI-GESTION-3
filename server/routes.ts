@@ -1131,6 +1131,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         product: product.producto,
         sku: product.sku || null,
         cantidad: product.cantidad || 1,
+        esObsequio: product.esObsequio || false,
         medidaEspecial: product.medidaEspecial || null,
         fecha: existingSales[0].fecha,
         estadoEntrega: existingSales[0].estadoEntrega,
@@ -3928,6 +3929,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             cantidad: parseInt(product.cantidad) || 1,
             // Override totalUsd with product-specific amount
             totalUsd: String(product.totalUsd),
+            // Product-specific obsequio flag
+            esObsequio: product.esObsequio || false,
             // Product-specific medida especial
             medidaEspecial: product.hasMedidaEspecial && product.medidaEspecial && product.medidaEspecial.trim()
               ? product.medidaEspecial.trim()

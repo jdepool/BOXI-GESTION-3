@@ -15,7 +15,8 @@ const productFormSchema = z.object({
   producto: z.string().min(1, "Producto es requerido"),
   sku: z.string().optional(),
   cantidad: z.coerce.number().int().min(1, "Cantidad debe ser al menos 1"),
-  totalUsd: z.coerce.number().min(0.01, "Total US$ debe ser mayor a 0"),
+  totalUsd: z.coerce.number().min(0, "Total US$ debe ser mayor o igual a 0"),
+  esObsequio: z.boolean().default(false),
   hasMedidaEspecial: z.boolean().default(false),
   medidaEspecial: z.string().max(10, "Máximo 10 caracteres").optional(),
 }).refine(data => {
@@ -46,7 +47,8 @@ export default function ProductDialog({ isOpen, onClose, onSave, product, index 
       producto: "",
       sku: "",
       cantidad: 1,
-      totalUsd: 0,
+      totalUsd: "" as any,
+      esObsequio: false,
       hasMedidaEspecial: false,
       medidaEspecial: "",
     },
@@ -67,7 +69,8 @@ export default function ProductDialog({ isOpen, onClose, onSave, product, index 
         producto: "",
         sku: "",
         cantidad: 1,
-        totalUsd: 0,
+        totalUsd: "" as any,
+        esObsequio: false,
         hasMedidaEspecial: false,
         medidaEspecial: "",
       });
@@ -155,13 +158,34 @@ export default function ProductDialog({ isOpen, onClose, onSave, product, index 
                     <Input 
                       type="number" 
                       step="0.01" 
-                      min="0.01" 
-                      placeholder="0.00" 
+                      min="0" 
+                      placeholder="Ingrese total" 
                       {...field} 
                       data-testid="input-total-usd"
                     />
                   </FormControl>
                   <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="esObsequio"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                      data-testid="checkbox-es-obsequio-producto"
+                    />
+                  </FormControl>
+                  <div className="space-y-1 leading-none">
+                    <FormLabel>
+                      Este producto es obsequio
+                    </FormLabel>
+                  </div>
                 </FormItem>
               )}
             />
