@@ -805,10 +805,11 @@ export class DatabaseStorage implements IStorage {
 
   async getMaxOrderNumberInRange(minOrderNumber: number): Promise<number> {
     // Efficiently get the maximum order number >= minOrderNumber without fetching all records
+    // Filter to only numeric orden values to avoid casting errors on alphanumeric IDs (e.g., Shopify "#1001")
     const result = await db
       .select({ maxOrder: sql<string>`MAX(CAST(${sales.orden} AS INTEGER))` })
       .from(sales)
-      .where(sql`CAST(${sales.orden} AS INTEGER) >= ${minOrderNumber}`);
+      .where(sql`${sales.orden} ~ '^[0-9]+$' AND CAST(${sales.orden} AS INTEGER) >= ${minOrderNumber}`);
     
     const maxOrder = result[0]?.maxOrder;
     return maxOrder ? parseInt(maxOrder) : minOrderNumber - 1;
