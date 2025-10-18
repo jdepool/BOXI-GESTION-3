@@ -3857,10 +3857,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Parse and validate the request body
       const body = req.body;
       
+      console.log('🔍 POST /api/sales/manual - Received canal:', body.canal);
+      console.log('🔍 POST /api/sales/manual - Request body:', JSON.stringify(body, null, 2));
+      
       // Validate required fields
       if (!body.canal || typeof body.canal !== 'string' || body.canal.trim() === '') {
+        console.log('❌ Canal validation failed:', body.canal);
         return res.status(400).json({ error: "Canal es requerido" });
       }
+      
+      console.log('✅ Canal validation passed:', body.canal);
       
       // Generate order number starting from 20000 for manual entries
       // Get manual sales with case-insensitive search to handle legacy "Manual" and new "manual" values

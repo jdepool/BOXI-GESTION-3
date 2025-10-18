@@ -164,12 +164,14 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
   // Filter to show only Receptor banks (for incoming payments)
   const banks = allBanks.filter(bank => bank.tipo === "Receptor");
 
-  const { data: canales = [] } = useQuery<Array<{ id: string; nombre: string; activo: string }>>({
+  const { data: canales = [] } = useQuery<Array<{ id: string; nombre: string; activo: boolean | string }>>({
     queryKey: ["/api/admin/canales"],
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
   const handleSubmit = (data: ManualSaleFormData) => {
+    console.log('Manual sale form submit - canal value:', data.canal);
+    console.log('Manual sale form submit - full data:', { ...data, products });
     onSubmit({ ...data, products });
   };
 
@@ -312,7 +314,7 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
                     </FormControl>
                     <SelectContent>
                       {canales
-                        .filter(canal => canal.activo === "true")
+                        .filter(canal => canal.activo === true || canal.activo === "true")
                         .map((canal) => (
                           <SelectItem key={canal.id} value={canal.nombre}>
                             {canal.nombre}
