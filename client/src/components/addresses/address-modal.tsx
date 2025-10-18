@@ -131,7 +131,7 @@ export default function AddressModal({ open, onOpenChange, sale }: AddressModalP
 
   const handleAddressChange = (field: keyof AddressData, value: string | boolean) => {
     setAddressData(prev => {
-      const updates: Partial<AddressData> = { [field]: value };
+      const updates: Partial<AddressData> = { [field]: value } as Partial<AddressData>;
       
       // If checkbox is checked and a despacho field is being changed, mirror to facturación
       if (prev.direccionDespachoIgualFacturacion && typeof value === 'string') {
@@ -146,7 +146,7 @@ export default function AddressModal({ open, onOpenChange, sale }: AddressModalP
         
         const mirrorField = fieldMapping[field as string];
         if (mirrorField) {
-          updates[mirrorField] = value;
+          (updates as any)[mirrorField] = value;
         }
       }
       

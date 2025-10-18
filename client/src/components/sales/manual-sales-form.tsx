@@ -585,7 +585,7 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
         </Card>
 
         {/* Billing Address */}
-        {watchDespachoIgual && (
+        {!watchDespachoIgual && (
           <Card>
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
