@@ -2,6 +2,9 @@ import type { Express } from "express";
 import express from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
+import { db } from "./db";
+import { sales } from "@shared/schema";
+import { eq } from "drizzle-orm";
 import { 
   insertSaleSchema, insertUploadHistorySchema, insertBancoSchema, insertTipoEgresoSchema, 
   insertProductoSchema, insertMetodoPagoSchema, insertMonedaSchema, insertCategoriaSchema,
@@ -1113,54 +1116,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Order not found" });
       }
 
-      // Delete all existing sales for this order
-      for (const sale of existingSales) {
-        await storage.deleteSale(sale.id);
-      }
+      // Use database transaction to make delete-and-create atomic
+      const result = await db.transaction(async (tx) => {
+        // Delete all existing sales for this order within transaction
+        for (const sale of existingSales) {
+          await tx.delete(sales).where(eq(sales.id, sale.id));
+        }
 
-      // Create new sales with updated information
-      const newSales = products.map((product: any) => ({
-        orden: orderNumber,
-        nombre,
-        cedula: cedula || null,
-        telefono: telefono || null,
-        email: email || null,
-        canal: canal || existingSales[0].canal,
-        totalUsd: product.totalUsd || 0,
-        totalOrderUsd: parseFloat(totalUsd) || null,
-        product: product.producto,
-        sku: product.sku || null,
-        cantidad: product.cantidad || 1,
-        esObsequio: product.esObsequio || false,
-        medidaEspecial: product.medidaEspecial || null,
-        fecha: existingSales[0].fecha,
-        estadoEntrega: existingSales[0].estadoEntrega,
-        tipo: existingSales[0].tipo,
-        // Preserve addresses
-        direccionFacturacionPais: existingSales[0].direccionFacturacionPais,
-        direccionFacturacionEstado: existingSales[0].direccionFacturacionEstado,
-        direccionFacturacionCiudad: existingSales[0].direccionFacturacionCiudad,
-        direccionFacturacionDireccion: existingSales[0].direccionFacturacionDireccion,
-        direccionFacturacionUrbanizacion: existingSales[0].direccionFacturacionUrbanizacion,
-        direccionFacturacionReferencia: existingSales[0].direccionFacturacionReferencia,
-        direccionDespachoIgualFacturacion: existingSales[0].direccionDespachoIgualFacturacion,
-        direccionDespachoPais: existingSales[0].direccionDespachoPais,
-        direccionDespachoEstado: existingSales[0].direccionDespachoEstado,
-        direccionDespachoCiudad: existingSales[0].direccionDespachoCiudad,
-        direccionDespachoDireccion: existingSales[0].direccionDespachoDireccion,
-        direccionDespachoUrbanizacion: existingSales[0].direccionDespachoUrbanizacion,
-        direccionDespachoReferencia: existingSales[0].direccionDespachoReferencia,
-        // Preserve other fields
-        metodoPagoId: existingSales[0].metodoPagoId,
-        bancoReceptorInicial: existingSales[0].bancoReceptorInicial,
-        referenciaInicial: existingSales[0].referenciaInicial,
-        montoInicialBs: existingSales[0].montoInicialBs,
-        montoInicialUsd: existingSales[0].montoInicialUsd,
-        asesorId: existingSales[0].asesorId,
-      }));
+        // Create new sales with updated information within transaction
+        const newSalesData = products.map((product: any) => ({
+          orden: orderNumber,
+          nombre,
+          cedula: cedula || null,
+          telefono: telefono || null,
+          email: email || null,
+          canal: canal || existingSales[0].canal,
+          totalUsd: product.totalUsd?.toString() || "0",
+          totalOrderUsd: parseFloat(totalUsd) || null,
+          product: product.producto,
+          sku: product.sku || null,
+          cantidad: product.cantidad || 1,
+          esObsequio: product.esObsequio || false,
+          medidaEspecial: product.medidaEspecial || null,
+          fecha: existingSales[0].fecha,
+          estadoEntrega: existingSales[0].estadoEntrega,
+          tipo: existingSales[0].tipo,
+          // Preserve addresses
+          direccionFacturacionPais: existingSales[0].direccionFacturacionPais,
+          direccionFacturacionEstado: existingSales[0].direccionFacturacionEstado,
+          direccionFacturacionCiudad: existingSales[0].direccionFacturacionCiudad,
+          direccionFacturacionDireccion: existingSales[0].direccionFacturacionDireccion,
+          direccionFacturacionUrbanizacion: existingSales[0].direccionFacturacionUrbanizacion,
+          direccionFacturacionReferencia: existingSales[0].direccionFacturacionReferencia,
+          direccionDespachoIgualFacturacion: existingSales[0].direccionDespachoIgualFacturacion,
+          direccionDespachoPais: existingSales[0].direccionDespachoPais,
+          direccionDespachoEstado: existingSales[0].direccionDespachoEstado,
+          direccionDespachoCiudad: existingSales[0].direccionDespachoCiudad,
+          direccionDespachoDireccion: existingSales[0].direccionDespachoDireccion,
+          direccionDespachoUrbanizacion: existingSales[0].direccionDespachoUrbanizacion,
+          direccionDespachoReferencia: existingSales[0].direccionDespachoReferencia,
+          // Preserve other fields
+          metodoPagoId: existingSales[0].metodoPagoId,
+          bancoReceptorInicial: existingSales[0].bancoReceptorInicial,
+          referenciaInicial: existingSales[0].referenciaInicial,
+          montoInicialBs: existingSales[0].montoInicialBs,
+          montoInicialUsd: existingSales[0].montoInicialUsd,
+          asesorId: existingSales[0].asesorId,
+          pagoInicialUsd: existingSales[0].pagoInicialUsd,
+          fechaPagoInicial: existingSales[0].fechaPagoInicial,
+          pagoFleteUsd: existingSales[0].pagoFleteUsd,
+          fleteGratis: existingSales[0].fleteGratis,
+          seguimientoPago: existingSales[0].seguimientoPago,
+          notas: existingSales[0].notas,
+        }));
 
-      const createdSales = await storage.createSales(newSales);
-      res.json(createdSales);
+        const createdSales = await tx.insert(sales).values(newSalesData).returning();
+        return createdSales;
+      });
+
+      res.json(result);
     } catch (error) {
       console.error("Error updating order:", error);
       res.status(500).json({ error: "Failed to update order" });
