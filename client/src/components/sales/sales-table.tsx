@@ -728,7 +728,7 @@ export default function SalesTable({
                     <td className="p-2 min-w-[140px] text-xs font-medium text-foreground" title={sale.product}>
                       <div className="flex items-center gap-1">
                         {sale.esObsequio && (
-                          <Gift className="h-3.5 w-3.5 text-pink-500 flex-shrink-0" title="Obsequio" />
+                          <Gift className="h-3.5 w-3.5 text-pink-500 flex-shrink-0" />
                         )}
                         <span className="truncate">{sale.product}</span>
                       </div>
