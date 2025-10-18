@@ -90,6 +90,7 @@ export default function SimpleSalesList({
       case "cashea": return "bg-purple-100 text-purple-800";
       case "shopify": return "bg-green-100 text-green-800";
       case "treble": return "bg-blue-100 text-blue-800";
+      case "tienda": return "bg-yellow-100 text-yellow-800";
       case "manual": return "bg-orange-100 text-orange-800";
       default: return "bg-gray-100 text-gray-800";
     }
