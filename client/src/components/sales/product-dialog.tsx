@@ -173,7 +173,7 @@ export default function ProductDialog({ isOpen, onClose, onSave, product, index 
               control={form.control}
               name="esObsequio"
               render={({ field }) => (
-                <FormItem className="flex flex-row items-start space-x-3 space-y-0 mt-20">
+                <FormItem className="flex flex-row items-start space-x-3 space-y-0 mt-40">
                   <FormControl>
                     <Checkbox
                       checked={field.value}
