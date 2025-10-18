@@ -152,7 +152,7 @@ export default function ProductDialog({ isOpen, onClose, onSave, product, index 
               control={form.control}
               name="totalUsd"
               render={({ field }) => (
-                <FormItem className="mb-8">
+                <FormItem className="!mb-8">
                   <FormLabel>Total USD *</FormLabel>
                   <FormControl>
                     <Input 
