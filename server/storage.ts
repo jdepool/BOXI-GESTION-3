@@ -38,6 +38,7 @@ export interface IStorage {
   }): Promise<Sale[]>;
   getSaleById(id: string): Promise<Sale | undefined>;
   getSalesByOrderNumber(orderNumber: string): Promise<Sale[]>;
+  getMaxOrderNumberInRange(minOrderNumber: number): Promise<number>;
   getCasheaOrders(limit?: number): Promise<Sale[]>;
   getOrdersWithAddresses(limit?: number, offset?: number): Promise<{ data: Sale[]; total: number }>;
   updateSaleDeliveryStatus(saleId: string, newStatus: string): Promise<Sale | undefined>;
@@ -800,6 +801,17 @@ export class DatabaseStorage implements IStorage {
       .from(sales)
       .where(eq(sales.orden, orderNumber))
       .orderBy(desc(sales.fecha));
+  }
+
+  async getMaxOrderNumberInRange(minOrderNumber: number): Promise<number> {
+    // Efficiently get the maximum order number >= minOrderNumber without fetching all records
+    const result = await db
+      .select({ maxOrder: sql<string>`MAX(CAST(${sales.orden} AS INTEGER))` })
+      .from(sales)
+      .where(sql`CAST(${sales.orden} AS INTEGER) >= ${minOrderNumber}`);
+    
+    const maxOrder = result[0]?.maxOrder;
+    return maxOrder ? parseInt(maxOrder) : minOrderNumber - 1;
   }
 
   async updateSalesByOrderNumber(orderNumber: string, updates: Partial<InsertSale>): Promise<Sale[]> {

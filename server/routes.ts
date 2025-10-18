@@ -3863,18 +3863,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Generate order number starting from 20000 for manual entries
-      // Get manual sales with case-insensitive search to handle legacy "Manual" and new "manual" values
-      const manualSales = await storage.getSales({ canal: "manual" });
-      
-      // Also check for capitalized "Manual" in case of legacy data
-      const capitalizedManualSales = await storage.getSales({ canal: "Manual" });
-      const allManualSales = [...manualSales, ...capitalizedManualSales];
-      
-      const maxOrderNumber = allManualSales
-        .map(s => parseInt(s.orden || "0"))
-        .filter(n => !isNaN(n) && n >= 20000)
-        .sort((a, b) => b - a)[0] || 19999;
-      
+      // Use efficient storage method to get max order number in range (20000+)
+      // This ensures proper sequencing regardless of canal ("Tienda", "Manual", etc.)
+      const maxOrderNumber = await storage.getMaxOrderNumberInRange(20000);
       const newOrderNumber = (maxOrderNumber + 1).toString();
 
       // Check if products array is provided for multi-product support
