@@ -140,6 +140,11 @@
   color: white;
 }
 
+.channel-badge-tienda {
+  background-color: hsl(45, 93%, 47%);
+  color: white;
+}
+
 .status-badge-completed {
   background-color: hsl(142, 71%, 45%);
   color: white;
@@ -174,6 +179,11 @@
 
 .dark .channel-badge-treble {
   background-color: hsl(271, 85%, 65%);
+  color: hsl(218, 35%, 8%);
+}
+
+.dark .channel-badge-tienda {
+  background-color: hsl(45, 93%, 55%);
   color: hsl(218, 35%, 8%);
 }
 
