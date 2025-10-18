@@ -3857,6 +3857,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Parse and validate the request body
       const body = req.body;
       
+      // Validate required fields
+      if (!body.canal || typeof body.canal !== 'string' || body.canal.trim() === '') {
+        return res.status(400).json({ error: "Canal es requerido" });
+      }
+      
       // Generate order number starting from 20000 for manual entries
       // Get manual sales with case-insensitive search to handle legacy "Manual" and new "manual" values
       const manualSales = await storage.getSales({ canal: "manual" });
@@ -3888,7 +3893,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Order information - totalUsd will be set per product, totalOrderUsd is the overall order total
         totalOrderUsd: body.totalUsd ? body.totalUsd.toString() : null, // Store the total order amount from main form
         fecha: body.fecha ? new Date(body.fecha) : new Date(),
-        canal: body.canal || "manual",
+        canal: body.canal,
         estadoEntrega: body.estadoEntrega || "Pendiente", // Manual sales start as Pendiente
         orden: newOrderNumber,
         
