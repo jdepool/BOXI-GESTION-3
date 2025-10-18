@@ -173,7 +173,7 @@ export default function ProductDialog({ isOpen, onClose, onSave, product, index 
               control={form.control}
               name="esObsequio"
               render={({ field }) => (
-                <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                <FormItem className="flex flex-row items-start space-x-3 space-y-0 mt-6">
                   <FormControl>
                     <Checkbox
                       checked={field.value}
@@ -182,7 +182,7 @@ export default function ProductDialog({ isOpen, onClose, onSave, product, index 
                     />
                   </FormControl>
                   <div className="space-y-1 leading-none">
-                    <FormLabel>
+                    <FormLabel className="font-normal text-muted-foreground">
                       Este producto es obsequio
                     </FormLabel>
                   </div>
@@ -203,7 +203,7 @@ export default function ProductDialog({ isOpen, onClose, onSave, product, index 
                     />
                   </FormControl>
                   <div className="space-y-1 leading-none">
-                    <FormLabel>
+                    <FormLabel className="font-normal text-muted-foreground">
                       Este producto requiere medida especial
                     </FormLabel>
                   </div>
