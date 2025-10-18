@@ -3862,10 +3862,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Canal es requerido" });
       }
       
-      // Generate order number starting from 20000 for manual entries
-      // Use efficient storage method to get max order number in range (20000+)
-      // This ensures proper sequencing regardless of canal ("Tienda", "Manual", etc.)
-      const maxOrderNumber = await storage.getMaxOrderNumberInRange(20000);
+      // Normalize canal for consistent comparison
+      const normalizedCanal = body.canal.trim().toLowerCase();
+      
+      // Generate order number with separate sequences for Manual and Tienda
+      // Manual: 20000+ (20000, 20001, 20002...)
+      // Tienda: 30000+ (30000, 30001, 30002...)
+      // This prevents collisions and makes canal identification easy from order number
+      const startingOrderNumber = normalizedCanal === 'tienda' ? 30000 : 20000;
+      const maxOrderNumber = await storage.getMaxOrderNumberInRange(startingOrderNumber);
       const newOrderNumber = (maxOrderNumber + 1).toString();
 
       // Check if products array is provided for multi-product support

@@ -41,6 +41,7 @@ The application leverages shadcn/ui, Radix UI, Tailwind CSS, and Lucide React fo
 - **Transportista Management**: Full CRUD operations for transportation companies in the Administración section.
 - **Automated Cashea Downloads**: Configurable automation system for periodic Cashea order downloads, including enable/disable toggle, frequency options, download history, backend scheduler, and webhook integration for new Cashea orders.
 - **Reporte de Ordenes**: Comprehensive sales report with date filtering, sticky headers, dual-axis scrolling, Excel download with dynamic installment columns, and centralized Pendiente calculation matching the Pagos tab for consistency.
+- **Order Number Sequencing**: Separate order number ranges for manually-created sales to prevent collisions and enable easy canal identification: Manual orders use 20000+ (20000, 20001, 20002...), Tienda orders use 30000+ (30000, 30001, 30002...). Both sequences are generated through the same manual sales forms.
 
 # External Dependencies
 
