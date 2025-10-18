@@ -12,7 +12,7 @@ import { DateRangePicker } from "@/components/shared/date-range-picker";
 import SaleDetailModal from "./sale-detail-modal";
 import AddressModal from "@/components/addresses/address-modal";
 import EditSaleModal from "./edit-sale-modal";
-import { MapPin, Edit, CalendarIcon, Mail, Filter, ChevronDown, ChevronUp, Download, ChevronLeft, ChevronRight, RotateCcw, XCircle } from "lucide-react";
+import { MapPin, Edit, CalendarIcon, Mail, Filter, ChevronDown, ChevronUp, Download, ChevronLeft, ChevronRight, RotateCcw, XCircle, Gift } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -725,8 +725,13 @@ export default function SalesTable({
                     <td className="p-2 min-w-[100px] text-xs font-medium text-foreground">
                       ${Number(sale.totalUsd).toLocaleString()}
                     </td>
-                    <td className="p-2 min-w-[140px] text-xs font-medium text-foreground truncate" title={sale.product}>
-                      {sale.product}
+                    <td className="p-2 min-w-[140px] text-xs font-medium text-foreground" title={sale.product}>
+                      <div className="flex items-center gap-1">
+                        {sale.esObsequio && (
+                          <Gift className="h-3.5 w-3.5 text-pink-500 flex-shrink-0" title="Obsequio" />
+                        )}
+                        <span className="truncate">{sale.product}</span>
+                      </div>
                     </td>
                     <td className="p-2 min-w-[100px] text-xs text-muted-foreground truncate" title={sale.sku || undefined} data-testid={`sku-${sale.id}`}>
                       {sale.sku || 'N/A'}
