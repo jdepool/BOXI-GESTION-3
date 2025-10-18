@@ -170,6 +170,8 @@ export const sales = pgTable("sales", {
   seguimientoPago: text("seguimiento_pago"),
   // Medida especial (custom measurement for manual sales)
   medidaEspecial: varchar("medida_especial", { length: 10 }),
+  // Obsequio (gift item)
+  esObsequio: boolean("es_obsequio").default(false),
   // Asesor asignado
   asesorId: varchar("asesor_id"),
   // Transportista asignado
