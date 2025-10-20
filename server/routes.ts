@@ -4329,20 +4329,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Sale not found" });
       }
 
-      // Check if email was already sent
-      if (sale.emailSentAt) {
-        return res.status(200).json({ 
-          success: true, 
-          message: "Email was already sent for this order",
-          emailData: {
-            to: sale.email,
-            orderNumber: sale.orden || `ORD-${sale.id.slice(-8).toUpperCase()}`,
-            sentAt: sale.emailSentAt.toISOString(),
-            alreadySent: true
-          }
-        });
-      }
-
       // Validate that the sale has the required information for email
       if (!sale.email) {
         return res.status(400).json({ error: "Sale must have a customer email address" });
@@ -4352,12 +4338,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Sale must have a customer name" });
       }
 
-      // Get asesor name if available
-      let asesorName = undefined;
-      if (sale.asesorId) {
-        const asesor = await storage.getAsesorById(sale.asesorId);
-        asesorName = asesor?.nombre;
+      if (!sale.orden) {
+        return res.status(400).json({ error: "Sale must have an order number" });
       }
+
+      // Get all sales in the order
+      const orderSales = await storage.getSalesByOrderNumber(sale.orden);
+      if (!orderSales || orderSales.length === 0) {
+        return res.status(404).json({ error: "Order not found" });
+      }
+
+      // Check if email was already sent for any sale in this order
+      const emailAlreadySent = orderSales.some(s => s.emailSentAt);
+      if (emailAlreadySent) {
+        return res.status(200).json({ 
+          success: true, 
+          message: "Email was already sent for this order",
+          emailData: {
+            to: sale.email,
+            orderNumber: sale.orden,
+            sentAt: orderSales.find(s => s.emailSentAt)?.emailSentAt?.toISOString(),
+            alreadySent: true
+          }
+        });
+      }
+
+      // Build products array from all sales in the order
+      const products = orderSales.map(s => ({
+        name: s.product || 'Producto BoxiSleep',
+        quantity: s.cantidad || 1
+      }));
 
       // Build shipping address string if available
       let shippingAddress = undefined;
@@ -4376,22 +4386,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const emailData: OrderEmailData = {
         customerName: sale.nombre,
         customerEmail: sale.email,
-        orderNumber: sale.orden || `ORD-${sale.id.slice(-8).toUpperCase()}`,
-        product: sale.product || 'Producto BoxiSleep',
-        quantity: sale.cantidad || 1,
-        totalUsd: parseFloat(sale.totalUsd?.toString() || '0'),
+        orderNumber: sale.orden,
+        products,
+        totalOrderUsd: parseFloat(sale.totalOrderUsd?.toString() || '0'),
         fecha: sale.fecha.toISOString(),
-        sku: sale.sku || undefined,
-        asesorName,
-        shippingAddress
+        shippingAddress,
+        montoInicialBs: sale.montoInicialBs?.toString(),
+        montoInicialUsd: sale.montoInicialUsd?.toString(),
+        referenciaInicial: sale.referenciaInicial || undefined
       };
 
       // Send the email
       await sendOrderConfirmationEmail(emailData);
 
-      // Update the sale with email sent timestamp
+      // Update all sales in the order with email sent timestamp
       const emailSentTimestamp = new Date();
-      await storage.updateSale(id, {
+      await storage.updateSalesByOrderNumber(sale.orden, {
         emailSentAt: emailSentTimestamp
       });
 
