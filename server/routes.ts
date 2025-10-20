@@ -2515,6 +2515,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           // Refetch to get the updated estadoEntrega in response
           finalSales = await storage.getSalesByOrderNumber(orderNumber);
+
+          // Auto-send email confirmation if not already sent and customer has email
+          if (finalSales.length > 0 && finalSales[0].email && !finalSales[0].emailSentAt) {
+            try {
+              const firstSale = finalSales[0];
+              
+              // Build products array
+              const products = finalSales.map(s => ({
+                name: s.product || 'Producto BoxiSleep',
+                quantity: s.cantidad || 1
+              }));
+
+              // Build shipping address
+              let shippingAddress = undefined;
+              if (firstSale.direccionDespachoDireccion) {
+                const addressParts = [
+                  firstSale.direccionDespachoDireccion,
+                  firstSale.direccionDespachoUrbanizacion,
+                  firstSale.direccionDespachoCiudad,
+                  firstSale.direccionDespachoEstado,
+                  firstSale.direccionDespachoPais
+                ].filter(Boolean);
+                shippingAddress = addressParts.join(', ');
+              }
+
+              // Prepare email data
+              const emailData: OrderEmailData = {
+                customerName: firstSale.nombre,
+                customerEmail: firstSale.email,
+                orderNumber: orderNumber,
+                products,
+                totalOrderUsd: parseFloat(firstSale.totalOrderUsd?.toString() || '0'),
+                fecha: firstSale.fecha.toISOString(),
+                shippingAddress,
+                montoInicialBs: firstSale.montoInicialBs?.toString(),
+                montoInicialUsd: firstSale.montoInicialUsd?.toString(),
+                referenciaInicial: firstSale.referenciaInicial || undefined
+              };
+
+              // Send email
+              await sendOrderConfirmationEmail(emailData);
+              
+              // Update all sales with emailSentAt timestamp
+              const emailSentTimestamp = new Date();
+              await storage.updateSalesByOrderNumber(orderNumber, {
+                emailSentAt: emailSentTimestamp
+              });
+
+              console.log(`📧 Auto-sent confirmation email to ${firstSale.email} for order ${orderNumber}`);
+              
+              // Refetch again to include emailSentAt in response
+              finalSales = await storage.getSalesByOrderNumber(orderNumber);
+            } catch (emailError) {
+              console.error(`⚠️  Failed to auto-send email for order ${orderNumber}:`, emailError);
+              // Don't fail the request if email fails - just log it
+            }
+          }
         }
       }
 
