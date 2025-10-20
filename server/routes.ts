@@ -2543,7 +2543,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               // Prepare email data
               const emailData: OrderEmailData = {
                 customerName: firstSale.nombre,
-                customerEmail: firstSale.email,
+                customerEmail: firstSale.email!,
                 orderNumber: orderNumber,
                 products,
                 totalOrderUsd: parseFloat(firstSale.totalOrderUsd?.toString() || '0'),
@@ -4493,6 +4493,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.status(500).json({ 
         error: "Failed to send email", 
+        details: error instanceof Error ? error.message : "Unknown error occurred" 
+      });
+    }
+  });
+
+  // POST /api/test-email - Send test email (TEMPORARY - for testing email structure)
+  app.post("/api/test-email", async (req, res) => {
+    try {
+      const { email } = req.body;
+      
+      if (!email) {
+        return res.status(400).json({ error: "Email address is required" });
+      }
+
+      // Sample email data with multiple products
+      const emailData: OrderEmailData = {
+        customerName: "María Eugenia Labrador",
+        customerEmail: email,
+        orderNumber: "TEST-20001",
+        products: [
+          { name: "Colchón Matrimonial Premium", quantity: 1 },
+          { name: "Almohada Viscoelástica", quantity: 2 },
+          { name: "Base para Colchón", quantity: 1 }
+        ],
+        totalOrderUsd: 850.00,
+        fecha: new Date().toISOString(),
+        shippingAddress: "Av. Principal #123, Urbanización Los Pinos, Caracas, Miranda, Venezuela",
+        montoInicialBs: "1800.00",
+        montoInicialUsd: "50.00",
+        referenciaInicial: "0123456789"
+      };
+
+      // Send the test email
+      await sendOrderConfirmationEmail(emailData);
+
+      res.json({ 
+        success: true, 
+        message: `Test email sent successfully to ${email}`,
+        emailData: {
+          to: email,
+          orderNumber: emailData.orderNumber
+        }
+      });
+
+    } catch (error) {
+      console.error("Test email error:", error);
+      res.status(500).json({ 
+        error: "Failed to send test email", 
         details: error instanceof Error ? error.message : "Unknown error occurred" 
       });
     }
