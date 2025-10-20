@@ -53,13 +53,13 @@ export interface OrderEmailData {
   customerName: string;
   customerEmail: string;
   orderNumber: string;
-  product: string;
-  quantity: number;
-  totalUsd: number;
+  products: Array<{ name: string; quantity: number }>;
+  totalOrderUsd: number;
   fecha: string;
-  sku?: string;
-  asesorName?: string;
   shippingAddress?: string;
+  montoInicialBs?: string;
+  montoInicialUsd?: string;
+  referenciaInicial?: string;
 }
 
 export function generateOrderConfirmationHTML(data: OrderEmailData): string {
@@ -98,6 +98,13 @@ export function generateOrderConfirmationHTML(data: OrderEmailData): string {
             margin: 20px 0;
             border-left: 4px solid #1DB5A6;
         }
+        .payment-details {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 4px solid #1DB5A6;
+        }
         .detail-row {
             display: flex;
             justify-content: space-between;
@@ -108,6 +115,15 @@ export function generateOrderConfirmationHTML(data: OrderEmailData): string {
         .detail-label {
             font-weight: bold;
             color: #555;
+        }
+        .product-list {
+            margin: 15px 0;
+            padding-left: 0;
+            list-style: none;
+        }
+        .product-item {
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
         }
         .total {
             background-color: #1DB5A6;
@@ -144,7 +160,7 @@ export function generateOrderConfirmationHTML(data: OrderEmailData): string {
     <div class="content">
         <p>Estimado/a <strong>${data.customerName}</strong>,</p>
         
-        <p>¡Gracias por tu pedido! Hemos recibido correctamente tu solicitud. Te mantendremos informado sobre el estado de tu compra.</p>
+        <p>¡Gracias por tu compra! Hemos recibido correctamente tus datos de pago. Te mantendremos informado sobre el estado de tu compra.</p>
         
         <div class="order-details">
             <h3>📋 Detalles del Pedido</h3>
@@ -163,21 +179,13 @@ export function generateOrderConfirmationHTML(data: OrderEmailData): string {
                 })}</span>
             </div>
             
-            <div class="detail-row">
-                <span class="detail-label">Producto:</span>
-                <span>${data.product}</span>
-            </div>
-            
-            ${data.sku ? `
-            <div class="detail-row">
-                <span class="detail-label">SKU:</span>
-                <span>${data.sku}</span>
-            </div>
-            ` : ''}
-            
-            <div class="detail-row">
-                <span class="detail-label">Cantidad:</span>
-                <span>${data.quantity} unidad${data.quantity > 1 ? 'es' : ''}</span>
+            <div style="margin: 15px 0;">
+                <span class="detail-label" style="display: block; margin-bottom: 10px;">Productos:</span>
+                <ul class="product-list">
+                    ${data.products.map(p => `
+                    <li class="product-item">• ${p.name} - Cantidad: ${p.quantity} unidad${p.quantity > 1 ? 'es' : ''}</li>
+                    `).join('')}
+                </ul>
             </div>
             
             ${data.shippingAddress ? `
@@ -186,17 +194,37 @@ export function generateOrderConfirmationHTML(data: OrderEmailData): string {
                 <span>${data.shippingAddress}</span>
             </div>
             ` : ''}
+        </div>
+        
+        ${(data.montoInicialBs || data.montoInicialUsd || data.referenciaInicial) ? `
+        <div class="payment-details">
+            <h3>💳 Información de Pago</h3>
             
-            ${data.asesorName ? `
+            ${data.montoInicialBs ? `
             <div class="detail-row">
-                <span class="detail-label">Asesor Asignado:</span>
-                <span>${data.asesorName}</span>
+                <span class="detail-label">Monto Bs:</span>
+                <span>${parseFloat(data.montoInicialBs).toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Bs</span>
+            </div>
+            ` : ''}
+            
+            ${data.montoInicialUsd ? `
+            <div class="detail-row">
+                <span class="detail-label">Monto USD:</span>
+                <span>$${parseFloat(data.montoInicialUsd).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD</span>
+            </div>
+            ` : ''}
+            
+            ${data.referenciaInicial ? `
+            <div class="detail-row">
+                <span class="detail-label">Referencia:</span>
+                <span>${data.referenciaInicial}</span>
             </div>
             ` : ''}
         </div>
+        ` : ''}
         
         <div class="total">
-            💰 Total: $${data.totalUsd.toLocaleString()} USD
+            💰 Total del Pedido: $${data.totalOrderUsd.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD
         </div>
     </div>
     
