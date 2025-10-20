@@ -2487,6 +2487,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Order not found" });
       }
 
+      // Store current estadoEntrega before update
+      const currentEstadoEntrega = salesInOrder[0]?.estadoEntrega;
+
       // Update pago inicial data for all products in this order
       const updatedSales = await storage.updateOrderPagoInicial(orderNumber, pagoData);
       
@@ -2494,7 +2497,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(500).json({ error: "Failed to update pago inicial" });
       }
 
-      res.json({ success: true, sales: updatedSales });
+      // Auto-update estadoEntrega from "Pendiente" to "En Proceso" when payment is complete
+      let finalSales = updatedSales;
+      if (currentEstadoEntrega === 'Pendiente' && updatedSales.length > 0) {
+        const firstSale = updatedSales[0];
+        // Check if all three payment fields are now filled
+        const hasPaymentAmount = firstSale.pagoInicialUsd != null && Number(firstSale.pagoInicialUsd) > 0;
+        const hasBanco = firstSale.bancoReceptorInicial != null && firstSale.bancoReceptorInicial.trim() !== '';
+        const hasReferencia = firstSale.referenciaInicial != null && firstSale.referenciaInicial.trim() !== '';
+        
+        if (hasPaymentAmount && hasBanco && hasReferencia) {
+          // Update estadoEntrega to "En Proceso"
+          await storage.updateSalesByOrderNumber(orderNumber, { 
+            estadoEntrega: 'En proceso'
+          });
+          console.log(`✅ Auto-updated order ${orderNumber} from "Pendiente" to "En proceso"`);
+          
+          // Refetch to get the updated estadoEntrega in response
+          finalSales = await storage.getSalesByOrderNumber(orderNumber);
+        }
+      }
+
+      res.json({ success: true, sales: finalSales });
     } catch (error) {
       console.error("Update pago inicial error:", error);
       res.status(500).json({ error: "Failed to update pago inicial" });
