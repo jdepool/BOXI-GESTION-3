@@ -645,7 +645,7 @@ export default function PagosTable({
                       <div className="flex justify-center">
                         <div className="bg-blue-100 dark:bg-blue-900 text-blue-900 dark:text-blue-100 px-3 py-1 rounded-md text-xs" data-testid={`metric-orden-${order.orden}`}>
                           {order.canal?.toLowerCase() === 'cashea' 
-                            ? formatCurrency(order.pagoInicialUsd) 
+                            ? formatCurrency(0) 
                             : formatCurrency(order.totalOrderUsd)}
                         </div>
                       </div>
