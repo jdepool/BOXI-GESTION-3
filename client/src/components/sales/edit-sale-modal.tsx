@@ -18,7 +18,7 @@ import ProductDialog, { ProductFormData } from "./product-dialog";
 
 const editSaleSchema = z.object({
   nombre: z.string().min(1, "Nombre es requerido"),
-  cedula: z.string().optional(),
+  cedula: z.string().regex(/^[A-Za-z0-9]{6,10}$/, "La cédula debe tener entre 6 y 10 caracteres alfanuméricos").optional().or(z.literal("")),
   telefono: z.string().optional(),
   email: z.string().email().optional().or(z.literal("")),
   canal: z.string().optional(),
@@ -226,7 +226,7 @@ export default function EditSaleModal({ open, onOpenChange, sale }: EditSaleModa
                         <FormLabel>Cédula</FormLabel>
                         <FormControl>
                           <Input 
-                            placeholder="V-12345678" 
+                            placeholder="12345678 para Cédula, J123456789 para RIF, sin espacios ni guiones" 
                             {...field} 
                             data-testid="input-cedula"
                           />

@@ -32,7 +32,7 @@ interface ManualReservaModalProps {
 // Form schema based on insertSaleSchema with proper numeric coercion
 const manualReservaSchema = z.object({
   nombre: z.string().min(1, "Nombre es requerido"),
-  cedula: z.string().min(1, "Cédula es requerida").regex(/^\d{6,8}$/, "La cédula debe tener entre 6 y 8 dígitos"),
+  cedula: z.string().min(1, "Cédula es requerida").regex(/^[A-Za-z0-9]{6,10}$/, "La cédula debe tener entre 6 y 10 caracteres alfanuméricos"),
   telefono: z.string().min(1, "Teléfono es requerido").regex(/^\d+$/, "El teléfono debe contener solo números"),
   email: z.string().email("Email inválido").optional().or(z.literal("")),
   totalUsd: z.string().min(1, "Total Orden USD es requerido"),
@@ -256,7 +256,7 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
                       <FormLabel>Cédula *</FormLabel>
                       <FormControl>
                         <Input 
-                          placeholder="12345678" 
+                          placeholder="12345678 para Cédula, J123456789 para RIF, sin espacios ni guiones" 
                           {...field} 
                           value={field.value || ""} 
                           data-testid="input-cedula" 
