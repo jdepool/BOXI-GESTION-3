@@ -235,29 +235,29 @@ export default function ProspectosTable({
                 </tr>
               ) : (
                 data.map((prospecto) => (
-                  <tr key={prospecto.id} className="border-b border-border hover:bg-muted/30" data-testid={`row-prospecto-${prospecto.id}`}>
-                    <td className="p-3 font-medium" data-testid={`text-prospecto-${prospecto.id}`}>
+                  <tr key={prospecto.id} className="border-b border-border hover:bg-muted/30 text-xs" data-testid={`row-prospecto-${prospecto.id}`}>
+                    <td className="p-3 font-medium text-xs" data-testid={`text-prospecto-${prospecto.id}`}>
                       {prospecto.prospecto}
                     </td>
-                    <td className="p-3" data-testid={`text-nombre-${prospecto.id}`}>
+                    <td className="p-3 text-xs" data-testid={`text-nombre-${prospecto.id}`}>
                       {prospecto.nombre}
                     </td>
-                    <td className="p-3" data-testid={`text-fecha-${prospecto.id}`}>
+                    <td className="p-3 text-xs" data-testid={`text-fecha-${prospecto.id}`}>
                       {format(new Date(prospecto.fechaCreacion), "dd/MM/yy")}
                     </td>
-                    <td className="p-3" data-testid={`text-canal-${prospecto.id}`}>
+                    <td className="p-3 text-xs" data-testid={`text-canal-${prospecto.id}`}>
                       {prospecto.canal || "-"}
                     </td>
-                    <td className="p-3" data-testid={`text-telefono-${prospecto.id}`}>
+                    <td className="p-3 text-xs" data-testid={`text-telefono-${prospecto.id}`}>
                       {prospecto.telefono}
                     </td>
-                    <td className="p-3" data-testid={`text-asesor-${prospecto.id}`}>
+                    <td className="p-3 text-xs" data-testid={`text-asesor-${prospecto.id}`}>
                       {prospecto.asesorId ? asesorMap.get(prospecto.asesorId) || "-" : "-"}
                     </td>
-                    <td className="p-3" data-testid={`text-notas-${prospecto.id}`}>
+                    <td className="p-3 text-xs" data-testid={`text-notas-${prospecto.id}`}>
                       {prospecto.notas || "-"}
                     </td>
-                    <td className="p-3">
+                    <td className="p-3 text-xs">
                       <div className="flex items-center gap-2">
                         <Button
                           size="sm"
