@@ -40,11 +40,19 @@ export default function SaleDetailModal({ sale, onClose }: SaleDetailModalProps)
   if (!sale) return null;
 
   // Fetch installments for this order
-  const { data: installments = [] } = useQuery<PaymentInstallment[]>({
+  const { data: installmentsData = [] } = useQuery<PaymentInstallment[]>({
     queryKey: ['/api/sales/installments', sale.orden],
-    queryFn: () => fetch(`/api/sales/installments?orden=${encodeURIComponent(sale.orden || '')}`).then(res => res.json()),
+    queryFn: async () => {
+      const res = await fetch(`/api/sales/installments?orden=${encodeURIComponent(sale.orden || '')}`);
+      const data = await res.json();
+      // Ensure we always return an array, even if API returns error object
+      return Array.isArray(data) ? data : [];
+    },
     enabled: !!sale.orden,
   });
+
+  // Ensure installments is always an array
+  const installments = Array.isArray(installmentsData) ? installmentsData : [];
 
   // Fetch banks to map IDs to names
   const { data: banks = [] } = useQuery<Banco[]>({
