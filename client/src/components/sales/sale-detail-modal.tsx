@@ -29,8 +29,9 @@ interface Banco {
 
 interface PaymentDisplay {
   tipo: string;
-  montoBs: string | null;
+  pagoUsd: string | null;
   montoUsd: string | null;
+  montoBs: string | null;
   referencia: string | null;
   bancoId: string | null;
   estadoVerificacion: string;
@@ -106,9 +107,10 @@ export default function SaleDetailModal({ sale, onClose }: SaleDetailModalProps)
   // Add initial payment if it exists
   if (sale.pagoInicialUsd || sale.montoInicialBs || sale.montoInicialUsd) {
     allPayments.push({
-      tipo: 'Inicial/Total',
+      tipo: 'Pago Inicial/Total',
+      pagoUsd: sale.pagoInicialUsd,
+      montoUsd: sale.montoInicialUsd,
       montoBs: sale.montoInicialBs,
-      montoUsd: sale.montoInicialUsd || sale.pagoInicialUsd,
       referencia: sale.referenciaInicial,
       bancoId: sale.bancoReceptorInicial,
       estadoVerificacion: sale.estadoVerificacionInicial || 'Por verificar',
@@ -116,11 +118,12 @@ export default function SaleDetailModal({ sale, onClose }: SaleDetailModalProps)
   }
 
   // Add freight payment if it exists
-  if (sale.pagoFleteUsd || sale.montoFleteBs) {
+  if (sale.pagoFleteUsd || sale.montoFleteUsd || sale.montoFleteBs) {
     allPayments.push({
-      tipo: 'Flete',
+      tipo: 'Pago Flete',
+      pagoUsd: sale.pagoFleteUsd,
+      montoUsd: sale.montoFleteUsd,
       montoBs: sale.montoFleteBs,
-      montoUsd: sale.pagoFleteUsd,
       referencia: sale.referenciaFlete,
       bancoId: sale.bancoReceptorFlete,
       estadoVerificacion: sale.estadoVerificacionFlete || 'Por verificar',
@@ -130,9 +133,10 @@ export default function SaleDetailModal({ sale, onClose }: SaleDetailModalProps)
   // Add installment payments
   installments.forEach((installment) => {
     allPayments.push({
-      tipo: `Cuota ${installment.installmentNumber}`,
+      tipo: `Pago Cuota ${installment.installmentNumber}`,
+      pagoUsd: installment.pagoCuotaUsd,
+      montoUsd: installment.montoCuotaUsd,
       montoBs: installment.montoCuotaBs,
-      montoUsd: installment.montoCuotaUsd || installment.pagoCuotaUsd,
       referencia: installment.referencia,
       bancoId: installment.bancoReceptorCuota,
       estadoVerificacion: installment.estadoVerificacion || 'Por verificar',
@@ -205,21 +209,24 @@ export default function SaleDetailModal({ sale, onClose }: SaleDetailModalProps)
               <div className="space-y-3">
                 {allPayments.map((payment, index) => (
                   <div key={index} className="bg-secondary rounded-lg p-4">
-                    <div className="grid grid-cols-1 md:grid-cols-6 gap-3 text-sm">
-                      <div>
-                        <p className="text-muted-foreground text-xs mb-1">Pago</p>
-                        <p className="text-foreground font-medium">{payment.tipo}</p>
-                      </div>
-                      {payment.montoBs && (
+                    <h4 className="font-medium text-foreground mb-3">{payment.tipo}</h4>
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 text-sm">
+                      {payment.pagoUsd && (
                         <div>
-                          <p className="text-muted-foreground text-xs mb-1">Monto Bs</p>
-                          <p className="text-foreground font-mono">Bs {Number(payment.montoBs).toLocaleString()}</p>
+                          <p className="text-muted-foreground text-xs mb-1">Pago USD</p>
+                          <p className="text-foreground font-mono">${Number(payment.pagoUsd).toLocaleString()}</p>
                         </div>
                       )}
                       {payment.montoUsd && (
                         <div>
                           <p className="text-muted-foreground text-xs mb-1">Monto USD</p>
                           <p className="text-foreground font-mono">${Number(payment.montoUsd).toLocaleString()}</p>
+                        </div>
+                      )}
+                      {payment.montoBs && (
+                        <div>
+                          <p className="text-muted-foreground text-xs mb-1">Monto Bs</p>
+                          <p className="text-foreground font-mono">Bs {Number(payment.montoBs).toLocaleString()}</p>
                         </div>
                       )}
                       <div>
