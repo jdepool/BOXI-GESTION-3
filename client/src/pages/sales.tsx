@@ -9,7 +9,9 @@ import SalesTable from "@/components/sales/sales-table";
 import ManualSalesEntry from "@/components/sales/manual-sales-entry";
 import ManualReservaModal from "@/components/sales/manual-reserva-modal";
 import PagosTable from "@/components/sales/pagos-table";
+import ProspectosTable from "@/components/prospectos/prospectos-table";
 import UploadZone from "@/components/upload/upload-zone";
+import type { Prospecto } from "@shared/schema";
 
 export default function Sales() {
   const [filters, setFilters] = useState({
@@ -40,9 +42,15 @@ export default function Sales() {
     offset: 0,
   });
 
+  const [prospectosFilters, setProspectosFilters] = useState({
+    asesorId: "",
+    limit: 20,
+    offset: 0,
+  });
+
   const [isManualReservaModalOpen, setIsManualReservaModalOpen] = useState(false);
   const [isSettingsDialogOpen, setIsSettingsDialogOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState("lista");
+  const [activeTab, setActiveTab] = useState("prospectos");
 
   const { data: salesData, isLoading } = useQuery<{
     data: any[];
@@ -112,6 +120,16 @@ export default function Sales() {
     queryKey: ["/api/uploads/recent"],
   });
 
+  // Query for Prospectos tab
+  const { data: prospectosData, isLoading: prospectosLoading } = useQuery<{
+    data: Prospecto[];
+    total: number;
+    limit: number;
+    offset: number;
+  }>({
+    queryKey: ["/api/prospectos", prospectosFilters],
+  });
+
   const handleFilterChange = (newFilters: Partial<typeof filters>) => {
     const normalized = { ...newFilters };
     if (normalized.canal === "all") normalized.canal = "";
@@ -177,6 +195,24 @@ export default function Sales() {
     });
   };
 
+  const handleProspectosFilterChange = (newFilters: Partial<typeof prospectosFilters>) => {
+    const normalized = { ...newFilters };
+    if (normalized.asesorId === "all") normalized.asesorId = "";
+    setProspectosFilters(prev => ({ ...prev, ...normalized, offset: 0 }));
+  };
+
+  const handleProspectosPageChange = (newOffset: number) => {
+    setProspectosFilters(prev => ({ ...prev, offset: newOffset }));
+  };
+
+  const handleClearProspectosFilters = () => {
+    setProspectosFilters({
+      asesorId: "",
+      limit: 20,
+      offset: 0,
+    });
+  };
+
   return (
     <div className="h-screen flex bg-background">
       <Sidebar />
@@ -190,6 +226,7 @@ export default function Sales() {
           <Tabs value={activeTab} onValueChange={setActiveTab} className="h-full">
             <div className="flex items-center justify-between mb-4">
               <TabsList>
+                <TabsTrigger value="prospectos" data-testid="tab-prospectos">Prospectos</TabsTrigger>
                 <TabsTrigger value="lista" data-testid="tab-sales-list">Lista de Ventas</TabsTrigger>
                 <TabsTrigger value="manual" data-testid="tab-manual-entry">Inmediatas</TabsTrigger>
                 <TabsTrigger value="reservas" data-testid="tab-reservas">Reservas</TabsTrigger>
@@ -205,6 +242,22 @@ export default function Sales() {
                 Cargar datos
               </Button>
             </div>
+            
+            <TabsContent value="prospectos" className="h-full">
+              <div className="bg-card rounded-lg border border-border h-full">
+                <ProspectosTable 
+                  data={prospectosData?.data || []} 
+                  total={prospectosData?.total || 0}
+                  limit={prospectosFilters.limit}
+                  offset={prospectosFilters.offset}
+                  isLoading={prospectosLoading}
+                  filters={prospectosFilters}
+                  onFilterChange={handleProspectosFilterChange}
+                  onPageChange={handleProspectosPageChange}
+                  onClearFilters={handleClearProspectosFilters}
+                />
+              </div>
+            </TabsContent>
             
             <TabsContent value="lista" className="h-full">
               <div className="bg-card rounded-lg border border-border h-full">
