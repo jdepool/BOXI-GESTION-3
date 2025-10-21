@@ -475,7 +475,14 @@ export const insertProspectoSchema = createInsertSchema(prospectos).omit({
   email: z.string().email("Email inválido").optional().or(z.literal("")),
   canal: z.string().optional(),
   asesorId: z.string().optional().nullable(),
-  fechaEntrega: z.union([z.date(), z.string().transform((val) => new Date(val))]).optional().nullable(),
+  fechaEntrega: z.preprocess(
+    (val) => {
+      if (val === "" || val === null) return null;
+      if (typeof val === "string") return new Date(val);
+      return val;
+    },
+    z.date().nullable().optional()
+  ),
   totalUsd: z.string().optional(),
   products: z.string().optional(), // JSON string
   direccionFacturacionPais: z.string().optional(),
