@@ -3596,6 +3596,83 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Export prospectos data to Excel
+  app.get("/api/prospectos/export", async (req, res) => {
+    try {
+      const query = getProspectosQuerySchema.parse(req.query);
+      
+      const prospectosData = await storage.getProspectos({
+        asesorId: query.asesorId,
+        limit: 10000, // Get all for export
+        offset: 0,
+      });
+      
+      // Map to Excel columns
+      const excelData = prospectosData.map(prospecto => {
+        // Parse products JSON
+        let productsText = '';
+        if (prospecto.products) {
+          try {
+            const products = JSON.parse(prospecto.products);
+            productsText = products.map((p: any) => 
+              `${p.product} (SKU: ${p.sku}, Cant: ${p.cantidad}, Total: $${p.totalUsd})`
+            ).join('; ');
+          } catch (e) {
+            productsText = '';
+          }
+        }
+        
+        return {
+          'Prospecto': prospecto.prospecto,
+          'Nombre': prospecto.nombre,
+          'Cédula': prospecto.cedula || '',
+          'Teléfono': prospecto.telefono,
+          'Email': prospecto.email || '',
+          'Canal': prospecto.canal || '',
+          'Asesor': prospecto.asesorId || '',
+          'Fecha de Entrega': prospecto.fechaEntrega ? new Date(prospecto.fechaEntrega).toLocaleDateString('es-ES') : '',
+          'Total USD': prospecto.totalUsd || '',
+          'Productos': productsText,
+          'Notas': prospecto.notas || '',
+          
+          // Shipping Address
+          'País (Despacho)': prospecto.direccionDespachoPais || '',
+          'Estado (Despacho)': prospecto.direccionDespachoEstado || '',
+          'Ciudad (Despacho)': prospecto.direccionDespachoCiudad || '',
+          'Dirección (Despacho)': prospecto.direccionDespachoDireccion || '',
+          'Urbanización (Despacho)': prospecto.direccionDespachoUrbanizacion || '',
+          'Referencia (Despacho)': prospecto.direccionDespachoReferencia || '',
+          
+          // Billing Address
+          'Despacho Igual a Facturación': prospecto.direccionDespachoIgualFacturacion === "true" ? 'Sí' : 'No',
+          'País (Facturación)': prospecto.direccionFacturacionPais || '',
+          'Estado (Facturación)': prospecto.direccionFacturacionEstado || '',
+          'Ciudad (Facturación)': prospecto.direccionFacturacionCiudad || '',
+          'Dirección (Facturación)': prospecto.direccionFacturacionDireccion || '',
+          'Urbanización (Facturación)': prospecto.direccionFacturacionUrbanizacion || '',
+          'Referencia (Facturación)': prospecto.direccionFacturacionReferencia || '',
+          
+          'Fecha de Creación': new Date(prospecto.fechaCreacion).toLocaleDateString('es-ES'),
+        };
+      });
+
+      // Convert to Excel format
+      const worksheet = XLSX.utils.json_to_sheet(excelData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Prospectos');
+
+      const buffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' });
+
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+      res.setHeader('Content-Disposition', `attachment; filename="prospectos_boxisleep_${new Date().toISOString().split('T')[0]}.xlsx"`);
+      res.send(buffer);
+
+    } catch (error) {
+      console.error("Error exporting prospectos:", error);
+      res.status(500).json({ error: "Failed to export prospectos data" });
+    }
+  });
+
   app.post("/api/prospectos", async (req, res) => {
     try {
       const validatedData = insertProspectoSchema.parse(req.body);

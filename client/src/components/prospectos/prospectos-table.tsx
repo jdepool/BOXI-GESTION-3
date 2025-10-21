@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { ChevronLeft, ChevronRight, Edit, Plus, RotateCcw, Filter, ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronLeft, ChevronRight, Edit, Plus, RotateCcw, Filter, ChevronDown, ChevronUp, Download } from "lucide-react";
 import { format } from "date-fns";
 import ProspectoDialog from "./prospecto-dialog";
 import type { Prospecto } from "@shared/schema";
@@ -81,6 +81,31 @@ export default function ProspectosTable({
     }
   };
 
+  const handleExport = async () => {
+    try {
+      const queryParams = new URLSearchParams();
+      
+      if (filters?.asesorId) {
+        queryParams.append('asesorId', filters.asesorId);
+      }
+
+      const response = await fetch(`/api/prospectos/export?${queryParams}`);
+      if (!response.ok) throw new Error('Export failed');
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `prospectos_boxisleep_${new Date().toISOString().split('T')[0]}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error('Export error:', error);
+    }
+  };
+
   return (
     <>
       <div className="flex flex-col h-full">
@@ -127,6 +152,17 @@ export default function ProspectosTable({
                 </Tooltip>
               </TooltipProvider>
             )}
+            
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={handleExport} 
+              data-testid="button-export-prospectos"
+              className="text-muted-foreground"
+              title="Exportar"
+            >
+              <Download className="h-4 w-4" />
+            </Button>
           </div>
         </div>
 
