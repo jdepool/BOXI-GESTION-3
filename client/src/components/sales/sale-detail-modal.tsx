@@ -22,12 +22,18 @@ export default function SaleDetailModal({ sale, onClose }: SaleDetailModalProps)
     }
   };
 
-  const getStatusBadgeClass = (status: string) => {
-    switch (status?.toLowerCase()) {
-      case 'entregado': return 'status-badge-completed';
-      case 'pendiente': return 'status-badge-pending';
-      case 'reservado': return 'status-badge-reserved';
-      default: return 'bg-gray-500';
+  const getEstadoEntregaBadgeClass = (estado: string) => {
+    switch (estado?.toLowerCase()) {
+      case 'entregado': return 'bg-green-600 text-white';
+      case 'pendiente': return 'bg-yellow-600 text-white';
+      case 'en proceso': return 'bg-blue-600 text-white';
+      case 'a despachar': return 'bg-purple-600 text-white';
+      case 'en tránsito': return 'bg-indigo-600 text-white';
+      case 'a devolver': return 'bg-orange-600 text-white';
+      case 'devuelto': return 'bg-gray-600 text-white';
+      case 'cancelada': return 'bg-red-600 text-white';
+      case 'perdida': return 'bg-red-800 text-white';
+      default: return 'bg-gray-500 text-white';
     }
   };
 
@@ -58,6 +64,18 @@ export default function SaleDetailModal({ sale, onClose }: SaleDetailModalProps)
                   {sale.canal.charAt(0).toUpperCase() + sale.canal.slice(1)}
                 </Badge>
               </p>
+              <p>
+                <span className="text-muted-foreground">Tipo:</span> 
+                <Badge variant="secondary" className="ml-2">
+                  {sale.tipo || 'Inmediato'}
+                </Badge>
+              </p>
+              <p>
+                <span className="text-muted-foreground">Estado Entrega:</span> 
+                <Badge className={`${getEstadoEntregaBadgeClass(sale.estadoEntrega)} ml-2`}>
+                  {sale.estadoEntrega}
+                </Badge>
+              </p>
               <p><span className="text-muted-foreground">Total Order USD:</span> <span className="text-foreground font-medium">${sale.totalOrderUsd != null ? Number(sale.totalOrderUsd).toLocaleString() : 'N/A'}</span></p>
               <p><span className="text-muted-foreground">Fecha:</span> <span className="text-foreground">{format(new Date(sale.fecha), 'dd/MM/yy')}</span></p>
             </div>
@@ -73,30 +91,6 @@ export default function SaleDetailModal({ sale, onClose }: SaleDetailModalProps)
                 </div>
                 <p className="font-bold text-foreground">${Number(sale.totalUsd).toLocaleString()}</p>
               </div>
-            </div>
-          </div>
-
-          <div className="md:col-span-2">
-            <h3 className="font-semibold text-foreground mb-3">Estado y Entrega</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <p className="text-muted-foreground text-sm mb-1">Tipo</p>
-                <Badge variant="secondary">
-                  {sale.tipo || 'Inmediato'}
-                </Badge>
-              </div>
-              {sale.estadoPagoInicial && (
-                <div>
-                  <p className="text-muted-foreground text-sm mb-1">Estado de Pago Inicial</p>
-                  <Badge variant="outline">{sale.estadoPagoInicial}</Badge>
-                </div>
-              )}
-              {sale.pagoInicialUsd && (
-                <div>
-                  <p className="text-muted-foreground text-sm mb-1">Pago Inicial/Total</p>
-                  <p className="text-foreground">${Number(sale.pagoInicialUsd).toLocaleString()}</p>
-                </div>
-              )}
             </div>
           </div>
 
