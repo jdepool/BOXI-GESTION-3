@@ -12,7 +12,7 @@ import { DateRangePicker } from "@/components/shared/date-range-picker";
 import SaleDetailModal from "./sale-detail-modal";
 import AddressModal from "@/components/addresses/address-modal";
 import EditSaleModal from "./edit-sale-modal";
-import { MapPin, Edit, CalendarIcon, Mail, Filter, ChevronDown, ChevronUp, Download, ChevronLeft, ChevronRight, RotateCcw, XCircle, Gift } from "lucide-react";
+import { MapPin, Edit, CalendarIcon, Filter, ChevronDown, ChevronUp, Download, ChevronLeft, ChevronRight, RotateCcw, XCircle, Gift } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -73,31 +73,6 @@ export default function SalesTable({
     parentFilters?.endDate
   );
   
-  // Email sending mutation
-  const sendEmailMutation = useMutation({
-    mutationFn: async (saleId: string) => {
-      const response = await apiRequest('POST', `/api/sales/${saleId}/send-email`);
-      return await response.json();
-    },
-    onSuccess: (data: any) => {
-      toast({
-        title: "¡Email enviado!",
-        description: `Confirmación de pedido enviada a ${data.emailData.to}`,
-        className: "bg-green-50 border-green-200 text-green-800",
-      });
-      // Refresh sales data to show green icon
-      queryClient.invalidateQueries({ queryKey: ["/api/sales"] });
-    },
-    onError: (error: any) => {
-      console.error("Error sending email:", error);
-      toast({
-        title: "Error al enviar email",
-        description: error.details || error.message || "Error desconocido al enviar el email",
-        variant: "destructive",
-      });
-    },
-  });
-
   // Cancel sale mutation
   const cancelSaleMutation = useMutation({
     mutationFn: async (saleId: string) => {
@@ -896,20 +871,6 @@ export default function SalesTable({
                           <Edit className="h-3 w-3 mr-1" />
                           Editar
                         </Button>
-                        {sale.canal?.toLowerCase() === "manual" && sale.email && (
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => sendEmailMutation.mutate(sale.id)}
-                            disabled={sendEmailMutation.isPending || !!sale.emailSentAt}
-                            data-testid={`email-sale-${sale.id}`}
-                            className="h-7 text-xs"
-                            title={sale.emailSentAt ? `Email ya enviado` : `Enviar confirmación a ${sale.email}`}
-                          >
-                            <Mail className={cn("h-3 w-3 mr-1", sale.emailSentAt && "text-green-600")} />
-                            {sendEmailMutation.isPending ? "Enviando..." : "Email"}
-                          </Button>
-                        )}
                         <Button
                           variant="ghost"
                           size="sm"
