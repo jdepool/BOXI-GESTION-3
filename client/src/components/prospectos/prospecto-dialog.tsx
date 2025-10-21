@@ -540,7 +540,6 @@ export default function ProspectoDialog({ open, onOpenChange, prospecto }: Prosp
                     name="notas"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Comentarios e Inquietudes del Cliente</FormLabel>
                         <FormControl>
                           <Textarea
                             placeholder="Escribe aquí cualquier comentario, pregunta o necesidad específica del prospecto..."
