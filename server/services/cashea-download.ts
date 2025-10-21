@@ -179,8 +179,6 @@ async function transformCasheaData(rawData: any[], storage: IStorage): Promise<a
       email: emails[i] ? String(emails[i]) : null,
       totalUsd: totalUsdValue,
       totalOrderUsd: totalUsdValue,
-      sucursal: null,
-      tienda: null,
       fecha,
       canal: 'cashea',
       estadoEntrega: 'En proceso',

@@ -120,8 +120,6 @@ export const sales = pgTable("sales", {
   email: text("email"),
   totalUsd: decimal("total_usd", { precision: 10, scale: 2 }).notNull(),
   totalOrderUsd: decimal("total_order_usd", { precision: 10, scale: 2 }),
-  sucursal: text("sucursal"),
-  tienda: text("tienda"),
   fecha: timestamp("fecha").notNull(),
   canal: text("canal").notNull(), // cashea, shopify, treble
   estadoPagoInicial: text("estado_pago_inicial"),

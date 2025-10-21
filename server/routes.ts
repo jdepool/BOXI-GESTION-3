@@ -210,8 +210,6 @@ function parseFile(buffer: Buffer, canal: string, filename: string) {
           email: row.Email ? String(row.Email) : null,
           totalUsd: String((parseFloat(row['Lineitem price'] || 0) * Number(row['Lineitem quantity'] || 1)).toFixed(2)), // Total price for this line item (unit price × quantity)
           totalOrderUsd: row['Total'] ? String(row['Total']) : null, // Full order total from Shopify
-          sucursal: null, // Shopify doesn't have sucursal
-          tienda: null, // Shopify doesn't have tienda  
           fecha,
           canal: canal,
           estadoPagoInicial: null,
@@ -269,8 +267,6 @@ function parseFile(buffer: Buffer, canal: string, filename: string) {
           email: row.Email ? String(row.Email) : null,
           totalUsd: totalUsdValue,
           totalOrderUsd: totalOrderUsdValue,
-          sucursal: row.Sucursal ? String(row.Sucursal) : null,
-          tienda: row.Tienda ? String(row.Tienda) : null,
           fecha,
           canal: canal, // Use the provided canal parameter
           estadoPagoInicial: row['Estado pago inicial'] ? String(row['Estado pago inicial']) : null,
@@ -1636,8 +1632,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
           email: row.Email ? String(row.Email) : null,
           totalUsd: totalUsdValue,
           totalOrderUsd: row['Total'] ? String(row['Total']) : null, // Full order total from Shopify
-          sucursal: null, // Shopify doesn't have sucursal
-          tienda: null, // Shopify doesn't have tienda  
           fecha,
           canal: 'shopify',
           estadoPagoInicial: null,
@@ -2070,8 +2064,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         email: emails[i] ? String(emails[i]) : null,
         totalUsd: totalUsdValue,
         totalOrderUsd: totalUsdValue, // For Cashea, set totalOrderUsd equal to totalUsd for each product
-        sucursal: null,
-        tienda: null,
         fecha,
         canal: 'cashea',
         estadoEntrega: 'En proceso', // All CASHEA orders start as "En proceso"
@@ -3975,8 +3967,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         orden: newOrderNumber,
         
         // Payment fields
-        sucursal: null,
-        tienda: null,
         estadoPagoInicial: body.estadoPagoInicial || "pendiente",
         pagoInicialUsd: (body.pagoInicialUsd !== undefined && body.pagoInicialUsd !== null) ? String(body.pagoInicialUsd) : null,
         factura: null,
