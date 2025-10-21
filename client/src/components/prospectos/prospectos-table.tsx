@@ -260,15 +260,6 @@ export default function ProspectosTable({
                     <td className="p-3 text-xs">
                       <div className="flex items-center gap-2">
                         <Button
-                          size="sm"
-                          className="bg-blue-600 hover:bg-blue-700 text-white"
-                          onClick={() => handleConvertProspecto(prospecto)}
-                          data-testid={`button-convert-prospecto-${prospecto.id}`}
-                        >
-                          <DollarSign className="h-4 w-4 mr-2" />
-                          Convertir
-                        </Button>
-                        <Button
                           variant="ghost"
                           size="sm"
                           onClick={() => handleEditProspecto(prospecto)}
@@ -276,6 +267,15 @@ export default function ProspectosTable({
                         >
                           <Edit className="h-4 w-4 mr-2" />
                           Editar
+                        </Button>
+                        <Button
+                          size="sm"
+                          className="bg-blue-600 hover:bg-blue-700 text-white"
+                          onClick={() => handleConvertProspecto(prospecto)}
+                          data-testid={`button-convert-prospecto-${prospecto.id}`}
+                        >
+                          <DollarSign className="h-4 w-4 mr-2" />
+                          Convertir
                         </Button>
                       </div>
                     </td>
