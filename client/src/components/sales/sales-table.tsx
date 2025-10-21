@@ -897,16 +897,18 @@ export default function SalesTable({
                           <Edit className="h-3 w-3 mr-1" />
                           Editar
                         </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setSelectedSale(sale)}
-                          data-testid={`view-sale-${sale.id}`}
-                          className="h-7 w-7 p-0"
-                          title="Ver detalles"
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
+                        {activeTab === "lista" && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setSelectedSale(sale)}
+                            data-testid={`view-sale-${sale.id}`}
+                            className="h-7 w-7 p-0"
+                            title="Ver detalles"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                        )}
                       </div>
                     </td>
                     {activeTab === "lista" && (
