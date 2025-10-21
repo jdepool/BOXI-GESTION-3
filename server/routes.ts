@@ -4214,6 +4214,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ? body.products
         : null;
 
+      // Default asesor to Héctor if not provided (business rule for manual sales and conversions)
+      let asesorId = body.asesorId || null;
+      if (!asesorId) {
+        const asesores = await storage.getAsesores();
+        const hectorAsesor = asesores.find((a: any) => a.nombre === "Héctor");
+        if (hectorAsesor) {
+          asesorId = hectorAsesor.id;
+        }
+      }
+
       // Prepare base sale data shared by all products
       const baseSaleData = {
         // Customer information
@@ -4238,6 +4248,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         montoInicialUsd: body.montoInicialUsd || null,
         metodoPagoId: body.metodoPagoId || null,
         bancoReceptorInicial: body.bancoReceptorInicial || null,
+        
+        // Asesor field (defaults to Héctor if not provided)
+        asesorId: asesorId,
         
         // Address fields
         direccionFacturacionPais: body.direccionFacturacionPais || null,
