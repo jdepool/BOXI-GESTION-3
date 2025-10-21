@@ -898,7 +898,7 @@ export default function SalesTable({
                             disabled={sale.estadoEntrega === "A devolver" || returnSaleMutation.isPending}
                             data-testid={`return-sale-${sale.id}`}
                             className={cn(
-                              "h-7 text-xs bg-orange-600 text-white border-orange-600 hover:bg-orange-700 hover:border-orange-700 dark:bg-orange-600 dark:text-white dark:border-orange-600 dark:hover:bg-orange-700",
+                              "h-7 text-xs bg-slate-500 text-white border-slate-500 hover:bg-slate-600 hover:border-slate-600 dark:bg-slate-500 dark:text-white dark:border-slate-500 dark:hover:bg-slate-600",
                               sale.estadoEntrega === "A devolver" && "bg-green-800 text-white hover:bg-green-800 opacity-70 cursor-not-allowed border-green-700"
                             )}
                             title={sale.estadoEntrega === "A devolver" ? "Venta ya marcada a devolver" : "Marcar como a devolver"}
