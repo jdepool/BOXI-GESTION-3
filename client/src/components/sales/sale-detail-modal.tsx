@@ -165,6 +165,7 @@ export default function SaleDetailModal({ sale, onClose }: SaleDetailModalProps)
             <h3 className="font-semibold text-foreground mb-3">Información de Venta</h3>
             <div className="space-y-2 text-sm">
               <p><span className="text-muted-foreground">Orden:</span> <span className="text-foreground font-mono font-medium">{sale.orden || 'N/A'}</span></p>
+              <p><span className="text-muted-foreground">Fecha:</span> <span className="text-foreground">{format(new Date(sale.fecha), 'dd/MM/yy')}</span></p>
               <p>
                 <span className="text-muted-foreground">Canal:</span> 
                 <Badge className={`${getChannelBadgeClass(sale.canal)} text-white ml-2`}>
@@ -184,7 +185,9 @@ export default function SaleDetailModal({ sale, onClose }: SaleDetailModalProps)
                 </Badge>
               </p>
               <p><span className="text-muted-foreground">Total Order USD:</span> <span className="text-foreground font-medium">${sale.totalOrderUsd != null ? Number(sale.totalOrderUsd).toLocaleString() : 'N/A'}</span></p>
-              <p><span className="text-muted-foreground">Fecha:</span> <span className="text-foreground">{format(new Date(sale.fecha), 'dd/MM/yy')}</span></p>
+              {sale.pagoFleteUsd && (
+                <p><span className="text-muted-foreground">Pago Flete USD:</span> <span className="text-foreground font-medium">${Number(sale.pagoFleteUsd).toLocaleString()}</span></p>
+              )}
             </div>
           </div>
 
