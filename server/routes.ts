@@ -3719,6 +3719,94 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/prospectos/convert", async (req, res) => {
+    try {
+      const { tipo, prospectoId } = req.body;
+      
+      if (!tipo || !prospectoId) {
+        return res.status(400).json({ error: "Missing required fields: tipo and prospectoId" });
+      }
+
+      if (tipo !== "inmediata" && tipo !== "reserva") {
+        return res.status(400).json({ error: "Invalid tipo. Must be 'inmediata' or 'reserva'" });
+      }
+
+      // Get the prospecto
+      const prospecto = await storage.getProspectoById(prospectoId);
+      if (!prospecto) {
+        return res.status(404).json({ error: "Prospecto not found" });
+      }
+
+      // Parse products
+      let products = [];
+      try {
+        products = prospecto.products ? JSON.parse(prospecto.products) : [];
+      } catch (e) {
+        console.error("Error parsing prospecto products:", e);
+        return res.status(400).json({ error: "Invalid products data in prospecto" });
+      }
+
+      // Validate that products exist
+      if (!products || products.length === 0) {
+        return res.status(400).json({ error: "Cannot convert prospecto without products. Please add products to the prospecto first." });
+      }
+
+      // Convert tipo to proper capitalization to match sales system
+      const salesTipo = tipo === "inmediata" ? "Inmediato" : "Reserva";
+
+      // Prepare sales data - one sale per product
+      const salesData = products.map((product: any) => ({
+        nombre: prospecto.nombre,
+        cedula: prospecto.cedula || null,
+        telefono: prospecto.telefono,
+        email: prospecto.email || null,
+        totalOrdenUsd: parseFloat(prospecto.totalUsd || "0"),
+        totalOrdenBs: null,
+        producto: product.producto,
+        sku: product.sku || null,
+        cantidad: product.cantidad,
+        montoProductoUsd: product.totalUsd,
+        montoProductoBs: null,
+        esObsequio: product.esObsequio || false,
+        medidaEspecial: product.medidaEspecial || null,
+        fechaEntrega: prospecto.fechaEntrega || null,
+        direccionDespachoIgualFacturacion: prospecto.direccionDespachoIgualFacturacion === "true" ? "true" : "false",
+        direccionDespachoPais: prospecto.direccionDespachoPais || null,
+        direccionDespachoEstado: prospecto.direccionDespachoEstado || null,
+        direccionDespachoCiudad: prospecto.direccionDespachoCiudad || null,
+        direccionDespachoDireccion: prospecto.direccionDespachoDireccion || null,
+        direccionDespachoUrbanizacion: prospecto.direccionDespachoUrbanizacion || null,
+        direccionDespachoReferencia: prospecto.direccionDespachoReferencia || null,
+        direccionFacturacionPais: prospecto.direccionFacturacionPais || null,
+        direccionFacturacionEstado: prospecto.direccionFacturacionEstado || null,
+        direccionFacturacionCiudad: prospecto.direccionFacturacionCiudad || null,
+        direccionFacturacionDireccion: prospecto.direccionFacturacionDireccion || null,
+        direccionFacturacionUrbanizacion: prospecto.direccionFacturacionUrbanizacion || null,
+        direccionFacturacionReferencia: prospecto.direccionFacturacionReferencia || null,
+        canal: prospecto.canal || "Tienda",
+        asesorId: prospecto.asesorId || null,
+        tipo: salesTipo,
+        notas: prospecto.notas || null,
+        estadoEntrega: "Pendiente",
+      }));
+
+      // Create sales
+      const createdSales = [];
+      for (const saleData of salesData) {
+        const sale = await storage.createSale(saleData as any);
+        createdSales.push(sale);
+      }
+
+      // Delete the prospecto
+      await storage.deleteProspecto(prospectoId);
+
+      res.json({ success: true, sales: createdSales });
+    } catch (error) {
+      console.error("Convert prospecto error:", error);
+      res.status(500).json({ error: "Failed to convert prospecto" });
+    }
+  });
+
   // EGRESOS endpoints
   const getEgresosQuerySchema = z.object({
     tipoEgresoId: z.string().optional(),

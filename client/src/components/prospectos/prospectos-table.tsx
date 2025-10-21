@@ -4,9 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { ChevronLeft, ChevronRight, Edit, Plus, RotateCcw, Filter, ChevronDown, ChevronUp, Download } from "lucide-react";
+import { ChevronLeft, ChevronRight, Edit, Plus, RotateCcw, Filter, ChevronDown, ChevronUp, Download, DollarSign } from "lucide-react";
 import { format } from "date-fns";
 import ProspectoDialog from "./prospecto-dialog";
+import ConvertProspectoDialog from "./convert-prospecto-dialog";
 import type { Prospecto } from "@shared/schema";
 
 interface ProspectosTableProps {
@@ -39,6 +40,8 @@ export default function ProspectosTable({
   const [prospectoDialogOpen, setProspectoDialogOpen] = useState(false);
   const [selectedProspecto, setSelectedProspecto] = useState<Prospecto | null>(null);
   const [filtersVisible, setFiltersVisible] = useState(false);
+  const [convertDialogOpen, setConvertDialogOpen] = useState(false);
+  const [prospectoToConvert, setProspectoToConvert] = useState<Prospecto | null>(null);
 
   const currentPage = Math.floor(offset / limit) + 1;
   const totalPages = Math.ceil(total / limit);
@@ -67,6 +70,11 @@ export default function ProspectosTable({
   const handleEditProspecto = (prospecto: Prospecto) => {
     setSelectedProspecto(prospecto);
     setProspectoDialogOpen(true);
+  };
+
+  const handleConvertProspecto = (prospecto: Prospecto) => {
+    setProspectoToConvert(prospecto);
+    setConvertDialogOpen(true);
   };
 
   const handlePrevPage = () => {
@@ -244,15 +252,26 @@ export default function ProspectosTable({
                       {format(new Date(prospecto.fechaCreacion), "dd/MM/yy")}
                     </td>
                     <td className="p-3">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleEditProspecto(prospecto)}
-                        data-testid={`button-edit-prospecto-${prospecto.id}`}
-                      >
-                        <Edit className="h-4 w-4 mr-2" />
-                        Editar
-                      </Button>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          size="sm"
+                          className="bg-blue-600 hover:bg-blue-700 text-white"
+                          onClick={() => handleConvertProspecto(prospecto)}
+                          data-testid={`button-convert-prospecto-${prospecto.id}`}
+                        >
+                          <DollarSign className="h-4 w-4 mr-2" />
+                          Convertir
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleEditProspecto(prospecto)}
+                          data-testid={`button-edit-prospecto-${prospecto.id}`}
+                        >
+                          <Edit className="h-4 w-4 mr-2" />
+                          Editar
+                        </Button>
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -295,6 +314,12 @@ export default function ProspectosTable({
         open={prospectoDialogOpen}
         onOpenChange={setProspectoDialogOpen}
         prospecto={selectedProspecto}
+      />
+
+      <ConvertProspectoDialog
+        open={convertDialogOpen}
+        onOpenChange={setConvertDialogOpen}
+        prospecto={prospectoToConvert}
       />
     </>
   );
