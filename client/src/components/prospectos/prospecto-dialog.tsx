@@ -128,6 +128,10 @@ export default function ProspectoDialog({ open, onOpenChange, prospecto }: Prosp
 
   const activeAsesores = asesores.filter((a) => a.activo);
 
+  // Find Héctor's ID for default asesor
+  const hectorAsesor = asesores.find((a) => a.nombre === "Héctor");
+  const defaultAsesorId = hectorAsesor?.id || null;
+
   useEffect(() => {
     if (prospecto) {
       const parsedProducts = prospecto.products ? JSON.parse(prospecto.products) : [];
@@ -165,7 +169,7 @@ export default function ProspectoDialog({ open, onOpenChange, prospecto }: Prosp
         telefono: "",
         email: "",
         canal: "Tienda",
-        asesorId: null,
+        asesorId: defaultAsesorId,
         fechaEntrega: undefined,
         totalUsd: "",
         direccionFacturacionPais: "Venezuela",
@@ -184,7 +188,7 @@ export default function ProspectoDialog({ open, onOpenChange, prospecto }: Prosp
         products: [],
       });
     }
-  }, [prospecto, form]);
+  }, [prospecto, form, defaultAsesorId]);
 
   const handleSaveProduct = (product: ProductFormData, index?: number) => {
     if (index !== undefined) {
