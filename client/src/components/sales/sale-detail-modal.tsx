@@ -58,6 +58,7 @@ export default function SaleDetailModal({ sale, onClose }: SaleDetailModalProps)
           <div>
             <h3 className="font-semibold text-foreground mb-3">Información de Venta</h3>
             <div className="space-y-2 text-sm">
+              <p><span className="text-muted-foreground">Orden:</span> <span className="text-foreground font-mono font-medium">{sale.orden || 'N/A'}</span></p>
               <p>
                 <span className="text-muted-foreground">Canal:</span> 
                 <Badge className={`${getChannelBadgeClass(sale.canal)} text-white ml-2`}>
@@ -95,12 +96,8 @@ export default function SaleDetailModal({ sale, onClose }: SaleDetailModalProps)
           </div>
 
           <div className="md:col-span-2">
-            <h3 className="font-semibold text-foreground mb-3">Referencias</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-              <div>
-                <p className="text-muted-foreground">Orden</p>
-                <p className="text-foreground font-mono">{sale.orden || 'N/A'}</p>
-              </div>
+            <h3 className="font-semibold text-foreground mb-3">Información de Pagos</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
               <div>
                 <p className="text-muted-foreground">Factura</p>
                 <p className="text-foreground font-mono">{sale.factura || 'N/A'}</p>
