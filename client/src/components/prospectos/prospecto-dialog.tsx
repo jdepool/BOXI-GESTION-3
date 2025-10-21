@@ -5,6 +5,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -12,7 +13,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { CalendarIcon, MapPin, Package, Plus, Trash2, User, Pencil } from "lucide-react";
+import { CalendarIcon, MapPin, Package, Plus, Trash2, User, Pencil, FileText } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -30,6 +31,7 @@ const prospectoFormSchema = z.object({
   asesorId: z.string().optional().nullable(),
   fechaEntrega: z.date().optional().nullable(),
   totalUsd: z.string().optional(),
+  notas: z.string().optional(),
   direccionDespachoIgualFacturacion: z.boolean().default(true),
   direccionDespachoPais: z.string().optional(),
   direccionDespachoEstado: z.string().optional(),
@@ -73,6 +75,7 @@ export default function ProspectoDialog({ open, onOpenChange, prospecto }: Prosp
       asesorId: null,
       fechaEntrega: undefined,
       totalUsd: "",
+      notas: "",
       direccionFacturacionPais: "Venezuela",
       direccionFacturacionEstado: "",
       direccionFacturacionCiudad: "",
@@ -146,6 +149,7 @@ export default function ProspectoDialog({ open, onOpenChange, prospecto }: Prosp
         asesorId: prospecto.asesorId,
         fechaEntrega: prospecto.fechaEntrega ? new Date(prospecto.fechaEntrega) : undefined,
         totalUsd: prospecto.totalUsd || "",
+        notas: prospecto.notas || "",
         direccionFacturacionPais: prospecto.direccionFacturacionPais || "Venezuela",
         direccionFacturacionEstado: prospecto.direccionFacturacionEstado || "",
         direccionFacturacionCiudad: prospecto.direccionFacturacionCiudad || "",
@@ -172,6 +176,7 @@ export default function ProspectoDialog({ open, onOpenChange, prospecto }: Prosp
         asesorId: defaultAsesorId,
         fechaEntrega: undefined,
         totalUsd: "",
+        notas: "",
         direccionFacturacionPais: "Venezuela",
         direccionFacturacionEstado: "",
         direccionFacturacionCiudad: "",
@@ -226,6 +231,7 @@ export default function ProspectoDialog({ open, onOpenChange, prospecto }: Prosp
         asesorId: data.asesorId || null,
         fechaEntrega: data.fechaEntrega?.toISOString() || null,
         totalUsd: data.totalUsd || null,
+        notas: data.notas || null,
         products: JSON.stringify(products),
         direccionFacturacionPais: data.direccionFacturacionPais || null,
         direccionFacturacionEstado: data.direccionFacturacionEstado || null,
@@ -272,6 +278,7 @@ export default function ProspectoDialog({ open, onOpenChange, prospecto }: Prosp
         asesorId: data.asesorId || null,
         fechaEntrega: data.fechaEntrega?.toISOString() || null,
         totalUsd: data.totalUsd || null,
+        notas: data.notas || null,
         products: JSON.stringify(products),
         direccionFacturacionPais: data.direccionFacturacionPais || null,
         direccionFacturacionEstado: data.direccionFacturacionEstado || null,
@@ -512,6 +519,37 @@ export default function ProspectoDialog({ open, onOpenChange, prospecto }: Prosp
                             ))}
                           </SelectContent>
                         </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </CardContent>
+              </Card>
+
+              {/* Notas */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <FileText className="h-4 w-4" />
+                    Notas
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <FormField
+                    control={form.control}
+                    name="notas"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Comentarios e Inquietudes del Cliente</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            placeholder="Escribe aquí cualquier comentario, pregunta o necesidad específica del prospecto..."
+                            className="min-h-[100px] resize-y"
+                            {...field}
+                            value={field.value || ""}
+                            data-testid="textarea-prospecto-notas"
+                          />
+                        </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
