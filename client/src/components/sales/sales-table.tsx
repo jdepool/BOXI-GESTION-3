@@ -128,7 +128,7 @@ export default function SalesTable({
   // Mark as delivered mutation
   const markDeliveredMutation = useMutation({
     mutationFn: async (saleId: string) => {
-      return apiRequest("PATCH", `/api/sales/${saleId}`, { estadoEntrega: "Entregado" });
+      return apiRequest("PUT", `/api/sales/${saleId}/delivery-status`, { status: "Entregado" });
     },
     onSuccess: () => {
       // Invalidate all sales queries to refresh data across all pages
