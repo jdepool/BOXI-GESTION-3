@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { ChevronLeft, ChevronRight, Edit, Plus, RotateCcw, Filter, ChevronDown, ChevronUp } from "lucide-react";
 import { format } from "date-fns";
 import ProspectoDialog from "./prospecto-dialog";
@@ -83,46 +84,64 @@ export default function ProspectosTable({
   return (
     <>
       <div className="flex flex-col h-full">
-        <div className="p-4 border-b border-border space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setFiltersVisible(!filtersVisible)}
-                data-testid="button-toggle-filters"
-              >
-                <Filter className="h-4 w-4 mr-2" />
-                Filtros
-                {filtersVisible ? <ChevronUp className="h-4 w-4 ml-2" /> : <ChevronDown className="h-4 w-4 ml-2" />}
-              </Button>
-              {hasActiveFilters && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={onClearFilters}
-                  data-testid="button-clear-filters"
-                >
-                  <RotateCcw className="h-4 w-4 mr-2" />
-                  Limpiar filtros
-                </Button>
-              )}
-            </div>
+        {/* Top toolbar - consistent with Sales tab layout */}
+        <div className="p-3 border-b border-border flex items-center justify-between">
+          {/* Left side - Nuevo Prospecto button */}
+          <div>
             <Button onClick={handleNewProspecto} data-testid="button-new-prospecto">
               <Plus className="h-4 w-4 mr-2" />
               Nuevo Prospecto
             </Button>
           </div>
+          
+          {/* Right side - filter toggle and clear buttons */}
+          <div className="flex items-center gap-2">
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={() => setFiltersVisible(!filtersVisible)}
+              data-testid="button-toggle-filters"
+              className="text-muted-foreground"
+            >
+              <Filter className="h-4 w-4 mr-2" />
+              {filtersVisible ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+            </Button>
+            
+            {hasActiveFilters && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={onClearFilters}
+                      data-testid="button-clear-filters"
+                      className="text-muted-foreground"
+                    >
+                      <RotateCcw className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Limpiar Filtros</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
+          </div>
+        </div>
 
-          {filtersVisible && (
-            <div className="flex gap-2">
-              <div className="w-48">
+        {/* Filter section - collapsible */}
+        {filtersVisible && (
+          <div className="p-6 border-b border-border">
+            <div className="flex gap-3">
+              <div>
+                <label className="text-sm font-medium mb-1 block">Asesor:</label>
                 <Select
                   value={filters?.asesorId || "all"}
                   onValueChange={(value) => handleFilterChange("asesorId", value)}
                   data-testid="select-filter-asesor"
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="w-40">
                     <SelectValue placeholder="Filtrar por asesor" />
                   </SelectTrigger>
                   <SelectContent>
@@ -136,8 +155,8 @@ export default function ProspectosTable({
                 </Select>
               </div>
             </div>
-          )}
-        </div>
+          </div>
+        )}
 
         <div className="flex-1 overflow-auto">
           <table className="w-full">
