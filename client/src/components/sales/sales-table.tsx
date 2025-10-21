@@ -889,6 +889,24 @@ export default function SalesTable({
                       <td className="p-2 min-w-[180px]">
                         <div className="flex gap-1">
                           <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedSaleForReturn(sale);
+                              setReturnConfirmOpen(true);
+                            }}
+                            disabled={sale.estadoEntrega === "A devolver" || returnSaleMutation.isPending}
+                            data-testid={`return-sale-${sale.id}`}
+                            className={cn(
+                              "h-7 text-xs bg-orange-600 text-white border-orange-600 hover:bg-orange-700 hover:border-orange-700 dark:bg-orange-600 dark:text-white dark:border-orange-600 dark:hover:bg-orange-700",
+                              sale.estadoEntrega === "A devolver" && "bg-green-800 text-white hover:bg-green-800 opacity-70 cursor-not-allowed border-green-700"
+                            )}
+                            title={sale.estadoEntrega === "A devolver" ? "Venta ya marcada a devolver" : "Marcar como a devolver"}
+                          >
+                            <RotateCcw className={cn("h-3 w-3 mr-1", sale.estadoEntrega === "A devolver" && "text-green-400")} />
+                            Devolver
+                          </Button>
+                          <Button
                             variant={sale.estadoEntrega === "Cancelada" ? "outline" : "destructive"}
                             size="sm"
                             onClick={() => {
@@ -905,24 +923,6 @@ export default function SalesTable({
                           >
                             <XCircle className={cn("h-3 w-3 mr-1", sale.estadoEntrega === "Cancelada" && "text-green-400")} />
                             Cancelar
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              setSelectedSaleForReturn(sale);
-                              setReturnConfirmOpen(true);
-                            }}
-                            disabled={sale.estadoEntrega === "A devolver" || returnSaleMutation.isPending}
-                            data-testid={`return-sale-${sale.id}`}
-                            className={cn(
-                              "h-7 text-xs border-gray-400 text-gray-600 hover:bg-gray-100 dark:border-gray-600 dark:text-gray-400 dark:hover:bg-gray-800",
-                              sale.estadoEntrega === "A devolver" && "bg-green-800 text-white hover:bg-green-800 opacity-70 cursor-not-allowed border-green-700"
-                            )}
-                            title={sale.estadoEntrega === "A devolver" ? "Venta ya marcada a devolver" : "Marcar como a devolver"}
-                          >
-                            <RotateCcw className={cn("h-3 w-3 mr-1", sale.estadoEntrega === "A devolver" && "text-green-400")} />
-                            Devolver
                           </Button>
                         </div>
                       </td>
