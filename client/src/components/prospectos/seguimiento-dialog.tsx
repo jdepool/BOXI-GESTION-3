@@ -1,10 +1,13 @@
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { CalendarIcon } from "lucide-react";
 import { addDays, format } from "date-fns";
+import { cn } from "@/lib/utils";
 import type { Prospecto } from "@shared/schema";
 
 interface SeguimientoDialogProps {
@@ -29,59 +32,58 @@ export default function SeguimientoDialog({
   onSave,
   isSaving,
 }: SeguimientoDialogProps) {
-  const [fecha1, setFecha1] = useState("");
+  const [fecha1, setFecha1] = useState<Date | undefined>();
   const [respuesta1, setRespuesta1] = useState("");
-  const [fecha2, setFecha2] = useState("");
+  const [fecha2, setFecha2] = useState<Date | undefined>();
   const [respuesta2, setRespuesta2] = useState("");
-  const [fecha3, setFecha3] = useState("");
+  const [fecha3, setFecha3] = useState<Date | undefined>();
   const [respuesta3, setRespuesta3] = useState("");
 
   useEffect(() => {
     if (prospecto && open) {
-      // Helper to extract YYYY-MM-DD from ISO timestamp
-      const extractDate = (isoDate: string | Date) => {
-        const dateStr = typeof isoDate === 'string' ? isoDate : isoDate.toISOString();
-        return dateStr.split('T')[0]; // Extract YYYY-MM-DD
+      // Helper to parse date from ISO timestamp to Date object without timezone shift
+      const parseDate = (isoDate: string | Date): Date => {
+        if (typeof isoDate === 'string') {
+          const dateOnly = isoDate.split('T')[0];
+          const [year, month, day] = dateOnly.split('-').map(Number);
+          return new Date(year, month - 1, day);
+        }
+        return isoDate;
       };
 
       // Load existing data or calculate default dates
       if (prospecto.fechaSeguimiento1) {
-        setFecha1(extractDate(prospecto.fechaSeguimiento1));
+        setFecha1(parseDate(prospecto.fechaSeguimiento1));
       } else {
         // Default: 2 days after registration
-        const registrationDate = extractDate(prospecto.fechaCreacion);
-        const defaultFecha1 = addDays(new Date(registrationDate), 2);
-        setFecha1(format(defaultFecha1, "yyyy-MM-dd"));
+        const registrationDate = parseDate(prospecto.fechaCreacion);
+        setFecha1(addDays(registrationDate, 2));
       }
       setRespuesta1(prospecto.respuestaSeguimiento1 || "");
 
       if (prospecto.fechaSeguimiento2) {
-        setFecha2(extractDate(prospecto.fechaSeguimiento2));
+        setFecha2(parseDate(prospecto.fechaSeguimiento2));
       } else if (prospecto.fechaSeguimiento1) {
         // Default: 4 days after first follow-up
-        const fecha1 = extractDate(prospecto.fechaSeguimiento1);
-        const defaultFecha2 = addDays(new Date(fecha1), 4);
-        setFecha2(format(defaultFecha2, "yyyy-MM-dd"));
+        const fecha1Date = parseDate(prospecto.fechaSeguimiento1);
+        setFecha2(addDays(fecha1Date, 4));
       } else {
         // Calculate from registration + 2 days + 4 days
-        const registrationDate = extractDate(prospecto.fechaCreacion);
-        const defaultFecha2 = addDays(new Date(registrationDate), 6);
-        setFecha2(format(defaultFecha2, "yyyy-MM-dd"));
+        const registrationDate = parseDate(prospecto.fechaCreacion);
+        setFecha2(addDays(registrationDate, 6));
       }
       setRespuesta2(prospecto.respuestaSeguimiento2 || "");
 
       if (prospecto.fechaSeguimiento3) {
-        setFecha3(extractDate(prospecto.fechaSeguimiento3));
+        setFecha3(parseDate(prospecto.fechaSeguimiento3));
       } else if (prospecto.fechaSeguimiento2) {
         // Default: 7 days after second follow-up
-        const fecha2 = extractDate(prospecto.fechaSeguimiento2);
-        const defaultFecha3 = addDays(new Date(fecha2), 7);
-        setFecha3(format(defaultFecha3, "yyyy-MM-dd"));
+        const fecha2Date = parseDate(prospecto.fechaSeguimiento2);
+        setFecha3(addDays(fecha2Date, 7));
       } else {
         // Calculate from registration + 2 + 4 + 7 days
-        const registrationDate = extractDate(prospecto.fechaCreacion);
-        const defaultFecha3 = addDays(new Date(registrationDate), 13);
-        setFecha3(format(defaultFecha3, "yyyy-MM-dd"));
+        const registrationDate = parseDate(prospecto.fechaCreacion);
+        setFecha3(addDays(registrationDate, 13));
       }
       setRespuesta3(prospecto.respuestaSeguimiento3 || "");
     }
@@ -89,11 +91,11 @@ export default function SeguimientoDialog({
 
   const handleSave = () => {
     onSave({
-      fechaSeguimiento1: fecha1 ? new Date(fecha1) : null,
+      fechaSeguimiento1: fecha1 || null,
       respuestaSeguimiento1: respuesta1 || "",
-      fechaSeguimiento2: fecha2 ? new Date(fecha2) : null,
+      fechaSeguimiento2: fecha2 || null,
       respuestaSeguimiento2: respuesta2 || "",
-      fechaSeguimiento3: fecha3 ? new Date(fecha3) : null,
+      fechaSeguimiento3: fecha3 || null,
       respuestaSeguimiento3: respuesta3 || "",
     });
   };
@@ -104,7 +106,7 @@ export default function SeguimientoDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Seguimiento - {prospecto.prospecto}</DialogTitle>
+          <DialogTitle>Seguimiento - {prospecto.prospecto} - {prospecto.nombre}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-6 py-4">
@@ -115,14 +117,30 @@ export default function SeguimientoDialog({
               (2 días después del registro)
             </p>
             <div className="space-y-2">
-              <Label htmlFor="fecha1">Fecha de Contacto</Label>
-              <Input
-                id="fecha1"
-                type="date"
-                value={fecha1}
-                onChange={(e) => setFecha1(e.target.value)}
-                data-testid="input-fecha-seguimiento1"
-              />
+              <Label>Fecha de Contacto</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !fecha1 && "text-muted-foreground"
+                    )}
+                    data-testid="input-fecha-seguimiento1"
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {fecha1 ? format(fecha1, "dd/MM/yyyy") : "Seleccionar fecha"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={fecha1}
+                    onSelect={setFecha1}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
             </div>
             <div className="space-y-2">
               <Label htmlFor="respuesta1">Respuesta / Notas</Label>
@@ -144,14 +162,30 @@ export default function SeguimientoDialog({
               (4 días después del seguimiento 1)
             </p>
             <div className="space-y-2">
-              <Label htmlFor="fecha2">Fecha de Contacto</Label>
-              <Input
-                id="fecha2"
-                type="date"
-                value={fecha2}
-                onChange={(e) => setFecha2(e.target.value)}
-                data-testid="input-fecha-seguimiento2"
-              />
+              <Label>Fecha de Contacto</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !fecha2 && "text-muted-foreground"
+                    )}
+                    data-testid="input-fecha-seguimiento2"
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {fecha2 ? format(fecha2, "dd/MM/yyyy") : "Seleccionar fecha"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={fecha2}
+                    onSelect={setFecha2}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
             </div>
             <div className="space-y-2">
               <Label htmlFor="respuesta2">Respuesta / Notas</Label>
@@ -173,14 +207,30 @@ export default function SeguimientoDialog({
               (7 días después del seguimiento 2)
             </p>
             <div className="space-y-2">
-              <Label htmlFor="fecha3">Fecha de Contacto</Label>
-              <Input
-                id="fecha3"
-                type="date"
-                value={fecha3}
-                onChange={(e) => setFecha3(e.target.value)}
-                data-testid="input-fecha-seguimiento3"
-              />
+              <Label>Fecha de Contacto</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !fecha3 && "text-muted-foreground"
+                    )}
+                    data-testid="input-fecha-seguimiento3"
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {fecha3 ? format(fecha3, "dd/MM/yyyy") : "Seleccionar fecha"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={fecha3}
+                    onSelect={setFecha3}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
             </div>
             <div className="space-y-2">
               <Label htmlFor="respuesta3">Respuesta / Notas</Label>
