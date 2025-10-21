@@ -428,3 +428,27 @@ export type EgresoPorAprobar = typeof egresosPorAprobar.$inferSelect;
 export type InsertEgresoPorAprobar = z.infer<typeof insertEgresoPorAprobarSchema>;
 export type PaymentInstallment = typeof paymentInstallments.$inferSelect;
 export type InsertPaymentInstallment = z.infer<typeof insertPaymentInstallmentSchema>;
+
+// Prospectos table
+export const prospectos = pgTable("prospectos", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  prospecto: text("prospecto").notNull().unique(), // Sequential prospecto number (P-0001, P-0002, etc.)
+  nombre: text("nombre").notNull(),
+  telefono: text("telefono").notNull(),
+  canal: text("canal"),
+  asesorId: varchar("asesor_id"),
+  fechaCreacion: timestamp("fecha_creacion").defaultNow().notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const insertProspectoSchema = createInsertSchema(prospectos).omit({
+  id: true,
+  prospecto: true,
+  fechaCreacion: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type Prospecto = typeof prospectos.$inferSelect;
+export type InsertProspecto = z.infer<typeof insertProspectoSchema>;
