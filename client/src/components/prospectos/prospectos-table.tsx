@@ -24,6 +24,7 @@ interface ProspectosTableProps {
   onFilterChange?: (filters: any) => void;
   onPageChange?: (newOffset: number) => void;
   onClearFilters?: () => void;
+  onConvertProspecto?: (tipo: "inmediata" | "reserva", prospecto: Prospecto) => void;
 }
 
 export default function ProspectosTable({
@@ -36,6 +37,7 @@ export default function ProspectosTable({
   onFilterChange,
   onPageChange,
   onClearFilters,
+  onConvertProspecto,
 }: ProspectosTableProps) {
   const [prospectoDialogOpen, setProspectoDialogOpen] = useState(false);
   const [selectedProspecto, setSelectedProspecto] = useState<Prospecto | null>(null);
@@ -320,6 +322,11 @@ export default function ProspectosTable({
         open={convertDialogOpen}
         onOpenChange={setConvertDialogOpen}
         prospecto={prospectoToConvert}
+        onConvert={(tipo, prospecto) => {
+          if (onConvertProspecto) {
+            onConvertProspecto(tipo, prospecto);
+          }
+        }}
       />
     </>
   );

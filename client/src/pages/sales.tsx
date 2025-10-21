@@ -51,6 +51,7 @@ export default function Sales() {
   const [isManualReservaModalOpen, setIsManualReservaModalOpen] = useState(false);
   const [isSettingsDialogOpen, setIsSettingsDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("prospectos");
+  const [convertingProspecto, setConvertingProspecto] = useState<{ tipo: "inmediata" | "reserva"; prospecto: Prospecto } | null>(null);
 
   const { data: salesData, isLoading } = useQuery<{
     data: any[];
@@ -213,6 +214,17 @@ export default function Sales() {
     });
   };
 
+  const handleProspectoConvert = (tipo: "inmediata" | "reserva", prospecto: Prospecto) => {
+    setConvertingProspecto({ tipo, prospecto });
+    // Switch to the appropriate tab and open the form
+    if (tipo === "inmediata") {
+      setActiveTab("manual");
+    } else {
+      setActiveTab("reservas");
+      setIsManualReservaModalOpen(true);
+    }
+  };
+
   return (
     <div className="h-screen flex bg-background">
       <Sidebar />
@@ -255,6 +267,7 @@ export default function Sales() {
                   onFilterChange={handleProspectosFilterChange}
                   onPageChange={handleProspectosPageChange}
                   onClearFilters={handleClearProspectosFilters}
+                  onConvertProspecto={handleProspectoConvert}
                 />
               </div>
             </TabsContent>
@@ -282,7 +295,10 @@ export default function Sales() {
             </TabsContent>
             
             <TabsContent value="manual" className="h-full">
-              <ManualSalesEntry />
+              <ManualSalesEntry 
+                convertingProspecto={convertingProspecto?.tipo === "inmediata" ? convertingProspecto.prospecto : null}
+                onConversionComplete={() => setConvertingProspecto(null)}
+              />
             </TabsContent>
             
             <TabsContent value="reservas" className="h-full">

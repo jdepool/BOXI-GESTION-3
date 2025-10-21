@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,7 +8,7 @@ import SalesTable from "./sales-table";
 import EditSaleModal from "./edit-sale-modal";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import type { Sale } from "@shared/schema";
+import type { Sale, Prospecto } from "@shared/schema";
 
 interface SalesResponse {
   data: any[];
@@ -17,7 +17,12 @@ interface SalesResponse {
   offset: number;
 }
 
-export default function ManualSalesEntry() {
+interface ManualSalesEntryProps {
+  convertingProspecto?: Prospecto | null;
+  onConversionComplete?: () => void;
+}
+
+export default function ManualSalesEntry({ convertingProspecto, onConversionComplete }: ManualSalesEntryProps) {
   const [showForm, setShowForm] = useState(false);
   const [editSale, setEditSale] = useState<Sale | null>(null);
   const [filters, setFilters] = useState({
@@ -33,6 +38,13 @@ export default function ManualSalesEntry() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
+  // Open form when converting prospecto
+  useEffect(() => {
+    if (convertingProspecto) {
+      setShowForm(true);
+    }
+  }, [convertingProspecto]);
+
   // Get sales that need to be completed (manual and Shopify orders) - exclude Reserva orders
   const { data: incompleteSales, isLoading } = useQuery<SalesResponse>({
     queryKey: ["/api/sales", { 
@@ -45,14 +57,26 @@ export default function ManualSalesEntry() {
 
   const createManualSaleMutation = useMutation({
     mutationFn: (data: any) => apiRequest("POST", "/api/sales/manual", data),
-    onSuccess: (response) => {
+    onSuccess: async (response) => {
+      // If converting from prospecto, delete the prospecto
+      if (convertingProspecto) {
+        try {
+          await apiRequest("DELETE", `/api/prospectos/${convertingProspecto.id}`);
+          queryClient.invalidateQueries({ queryKey: ["/api/prospectos"] });
+          onConversionComplete?.();
+        } catch (error) {
+          console.error("Failed to delete prospecto:", error);
+          // Still show success for sale creation
+        }
+      }
+      
       // Invalidate all sales queries using predicate to ensure all variants are invalidated
       queryClient.invalidateQueries({ 
         predicate: (query) => Array.isArray(query.queryKey) && typeof query.queryKey[0] === 'string' && query.queryKey[0].startsWith('/api/sales')
       });
       toast({
-        title: "Venta creada",
-        description: "La venta ha sido registrada exitosamente.",
+        title: convertingProspecto ? "Prospecto convertido" : "Venta creada",
+        description: convertingProspecto ? "El prospecto ha sido convertido en venta exitosamente." : "La venta ha sido registrada exitosamente.",
       });
       setShowForm(false);
     },
@@ -96,11 +120,23 @@ export default function ManualSalesEntry() {
       <div className="h-full">
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h2 className="text-lg font-semibold text-foreground">Nueva Venta Manual</h2>
+            <h2 className="text-lg font-semibold text-foreground">
+              {convertingProspecto ? "Convertir Prospecto en Venta" : "Nueva Venta Manual"}
+            </h2>
+            {convertingProspecto && (
+              <p className="text-sm text-muted-foreground mt-1">
+                Convirtiendo prospecto de {convertingProspecto.nombre}. Agrega los productos para completar la venta.
+              </p>
+            )}
           </div>
           <Button
             variant="outline"
-            onClick={() => setShowForm(false)}
+            onClick={() => {
+              setShowForm(false);
+              if (convertingProspecto) {
+                onConversionComplete?.();
+              }
+            }}
             data-testid="cancel-manual-sale"
           >
             <X className="h-4 w-4 mr-2" />
@@ -110,8 +146,14 @@ export default function ManualSalesEntry() {
         
         <ManualSalesForm
           onSubmit={handleFormSubmit}
-          onCancel={() => setShowForm(false)}
+          onCancel={() => {
+            setShowForm(false);
+            if (convertingProspecto) {
+              onConversionComplete?.();
+            }
+          }}
           isSubmitting={createManualSaleMutation.isPending}
+          convertingProspecto={convertingProspecto}
         />
       </div>
     );

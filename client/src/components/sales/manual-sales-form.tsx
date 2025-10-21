@@ -21,7 +21,7 @@ import { Separator } from "@/components/ui/separator";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { Save, User, MapPin, Package, CalendarIcon, Plus, Trash2, Pencil } from "lucide-react";
-import { insertSaleSchema } from "@shared/schema";
+import { insertSaleSchema, type Prospecto } from "@shared/schema";
 import ProductDialog, { ProductFormData } from "./product-dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
@@ -63,9 +63,10 @@ interface ManualSalesFormProps {
   onSubmit: (data: ManualSaleFormData) => void;
   onCancel: () => void;
   isSubmitting?: boolean;
+  convertingProspecto?: Prospecto | null;
 }
 
-export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = false }: ManualSalesFormProps) {
+export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = false, convertingProspecto }: ManualSalesFormProps) {
   const [products, setProducts] = useState<ProductFormData[]>([]);
   const [isProductDialogOpen, setIsProductDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<{product: ProductFormData; index: number} | null>(null);
@@ -108,6 +109,40 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
   const watchDespachoDireccion = form.watch("direccionDespachoDireccion");
   const watchDespachoUrbanizacion = form.watch("direccionDespachoUrbanizacion");
   const watchDespachoReferencia = form.watch("direccionDespachoReferencia");
+
+  // Pre-fill form when converting prospecto
+  useEffect(() => {
+    if (convertingProspecto) {
+      form.reset({
+        nombre: convertingProspecto.nombre || "",
+        cedula: convertingProspecto.cedula || "",
+        telefono: convertingProspecto.telefono || "",
+        email: convertingProspecto.email || "",
+        totalUsd: "0",
+        fecha: new Date().toISOString().split('T')[0],
+        fechaEntrega: convertingProspecto.fechaEntrega ? new Date(convertingProspecto.fechaEntrega) : undefined,
+        referencia: "",
+        montoUsd: "",
+        montoBs: "",
+        direccionFacturacionPais: convertingProspecto.direccionFacturacionPais || "Venezuela",
+        direccionFacturacionEstado: convertingProspecto.direccionFacturacionEstado || "",
+        direccionFacturacionCiudad: convertingProspecto.direccionFacturacionCiudad || "",
+        direccionFacturacionDireccion: convertingProspecto.direccionFacturacionDireccion || "",
+        direccionFacturacionUrbanizacion: convertingProspecto.direccionFacturacionUrbanizacion || "",
+        direccionFacturacionReferencia: convertingProspecto.direccionFacturacionReferencia || "",
+        direccionDespachoIgualFacturacion: convertingProspecto.direccionDespachoIgualFacturacion === "true",
+        direccionDespachoPais: convertingProspecto.direccionDespachoPais || "Venezuela",
+        direccionDespachoEstado: convertingProspecto.direccionDespachoEstado || "",
+        direccionDespachoCiudad: convertingProspecto.direccionDespachoCiudad || "",
+        direccionDespachoDireccion: convertingProspecto.direccionDespachoDireccion || "",
+        direccionDespachoUrbanizacion: convertingProspecto.direccionDespachoUrbanizacion || "",
+        direccionDespachoReferencia: convertingProspecto.direccionDespachoReferencia || "",
+        canal: convertingProspecto.canal || "",
+        asesorId: convertingProspecto.asesorId || undefined,
+        products: [],
+      });
+    }
+  }, [convertingProspecto, form]);
 
   // Auto-calculate Total Orden USD from sum of products
   useEffect(() => {
