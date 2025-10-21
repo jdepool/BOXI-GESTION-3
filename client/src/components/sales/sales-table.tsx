@@ -12,7 +12,7 @@ import { DateRangePicker } from "@/components/shared/date-range-picker";
 import SaleDetailModal from "./sale-detail-modal";
 import AddressModal from "@/components/addresses/address-modal";
 import EditSaleModal from "./edit-sale-modal";
-import { MapPin, Edit, CalendarIcon, Filter, ChevronDown, ChevronUp, Download, ChevronLeft, ChevronRight, RotateCcw, XCircle, Gift, Eye } from "lucide-react";
+import { MapPin, Edit, CalendarIcon, Filter, ChevronDown, ChevronUp, Download, ChevronLeft, ChevronRight, RotateCcw, XCircle, Gift, Eye, Plus } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -434,13 +434,13 @@ export default function SalesTable({
             <div>
               {activeTab === "manual" && onNewManualSale && (
                 <Button onClick={onNewManualSale} data-testid="button-nueva-venta-manual">
-                  <i className="fas fa-plus mr-2"></i>
+                  <Plus className="h-4 w-4 mr-2" />
                   Nueva Venta Manual
                 </Button>
               )}
               {activeTab === "reservas" && onNewReserva && (
                 <Button onClick={onNewReserva} data-testid="button-nueva-reserva-manual">
-                  <i className="fas fa-plus mr-2"></i>
+                  <Plus className="h-4 w-4 mr-2" />
                   Nueva Reserva Manual
                 </Button>
               )}
