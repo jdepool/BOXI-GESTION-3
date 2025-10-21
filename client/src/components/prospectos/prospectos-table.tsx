@@ -96,6 +96,18 @@ function getSeguimientoStatus(prospecto: Prospecto): {
   };
 }
 
+// Helper function to get channel badge color
+function getChannelColor(channel: string | null) {
+  switch (channel?.toLowerCase()) {
+    case "cashea": return "channel-badge-cashea";
+    case "shopify": return "channel-badge-shopify";
+    case "treble": return "channel-badge-treble";
+    case "tienda": return "channel-badge-tienda";
+    case "manual": return "bg-orange-100 text-orange-800";
+    default: return "bg-gray-100 text-gray-800";
+  }
+}
+
 export default function ProspectosTable({
   data,
   total,
@@ -307,7 +319,7 @@ export default function ProspectosTable({
                 <th className="text-left p-3 font-medium text-sm text-muted-foreground">Teléfono</th>
                 <th className="text-left p-3 font-medium text-sm text-muted-foreground">Asesor</th>
                 <th className="text-left p-3 font-medium text-sm text-muted-foreground">Notas</th>
-                <th className="text-left p-3 font-medium text-sm text-muted-foreground">Estado Seg.</th>
+                <th className="text-left p-3 font-medium text-sm text-muted-foreground">Próximo</th>
                 <th className="text-left p-3 font-medium text-sm text-muted-foreground">Acciones</th>
               </tr>
             </thead>
@@ -341,7 +353,13 @@ export default function ProspectosTable({
                       {format(new Date(prospecto.fechaCreacion), "dd/MM/yy")}
                     </td>
                     <td className="p-3 text-xs" data-testid={`text-canal-${prospecto.id}`}>
-                      {prospecto.canal || "-"}
+                      {prospecto.canal ? (
+                        <Badge className={`${getChannelColor(prospecto.canal)} text-xs`}>
+                          {prospecto.canal}
+                        </Badge>
+                      ) : (
+                        "-"
+                      )}
                     </td>
                     <td className="p-3 text-xs" data-testid={`text-telefono-${prospecto.id}`}>
                       {prospecto.telefono}
