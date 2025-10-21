@@ -874,14 +874,14 @@ export default function SalesTable({
                           Editar
                         </Button>
                         <Button
-                          variant="ghost"
+                          variant="outline"
                           size="sm"
                           onClick={() => setSelectedSale(sale)}
                           data-testid={`view-sale-${sale.id}`}
-                          className="h-6 w-6 p-0"
+                          className="h-7 w-7 p-0"
                           title="Ver detalles"
                         >
-                          <i className="fas fa-eye text-xs"></i>
+                          <i className="fas fa-eye text-sm"></i>
                         </Button>
                       </div>
                     </td>
