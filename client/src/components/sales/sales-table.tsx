@@ -12,7 +12,7 @@ import { DateRangePicker } from "@/components/shared/date-range-picker";
 import SaleDetailModal from "./sale-detail-modal";
 import AddressModal from "@/components/addresses/address-modal";
 import EditSaleModal from "./edit-sale-modal";
-import { MapPin, Edit, CalendarIcon, Filter, ChevronDown, ChevronUp, Download, ChevronLeft, ChevronRight, RotateCcw, XCircle, Gift } from "lucide-react";
+import { MapPin, Edit, CalendarIcon, Filter, ChevronDown, ChevronUp, Download, ChevronLeft, ChevronRight, RotateCcw, XCircle, Gift, Eye } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -881,7 +881,7 @@ export default function SalesTable({
                           className="h-7 w-7 p-0"
                           title="Ver detalles"
                         >
-                          <i className="fas fa-eye text-sm"></i>
+                          <Eye className="h-4 w-4" />
                         </Button>
                       </div>
                     </td>
