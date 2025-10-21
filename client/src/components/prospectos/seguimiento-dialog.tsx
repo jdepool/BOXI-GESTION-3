@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -41,8 +41,15 @@ export default function SeguimientoDialog({
   const [respuesta3, setRespuesta3] = useState("");
   
   // Track manual edits during current session to prevent overwriting user changes
+  const [manuallyEditedFecha1, setManuallyEditedFecha1] = useState(false);
   const [manuallyEditedFecha2, setManuallyEditedFecha2] = useState(false);
   const [manuallyEditedFecha3, setManuallyEditedFecha3] = useState(false);
+
+  // Track if we've initialized for current prospecto to prevent config loading from resetting dates
+  const initializedProspectoId = useRef<string | null>(null);
+  
+  // Track previous config values to detect when config loads
+  const previousDiasFase = useRef<{ fase1: number; fase2: number; fase3: number } | null>(null);
 
   // Fetch seguimiento config
   const { data: config } = useQuery<SeguimientoConfig>({
@@ -55,7 +62,9 @@ export default function SeguimientoDialog({
   const diasFase3 = config?.diasFase3 ?? 7;
 
   useEffect(() => {
-    if (prospecto && open) {
+    // Only initialize once per prospecto opening to prevent config changes from resetting user edits
+    if (prospecto && open && initializedProspectoId.current !== prospecto.id) {
+      initializedProspectoId.current = prospecto.id;
       // Helper to parse date from ISO timestamp to Date object without timezone shift
       const parseDate = (isoDate: string | Date): Date => {
         if (typeof isoDate === 'string') {
@@ -69,10 +78,12 @@ export default function SeguimientoDialog({
       // Load existing data or calculate default dates
       if (prospecto.fechaSeguimiento1) {
         setFecha1(parseDate(prospecto.fechaSeguimiento1));
+        setManuallyEditedFecha1(true); // Saved date = manually set
       } else {
         // Default: diasFase1 days after registration
         const registrationDate = parseDate(prospecto.fechaCreacion);
         setFecha1(addDays(registrationDate, diasFase1));
+        setManuallyEditedFecha1(false);
       }
       setRespuesta1(prospecto.respuestaSeguimiento1 || "");
 
@@ -110,11 +121,74 @@ export default function SeguimientoDialog({
       }
       setRespuesta3(prospecto.respuestaSeguimiento3 || "");
     }
-  }, [prospecto, open, diasFase1, diasFase2, diasFase3]);
+    
+    // Reset initialization tracking when dialog closes
+    if (!open) {
+      initializedProspectoId.current = null;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [prospecto, open]);
 
-  // Cascading recalculation: when fecha1 changes, update fecha2 and fecha3
+  // Handle config loading: update dates when config values change from defaults
+  // but only if user hasn't manually edited them
   useEffect(() => {
-    if (fecha1 && open) {
+    if (open && initializedProspectoId.current === prospecto?.id && previousDiasFase.current) {
+      const configChanged = 
+        previousDiasFase.current.fase1 !== diasFase1 ||
+        previousDiasFase.current.fase2 !== diasFase2 ||
+        previousDiasFase.current.fase3 !== diasFase3;
+      
+      if (configChanged && prospecto) {
+        // Config has loaded with different values - recalculate dates if not manually edited
+        const parseDate = (isoDate: string | Date): Date => {
+          if (typeof isoDate === 'string') {
+            const dateOnly = isoDate.split('T')[0];
+            const [year, month, day] = dateOnly.split('-').map(Number);
+            return new Date(year, month - 1, day);
+          }
+          return isoDate;
+        };
+        
+        // Track if we updated fecha1/fecha2 in this config change
+        let updatedFecha1: Date | undefined;
+        let updatedFecha2: Date | undefined;
+        
+        // Update fecha1 if diasFase1 changed and not manually edited
+        if (previousDiasFase.current.fase1 !== diasFase1 && !manuallyEditedFecha1) {
+          const registrationDate = parseDate(prospecto.fechaCreacion);
+          updatedFecha1 = addDays(registrationDate, diasFase1);
+          setFecha1(updatedFecha1);
+        }
+        
+        // Update fecha2 if diasFase2 changed and not manually edited
+        // Use updatedFecha1 if we just set it, otherwise use current fecha1
+        if (!manuallyEditedFecha2) {
+          const baseFecha1 = updatedFecha1 || fecha1;
+          if (baseFecha1) {
+            updatedFecha2 = addDays(baseFecha1, diasFase2);
+            setFecha2(updatedFecha2);
+          }
+        }
+        
+        // Update fecha3 if diasFase3 changed and not manually edited
+        // Use updatedFecha2 if we just set it, otherwise use current fecha2
+        if (!manuallyEditedFecha3) {
+          const baseFecha2 = updatedFecha2 || fecha2;
+          if (baseFecha2) {
+            setFecha3(addDays(baseFecha2, diasFase3));
+          }
+        }
+      }
+    }
+    
+    // Update previous values
+    previousDiasFase.current = { fase1: diasFase1, fase2: diasFase2, fase3: diasFase3 };
+  }, [diasFase1, diasFase2, diasFase3, open, prospecto, fecha1, fecha2, manuallyEditedFecha1, manuallyEditedFecha2, manuallyEditedFecha3]);
+
+  // Cascading recalculation: when fecha1 changes (user edit), update fecha2 and fecha3
+  // Only when fecha1 itself changes, not when config values change
+  useEffect(() => {
+    if (fecha1 && open && initializedProspectoId.current === prospecto?.id) {
       // Only recalculate if the user hasn't manually edited fecha2 during this session
       if (!manuallyEditedFecha2) {
         const newFecha2 = addDays(fecha1, diasFase2);
@@ -126,19 +200,27 @@ export default function SeguimientoDialog({
         }
       }
     }
-  }, [fecha1, open, manuallyEditedFecha2, manuallyEditedFecha3, diasFase2, diasFase3]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fecha1, open, manuallyEditedFecha1, manuallyEditedFecha2, manuallyEditedFecha3]);
 
   // Cascading recalculation: when fecha2 changes, update fecha3
+  // Only when fecha2 itself changes, not when config values change
   useEffect(() => {
-    if (fecha2 && open) {
+    if (fecha2 && open && initializedProspectoId.current === prospecto?.id) {
       // Only recalculate if the user hasn't manually edited fecha3 during this session
       if (!manuallyEditedFecha3) {
         setFecha3(addDays(fecha2, diasFase3));
       }
     }
-  }, [fecha2, open, manuallyEditedFecha3, diasFase3]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fecha2, open, manuallyEditedFecha3]);
 
   // Wrapper functions to track manual edits
+  const handleFecha1Change = (date: Date | undefined) => {
+    setFecha1(date);
+    setManuallyEditedFecha1(true);
+  };
+
   const handleFecha2Change = (date: Date | undefined) => {
     setFecha2(date);
     setManuallyEditedFecha2(true);
@@ -196,7 +278,7 @@ export default function SeguimientoDialog({
                   <Calendar
                     mode="single"
                     selected={fecha1}
-                    onSelect={setFecha1}
+                    onSelect={handleFecha1Change}
                     initialFocus
                   />
                 </PopoverContent>
