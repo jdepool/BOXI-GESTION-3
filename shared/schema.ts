@@ -471,34 +471,34 @@ export const insertProspectoSchema = createInsertSchema(prospectos).omit({
 }).extend({
   nombre: z.string().min(1, "Nombre es requerido"),
   telefono: z.string().min(1, "Teléfono es requerido"),
-  cedula: z.string().optional(),
-  email: z.string().email("Email inválido").optional().or(z.literal("")),
-  canal: z.string().optional(),
-  asesorId: z.string().optional().nullable(),
+  cedula: z.preprocess((val) => val === "" ? undefined : val, z.string().optional()),
+  email: z.preprocess((val) => val === "" ? undefined : val, z.string().email("Email inválido").optional()),
+  canal: z.preprocess((val) => val === "" ? undefined : val, z.string().optional()),
+  asesorId: z.preprocess((val) => val === "" ? undefined : val, z.string().optional().nullable()),
   fechaEntrega: z.preprocess(
     (val) => {
-      if (val === "" || val === null) return null;
+      if (val === "" || val === null || val === undefined) return undefined;
       if (typeof val === "string") return new Date(val);
       return val;
     },
     z.date().nullable().optional()
   ),
-  totalUsd: z.string().optional(),
-  products: z.string().optional(), // JSON string
-  direccionFacturacionPais: z.string().optional(),
-  direccionFacturacionEstado: z.string().optional(),
-  direccionFacturacionCiudad: z.string().optional(),
-  direccionFacturacionDireccion: z.string().optional(),
-  direccionFacturacionUrbanizacion: z.string().optional(),
-  direccionFacturacionReferencia: z.string().optional(),
-  direccionDespachoIgualFacturacion: z.string().optional(),
-  direccionDespachoPais: z.string().optional(),
-  direccionDespachoEstado: z.string().optional(),
-  direccionDespachoCiudad: z.string().optional(),
-  direccionDespachoDireccion: z.string().optional(),
-  direccionDespachoUrbanizacion: z.string().optional(),
-  direccionDespachoReferencia: z.string().optional(),
-  notas: z.string().optional(),
+  totalUsd: z.preprocess((val) => val === "" ? undefined : val, z.string().optional()),
+  products: z.preprocess((val) => val === "" ? undefined : val, z.string().optional()),
+  direccionFacturacionPais: z.preprocess((val) => val === "" ? undefined : val, z.string().optional()),
+  direccionFacturacionEstado: z.preprocess((val) => val === "" ? undefined : val, z.string().optional()),
+  direccionFacturacionCiudad: z.preprocess((val) => val === "" ? undefined : val, z.string().optional()),
+  direccionFacturacionDireccion: z.preprocess((val) => val === "" ? undefined : val, z.string().optional()),
+  direccionFacturacionUrbanizacion: z.preprocess((val) => val === "" ? undefined : val, z.string().optional()),
+  direccionFacturacionReferencia: z.preprocess((val) => val === "" ? undefined : val, z.string().optional()),
+  direccionDespachoIgualFacturacion: z.preprocess((val) => val === "" ? undefined : val, z.string().optional()),
+  direccionDespachoPais: z.preprocess((val) => val === "" ? undefined : val, z.string().optional()),
+  direccionDespachoEstado: z.preprocess((val) => val === "" ? undefined : val, z.string().optional()),
+  direccionDespachoCiudad: z.preprocess((val) => val === "" ? undefined : val, z.string().optional()),
+  direccionDespachoDireccion: z.preprocess((val) => val === "" ? undefined : val, z.string().optional()),
+  direccionDespachoUrbanizacion: z.preprocess((val) => val === "" ? undefined : val, z.string().optional()),
+  direccionDespachoReferencia: z.preprocess((val) => val === "" ? undefined : val, z.string().optional()),
+  notas: z.preprocess((val) => val === "" ? undefined : val, z.string().optional()),
 });
 
 export type Prospecto = typeof prospectos.$inferSelect;
