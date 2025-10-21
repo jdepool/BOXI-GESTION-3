@@ -51,6 +51,7 @@ const manualReservaSchema = z.object({
   direccionFacturacionUrbanizacion: z.string().optional(),
   direccionFacturacionReferencia: z.string().optional(),
   canal: z.string().min(1, "Canal es requerido"),
+  asesorId: z.string().optional(),
 });
 
 type ManualReservaFormData = z.infer<typeof manualReservaSchema> & {
@@ -146,6 +147,13 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
     queryKey: ["/api/admin/canales"],
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
+
+  const { data: asesoresList = [] } = useQuery<Array<{ id: string; nombre: string; activo: boolean | string }>>({
+    queryKey: ["/api/admin/asesores"],
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+
+  const activeAsesores = asesoresList.filter(asesor => asesor.activo === true || asesor.activo === "true");
 
   const createReservaMutation = useMutation({
     mutationFn: async (data: ManualReservaFormData) => {
@@ -375,6 +383,36 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
                                 {canal.nombre}
                               </SelectItem>
                             ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="asesorId"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Asesor</FormLabel>
+                      <Select
+                        value={field.value || "none"}
+                        onValueChange={(value) => field.onChange(value === "none" ? undefined : value)}
+                        data-testid="select-asesor-reserva"
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Seleccionar asesor" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="none">Sin asesor</SelectItem>
+                          {activeAsesores.map((asesor) => (
+                            <SelectItem key={asesor.id} value={asesor.id}>
+                              {asesor.nombre}
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                       <FormMessage />

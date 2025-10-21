@@ -169,6 +169,13 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
+  const { data: asesoresList = [] } = useQuery<Array<{ id: string; nombre: string; activo: boolean | string }>>({
+    queryKey: ["/api/admin/asesores"],
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+
+  const activeAsesores = asesoresList.filter(asesor => asesor.activo === true || asesor.activo === "true");
+
   const handleSubmit = (data: ManualSaleFormData) => {
     onSubmit({ ...data, products });
   };
@@ -318,6 +325,36 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
                             {canal.nombre}
                           </SelectItem>
                         ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="asesorId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Asesor</FormLabel>
+                  <Select
+                    value={field.value || "none"}
+                    onValueChange={(value) => field.onChange(value === "none" ? undefined : value)}
+                    data-testid="select-asesor-venta"
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Seleccionar asesor" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="none">Sin asesor</SelectItem>
+                      {activeAsesores.map((asesor) => (
+                        <SelectItem key={asesor.id} value={asesor.id}>
+                          {asesor.nombre}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                   <FormMessage />
