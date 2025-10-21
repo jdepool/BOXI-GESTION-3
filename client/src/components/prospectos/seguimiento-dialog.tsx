@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -8,7 +9,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { CalendarIcon } from "lucide-react";
 import { addDays, format } from "date-fns";
 import { cn } from "@/lib/utils";
-import type { Prospecto } from "@shared/schema";
+import type { Prospecto, SeguimientoConfig } from "@shared/schema";
 
 interface SeguimientoDialogProps {
   open: boolean;
@@ -43,6 +44,16 @@ export default function SeguimientoDialog({
   const [manuallyEditedFecha2, setManuallyEditedFecha2] = useState(false);
   const [manuallyEditedFecha3, setManuallyEditedFecha3] = useState(false);
 
+  // Fetch seguimiento config
+  const { data: config } = useQuery<SeguimientoConfig>({
+    queryKey: ["/api/admin/seguimiento-config"],
+  });
+
+  // Use config values or defaults
+  const diasFase1 = config?.diasFase1 ?? 2;
+  const diasFase2 = config?.diasFase2 ?? 4;
+  const diasFase3 = config?.diasFase3 ?? 7;
+
   useEffect(() => {
     if (prospecto && open) {
       // Helper to parse date from ISO timestamp to Date object without timezone shift
@@ -59,9 +70,9 @@ export default function SeguimientoDialog({
       if (prospecto.fechaSeguimiento1) {
         setFecha1(parseDate(prospecto.fechaSeguimiento1));
       } else {
-        // Default: 2 days after registration
+        // Default: diasFase1 days after registration
         const registrationDate = parseDate(prospecto.fechaCreacion);
-        setFecha1(addDays(registrationDate, 2));
+        setFecha1(addDays(registrationDate, diasFase1));
       }
       setRespuesta1(prospecto.respuestaSeguimiento1 || "");
 
@@ -70,14 +81,14 @@ export default function SeguimientoDialog({
         setFecha2(parseDate(prospecto.fechaSeguimiento2));
         setManuallyEditedFecha2(true);
       } else if (prospecto.fechaSeguimiento1) {
-        // Default: 4 days after first follow-up
+        // Default: diasFase2 days after first follow-up
         const fecha1Date = parseDate(prospecto.fechaSeguimiento1);
-        setFecha2(addDays(fecha1Date, 4));
+        setFecha2(addDays(fecha1Date, diasFase2));
         setManuallyEditedFecha2(false);
       } else {
-        // Calculate from registration + 2 days + 4 days
+        // Calculate from registration + diasFase1 + diasFase2
         const registrationDate = parseDate(prospecto.fechaCreacion);
-        setFecha2(addDays(registrationDate, 6));
+        setFecha2(addDays(registrationDate, diasFase1 + diasFase2));
         setManuallyEditedFecha2(false);
       }
       setRespuesta2(prospecto.respuestaSeguimiento2 || "");
@@ -87,45 +98,45 @@ export default function SeguimientoDialog({
         setFecha3(parseDate(prospecto.fechaSeguimiento3));
         setManuallyEditedFecha3(true);
       } else if (prospecto.fechaSeguimiento2) {
-        // Default: 7 days after second follow-up
+        // Default: diasFase3 days after second follow-up
         const fecha2Date = parseDate(prospecto.fechaSeguimiento2);
-        setFecha3(addDays(fecha2Date, 7));
+        setFecha3(addDays(fecha2Date, diasFase3));
         setManuallyEditedFecha3(false);
       } else {
-        // Calculate from registration + 2 + 4 + 7 days
+        // Calculate from registration + diasFase1 + diasFase2 + diasFase3
         const registrationDate = parseDate(prospecto.fechaCreacion);
-        setFecha3(addDays(registrationDate, 13));
+        setFecha3(addDays(registrationDate, diasFase1 + diasFase2 + diasFase3));
         setManuallyEditedFecha3(false);
       }
       setRespuesta3(prospecto.respuestaSeguimiento3 || "");
     }
-  }, [prospecto, open]);
+  }, [prospecto, open, diasFase1, diasFase2, diasFase3]);
 
   // Cascading recalculation: when fecha1 changes, update fecha2 and fecha3
   useEffect(() => {
     if (fecha1 && open) {
       // Only recalculate if the user hasn't manually edited fecha2 during this session
       if (!manuallyEditedFecha2) {
-        const newFecha2 = addDays(fecha1, 4);
+        const newFecha2 = addDays(fecha1, diasFase2);
         setFecha2(newFecha2);
         
         // Also update fecha3 based on the new fecha2 if not manually edited
         if (!manuallyEditedFecha3) {
-          setFecha3(addDays(newFecha2, 7));
+          setFecha3(addDays(newFecha2, diasFase3));
         }
       }
     }
-  }, [fecha1, open, manuallyEditedFecha2, manuallyEditedFecha3]);
+  }, [fecha1, open, manuallyEditedFecha2, manuallyEditedFecha3, diasFase2, diasFase3]);
 
   // Cascading recalculation: when fecha2 changes, update fecha3
   useEffect(() => {
     if (fecha2 && open) {
       // Only recalculate if the user hasn't manually edited fecha3 during this session
       if (!manuallyEditedFecha3) {
-        setFecha3(addDays(fecha2, 7));
+        setFecha3(addDays(fecha2, diasFase3));
       }
     }
-  }, [fecha2, open, manuallyEditedFecha3]);
+  }, [fecha2, open, manuallyEditedFecha3, diasFase3]);
 
   // Wrapper functions to track manual edits
   const handleFecha2Change = (date: Date | undefined) => {
@@ -163,7 +174,7 @@ export default function SeguimientoDialog({
           <div className="space-y-3 p-4 border rounded-lg">
             <h3 className="font-semibold text-sm">Seguimiento 1</h3>
             <p className="text-xs text-muted-foreground">
-              (2 días después del registro)
+              ({diasFase1} {diasFase1 === 1 ? 'día' : 'días'} después del registro)
             </p>
             <div className="space-y-2">
               <Label>Fecha de Contacto</Label>
@@ -208,7 +219,7 @@ export default function SeguimientoDialog({
           <div className="space-y-3 p-4 border rounded-lg">
             <h3 className="font-semibold text-sm">Seguimiento 2</h3>
             <p className="text-xs text-muted-foreground">
-              (4 días después del seguimiento 1)
+              ({diasFase2} {diasFase2 === 1 ? 'día' : 'días'} después del seguimiento 1)
             </p>
             <div className="space-y-2">
               <Label>Fecha de Contacto</Label>
@@ -253,7 +264,7 @@ export default function SeguimientoDialog({
           <div className="space-y-3 p-4 border rounded-lg">
             <h3 className="font-semibold text-sm">Seguimiento 3</h3>
             <p className="text-xs text-muted-foreground">
-              (7 días después del seguimiento 2)
+              ({diasFase3} {diasFase3 === 1 ? 'día' : 'días'} después del seguimiento 2)
             </p>
             <div className="space-y-2">
               <Label>Fecha de Contacto</Label>
