@@ -1,11 +1,12 @@
 import { 
-  sales, uploadHistory, users, bancos, bancosBackup, tiposEgresos, productos, productosBackup, metodosPago, monedas, categorias, canales, asesores, transportistas, egresos, egresosPorAprobar, paymentInstallments,
+  sales, uploadHistory, users, bancos, bancosBackup, tiposEgresos, productos, productosBackup, metodosPago, monedas, categorias, canales, asesores, transportistas, egresos, egresosPorAprobar, paymentInstallments, prospectos,
   type User, type InsertUser, type Sale, type InsertSale, type UploadHistory, type InsertUploadHistory,
   type Banco, type InsertBanco, type TipoEgreso, type InsertTipoEgreso,
   type Producto, type InsertProducto, type MetodoPago, type InsertMetodoPago,
   type Moneda, type InsertMoneda, type Categoria, type InsertCategoria,
   type Canal, type InsertCanal, type Asesor, type InsertAsesor, type Transportista, type InsertTransportista, type Egreso, type InsertEgreso,
-  type EgresoPorAprobar, type InsertEgresoPorAprobar, type PaymentInstallment, type InsertPaymentInstallment
+  type EgresoPorAprobar, type InsertEgresoPorAprobar, type PaymentInstallment, type InsertPaymentInstallment,
+  type Prospecto, type InsertProspecto
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, asc, count, sum, avg, and, gte, lte, or, ne, like, ilike, isNotNull, isNull, sql } from "drizzle-orm";
@@ -265,6 +266,21 @@ export interface IStorage {
     saldoPendiente: number;
   }>;
   isPaymentFullyVerified(saleId: string): Promise<boolean>;
+
+  // Prospectos
+  getProspectos(filters?: {
+    asesorId?: string;
+    limit?: number;
+    offset?: number;
+  }): Promise<Prospecto[]>;
+  getProspectoById(id: string): Promise<Prospecto | undefined>;
+  createProspecto(prospecto: InsertProspecto): Promise<Prospecto>;
+  updateProspecto(id: string, prospecto: Partial<InsertProspecto>): Promise<Prospecto | undefined>;
+  deleteProspecto(id: string): Promise<boolean>;
+  getTotalProspectosCount(filters?: {
+    asesorId?: string;
+  }): Promise<number>;
+  getNextProspectoNumber(): Promise<string>;
 
   // Reports
   getReporteOrdenes(filters?: {
@@ -2635,6 +2651,105 @@ export class DatabaseStorage implements IStorage {
     }
 
     return false;
+  }
+
+  // Prospectos methods
+  async getProspectos(filters?: {
+    asesorId?: string;
+    limit?: number;
+    offset?: number;
+  }): Promise<Prospecto[]> {
+    const whereConditions = [];
+
+    if (filters?.asesorId) {
+      whereConditions.push(eq(prospectos.asesorId, filters.asesorId));
+    }
+
+    return await db
+      .select()
+      .from(prospectos)
+      .where(whereConditions.length > 0 ? and(...whereConditions) : undefined)
+      .orderBy(desc(prospectos.fechaCreacion))
+      .limit(filters?.limit || 1000)
+      .offset(filters?.offset || 0);
+  }
+
+  async getProspectoById(id: string): Promise<Prospecto | undefined> {
+    const result = await db
+      .select()
+      .from(prospectos)
+      .where(eq(prospectos.id, id))
+      .limit(1);
+    return result[0];
+  }
+
+  async createProspecto(prospecto: InsertProspecto): Promise<Prospecto> {
+    const prospectoNumber = await this.getNextProspectoNumber();
+    const [newProspecto] = await db
+      .insert(prospectos)
+      .values({
+        ...prospecto,
+        prospecto: prospectoNumber,
+      })
+      .returning();
+    return newProspecto;
+  }
+
+  async updateProspecto(id: string, prospecto: Partial<InsertProspecto>): Promise<Prospecto | undefined> {
+    const [updated] = await db
+      .update(prospectos)
+      .set({
+        ...prospecto,
+        updatedAt: new Date(),
+      })
+      .where(eq(prospectos.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteProspecto(id: string): Promise<boolean> {
+    const result = await db
+      .delete(prospectos)
+      .where(eq(prospectos.id, id))
+      .returning();
+    return result.length > 0;
+  }
+
+  async getTotalProspectosCount(filters?: {
+    asesorId?: string;
+  }): Promise<number> {
+    const whereConditions = [];
+
+    if (filters?.asesorId) {
+      whereConditions.push(eq(prospectos.asesorId, filters.asesorId));
+    }
+
+    const result = await db
+      .select({ count: count() })
+      .from(prospectos)
+      .where(whereConditions.length > 0 ? and(...whereConditions) : undefined);
+    
+    return result[0]?.count || 0;
+  }
+
+  async getNextProspectoNumber(): Promise<string> {
+    // Get the latest prospecto number
+    const latestProspecto = await db
+      .select({ prospecto: prospectos.prospecto })
+      .from(prospectos)
+      .orderBy(desc(prospectos.prospecto))
+      .limit(1);
+
+    if (latestProspecto.length === 0) {
+      return 'P-0001';
+    }
+
+    // Extract the number from the prospecto (e.g., "P-0001" -> 1)
+    const lastNumber = parseInt(latestProspecto[0].prospecto.split('-')[1]);
+    const nextNumber = lastNumber + 1;
+
+    // Format with leading zeros (e.g., 2 -> "P-0002")
+    return `P-${nextNumber.toString().padStart(4, '0')}`;
   }
 }
 
