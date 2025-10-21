@@ -17,7 +17,7 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { insertSaleSchema } from "@shared/schema";
+import { insertSaleSchema, type Prospecto } from "@shared/schema";
 import { z } from "zod";
 import ProductDialog, { ProductFormData } from "./product-dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -27,6 +27,7 @@ interface ManualReservaModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
+  convertingProspecto?: Prospecto | null;
 }
 
 // Form schema based on insertSaleSchema with proper numeric coercion
@@ -58,7 +59,7 @@ type ManualReservaFormData = z.infer<typeof manualReservaSchema> & {
   products: ProductFormData[];
 };
 
-export default function ManualReservaModal({ isOpen, onClose, onSuccess }: ManualReservaModalProps) {
+export default function ManualReservaModal({ isOpen, onClose, onSuccess, convertingProspecto }: ManualReservaModalProps) {
   const { toast } = useToast();
   const [products, setProducts] = useState<ProductFormData[]>([]);
   const [isProductDialogOpen, setIsProductDialogOpen] = useState(false);
@@ -98,6 +99,36 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
   const watchDespachoDireccion = form.watch("direccionDespachoDireccion");
   const watchDespachoUrbanizacion = form.watch("direccionDespachoUrbanizacion");
   const watchDespachoReferencia = form.watch("direccionDespachoReferencia");
+
+  // Pre-fill form when converting prospecto
+  useEffect(() => {
+    if (convertingProspecto && isOpen) {
+      form.reset({
+        nombre: convertingProspecto.nombre || "",
+        cedula: convertingProspecto.cedula || "",
+        telefono: convertingProspecto.telefono || "",
+        email: convertingProspecto.email || "",
+        totalUsd: "0",
+        fechaEntrega: convertingProspecto.fechaEntrega ? new Date(convertingProspecto.fechaEntrega) : undefined,
+        direccionFacturacionPais: convertingProspecto.direccionFacturacionPais || "Venezuela",
+        direccionFacturacionEstado: convertingProspecto.direccionFacturacionEstado || "",
+        direccionFacturacionCiudad: convertingProspecto.direccionFacturacionCiudad || "",
+        direccionFacturacionDireccion: convertingProspecto.direccionFacturacionDireccion || "",
+        direccionFacturacionUrbanizacion: convertingProspecto.direccionFacturacionUrbanizacion || "",
+        direccionFacturacionReferencia: convertingProspecto.direccionFacturacionReferencia || "",
+        direccionDespachoIgualFacturacion: convertingProspecto.direccionDespachoIgualFacturacion === "true",
+        direccionDespachoPais: convertingProspecto.direccionDespachoPais || "Venezuela",
+        direccionDespachoEstado: convertingProspecto.direccionDespachoEstado || "",
+        direccionDespachoCiudad: convertingProspecto.direccionDespachoCiudad || "",
+        direccionDespachoDireccion: convertingProspecto.direccionDespachoDireccion || "",
+        direccionDespachoUrbanizacion: convertingProspecto.direccionDespachoUrbanizacion || "",
+        direccionDespachoReferencia: convertingProspecto.direccionDespachoReferencia || "",
+        canal: convertingProspecto.canal || "",
+        asesorId: convertingProspecto.asesorId || undefined,
+        products: [],
+      });
+    }
+  }, [convertingProspecto, isOpen, form]);
 
   // Auto-calculate Total Orden USD from sum of products
   useEffect(() => {
@@ -187,15 +218,27 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
       };
       return apiRequest("POST", "/api/sales/manual", formattedData);
     },
-    onSuccess: () => {
+    onSuccess: async () => {
+      // If converting from prospecto, delete the prospecto
+      if (convertingProspecto) {
+        try {
+          await apiRequest("DELETE", `/api/prospectos/${convertingProspecto.id}`);
+          queryClient.invalidateQueries({ queryKey: ["/api/prospectos"] });
+        } catch (error) {
+          console.error("Failed to delete prospecto:", error);
+          // Still show success for reserva creation
+        }
+      }
+      
       queryClient.invalidateQueries({ 
         predicate: (query) => Array.isArray(query.queryKey) && typeof query.queryKey[0] === 'string' && query.queryKey[0].startsWith('/api/sales')
       });
       toast({
-        title: "Reserva creada",
-        description: "La reserva manual ha sido creada exitosamente.",
+        title: convertingProspecto ? "Prospecto convertido" : "Reserva creada",
+        description: convertingProspecto ? "El prospecto ha sido convertido en reserva exitosamente." : "La reserva manual ha sido creada exitosamente.",
       });
       form.reset();
+      setProducts([]);
       onSuccess();
     },
     onError: (error: any) => {
@@ -222,7 +265,14 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess }: Manua
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto" data-testid="manual-reserva-modal">
         <DialogHeader>
-          <DialogTitle>Nueva Reserva Manual</DialogTitle>
+          <DialogTitle>
+            {convertingProspecto ? "Convertir Prospecto en Reserva" : "Nueva Reserva Manual"}
+          </DialogTitle>
+          {convertingProspecto && (
+            <p className="text-sm text-muted-foreground mt-2">
+              Convirtiendo prospecto de {convertingProspecto.nombre}. Agrega los productos para completar la reserva.
+            </p>
+          )}
         </DialogHeader>
 
         <Form {...form}>

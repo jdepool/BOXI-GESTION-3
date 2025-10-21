@@ -349,11 +349,20 @@ export default function Sales() {
 
       <ManualReservaModal 
         isOpen={isManualReservaModalOpen}
-        onClose={() => setIsManualReservaModalOpen(false)}
+        onClose={() => {
+          setIsManualReservaModalOpen(false);
+          if (convertingProspecto?.tipo === "reserva") {
+            setConvertingProspecto(null);
+          }
+        }}
         onSuccess={() => {
           setIsManualReservaModalOpen(false);
+          if (convertingProspecto?.tipo === "reserva") {
+            setConvertingProspecto(null);
+          }
           // The modal will handle cache invalidation internally
         }}
+        convertingProspecto={convertingProspecto?.tipo === "reserva" ? convertingProspecto.prospecto : null}
       />
 
       <Dialog open={isSettingsDialogOpen} onOpenChange={setIsSettingsDialogOpen}>
