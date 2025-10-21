@@ -8,7 +8,7 @@ import { eq } from "drizzle-orm";
 import { 
   insertSaleSchema, insertUploadHistorySchema, insertBancoSchema, insertTipoEgresoSchema, 
   insertProductoSchema, insertMetodoPagoSchema, insertMonedaSchema, insertCategoriaSchema,
-  insertEgresoSchema, insertEgresoPorAprobarSchema, insertPaymentInstallmentSchema, insertAsesorSchema, insertTransportistaSchema
+  insertEgresoSchema, insertEgresoPorAprobarSchema, insertPaymentInstallmentSchema, insertAsesorSchema, insertTransportistaSchema, insertProspectoSchema
 } from "@shared/schema";
 import { z } from "zod";
 import multer from "multer";
@@ -3559,6 +3559,86 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Delete transportista error:", error);
       res.status(500).json({ error: "Failed to delete transportista" });
+    }
+  });
+
+  // PROSPECTOS endpoints
+  const getProspectosQuerySchema = z.object({
+    asesorId: z.string().optional(),
+    limit: z.coerce.number().min(1).max(1000).default(100),
+    offset: z.coerce.number().min(0).default(0),
+  });
+
+  app.get("/api/prospectos", async (req, res) => {
+    try {
+      const query = getProspectosQuerySchema.parse(req.query);
+      
+      const [prospectosData, totalCount] = await Promise.all([
+        storage.getProspectos({
+          asesorId: query.asesorId,
+          limit: query.limit,
+          offset: query.offset,
+        }),
+        storage.getTotalProspectosCount({
+          asesorId: query.asesorId,
+        }),
+      ]);
+
+      res.json({
+        data: prospectosData,
+        total: totalCount,
+        limit: query.limit,
+        offset: query.offset,
+      });
+    } catch (error) {
+      console.error("Error fetching prospectos:", error);
+      res.status(500).json({ error: "Failed to fetch prospectos" });
+    }
+  });
+
+  app.post("/api/prospectos", async (req, res) => {
+    try {
+      const validatedData = insertProspectoSchema.parse(req.body);
+      const prospecto = await storage.createProspecto(validatedData);
+      res.status(201).json(prospecto);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Invalid data", details: error.errors });
+      }
+      console.error("Create prospecto error:", error);
+      res.status(500).json({ error: "Failed to create prospecto" });
+    }
+  });
+
+  app.patch("/api/prospectos/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const validatedData = insertProspectoSchema.partial().parse(req.body);
+      const prospecto = await storage.updateProspecto(id, validatedData);
+      if (!prospecto) {
+        return res.status(404).json({ error: "Prospecto not found" });
+      }
+      res.json(prospecto);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Invalid data", details: error.errors });
+      }
+      console.error("Update prospecto error:", error);
+      res.status(500).json({ error: "Failed to update prospecto" });
+    }
+  });
+
+  app.delete("/api/prospectos/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const deleted = await storage.deleteProspecto(id);
+      if (!deleted) {
+        return res.status(404).json({ error: "Prospecto not found" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Delete prospecto error:", error);
+      res.status(500).json({ error: "Failed to delete prospecto" });
     }
   });
 
