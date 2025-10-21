@@ -1573,6 +1573,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // GET /api/sales/installments - Get installments by order number (query param)
+  // MUST BE BEFORE /api/sales/:id to avoid route matching conflicts
+  app.get("/api/sales/installments", async (req, res) => {
+    try {
+      const { orden } = req.query;
+      
+      if (!orden || typeof orden !== 'string') {
+        return res.status(400).json({ error: "Order number is required" });
+      }
+      
+      const installments = await storage.getInstallmentsByOrder(orden);
+      res.json(installments);
+    } catch (error) {
+      console.error("Get installments error:", error);
+      res.status(500).json({ error: "Failed to get installments" });
+    }
+  });
+
   // Get specific sale by ID (MUST BE AFTER specific routes)
   app.get("/api/sales/:id", async (req, res) => {
     try {
@@ -4188,23 +4206,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Payment Installments Routes
-  
-  // GET /api/sales/installments - Get installments by order number (query param)
-  app.get("/api/sales/installments", async (req, res) => {
-    try {
-      const { orden } = req.query;
-      
-      if (!orden || typeof orden !== 'string') {
-        return res.status(400).json({ error: "Order number is required" });
-      }
-      
-      const installments = await storage.getInstallmentsByOrder(orden);
-      res.json(installments);
-    } catch (error) {
-      console.error("Get installments error:", error);
-      res.status(500).json({ error: "Failed to get installments" });
-    }
-  });
   
   // GET /api/sales/:saleId/installments - Returns installments + summary
   app.get("/api/sales/:saleId/installments", async (req, res) => {
