@@ -1,10 +1,10 @@
 import { 
-  sales, uploadHistory, users, bancos, bancosBackup, tiposEgresos, productos, productosBackup, metodosPago, monedas, categorias, canales, asesores, transportistas, egresos, egresosPorAprobar, paymentInstallments, prospectos,
+  sales, uploadHistory, users, bancos, bancosBackup, tiposEgresos, productos, productosBackup, metodosPago, monedas, categorias, canales, asesores, transportistas, seguimientoConfig, egresos, egresosPorAprobar, paymentInstallments, prospectos,
   type User, type InsertUser, type Sale, type InsertSale, type UploadHistory, type InsertUploadHistory,
   type Banco, type InsertBanco, type TipoEgreso, type InsertTipoEgreso,
   type Producto, type InsertProducto, type MetodoPago, type InsertMetodoPago,
   type Moneda, type InsertMoneda, type Categoria, type InsertCategoria,
-  type Canal, type InsertCanal, type Asesor, type InsertAsesor, type Transportista, type InsertTransportista, type Egreso, type InsertEgreso,
+  type Canal, type InsertCanal, type Asesor, type InsertAsesor, type Transportista, type InsertTransportista, type SeguimientoConfig, type InsertSeguimientoConfig, type Egreso, type InsertEgreso,
   type EgresoPorAprobar, type InsertEgresoPorAprobar, type PaymentInstallment, type InsertPaymentInstallment,
   type Prospecto, type InsertProspecto
 } from "@shared/schema";
@@ -195,6 +195,10 @@ export interface IStorage {
   createTransportista(transportista: InsertTransportista): Promise<Transportista>;
   updateTransportista(id: string, transportista: Partial<InsertTransportista>): Promise<Transportista | undefined>;
   deleteTransportista(id: string): Promise<boolean>;
+
+  // Seguimiento Config
+  getSeguimientoConfig(): Promise<SeguimientoConfig | undefined>;
+  updateSeguimientoConfig(config: Partial<InsertSeguimientoConfig>): Promise<SeguimientoConfig>;
 
   // Egresos
   getEgresos(filters?: {
@@ -1770,6 +1774,38 @@ export class DatabaseStorage implements IStorage {
   async deleteTransportista(id: string): Promise<boolean> {
     const result = await db.delete(transportistas).where(eq(transportistas.id, id));
     return (result.rowCount ?? 0) > 0;
+  }
+
+  // Seguimiento Config methods implementation
+  async getSeguimientoConfig(): Promise<SeguimientoConfig | undefined> {
+    const [config] = await db.select().from(seguimientoConfig).limit(1);
+    return config;
+  }
+
+  async updateSeguimientoConfig(config: Partial<InsertSeguimientoConfig>): Promise<SeguimientoConfig> {
+    // Check if a config row exists
+    const existing = await this.getSeguimientoConfig();
+    
+    if (existing) {
+      // Update existing config
+      const [updated] = await db
+        .update(seguimientoConfig)
+        .set({ ...config, updatedAt: new Date() })
+        .where(eq(seguimientoConfig.id, existing.id))
+        .returning();
+      return updated;
+    } else {
+      // Create new config with defaults
+      const [newConfig] = await db.insert(seguimientoConfig).values({
+        diasFase1: config.diasFase1 ?? 2,
+        diasFase2: config.diasFase2 ?? 4,
+        diasFase3: config.diasFase3 ?? 7,
+        emailRecordatorio: config.emailRecordatorio ?? null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      }).returning();
+      return newConfig;
+    }
   }
 
   // Egresos methods

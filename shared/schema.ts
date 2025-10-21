@@ -112,6 +112,16 @@ export const transportistas = pgTable("transportistas", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+export const seguimientoConfig = pgTable("seguimiento_config", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  diasFase1: integer("dias_fase_1").notNull().default(2),
+  diasFase2: integer("dias_fase_2").notNull().default(4),
+  diasFase3: integer("dias_fase_3").notNull().default(7),
+  emailRecordatorio: text("email_recordatorio"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 export const sales = pgTable("sales", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   nombre: text("nombre").notNull(),
@@ -353,6 +363,12 @@ export const insertTransportistaSchema = createInsertSchema(transportistas).omit
   updatedAt: true,
 });
 
+export const insertSeguimientoConfigSchema = createInsertSchema(seguimientoConfig).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 export const insertEgresoSchema = createInsertSchema(egresos).omit({
   id: true,
   pendienteInfo: true,
@@ -422,6 +438,8 @@ export type Asesor = typeof asesores.$inferSelect;
 export type InsertAsesor = z.infer<typeof insertAsesorSchema>;
 export type Transportista = typeof transportistas.$inferSelect;
 export type InsertTransportista = z.infer<typeof insertTransportistaSchema>;
+export type SeguimientoConfig = typeof seguimientoConfig.$inferSelect;
+export type InsertSeguimientoConfig = z.infer<typeof insertSeguimientoConfigSchema>;
 export type Egreso = typeof egresos.$inferSelect;
 export type InsertEgreso = z.infer<typeof insertEgresoSchema>;
 export type EgresoPorAprobar = typeof egresosPorAprobar.$inferSelect;
