@@ -910,7 +910,7 @@ export default function SalesTable({
                       </div>
                     </td>
                     {activeTab === "lista" && (
-                      <td className="pl-8 pr-2 py-2 min-w-[240px]">
+                      <td className="pl-16 pr-2 py-2 min-w-[240px]">
                         <div className="flex gap-1">
                           <Button
                             variant="outline"
