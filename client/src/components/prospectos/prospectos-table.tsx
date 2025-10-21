@@ -381,28 +381,30 @@ export default function ProspectosTable({
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => handleEditProspecto(prospecto)}
-                          data-testid={`button-edit-prospecto-${prospecto.id}`}
+                          onClick={() => handleSeguimientoClick(prospecto)}
+                          data-testid={`button-seguimiento-prospecto-${prospecto.id}`}
+                          className="text-xs"
                         >
-                          <Edit className="h-4 w-4 mr-2" />
-                          Editar
+                          <ClipboardCheck className="h-3 w-3 mr-1" />
+                          Seguimiento
                         </Button>
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => handleSeguimientoClick(prospecto)}
-                          data-testid={`button-seguimiento-prospecto-${prospecto.id}`}
+                          onClick={() => handleEditProspecto(prospecto)}
+                          data-testid={`button-edit-prospecto-${prospecto.id}`}
+                          className="text-xs"
                         >
-                          <ClipboardCheck className="h-4 w-4 mr-2" />
-                          Seguimiento
+                          <Edit className="h-3 w-3 mr-1" />
+                          Editar
                         </Button>
                         <Button
                           size="sm"
-                          className="bg-blue-600 hover:bg-blue-700 text-white"
+                          className="bg-blue-600 hover:bg-blue-700 text-white text-xs"
                           onClick={() => handleConvertProspecto(prospecto)}
                           data-testid={`button-convert-prospecto-${prospecto.id}`}
                         >
-                          <DollarSign className="h-4 w-4 mr-2" />
+                          <DollarSign className="h-3 w-3 mr-1" />
                           Convertir
                         </Button>
                       </div>
