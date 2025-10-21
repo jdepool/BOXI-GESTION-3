@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -64,6 +64,8 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess, convert
   const [products, setProducts] = useState<ProductFormData[]>([]);
   const [isProductDialogOpen, setIsProductDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<{product: ProductFormData; index: number} | null>(null);
+  const hasInitialized = useRef(false);
+  const lastProspectoId = useRef<string | null>(null);
 
   const form = useForm<ManualReservaFormData>({
     resolver: zodResolver(manualReservaSchema),
@@ -100,9 +102,25 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess, convert
   const watchDespachoUrbanizacion = form.watch("direccionDespachoUrbanizacion");
   const watchDespachoReferencia = form.watch("direccionDespachoReferencia");
 
+  // Get asesores for default asesor
+  const { data: asesoresList = [] } = useQuery<Array<{ id: string; nombre: string; activo: boolean | string }>>({
+    queryKey: ["/api/admin/asesores"],
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+
   // Pre-fill form when converting prospecto
   useEffect(() => {
-    if (convertingProspecto && isOpen) {
+    // Reset flag if prospecto ID changed
+    if (convertingProspecto && lastProspectoId.current !== convertingProspecto.id) {
+      hasInitialized.current = false;
+      lastProspectoId.current = convertingProspecto.id;
+    }
+    
+    if (convertingProspecto && isOpen && !hasInitialized.current && asesoresList.length > 0) {
+      // Find Héctor's ID for default asesor
+      const hectorAsesor = asesoresList.find((a) => a.nombre === "Héctor");
+      const defaultAsesorId = hectorAsesor?.id || undefined;
+      
       form.reset({
         nombre: convertingProspecto.nombre || "",
         cedula: convertingProspecto.cedula || "",
@@ -124,11 +142,18 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess, convert
         direccionDespachoUrbanizacion: convertingProspecto.direccionDespachoUrbanizacion || "",
         direccionDespachoReferencia: convertingProspecto.direccionDespachoReferencia || "",
         canal: convertingProspecto.canal || "",
-        asesorId: convertingProspecto.asesorId || undefined,
+        asesorId: convertingProspecto.asesorId || defaultAsesorId,
         products: [],
       });
+      hasInitialized.current = true;
     }
-  }, [convertingProspecto, isOpen, form]);
+    
+    // Reset flag when modal closes or prospecto is cleared
+    if (!isOpen || !convertingProspecto) {
+      hasInitialized.current = false;
+      lastProspectoId.current = null;
+    }
+  }, [convertingProspecto, isOpen, form, asesoresList]);
 
   // Auto-calculate Total Orden USD from sum of products
   useEffect(() => {
@@ -176,11 +201,6 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess, convert
   // Fetch canales data
   const { data: canales = [] } = useQuery<Array<{ id: string; nombre: string; activo: string }>>({
     queryKey: ["/api/admin/canales"],
-    staleTime: 5 * 60 * 1000, // 5 minutes
-  });
-
-  const { data: asesoresList = [] } = useQuery<Array<{ id: string; nombre: string; activo: boolean | string }>>({
-    queryKey: ["/api/admin/asesores"],
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
