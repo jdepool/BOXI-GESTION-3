@@ -210,10 +210,11 @@ export default function ProspectosTable({
               <tr className="border-b border-border">
                 <th className="text-left p-3 font-medium text-sm text-muted-foreground">Prospecto</th>
                 <th className="text-left p-3 font-medium text-sm text-muted-foreground">Nombre</th>
-                <th className="text-left p-3 font-medium text-sm text-muted-foreground">Teléfono</th>
-                <th className="text-left p-3 font-medium text-sm text-muted-foreground">Canal</th>
-                <th className="text-left p-3 font-medium text-sm text-muted-foreground">Asesor</th>
                 <th className="text-left p-3 font-medium text-sm text-muted-foreground">Fecha</th>
+                <th className="text-left p-3 font-medium text-sm text-muted-foreground">Canal</th>
+                <th className="text-left p-3 font-medium text-sm text-muted-foreground">Teléfono</th>
+                <th className="text-left p-3 font-medium text-sm text-muted-foreground">Asesor</th>
+                <th className="text-left p-3 font-medium text-sm text-muted-foreground">Notas</th>
                 <th className="text-left p-3 font-medium text-sm text-muted-foreground">Acciones</th>
               </tr>
             </thead>
@@ -221,14 +222,14 @@ export default function ProspectosTable({
               {isLoading ? (
                 Array.from({ length: 5 }).map((_, i) => (
                   <tr key={i} className="border-b border-border">
-                    <td className="p-3" colSpan={7}>
+                    <td className="p-3" colSpan={8}>
                       <Skeleton className="h-8 w-full" />
                     </td>
                   </tr>
                 ))
               ) : data.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="p-8 text-center text-muted-foreground" data-testid="text-no-prospectos">
+                  <td colSpan={8} className="p-8 text-center text-muted-foreground" data-testid="text-no-prospectos">
                     No se encontraron prospectos
                   </td>
                 </tr>
@@ -241,17 +242,20 @@ export default function ProspectosTable({
                     <td className="p-3" data-testid={`text-nombre-${prospecto.id}`}>
                       {prospecto.nombre}
                     </td>
-                    <td className="p-3" data-testid={`text-telefono-${prospecto.id}`}>
-                      {prospecto.telefono}
+                    <td className="p-3" data-testid={`text-fecha-${prospecto.id}`}>
+                      {format(new Date(prospecto.fechaCreacion), "dd/MM/yy")}
                     </td>
                     <td className="p-3" data-testid={`text-canal-${prospecto.id}`}>
                       {prospecto.canal || "-"}
                     </td>
+                    <td className="p-3" data-testid={`text-telefono-${prospecto.id}`}>
+                      {prospecto.telefono}
+                    </td>
                     <td className="p-3" data-testid={`text-asesor-${prospecto.id}`}>
                       {prospecto.asesorId ? asesorMap.get(prospecto.asesorId) || "-" : "-"}
                     </td>
-                    <td className="p-3" data-testid={`text-fecha-${prospecto.id}`}>
-                      {format(new Date(prospecto.fechaCreacion), "dd/MM/yy")}
+                    <td className="p-3" data-testid={`text-notas-${prospecto.id}`}>
+                      {prospecto.notas || "-"}
                     </td>
                     <td className="p-3">
                       <div className="flex items-center gap-2">
