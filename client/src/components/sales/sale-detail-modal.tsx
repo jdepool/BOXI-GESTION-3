@@ -1,6 +1,7 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { format } from "date-fns";
 import type { Sale } from "@shared/schema";
 
 interface SaleDetailModalProps {
@@ -57,9 +58,8 @@ export default function SaleDetailModal({ sale, onClose }: SaleDetailModalProps)
                   {sale.canal.charAt(0).toUpperCase() + sale.canal.slice(1)}
                 </Badge>
               </p>
-              <p><span className="text-muted-foreground">Total USD:</span> <span className="text-foreground font-medium">${Number(sale.totalUsd).toLocaleString()}</span></p>
-              <p><span className="text-muted-foreground">Monto Bs:</span> <span className="text-foreground">{sale.montoInicialBs ? `Bs ${Number(sale.montoInicialBs).toLocaleString()}` : 'N/A'}</span></p>
-              <p><span className="text-muted-foreground">Fecha:</span> <span className="text-foreground">{new Date(sale.fecha).toLocaleDateString()}</span></p>
+              <p><span className="text-muted-foreground">Total Order USD:</span> <span className="text-foreground font-medium">${sale.totalOrderUsd != null ? Number(sale.totalOrderUsd).toLocaleString() : 'N/A'}</span></p>
+              <p><span className="text-muted-foreground">Fecha:</span> <span className="text-foreground">{format(new Date(sale.fecha), 'dd/MM/yy')}</span></p>
             </div>
           </div>
 
