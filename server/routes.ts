@@ -3562,6 +3562,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // SEGUIMIENTO CONFIG endpoints
+  app.get("/api/admin/seguimiento-config", async (req, res) => {
+    try {
+      const config = await storage.getSeguimientoConfig();
+      // Return default values if no config exists yet
+      if (!config) {
+        return res.json({
+          diasFase1: 2,
+          diasFase2: 4,
+          diasFase3: 7,
+          emailRecordatorio: null,
+        });
+      }
+      res.json(config);
+    } catch (error) {
+      console.error("Fetch seguimiento config error:", error);
+      res.status(500).json({ error: "Failed to fetch seguimiento config" });
+    }
+  });
+
+  app.put("/api/admin/seguimiento-config", async (req, res) => {
+    try {
+      const { insertSeguimientoConfigSchema } = await import("@shared/schema");
+      const validatedData = insertSeguimientoConfigSchema.partial().parse(req.body);
+      const config = await storage.updateSeguimientoConfig(validatedData);
+      res.json(config);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Invalid data", details: error.errors });
+      }
+      console.error("Update seguimiento config error:", error);
+      res.status(500).json({ error: "Failed to update seguimiento config" });
+    }
+  });
+
   // PROSPECTOS endpoints
   const getProspectosQuerySchema = z.object({
     asesorId: z.string().optional(),
