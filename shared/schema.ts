@@ -456,6 +456,7 @@ export const prospectos = pgTable("prospectos", {
   direccionDespachoDireccion: text("direccion_despacho_direccion"),
   direccionDespachoUrbanizacion: text("direccion_despacho_urbanizacion"),
   direccionDespachoReferencia: text("direccion_despacho_referencia"),
+  notas: text("notas"),
   fechaCreacion: timestamp("fecha_creacion").defaultNow().notNull(),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
@@ -490,6 +491,7 @@ export const insertProspectoSchema = createInsertSchema(prospectos).omit({
   direccionDespachoDireccion: z.string().optional(),
   direccionDespachoUrbanizacion: z.string().optional(),
   direccionDespachoReferencia: z.string().optional(),
+  notas: z.string().optional(),
 });
 
 export type Prospecto = typeof prospectos.$inferSelect;
