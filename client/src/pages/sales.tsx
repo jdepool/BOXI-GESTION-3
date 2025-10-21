@@ -227,10 +227,10 @@ export default function Sales() {
             <div className="flex items-center justify-between mb-4">
               <TabsList>
                 <TabsTrigger value="prospectos" data-testid="tab-prospectos">Prospectos</TabsTrigger>
-                <TabsTrigger value="lista" data-testid="tab-sales-list">Lista de Ventas</TabsTrigger>
                 <TabsTrigger value="manual" data-testid="tab-manual-entry">Inmediatas</TabsTrigger>
                 <TabsTrigger value="reservas" data-testid="tab-reservas">Reservas</TabsTrigger>
                 <TabsTrigger value="pagos" data-testid="tab-pagos">Pagos</TabsTrigger>
+                <TabsTrigger value="lista" data-testid="tab-sales-list">Lista de Ventas</TabsTrigger>
               </TabsList>
               <Button
                 variant="ghost"
