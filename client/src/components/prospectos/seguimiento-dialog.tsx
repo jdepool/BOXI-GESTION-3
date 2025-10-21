@@ -38,6 +38,10 @@ export default function SeguimientoDialog({
   const [respuesta2, setRespuesta2] = useState("");
   const [fecha3, setFecha3] = useState<Date | undefined>();
   const [respuesta3, setRespuesta3] = useState("");
+  
+  // Track manual edits during current session to prevent overwriting user changes
+  const [manuallyEditedFecha2, setManuallyEditedFecha2] = useState(false);
+  const [manuallyEditedFecha3, setManuallyEditedFecha3] = useState(false);
 
   useEffect(() => {
     if (prospecto && open) {
@@ -61,33 +65,78 @@ export default function SeguimientoDialog({
       }
       setRespuesta1(prospecto.respuestaSeguimiento1 || "");
 
+      // If fecha2 is saved, treat it as manually edited to prevent overwriting
       if (prospecto.fechaSeguimiento2) {
         setFecha2(parseDate(prospecto.fechaSeguimiento2));
+        setManuallyEditedFecha2(true);
       } else if (prospecto.fechaSeguimiento1) {
         // Default: 4 days after first follow-up
         const fecha1Date = parseDate(prospecto.fechaSeguimiento1);
         setFecha2(addDays(fecha1Date, 4));
+        setManuallyEditedFecha2(false);
       } else {
         // Calculate from registration + 2 days + 4 days
         const registrationDate = parseDate(prospecto.fechaCreacion);
         setFecha2(addDays(registrationDate, 6));
+        setManuallyEditedFecha2(false);
       }
       setRespuesta2(prospecto.respuestaSeguimiento2 || "");
 
+      // If fecha3 is saved, treat it as manually edited to prevent overwriting
       if (prospecto.fechaSeguimiento3) {
         setFecha3(parseDate(prospecto.fechaSeguimiento3));
+        setManuallyEditedFecha3(true);
       } else if (prospecto.fechaSeguimiento2) {
         // Default: 7 days after second follow-up
         const fecha2Date = parseDate(prospecto.fechaSeguimiento2);
         setFecha3(addDays(fecha2Date, 7));
+        setManuallyEditedFecha3(false);
       } else {
         // Calculate from registration + 2 + 4 + 7 days
         const registrationDate = parseDate(prospecto.fechaCreacion);
         setFecha3(addDays(registrationDate, 13));
+        setManuallyEditedFecha3(false);
       }
       setRespuesta3(prospecto.respuestaSeguimiento3 || "");
     }
   }, [prospecto, open]);
+
+  // Cascading recalculation: when fecha1 changes, update fecha2 and fecha3
+  useEffect(() => {
+    if (fecha1 && open) {
+      // Only recalculate if the user hasn't manually edited fecha2 during this session
+      if (!manuallyEditedFecha2) {
+        const newFecha2 = addDays(fecha1, 4);
+        setFecha2(newFecha2);
+        
+        // Also update fecha3 based on the new fecha2 if not manually edited
+        if (!manuallyEditedFecha3) {
+          setFecha3(addDays(newFecha2, 7));
+        }
+      }
+    }
+  }, [fecha1, open, manuallyEditedFecha2, manuallyEditedFecha3]);
+
+  // Cascading recalculation: when fecha2 changes, update fecha3
+  useEffect(() => {
+    if (fecha2 && open) {
+      // Only recalculate if the user hasn't manually edited fecha3 during this session
+      if (!manuallyEditedFecha3) {
+        setFecha3(addDays(fecha2, 7));
+      }
+    }
+  }, [fecha2, open, manuallyEditedFecha3]);
+
+  // Wrapper functions to track manual edits
+  const handleFecha2Change = (date: Date | undefined) => {
+    setFecha2(date);
+    setManuallyEditedFecha2(true);
+  };
+
+  const handleFecha3Change = (date: Date | undefined) => {
+    setFecha3(date);
+    setManuallyEditedFecha3(true);
+  };
 
   const handleSave = () => {
     onSave({
@@ -181,7 +230,7 @@ export default function SeguimientoDialog({
                   <Calendar
                     mode="single"
                     selected={fecha2}
-                    onSelect={setFecha2}
+                    onSelect={handleFecha2Change}
                     initialFocus
                   />
                 </PopoverContent>
@@ -226,7 +275,7 @@ export default function SeguimientoDialog({
                   <Calendar
                     mode="single"
                     selected={fecha3}
-                    onSelect={setFecha3}
+                    onSelect={handleFecha3Change}
                     initialFocus
                   />
                 </PopoverContent>
