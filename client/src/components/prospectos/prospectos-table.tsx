@@ -1,13 +1,16 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { ChevronLeft, ChevronRight, Edit, Plus, RotateCcw, Filter, ChevronDown, ChevronUp, Download, DollarSign } from "lucide-react";
-import { format } from "date-fns";
+import { Badge } from "@/components/ui/badge";
+import { ChevronLeft, ChevronRight, Edit, Plus, RotateCcw, Filter, ChevronDown, ChevronUp, Download, DollarSign, ClipboardCheck } from "lucide-react";
+import { format, startOfDay, addDays } from "date-fns";
+import { apiRequest, queryClient } from "@/lib/queryClient";
 import ProspectoDialog from "./prospecto-dialog";
 import ConvertProspectoDialog from "./convert-prospecto-dialog";
+import SeguimientoDialog from "./seguimiento-dialog";
 import type { Prospecto } from "@shared/schema";
 
 interface ProspectosTableProps {
@@ -27,6 +30,72 @@ interface ProspectosTableProps {
   onConvertProspecto?: (tipo: "inmediata" | "reserva", prospecto: Prospecto) => void;
 }
 
+// Helper function to determine seguimiento status
+function getSeguimientoStatus(prospecto: Prospecto): {
+  phase: number | null;
+  status: "overdue" | "today" | "future" | null;
+  date: Date | null;
+} {
+  // Extract date-only string from ISO timestamp to avoid timezone issues
+  const extractDate = (isoDate: string | Date) => {
+    const dateStr = typeof isoDate === 'string' ? isoDate : isoDate.toISOString();
+    return dateStr.split('T')[0]; // YYYY-MM-DD
+  };
+
+  const todayStr = format(new Date(), "yyyy-MM-dd");
+  
+  // Determine which phase we're in and the next follow-up date
+  const registrationDateStr = extractDate(prospecto.fechaCreacion);
+  const fase1Str = prospecto.fechaSeguimiento1 
+    ? extractDate(prospecto.fechaSeguimiento1) 
+    : format(addDays(new Date(registrationDateStr), 2), "yyyy-MM-dd");
+  
+  const fase2Str = prospecto.fechaSeguimiento2 
+    ? extractDate(prospecto.fechaSeguimiento2) 
+    : (prospecto.fechaSeguimiento1 
+      ? format(addDays(new Date(extractDate(prospecto.fechaSeguimiento1)), 4), "yyyy-MM-dd")
+      : format(addDays(new Date(registrationDateStr), 6), "yyyy-MM-dd"));
+  
+  const fase3Str = prospecto.fechaSeguimiento3 
+    ? extractDate(prospecto.fechaSeguimiento3) 
+    : (prospecto.fechaSeguimiento2 
+      ? format(addDays(new Date(extractDate(prospecto.fechaSeguimiento2)), 7), "yyyy-MM-dd")
+      : format(addDays(new Date(registrationDateStr), 13), "yyyy-MM-dd"));
+
+  // Determine current phase based on completed phases
+  let currentPhase = 1;
+  let nextDateStr = fase1Str;
+
+  if (prospecto.respuestaSeguimiento1) {
+    currentPhase = 2;
+    nextDateStr = fase2Str;
+  }
+  if (prospecto.respuestaSeguimiento2) {
+    currentPhase = 3;
+    nextDateStr = fase3Str;
+  }
+  if (prospecto.respuestaSeguimiento3) {
+    // All phases completed
+    return { phase: null, status: null, date: null };
+  }
+
+  // Determine status by string comparison (YYYY-MM-DD format)
+  let status: "overdue" | "today" | "future";
+  if (nextDateStr < todayStr) {
+    status = "overdue";
+  } else if (nextDateStr === todayStr) {
+    status = "today";
+  } else {
+    status = "future";
+  }
+
+  return { 
+    phase: currentPhase, 
+    status, 
+    date: new Date(nextDateStr) 
+  };
+}
+
 export default function ProspectosTable({
   data,
   total,
@@ -44,6 +113,8 @@ export default function ProspectosTable({
   const [filtersVisible, setFiltersVisible] = useState(false);
   const [convertDialogOpen, setConvertDialogOpen] = useState(false);
   const [prospectoToConvert, setProspectoToConvert] = useState<Prospecto | null>(null);
+  const [seguimientoDialogOpen, setSeguimientoDialogOpen] = useState(false);
+  const [prospectoForSeguimiento, setProspectoForSeguimiento] = useState<Prospecto | null>(null);
 
   const currentPage = Math.floor(offset / limit) + 1;
   const totalPages = Math.ceil(total / limit);
@@ -115,6 +186,27 @@ export default function ProspectosTable({
       console.error('Export error:', error);
     }
   };
+
+  const handleSeguimientoClick = (prospecto: Prospecto) => {
+    setProspectoForSeguimiento(prospecto);
+    setSeguimientoDialogOpen(true);
+  };
+
+  const saveSeguimientoMutation = useMutation({
+    mutationFn: async ({ prospectoId, data }: { prospectoId: string; data: any }) => {
+      const response = await fetch(`/api/prospectos/${prospectoId}/seguimiento`, {
+        method: "PUT",
+        body: JSON.stringify(data),
+        headers: { "Content-Type": "application/json" },
+      });
+      if (!response.ok) throw new Error("Failed to save seguimiento");
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/prospectos"] });
+      setSeguimientoDialogOpen(false);
+    },
+  });
 
   return (
     <>
@@ -215,6 +307,7 @@ export default function ProspectosTable({
                 <th className="text-left p-3 font-medium text-sm text-muted-foreground">Teléfono</th>
                 <th className="text-left p-3 font-medium text-sm text-muted-foreground">Asesor</th>
                 <th className="text-left p-3 font-medium text-sm text-muted-foreground">Notas</th>
+                <th className="text-left p-3 font-medium text-sm text-muted-foreground">Estado Seg.</th>
                 <th className="text-left p-3 font-medium text-sm text-muted-foreground">Acciones</th>
               </tr>
             </thead>
@@ -222,19 +315,21 @@ export default function ProspectosTable({
               {isLoading ? (
                 Array.from({ length: 5 }).map((_, i) => (
                   <tr key={i} className="border-b border-border">
-                    <td className="p-3" colSpan={8}>
+                    <td className="p-3" colSpan={9}>
                       <Skeleton className="h-8 w-full" />
                     </td>
                   </tr>
                 ))
               ) : data.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="p-8 text-center text-muted-foreground" data-testid="text-no-prospectos">
+                  <td colSpan={9} className="p-8 text-center text-muted-foreground" data-testid="text-no-prospectos">
                     No se encontraron prospectos
                   </td>
                 </tr>
               ) : (
-                data.map((prospecto) => (
+                data.map((prospecto) => {
+                  const seguimientoStatus = getSeguimientoStatus(prospecto);
+                  return (
                   <tr key={prospecto.id} className="border-b border-border hover:bg-muted/30 text-xs" data-testid={`row-prospecto-${prospecto.id}`}>
                     <td className="p-3 text-xs text-muted-foreground" data-testid={`text-prospecto-${prospecto.id}`}>
                       {prospecto.prospecto}
@@ -257,6 +352,30 @@ export default function ProspectosTable({
                     <td className="p-3 text-xs text-muted-foreground" data-testid={`text-notas-${prospecto.id}`}>
                       {prospecto.notas || "-"}
                     </td>
+                    <td className="p-3 text-xs" data-testid={`text-seguimiento-status-${prospecto.id}`}>
+                      {seguimientoStatus.phase !== null ? (
+                        <div className="flex items-center gap-2">
+                          <Badge
+                            className={`text-xs font-semibold px-2 py-1 ${
+                              seguimientoStatus.status === "overdue"
+                                ? "bg-red-500 hover:bg-red-600 text-white"
+                                : seguimientoStatus.status === "today"
+                                ? "bg-yellow-500 hover:bg-yellow-600 text-white"
+                                : "bg-green-500 hover:bg-green-600 text-white"
+                            }`}
+                          >
+                            {seguimientoStatus.phase}
+                          </Badge>
+                          {seguimientoStatus.status === "future" && seguimientoStatus.date && (
+                            <span className="text-xs text-muted-foreground">
+                              {format(seguimientoStatus.date, "dd/MM")}
+                            </span>
+                          )}
+                        </div>
+                      ) : (
+                        <span className="text-muted-foreground">-</span>
+                      )}
+                    </td>
                     <td className="p-3 text-xs">
                       <div className="flex items-center gap-2">
                         <Button
@@ -267,6 +386,15 @@ export default function ProspectosTable({
                         >
                           <Edit className="h-4 w-4 mr-2" />
                           Editar
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleSeguimientoClick(prospecto)}
+                          data-testid={`button-seguimiento-prospecto-${prospecto.id}`}
+                        >
+                          <ClipboardCheck className="h-4 w-4 mr-2" />
+                          Seguimiento
                         </Button>
                         <Button
                           size="sm"
@@ -280,8 +408,9 @@ export default function ProspectosTable({
                       </div>
                     </td>
                   </tr>
-                ))
-              )}
+                  );
+                }))
+              }
             </tbody>
           </table>
         </div>
@@ -331,6 +460,21 @@ export default function ProspectosTable({
             onConvertProspecto(tipo, prospecto);
           }
         }}
+      />
+
+      <SeguimientoDialog
+        open={seguimientoDialogOpen}
+        onOpenChange={setSeguimientoDialogOpen}
+        prospecto={prospectoForSeguimiento}
+        onSave={(data) => {
+          if (prospectoForSeguimiento) {
+            saveSeguimientoMutation.mutate({
+              prospectoId: prospectoForSeguimiento.id,
+              data,
+            });
+          }
+        }}
+        isSaving={saveSeguimientoMutation.isPending}
       />
     </>
   );

@@ -457,6 +457,13 @@ export const prospectos = pgTable("prospectos", {
   direccionDespachoUrbanizacion: text("direccion_despacho_urbanizacion"),
   direccionDespachoReferencia: text("direccion_despacho_referencia"),
   notas: text("notas"),
+  // Follow-up tracking
+  fechaSeguimiento1: timestamp("fecha_seguimiento1"),
+  respuestaSeguimiento1: text("respuesta_seguimiento1"),
+  fechaSeguimiento2: timestamp("fecha_seguimiento2"),
+  respuestaSeguimiento2: text("respuesta_seguimiento2"),
+  fechaSeguimiento3: timestamp("fecha_seguimiento3"),
+  respuestaSeguimiento3: text("respuesta_seguimiento3"),
   fechaCreacion: timestamp("fecha_creacion").defaultNow().notNull(),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),

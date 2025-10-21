@@ -3719,6 +3719,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.put("/api/prospectos/:id/seguimiento", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const seguimientoData = req.body;
+
+      // Validate that prospecto exists
+      const existingProspecto = await storage.getProspectoById(id);
+      if (!existingProspecto) {
+        return res.status(404).json({ error: "Prospecto not found" });
+      }
+
+      const updatedProspecto = await storage.updateProspecto(id, seguimientoData);
+      
+      if (!updatedProspecto) {
+        return res.status(500).json({ error: "Failed to update seguimiento" });
+      }
+
+      res.json({ success: true, prospecto: updatedProspecto });
+    } catch (error) {
+      console.error("Update prospecto seguimiento error:", error);
+      res.status(500).json({ error: "Failed to update seguimiento" });
+    }
+  });
+
   app.post("/api/prospectos/convert", async (req, res) => {
     try {
       const { tipo, prospectoId } = req.body;
