@@ -56,7 +56,45 @@ export default function ManualSalesEntry({ convertingProspecto, onConversionComp
   });
 
   const createManualSaleMutation = useMutation({
-    mutationFn: (data: any) => apiRequest("POST", "/api/sales/manual", data),
+    mutationFn: (data: any) => {
+      // Step 1: Normalize all billing address fields first
+      const normalizedBilling = {
+        direccionFacturacionPais: data.direccionFacturacionPais || null,
+        direccionFacturacionEstado: data.direccionFacturacionEstado || null,
+        direccionFacturacionCiudad: data.direccionFacturacionCiudad || null,
+        direccionFacturacionDireccion: data.direccionFacturacionDireccion || null,
+        direccionFacturacionUrbanizacion: data.direccionFacturacionUrbanizacion || null,
+        direccionFacturacionReferencia: data.direccionFacturacionReferencia || null,
+      };
+      
+      // Step 2: Convert form data to proper API format
+      const formattedData = {
+        ...data,
+        // Convert fechaEntrega to ISO string if provided
+        fechaEntrega: data.fechaEntrega?.toISOString ? data.fechaEntrega.toISOString() : data.fechaEntrega,
+        // Ensure empty string fields are converted to null for API
+        cedula: data.cedula || null,
+        telefono: data.telefono || null,
+        email: data.email || null,
+        // Use normalized billing address
+        ...normalizedBilling,
+        // If direccionDespachoIgualFacturacion is true, copy normalized billing address to shipping
+        direccionDespachoPais: data.direccionDespachoIgualFacturacion ? normalizedBilling.direccionFacturacionPais : (data.direccionDespachoPais || null),
+        direccionDespachoEstado: data.direccionDespachoIgualFacturacion ? normalizedBilling.direccionFacturacionEstado : (data.direccionDespachoEstado || null),
+        direccionDespachoCiudad: data.direccionDespachoIgualFacturacion ? normalizedBilling.direccionFacturacionCiudad : (data.direccionDespachoCiudad || null),
+        direccionDespachoDireccion: data.direccionDespachoIgualFacturacion ? normalizedBilling.direccionFacturacionDireccion : (data.direccionDespachoDireccion || null),
+        direccionDespachoUrbanizacion: data.direccionDespachoIgualFacturacion ? normalizedBilling.direccionFacturacionUrbanizacion : (data.direccionDespachoUrbanizacion || null),
+        direccionDespachoReferencia: data.direccionDespachoIgualFacturacion ? normalizedBilling.direccionFacturacionReferencia : (data.direccionDespachoReferencia || null),
+        // Include products array for multi-product support
+        products: data.products,
+        // Add Inmediato-specific flags
+        estadoEntrega: "Pendiente",
+        tipo: "Inmediato",
+        // Ensure asesorId is included
+        asesorId: data.asesorId || null,
+      };
+      return apiRequest("POST", "/api/sales/manual", formattedData);
+    },
     onSuccess: async (response) => {
       // If converting from prospecto, delete the prospecto
       if (convertingProspecto) {
