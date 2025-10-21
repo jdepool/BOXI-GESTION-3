@@ -202,8 +202,8 @@ export default function ProspectoDialog({ open, onOpenChange, prospecto }: Prosp
                 <FormItem>
                   <FormLabel>Asesor</FormLabel>
                   <Select
-                    value={field.value || ""}
-                    onValueChange={(value) => field.onChange(value || null)}
+                    value={field.value || "none"}
+                    onValueChange={(value) => field.onChange(value === "none" ? null : value)}
                     data-testid="select-prospecto-asesor"
                   >
                     <FormControl>
@@ -212,7 +212,7 @@ export default function ProspectoDialog({ open, onOpenChange, prospecto }: Prosp
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="" data-testid="option-asesor-none">Sin asesor</SelectItem>
+                      <SelectItem value="none" data-testid="option-asesor-none">Sin asesor</SelectItem>
                       {activeAsesores.map((asesor) => (
                         <SelectItem key={asesor.id} value={asesor.id} data-testid={`option-asesor-${asesor.id}`}>
                           {asesor.nombre}
