@@ -618,13 +618,15 @@ export default function SalesTable({
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[120px]">Asesor</th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[150px]">Notas</th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[150px]">Acciones</th>
-                <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[180px]"></th>
+                {activeTab === "lista" && (
+                  <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[180px]"></th>
+                )}
               </tr>
             </thead>
             <tbody>
               {data.length === 0 ? (
                 <tr>
-                  <td colSpan={showDeliveryDateColumn ? 24 : 23} className="text-center p-8 text-muted-foreground">
+                  <td colSpan={showDeliveryDateColumn ? (activeTab === "lista" ? 24 : 23) : (activeTab === "lista" ? 23 : 22)} className="text-center p-8 text-muted-foreground">
                     No hay datos disponibles
                   </td>
                 </tr>
@@ -883,46 +885,48 @@ export default function SalesTable({
                         </Button>
                       </div>
                     </td>
-                    <td className="p-2 min-w-[180px]">
-                      <div className="flex gap-1">
-                        <Button
-                          variant={sale.estadoEntrega === "Cancelada" ? "outline" : "destructive"}
-                          size="sm"
-                          onClick={() => {
-                            setSelectedSaleForCancel(sale);
-                            setCancelConfirmOpen(true);
-                          }}
-                          disabled={sale.estadoEntrega === "Cancelada" || cancelSaleMutation.isPending}
-                          data-testid={`cancel-sale-${sale.id}`}
-                          className={cn(
-                            "h-7 text-xs",
-                            sale.estadoEntrega === "Cancelada" && "bg-green-800 text-white hover:bg-green-800 opacity-70 cursor-not-allowed border-green-700"
-                          )}
-                          title={sale.estadoEntrega === "Cancelada" ? "Venta ya cancelada" : "Cancelar venta"}
-                        >
-                          <XCircle className={cn("h-3 w-3 mr-1", sale.estadoEntrega === "Cancelada" && "text-green-400")} />
-                          Cancelar
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            setSelectedSaleForReturn(sale);
-                            setReturnConfirmOpen(true);
-                          }}
-                          disabled={sale.estadoEntrega === "A devolver" || returnSaleMutation.isPending}
-                          data-testid={`return-sale-${sale.id}`}
-                          className={cn(
-                            "h-7 text-xs border-gray-400 text-gray-600 hover:bg-gray-100 dark:border-gray-600 dark:text-gray-400 dark:hover:bg-gray-800",
-                            sale.estadoEntrega === "A devolver" && "bg-green-800 text-white hover:bg-green-800 opacity-70 cursor-not-allowed border-green-700"
-                          )}
-                          title={sale.estadoEntrega === "A devolver" ? "Venta ya marcada a devolver" : "Marcar como a devolver"}
-                        >
-                          <RotateCcw className={cn("h-3 w-3 mr-1", sale.estadoEntrega === "A devolver" && "text-green-400")} />
-                          Devolver
-                        </Button>
-                      </div>
-                    </td>
+                    {activeTab === "lista" && (
+                      <td className="p-2 min-w-[180px]">
+                        <div className="flex gap-1">
+                          <Button
+                            variant={sale.estadoEntrega === "Cancelada" ? "outline" : "destructive"}
+                            size="sm"
+                            onClick={() => {
+                              setSelectedSaleForCancel(sale);
+                              setCancelConfirmOpen(true);
+                            }}
+                            disabled={sale.estadoEntrega === "Cancelada" || cancelSaleMutation.isPending}
+                            data-testid={`cancel-sale-${sale.id}`}
+                            className={cn(
+                              "h-7 text-xs",
+                              sale.estadoEntrega === "Cancelada" && "bg-green-800 text-white hover:bg-green-800 opacity-70 cursor-not-allowed border-green-700"
+                            )}
+                            title={sale.estadoEntrega === "Cancelada" ? "Venta ya cancelada" : "Cancelar venta"}
+                          >
+                            <XCircle className={cn("h-3 w-3 mr-1", sale.estadoEntrega === "Cancelada" && "text-green-400")} />
+                            Cancelar
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedSaleForReturn(sale);
+                              setReturnConfirmOpen(true);
+                            }}
+                            disabled={sale.estadoEntrega === "A devolver" || returnSaleMutation.isPending}
+                            data-testid={`return-sale-${sale.id}`}
+                            className={cn(
+                              "h-7 text-xs border-gray-400 text-gray-600 hover:bg-gray-100 dark:border-gray-600 dark:text-gray-400 dark:hover:bg-gray-800",
+                              sale.estadoEntrega === "A devolver" && "bg-green-800 text-white hover:bg-green-800 opacity-70 cursor-not-allowed border-green-700"
+                            )}
+                            title={sale.estadoEntrega === "A devolver" ? "Venta ya marcada a devolver" : "Marcar como a devolver"}
+                          >
+                            <RotateCcw className={cn("h-3 w-3 mr-1", sale.estadoEntrega === "A devolver" && "text-green-400")} />
+                            Devolver
+                          </Button>
+                        </div>
+                      </td>
+                    )}
                   </tr>
                 ))
               )}
