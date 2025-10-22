@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, decimal, timestamp, integer, boolean, index, unique, check } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, decimal, timestamp, integer, boolean, index, unique, check, jsonb } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -118,6 +118,7 @@ export const seguimientoConfig = pgTable("seguimiento_config", {
   diasFase2: integer("dias_fase_2").notNull().default(4),
   diasFase3: integer("dias_fase_3").notNull().default(7),
   emailRecordatorio: text("email_recordatorio"),
+  asesorEmails: jsonb("asesor_emails").$type<Array<{ asesorId: string; email: string }>>(),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -369,6 +370,10 @@ export const insertSeguimientoConfigSchema = createInsertSchema(seguimientoConfi
   updatedAt: true,
 }).extend({
   emailRecordatorio: z.string().nullable().optional(),
+  asesorEmails: z.array(z.object({
+    asesorId: z.string(),
+    email: z.string().email(),
+  })).max(5).nullable().optional(),
 });
 
 export const insertEgresoSchema = createInsertSchema(egresos).omit({
