@@ -275,6 +275,10 @@ export interface IStorage {
   getProspectos(filters?: {
     asesorId?: string;
     estadoProspecto?: string;
+    canal?: string;
+    prospecto?: string;
+    startDate?: string;
+    endDate?: string;
     limit?: number;
     offset?: number;
   }): Promise<Prospecto[]>;
@@ -285,6 +289,10 @@ export interface IStorage {
   getTotalProspectosCount(filters?: {
     asesorId?: string;
     estadoProspecto?: string;
+    canal?: string;
+    prospecto?: string;
+    startDate?: string;
+    endDate?: string;
   }): Promise<number>;
   getNextProspectoNumber(): Promise<string>;
 
@@ -2695,6 +2703,10 @@ export class DatabaseStorage implements IStorage {
   async getProspectos(filters?: {
     asesorId?: string;
     estadoProspecto?: string;
+    canal?: string;
+    prospecto?: string;
+    startDate?: string;
+    endDate?: string;
     limit?: number;
     offset?: number;
   }): Promise<Prospecto[]> {
@@ -2707,6 +2719,22 @@ export class DatabaseStorage implements IStorage {
     // Default to 'Activo' if no estadoProspecto filter is provided
     const estadoFilter = filters?.estadoProspecto || 'Activo';
     whereConditions.push(eq(prospectos.estadoProspecto, estadoFilter));
+
+    if (filters?.canal) {
+      whereConditions.push(eq(prospectos.canal, filters.canal));
+    }
+
+    if (filters?.prospecto) {
+      whereConditions.push(ilike(prospectos.prospecto, `%${filters.prospecto}%`));
+    }
+
+    if (filters?.startDate) {
+      whereConditions.push(gte(prospectos.fechaCreacion, filters.startDate));
+    }
+
+    if (filters?.endDate) {
+      whereConditions.push(lte(prospectos.fechaCreacion, filters.endDate));
+    }
 
     return await db
       .select()
@@ -2761,6 +2789,10 @@ export class DatabaseStorage implements IStorage {
   async getTotalProspectosCount(filters?: {
     asesorId?: string;
     estadoProspecto?: string;
+    canal?: string;
+    prospecto?: string;
+    startDate?: string;
+    endDate?: string;
   }): Promise<number> {
     const whereConditions = [];
 
@@ -2771,6 +2803,22 @@ export class DatabaseStorage implements IStorage {
     // Default to 'Activo' if no estadoProspecto filter is provided
     const estadoFilter = filters?.estadoProspecto || 'Activo';
     whereConditions.push(eq(prospectos.estadoProspecto, estadoFilter));
+
+    if (filters?.canal) {
+      whereConditions.push(eq(prospectos.canal, filters.canal));
+    }
+
+    if (filters?.prospecto) {
+      whereConditions.push(ilike(prospectos.prospecto, `%${filters.prospecto}%`));
+    }
+
+    if (filters?.startDate) {
+      whereConditions.push(gte(prospectos.fechaCreacion, filters.startDate));
+    }
+
+    if (filters?.endDate) {
+      whereConditions.push(lte(prospectos.fechaCreacion, filters.endDate));
+    }
 
     const result = await db
       .select({ count: count() })
