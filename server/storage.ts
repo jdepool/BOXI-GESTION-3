@@ -1,10 +1,10 @@
 import { 
-  sales, uploadHistory, users, bancos, bancosBackup, tiposEgresos, productos, productosBackup, metodosPago, monedas, categorias, canales, asesores, transportistas, seguimientoConfig, egresos, egresosPorAprobar, paymentInstallments, prospectos,
+  sales, uploadHistory, users, bancos, bancosBackup, tiposEgresos, productos, productosBackup, metodosPago, monedas, categorias, canales, asesores, transportistas, seguimientoConfig, precios, egresos, egresosPorAprobar, paymentInstallments, prospectos,
   type User, type InsertUser, type Sale, type InsertSale, type UploadHistory, type InsertUploadHistory,
   type Banco, type InsertBanco, type TipoEgreso, type InsertTipoEgreso,
   type Producto, type InsertProducto, type MetodoPago, type InsertMetodoPago,
   type Moneda, type InsertMoneda, type Categoria, type InsertCategoria,
-  type Canal, type InsertCanal, type Asesor, type InsertAsesor, type Transportista, type InsertTransportista, type SeguimientoConfig, type InsertSeguimientoConfig, type Egreso, type InsertEgreso,
+  type Canal, type InsertCanal, type Asesor, type InsertAsesor, type Transportista, type InsertTransportista, type SeguimientoConfig, type InsertSeguimientoConfig, type Precio, type InsertPrecio, type Egreso, type InsertEgreso,
   type EgresoPorAprobar, type InsertEgresoPorAprobar, type PaymentInstallment, type InsertPaymentInstallment,
   type Prospecto, type InsertProspecto
 } from "@shared/schema";
@@ -199,6 +199,12 @@ export interface IStorage {
   // Seguimiento Config
   getSeguimientoConfig(): Promise<SeguimientoConfig | undefined>;
   updateSeguimientoConfig(config: Partial<InsertSeguimientoConfig>): Promise<SeguimientoConfig>;
+
+  // Precios
+  getPrecios(): Promise<Precio[]>;
+  createPrecio(precio: InsertPrecio): Promise<Precio>;
+  updatePrecio(id: string, precio: Partial<InsertPrecio>): Promise<Precio | undefined>;
+  deletePrecio(id: string): Promise<boolean>;
 
   // Egresos
   getEgresos(filters?: {
@@ -1816,6 +1822,34 @@ export class DatabaseStorage implements IStorage {
       }).returning();
       return newConfig;
     }
+  }
+
+  // Precios methods implementation
+  async getPrecios(): Promise<Precio[]> {
+    return await db.select().from(precios).orderBy(desc(precios.fechaVigenciaDesde));
+  }
+
+  async createPrecio(precio: InsertPrecio): Promise<Precio> {
+    const [newPrecio] = await db.insert(precios).values({
+      ...precio,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }).returning();
+    return newPrecio;
+  }
+
+  async updatePrecio(id: string, precio: Partial<InsertPrecio>): Promise<Precio | undefined> {
+    const [updated] = await db
+      .update(precios)
+      .set({ ...precio, updatedAt: new Date() })
+      .where(eq(precios.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deletePrecio(id: string): Promise<boolean> {
+    const result = await db.delete(precios).where(eq(precios.id, id));
+    return (result.rowCount ?? 0) > 0;
   }
 
   // Egresos methods

@@ -123,6 +123,18 @@ export const seguimientoConfig = pgTable("seguimiento_config", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+export const precios = pgTable("precios", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  pais: text("pais").notNull().default("Venezuela"),
+  sku: text("sku").notNull(),
+  precioInmediataUsd: decimal("precio_inmediata_usd", { precision: 10, scale: 2 }).notNull(),
+  precioReservaUsd: decimal("precio_reserva_usd", { precision: 10, scale: 2 }).notNull(),
+  costoUnitarioUsd: decimal("costo_unitario_usd", { precision: 10, scale: 2 }).notNull(),
+  fechaVigenciaDesde: timestamp("fecha_vigencia_desde").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 export const sales = pgTable("sales", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   nombre: text("nombre").notNull(),
@@ -376,6 +388,14 @@ export const insertSeguimientoConfigSchema = createInsertSchema(seguimientoConfi
   })).max(5).nullable().optional(),
 });
 
+export const insertPrecioSchema = createInsertSchema(precios).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  fechaVigenciaDesde: z.union([z.date(), z.string().transform((val) => new Date(val))]),
+});
+
 export const insertEgresoSchema = createInsertSchema(egresos).omit({
   id: true,
   pendienteInfo: true,
@@ -447,6 +467,8 @@ export type Transportista = typeof transportistas.$inferSelect;
 export type InsertTransportista = z.infer<typeof insertTransportistaSchema>;
 export type SeguimientoConfig = typeof seguimientoConfig.$inferSelect;
 export type InsertSeguimientoConfig = z.infer<typeof insertSeguimientoConfigSchema>;
+export type Precio = typeof precios.$inferSelect;
+export type InsertPrecio = z.infer<typeof insertPrecioSchema>;
 export type Egreso = typeof egresos.$inferSelect;
 export type InsertEgreso = z.infer<typeof insertEgresoSchema>;
 export type EgresoPorAprobar = typeof egresosPorAprobar.$inferSelect;

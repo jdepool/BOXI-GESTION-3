@@ -8,7 +8,7 @@ import { eq } from "drizzle-orm";
 import { 
   insertSaleSchema, insertUploadHistorySchema, insertBancoSchema, insertTipoEgresoSchema, 
   insertProductoSchema, insertMetodoPagoSchema, insertMonedaSchema, insertCategoriaSchema,
-  insertEgresoSchema, insertEgresoPorAprobarSchema, insertPaymentInstallmentSchema, insertAsesorSchema, insertTransportistaSchema, insertProspectoSchema
+  insertEgresoSchema, insertEgresoPorAprobarSchema, insertPaymentInstallmentSchema, insertAsesorSchema, insertTransportistaSchema, insertPrecioSchema, insertProspectoSchema
 } from "@shared/schema";
 import { z } from "zod";
 import multer from "multer";
@@ -3559,6 +3559,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Delete transportista error:", error);
       res.status(500).json({ error: "Failed to delete transportista" });
+    }
+  });
+
+  // PRECIOS endpoints
+  app.get("/api/admin/precios", async (req, res) => {
+    try {
+      const precios = await storage.getPrecios();
+      res.json(precios);
+    } catch (error) {
+      console.error("Fetch precios error:", error);
+      res.status(500).json({ error: "Failed to fetch precios" });
+    }
+  });
+
+  app.post("/api/admin/precios", async (req, res) => {
+    try {
+      const validatedData = insertPrecioSchema.parse(req.body);
+      const precio = await storage.createPrecio(validatedData);
+      res.status(201).json(precio);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Invalid data", details: error.errors });
+      }
+      console.error("Create precio error:", error);
+      res.status(500).json({ error: "Failed to create precio" });
+    }
+  });
+
+  app.put("/api/admin/precios/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const validatedData = insertPrecioSchema.partial().parse(req.body);
+      const precio = await storage.updatePrecio(id, validatedData);
+      if (!precio) {
+        return res.status(404).json({ error: "Precio not found" });
+      }
+      res.json(precio);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Invalid data", details: error.errors });
+      }
+      console.error("Update precio error:", error);
+      res.status(500).json({ error: "Failed to update precio" });
+    }
+  });
+
+  app.delete("/api/admin/precios/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const deleted = await storage.deletePrecio(id);
+      if (!deleted) {
+        return res.status(404).json({ error: "Precio not found" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Delete precio error:", error);
+      res.status(500).json({ error: "Failed to delete precio" });
     }
   });
 
