@@ -14,7 +14,7 @@ import { DateRangePicker } from "@/components/shared/date-range-picker";
 import ProspectoDialog from "./prospecto-dialog";
 import ConvertProspectoDialog from "./convert-prospecto-dialog";
 import SeguimientoDialog from "./seguimiento-dialog";
-import type { Prospecto } from "@shared/schema";
+import type { Prospecto, SeguimientoConfig } from "@shared/schema";
 
 interface ProspectosTableProps {
   data: Prospecto[];
@@ -39,7 +39,12 @@ interface ProspectosTableProps {
 }
 
 // Helper function to determine seguimiento status
-function getSeguimientoStatus(prospecto: Prospecto): {
+function getSeguimientoStatus(
+  prospecto: Prospecto, 
+  diasFase1: number = 2, 
+  diasFase2: number = 4, 
+  diasFase3: number = 7
+): {
   phase: number | null;
   status: "overdue" | "today" | "future" | null;
   date: Date | null;
@@ -56,19 +61,19 @@ function getSeguimientoStatus(prospecto: Prospecto): {
   const registrationDateStr = extractDate(prospecto.fechaCreacion);
   const fase1Str = prospecto.fechaSeguimiento1 
     ? extractDate(prospecto.fechaSeguimiento1) 
-    : format(addDays(new Date(registrationDateStr), 2), "yyyy-MM-dd");
+    : format(addDays(new Date(registrationDateStr), diasFase1), "yyyy-MM-dd");
   
   const fase2Str = prospecto.fechaSeguimiento2 
     ? extractDate(prospecto.fechaSeguimiento2) 
     : (prospecto.fechaSeguimiento1 
-      ? format(addDays(new Date(extractDate(prospecto.fechaSeguimiento1)), 4), "yyyy-MM-dd")
-      : format(addDays(new Date(registrationDateStr), 6), "yyyy-MM-dd"));
+      ? format(addDays(new Date(extractDate(prospecto.fechaSeguimiento1)), diasFase2), "yyyy-MM-dd")
+      : format(addDays(new Date(registrationDateStr), diasFase1 + diasFase2), "yyyy-MM-dd"));
   
   const fase3Str = prospecto.fechaSeguimiento3 
     ? extractDate(prospecto.fechaSeguimiento3) 
     : (prospecto.fechaSeguimiento2 
-      ? format(addDays(new Date(extractDate(prospecto.fechaSeguimiento2)), 7), "yyyy-MM-dd")
-      : format(addDays(new Date(registrationDateStr), 13), "yyyy-MM-dd"));
+      ? format(addDays(new Date(extractDate(prospecto.fechaSeguimiento2)), diasFase3), "yyyy-MM-dd")
+      : format(addDays(new Date(registrationDateStr), diasFase1 + diasFase2 + diasFase3), "yyyy-MM-dd"));
 
   // Determine current phase based on completed phases
   let currentPhase = 1;
@@ -146,7 +151,7 @@ export default function ProspectosTable({
     queryKey: ["/api/admin/asesores"],
   });
 
-  const { data: seguimientoConfig } = useQuery({
+  const { data: seguimientoConfig } = useQuery<SeguimientoConfig>({
     queryKey: ["/api/admin/seguimiento-config"],
   });
 
@@ -491,7 +496,12 @@ export default function ProspectosTable({
                 </tr>
               ) : (
                 data.map((prospecto) => {
-                  const seguimientoStatus = getSeguimientoStatus(prospecto);
+                  const seguimientoStatus = getSeguimientoStatus(
+                    prospecto,
+                    seguimientoConfig?.diasFase1 ?? 2,
+                    seguimientoConfig?.diasFase2 ?? 4,
+                    seguimientoConfig?.diasFase3 ?? 7
+                  );
                   return (
                   <tr key={prospecto.id} className="border-b border-border hover:bg-muted/30 text-xs" data-testid={`row-prospecto-${prospecto.id}`}>
                     <td className="p-3 text-xs text-muted-foreground" data-testid={`text-prospecto-${prospecto.id}`}>
