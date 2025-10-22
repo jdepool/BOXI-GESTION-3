@@ -3702,7 +3702,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/prospectos", async (req, res) => {
     try {
       const query = getProspectosQuerySchema.parse(req.query);
-      console.log("🔍 Prospectos query received:", query);
       
       const [prospectosData, totalCount] = await Promise.all([
         storage.getProspectos({

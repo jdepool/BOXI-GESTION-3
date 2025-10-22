@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { ChevronLeft, ChevronRight, Edit, Plus, RotateCcw, Filter, ChevronDown, ChevronUp, Download, DollarSign, ClipboardCheck } from "lucide-react";
 import { format, startOfDay, addDays } from "date-fns";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 import { DateRangePicker } from "@/components/shared/date-range-picker";
 import ProspectoDialog from "./prospecto-dialog";
 import ConvertProspectoDialog from "./convert-prospecto-dialog";
@@ -127,6 +128,7 @@ export default function ProspectosTable({
   onClearFilters,
   onConvertProspecto,
 }: ProspectosTableProps) {
+  const { toast } = useToast();
   const [prospectoDialogOpen, setProspectoDialogOpen] = useState(false);
   const [selectedProspecto, setSelectedProspecto] = useState<Prospecto | null>(null);
   const [filtersVisible, setFiltersVisible] = useState(false);
@@ -237,33 +239,41 @@ export default function ProspectosTable({
 
   const saveSeguimientoMutation = useMutation({
     mutationFn: async ({ prospectoId, data }: { prospectoId: string; data: any }) => {
-      const response = await fetch(`/api/prospectos/${prospectoId}/seguimiento`, {
-        method: "PUT",
-        body: JSON.stringify(data),
-        headers: { "Content-Type": "application/json" },
-      });
-      if (!response.ok) throw new Error("Failed to save seguimiento");
+      const response = await apiRequest("PUT", `/api/prospectos/${prospectoId}/seguimiento`, data);
       return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/prospectos"] });
       setSeguimientoDialogOpen(false);
+      toast({ title: "Seguimiento guardado exitosamente" });
+    },
+    onError: (error) => {
+      console.error("Error saving seguimiento:", error);
+      toast({
+        title: "Error",
+        description: "No se pudo guardar el seguimiento. Por favor intente de nuevo.",
+        variant: "destructive",
+      });
     },
   });
 
   const markAsFallidoMutation = useMutation({
     mutationFn: async (prospectoId: string) => {
-      const response = await fetch(`/api/prospectos/${prospectoId}`, {
-        method: "PUT",
-        body: JSON.stringify({ estadoProspecto: "Fallido" }),
-        headers: { "Content-Type": "application/json" },
-      });
-      if (!response.ok) throw new Error("Failed to mark as fallido");
+      const response = await apiRequest("PUT", `/api/prospectos/${prospectoId}`, { estadoProspecto: "Fallido" });
       return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/prospectos"] });
       setSeguimientoDialogOpen(false);
+      toast({ title: "Prospecto marcado como Fallido" });
+    },
+    onError: (error) => {
+      console.error("Error marking as fallido:", error);
+      toast({
+        title: "Error",
+        description: "No se pudo marcar el prospecto como Fallido. Por favor intente de nuevo.",
+        variant: "destructive",
+      });
     },
   });
 
