@@ -3950,8 +3950,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         createdSales.push(sale);
       }
 
-      // Delete the prospecto
-      await storage.deleteProspecto(prospectoId);
+      // Mark prospecto as Convertido instead of deleting
+      await storage.updateProspecto(prospectoId, { estadoProspecto: "Convertido" });
 
       res.json({ success: true, sales: createdSales });
     } catch (error) {
