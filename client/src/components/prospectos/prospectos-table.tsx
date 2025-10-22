@@ -146,6 +146,10 @@ export default function ProspectosTable({
     queryKey: ["/api/admin/asesores"],
   });
 
+  const { data: seguimientoConfig } = useQuery({
+    queryKey: ["/api/admin/seguimiento-config"],
+  });
+
   const activeAsesores = asesores.filter((a) => a.activo);
   const asesorMap = new Map(asesores.map((a) => [a.id, a.nombre]));
 
