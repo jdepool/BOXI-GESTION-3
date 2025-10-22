@@ -3,7 +3,8 @@ import {
   getFollowUpsDueToday, 
   generateFollowUpEmailHtml, 
   generateFollowUpEmailText,
-  getEmailConfiguration 
+  getEmailConfiguration,
+  sendEmail
 } from './services/seguimiento-email';
 
 let currentTask: ScheduledTask | null = null;
@@ -108,13 +109,15 @@ async function sendDailySeguimientoReminders() {
         const htmlContent = generateFollowUpEmailHtml(asesorData.asesorNombre, asesorData.reminders);
         const textContent = generateFollowUpEmailText(asesorData.asesorNombre, asesorData.reminders);
         
-        // TODO: Send email using email service (Resend)
-        // For now, just log the email details
-        console.log(`📧 [TODO] Send email to ${asesorData.asesorNombre} (${asesorEmail})`);
-        console.log(`   - ${asesorData.reminders.length} reminder(s)`);
-        console.log(`   - HTML length: ${htmlContent.length} chars`);
-        console.log(`   - Text length: ${textContent.length} chars`);
+        // Send email using Outlook
+        await sendEmail(
+          asesorEmail,
+          'Recordatorio de Seguimientos - BoxiSleep CRM',
+          htmlContent,
+          textContent
+        );
         
+        console.log(`✅ Email sent to ${asesorData.asesorNombre} (${asesorEmail}) - ${asesorData.reminders.length} reminder(s)`);
         emailsSent++;
       } catch (error) {
         console.error(`❌ Failed to send email to ${asesorData.asesorNombre}:`, error);
