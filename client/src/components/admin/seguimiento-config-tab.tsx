@@ -15,8 +15,15 @@ type AsesorEmailPair = {
   email: string;
 };
 
-export function SeguimientoConfigTab() {
-  const [formData, setFormData] = useState({
+type ConfigFormData = {
+  diasFase1: number;
+  diasFase2: number;
+  diasFase3: number;
+  emailRecordatorio: string;
+};
+
+function SeguimientoConfigCard({ tipo, title, description }: { tipo: 'prospectos' | 'ordenes'; title: string; description: string }) {
+  const [formData, setFormData] = useState<ConfigFormData>({
     diasFase1: 2,
     diasFase2: 4,
     diasFase3: 7,
@@ -27,7 +34,12 @@ export function SeguimientoConfigTab() {
   const queryClient = useQueryClient();
 
   const { data: config, isLoading } = useQuery<SeguimientoConfig>({
-    queryKey: ["/api/admin/seguimiento-config"],
+    queryKey: ["/api/admin/seguimiento-config", tipo],
+    queryFn: async () => {
+      const response = await fetch(`/api/admin/seguimiento-config/${tipo}`);
+      if (!response.ok) throw new Error('Failed to fetch config');
+      return response.json();
+    },
   });
 
   const { data: asesores } = useQuery<Asesor[]>({
@@ -58,30 +70,13 @@ export function SeguimientoConfigTab() {
       diasFase3: number; 
       emailRecordatorio: string | null;
       asesorEmails: AsesorEmailPair[] | null;
-    }) => apiRequest("PUT", "/api/admin/seguimiento-config", data),
+    }) => apiRequest("PUT", `/api/admin/seguimiento-config/${tipo}`, data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/seguimiento-config"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/seguimiento-config", tipo] });
       toast({ title: "Configuración actualizada exitosamente" });
     },
     onError: () => {
       toast({ title: "Error al actualizar configuración", variant: "destructive" });
-    },
-  });
-
-  const triggerRemindersMutation = useMutation({
-    mutationFn: () => apiRequest("POST", "/api/admin/trigger-seguimiento-reminders", {}),
-    onSuccess: () => {
-      toast({ 
-        title: "Recordatorios enviados", 
-        description: "Se han enviado los recordatorios de seguimiento por email"
-      });
-    },
-    onError: () => {
-      toast({ 
-        title: "Error al enviar recordatorios", 
-        description: "Ocurrió un error al intentar enviar los recordatorios",
-        variant: "destructive" 
-      });
     },
   });
 
@@ -173,6 +168,202 @@ export function SeguimientoConfigTab() {
   }
 
   return (
+    <Card>
+      <CardHeader>
+        <CardTitle>{title}</CardTitle>
+        <CardDescription>{description}</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="grid gap-6 md:grid-cols-3">
+            <div className="space-y-2">
+              <Label htmlFor={`diasFase1-${tipo}`}>
+                Días para Seguimiento 1
+                <span className="text-xs text-muted-foreground ml-2">
+                  (después del registro)
+                </span>
+              </Label>
+              <Input
+                id={`diasFase1-${tipo}`}
+                type="number"
+                min="1"
+                max="365"
+                value={formData.diasFase1}
+                onChange={(e) => setFormData({ ...formData, diasFase1: parseInt(e.target.value) || 0 })}
+                required
+                data-testid={`input-dias-fase1-${tipo}`}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor={`diasFase2-${tipo}`}>
+                Días para Seguimiento 2
+                <span className="text-xs text-muted-foreground ml-2">
+                  (después del Seguimiento 1)
+                </span>
+              </Label>
+              <Input
+                id={`diasFase2-${tipo}`}
+                type="number"
+                min="1"
+                max="365"
+                value={formData.diasFase2}
+                onChange={(e) => setFormData({ ...formData, diasFase2: parseInt(e.target.value) || 0 })}
+                required
+                data-testid={`input-dias-fase2-${tipo}`}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor={`diasFase3-${tipo}`}>
+                Días para Seguimiento 3
+                <span className="text-xs text-muted-foreground ml-2">
+                  (después del Seguimiento 2)
+                </span>
+              </Label>
+              <Input
+                id={`diasFase3-${tipo}`}
+                type="number"
+                min="1"
+                max="365"
+                value={formData.diasFase3}
+                onChange={(e) => setFormData({ ...formData, diasFase3: parseInt(e.target.value) || 0 })}
+                required
+                data-testid={`input-dias-fase3-${tipo}`}
+              />
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <Label className="text-base">Emails de Recordatorio por Asesor</Label>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Asigna un email a cada asesor para recibir recordatorios de seguimiento (máximo 5)
+                </p>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleAddAsesorEmail}
+                disabled={asesorEmailPairs.length >= 5}
+                data-testid={`button-add-asesor-email-${tipo}`}
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Agregar Asesor
+              </Button>
+            </div>
+
+            {asesorEmailPairs.length === 0 && (
+              <div className="text-sm text-muted-foreground text-center py-4 border border-dashed rounded-md">
+                No hay asesores configurados. Haz clic en "Agregar Asesor" para comenzar.
+              </div>
+            )}
+
+            <div className="space-y-3">
+              {asesorEmailPairs.map((pair, index) => (
+                <div key={index} className="flex gap-3 items-end">
+                  <div className="flex-1 space-y-2">
+                    <Label htmlFor={`asesor-${tipo}-${index}`}>Asesor</Label>
+                    <Select
+                      value={pair.asesorId}
+                      onValueChange={(value) => handleAsesorEmailChange(index, "asesorId", value)}
+                    >
+                      <SelectTrigger id={`asesor-${tipo}-${index}`} data-testid={`select-asesor-${tipo}-${index}`}>
+                        <SelectValue placeholder="Seleccionar asesor" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {getAvailableAsesores(index).map((asesor) => (
+                          <SelectItem key={asesor.id} value={asesor.id}>
+                            {asesor.nombre}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="flex-1 space-y-2">
+                    <Label htmlFor={`email-${tipo}-${index}`}>Email</Label>
+                    <Input
+                      id={`email-${tipo}-${index}`}
+                      type="email"
+                      value={pair.email}
+                      onChange={(e) => handleAsesorEmailChange(index, "email", e.target.value)}
+                      placeholder="ejemplo@boxisleep.com"
+                      data-testid={`input-email-${tipo}-${index}`}
+                    />
+                  </div>
+
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handleRemoveAsesorEmail(index)}
+                    data-testid={`button-remove-asesor-${tipo}-${index}`}
+                  >
+                    <Trash2 className="w-4 h-4 text-destructive" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="pt-4 border-t">
+            <div className="space-y-2">
+              <Label htmlFor={`emailRecordatorio-${tipo}`}>
+                Email General para Recordatorios (Opcional)
+                <span className="text-xs text-muted-foreground ml-2">
+                  (se usará como fallback si un asesor no tiene email configurado)
+                </span>
+              </Label>
+              <Input
+                id={`emailRecordatorio-${tipo}`}
+                type="email"
+                value={formData.emailRecordatorio}
+                onChange={(e) => setFormData({ ...formData, emailRecordatorio: e.target.value })}
+                placeholder="ejemplo@boxisleep.com"
+                data-testid={`input-email-recordatorio-${tipo}`}
+              />
+            </div>
+          </div>
+
+          <div className="flex justify-end">
+            <Button
+              type="submit"
+              disabled={updateMutation.isPending}
+              data-testid={`button-save-config-${tipo}`}
+            >
+              {updateMutation.isPending ? "Guardando..." : "Guardar Configuración"}
+            </Button>
+          </div>
+        </form>
+      </CardContent>
+    </Card>
+  );
+}
+
+export function SeguimientoConfigTab() {
+  const { toast } = useToast();
+
+  const triggerRemindersMutation = useMutation({
+    mutationFn: () => apiRequest("POST", "/api/admin/trigger-seguimiento-reminders", {}),
+    onSuccess: () => {
+      toast({ 
+        title: "Recordatorios enviados", 
+        description: "Se han enviado los recordatorios de seguimiento por email"
+      });
+    },
+    onError: () => {
+      toast({ 
+        title: "Error al enviar recordatorios", 
+        description: "Ocurrió un error al intentar enviar los recordatorios",
+        variant: "destructive" 
+      });
+    },
+  });
+
+  return (
     <div className="space-y-6">
       <div>
         <h2 className="text-lg font-semibold">Configuración de Seguimiento</h2>
@@ -181,180 +372,17 @@ export function SeguimientoConfigTab() {
         </p>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Protocolo de Seguimiento</CardTitle>
-          <CardDescription>
-            Define los días entre cada fase del seguimiento a prospectos
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="grid gap-6 md:grid-cols-3">
-              <div className="space-y-2">
-                <Label htmlFor="diasFase1">
-                  Días para Seguimiento 1
-                  <span className="text-xs text-muted-foreground ml-2">
-                    (después del registro)
-                  </span>
-                </Label>
-                <Input
-                  id="diasFase1"
-                  type="number"
-                  min="1"
-                  max="365"
-                  value={formData.diasFase1}
-                  onChange={(e) => setFormData({ ...formData, diasFase1: parseInt(e.target.value) || 0 })}
-                  required
-                  data-testid="input-dias-fase1"
-                />
-              </div>
+      <SeguimientoConfigCard 
+        tipo="prospectos"
+        title="Protocolo de Seguimiento Prospectos"
+        description="Define los días entre cada fase del seguimiento a prospectos"
+      />
 
-              <div className="space-y-2">
-                <Label htmlFor="diasFase2">
-                  Días para Seguimiento 2
-                  <span className="text-xs text-muted-foreground ml-2">
-                    (después del Seguimiento 1)
-                  </span>
-                </Label>
-                <Input
-                  id="diasFase2"
-                  type="number"
-                  min="1"
-                  max="365"
-                  value={formData.diasFase2}
-                  onChange={(e) => setFormData({ ...formData, diasFase2: parseInt(e.target.value) || 0 })}
-                  required
-                  data-testid="input-dias-fase2"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="diasFase3">
-                  Días para Seguimiento 3
-                  <span className="text-xs text-muted-foreground ml-2">
-                    (después del Seguimiento 2)
-                  </span>
-                </Label>
-                <Input
-                  id="diasFase3"
-                  type="number"
-                  min="1"
-                  max="365"
-                  value={formData.diasFase3}
-                  onChange={(e) => setFormData({ ...formData, diasFase3: parseInt(e.target.value) || 0 })}
-                  required
-                  data-testid="input-dias-fase3"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label className="text-base">Emails de Recordatorio por Asesor</Label>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Asigna un email a cada asesor para recibir recordatorios de seguimiento (máximo 5)
-                  </p>
-                </div>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={handleAddAsesorEmail}
-                  disabled={asesorEmailPairs.length >= 5}
-                  data-testid="button-add-asesor-email"
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Agregar Asesor
-                </Button>
-              </div>
-
-              {asesorEmailPairs.length === 0 && (
-                <div className="text-sm text-muted-foreground text-center py-4 border border-dashed rounded-md">
-                  No hay asesores configurados. Haz clic en "Agregar Asesor" para comenzar.
-                </div>
-              )}
-
-              <div className="space-y-3">
-                {asesorEmailPairs.map((pair, index) => (
-                  <div key={index} className="flex gap-3 items-end">
-                    <div className="flex-1 space-y-2">
-                      <Label htmlFor={`asesor-${index}`}>Asesor</Label>
-                      <Select
-                        value={pair.asesorId}
-                        onValueChange={(value) => handleAsesorEmailChange(index, "asesorId", value)}
-                      >
-                        <SelectTrigger id={`asesor-${index}`} data-testid={`select-asesor-${index}`}>
-                          <SelectValue placeholder="Seleccionar asesor" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {getAvailableAsesores(index).map((asesor) => (
-                            <SelectItem key={asesor.id} value={asesor.id}>
-                              {asesor.nombre}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="flex-1 space-y-2">
-                      <Label htmlFor={`email-${index}`}>Email</Label>
-                      <Input
-                        id={`email-${index}`}
-                        type="email"
-                        value={pair.email}
-                        onChange={(e) => handleAsesorEmailChange(index, "email", e.target.value)}
-                        placeholder="ejemplo@boxisleep.com"
-                        data-testid={`input-email-${index}`}
-                      />
-                    </div>
-
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleRemoveAsesorEmail(index)}
-                      data-testid={`button-remove-asesor-${index}`}
-                    >
-                      <Trash2 className="w-4 h-4 text-destructive" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="pt-4 border-t">
-              <div className="space-y-2">
-                <Label htmlFor="emailRecordatorio">
-                  Email General para Recordatorios (Opcional)
-                  <span className="text-xs text-muted-foreground ml-2">
-                    (se usará como fallback si un asesor no tiene email configurado)
-                  </span>
-                </Label>
-                <Input
-                  id="emailRecordatorio"
-                  type="email"
-                  value={formData.emailRecordatorio}
-                  onChange={(e) => setFormData({ ...formData, emailRecordatorio: e.target.value })}
-                  placeholder="ejemplo@boxisleep.com"
-                  data-testid="input-email-recordatorio"
-                />
-              </div>
-            </div>
-
-            <div className="flex justify-end">
-              <Button
-                type="submit"
-                disabled={updateMutation.isPending}
-                data-testid="button-save-config"
-              >
-                {updateMutation.isPending ? "Guardando..." : "Guardar Configuración"}
-              </Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
+      <SeguimientoConfigCard 
+        tipo="ordenes"
+        title="Protocolo de Seguimiento Ordenes Pendientes"
+        description="Define los días entre cada fase del seguimiento a órdenes pendientes (Inmediata y Reserva)"
+      />
 
       <Card>
         <CardHeader>

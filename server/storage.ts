@@ -205,8 +205,8 @@ export interface IStorage {
   deleteTransportista(id: string): Promise<boolean>;
 
   // Seguimiento Config
-  getSeguimientoConfig(): Promise<SeguimientoConfig | undefined>;
-  updateSeguimientoConfig(config: Partial<InsertSeguimientoConfig>): Promise<SeguimientoConfig>;
+  getSeguimientoConfig(tipo?: string): Promise<SeguimientoConfig | undefined>;
+  updateSeguimientoConfig(tipo: string, config: Partial<InsertSeguimientoConfig>): Promise<SeguimientoConfig>;
 
   // Precios
   getPrecios(): Promise<Precio[]>;
@@ -1870,14 +1870,18 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Seguimiento Config methods implementation
-  async getSeguimientoConfig(): Promise<SeguimientoConfig | undefined> {
-    const [config] = await db.select().from(seguimientoConfig).limit(1);
+  async getSeguimientoConfig(tipo: string = 'prospectos'): Promise<SeguimientoConfig | undefined> {
+    const [config] = await db
+      .select()
+      .from(seguimientoConfig)
+      .where(eq(seguimientoConfig.tipo, tipo))
+      .limit(1);
     return config;
   }
 
-  async updateSeguimientoConfig(config: Partial<InsertSeguimientoConfig>): Promise<SeguimientoConfig> {
-    // Check if a config row exists
-    const existing = await this.getSeguimientoConfig();
+  async updateSeguimientoConfig(tipo: string, config: Partial<InsertSeguimientoConfig>): Promise<SeguimientoConfig> {
+    // Check if a config row exists for this tipo
+    const existing = await this.getSeguimientoConfig(tipo);
     
     if (existing) {
       // Update existing config
@@ -1890,6 +1894,7 @@ export class DatabaseStorage implements IStorage {
     } else {
       // Create new config with defaults
       const [newConfig] = await db.insert(seguimientoConfig).values({
+        tipo,
         diasFase1: config.diasFase1 ?? 2,
         diasFase2: config.diasFase2 ?? 4,
         diasFase3: config.diasFase3 ?? 7,

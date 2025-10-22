@@ -114,6 +114,7 @@ export const transportistas = pgTable("transportistas", {
 
 export const seguimientoConfig = pgTable("seguimiento_config", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  tipo: text("tipo").notNull().default("prospectos"), // prospectos, ordenes
   diasFase1: integer("dias_fase_1").notNull().default(2),
   diasFase2: integer("dias_fase_2").notNull().default(4),
   diasFase3: integer("dias_fase_3").notNull().default(7),
@@ -121,7 +122,10 @@ export const seguimientoConfig = pgTable("seguimiento_config", {
   asesorEmails: jsonb("asesor_emails").$type<Array<{ asesorId: string; email: string }>>(),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
-});
+}, (table) => ({
+  tipoCheck: check("tipo_check", sql`${table.tipo} IN ('prospectos', 'ordenes')`),
+  tipoUnique: unique().on(table.tipo),
+}));
 
 export const precios = pgTable("precios", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),

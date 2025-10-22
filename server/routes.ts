@@ -3806,16 +3806,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // SEGUIMIENTO CONFIG endpoints
-  app.get("/api/admin/seguimiento-config", async (req, res) => {
+  app.get("/api/admin/seguimiento-config/:tipo", async (req, res) => {
     try {
-      const config = await storage.getSeguimientoConfig();
+      const { tipo } = req.params;
+      if (tipo !== 'prospectos' && tipo !== 'ordenes') {
+        return res.status(400).json({ error: "Invalid tipo. Must be 'prospectos' or 'ordenes'" });
+      }
+      
+      const config = await storage.getSeguimientoConfig(tipo);
       // Return default values if no config exists yet
       if (!config) {
         return res.json({
+          tipo,
           diasFase1: 2,
           diasFase2: 4,
           diasFase3: 7,
           emailRecordatorio: null,
+          asesorEmails: null,
         });
       }
       res.json(config);
@@ -3825,11 +3832,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/admin/seguimiento-config", async (req, res) => {
+  app.put("/api/admin/seguimiento-config/:tipo", async (req, res) => {
     try {
+      const { tipo } = req.params;
+      if (tipo !== 'prospectos' && tipo !== 'ordenes') {
+        return res.status(400).json({ error: "Invalid tipo. Must be 'prospectos' or 'ordenes'" });
+      }
+      
       const { insertSeguimientoConfigSchema } = await import("@shared/schema");
       const validatedData = insertSeguimientoConfigSchema.partial().parse(req.body);
-      const config = await storage.updateSeguimientoConfig(validatedData);
+      const config = await storage.updateSeguimientoConfig(tipo, validatedData);
       res.json(config);
     } catch (error) {
       if (error instanceof z.ZodError) {
