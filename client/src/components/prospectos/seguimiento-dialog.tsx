@@ -246,13 +246,21 @@ export default function SeguimientoDialog({
     setManuallyEditedFecha3(true);
   };
 
+  // Helper to format Date as YYYY-MM-DD without timezone conversion
+  const formatDateOnly = (date: Date): string => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
   const handleSave = () => {
     onSave({
-      fechaSeguimiento1: fecha1 ? fecha1.toISOString() : null,
+      fechaSeguimiento1: fecha1 ? formatDateOnly(fecha1) : null,
       respuestaSeguimiento1: respuesta1 || "",
-      fechaSeguimiento2: fecha2 ? fecha2.toISOString() : null,
+      fechaSeguimiento2: fecha2 ? formatDateOnly(fecha2) : null,
       respuestaSeguimiento2: respuesta2 || "",
-      fechaSeguimiento3: fecha3 ? fecha3.toISOString() : null,
+      fechaSeguimiento3: fecha3 ? formatDateOnly(fecha3) : null,
       respuestaSeguimiento3: respuesta3 || "",
     });
   };
@@ -260,11 +268,11 @@ export default function SeguimientoDialog({
   const handleMarkAsFallido = () => {
     if (prospecto && onMarkAsFallido) {
       const seguimientoData = {
-        fechaSeguimiento1: fecha1 ? fecha1.toISOString() : null,
+        fechaSeguimiento1: fecha1 ? formatDateOnly(fecha1) : null,
         respuestaSeguimiento1: respuesta1 || "",
-        fechaSeguimiento2: fecha2 ? fecha2.toISOString() : null,
+        fechaSeguimiento2: fecha2 ? formatDateOnly(fecha2) : null,
         respuestaSeguimiento2: respuesta2 || "",
-        fechaSeguimiento3: fecha3 ? fecha3.toISOString() : null,
+        fechaSeguimiento3: fecha3 ? formatDateOnly(fecha3) : null,
         respuestaSeguimiento3: respuesta3 || "",
       };
       onMarkAsFallido(prospecto.id, seguimientoData);
