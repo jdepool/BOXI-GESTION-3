@@ -9,6 +9,12 @@ export default function Despachos() {
   const [filters, setFilters] = useState({
     limit: 20,
     offset: 0,
+    canal: "",
+    estadoEntrega: "",
+    transportistaId: "",
+    startDate: "",
+    endDate: "",
+    search: "",
   });
 
   const { data: dispatchData, isLoading } = useQuery<{
@@ -22,6 +28,23 @@ export default function Despachos() {
 
   const handlePageChange = (newOffset: number) => {
     setFilters(prev => ({ ...prev, offset: newOffset }));
+  };
+
+  const handleFilterChange = (key: string, value: any) => {
+    setFilters(prev => ({ ...prev, [key]: value, offset: 0 }));
+  };
+
+  const handleClearFilters = () => {
+    setFilters({
+      limit: 20,
+      offset: 0,
+      canal: "",
+      estadoEntrega: "",
+      transportistaId: "",
+      startDate: "",
+      endDate: "",
+      search: "",
+    });
   };
 
   return (
@@ -41,7 +64,10 @@ export default function Despachos() {
               limit={filters.limit}
               offset={filters.offset}
               isLoading={isLoading}
+              filters={filters}
+              onFilterChange={handleFilterChange}
               onPageChange={handlePageChange}
+              onClearFilters={handleClearFilters}
             />
           </div>
         </div>

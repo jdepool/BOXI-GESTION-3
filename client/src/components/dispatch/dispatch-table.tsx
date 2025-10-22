@@ -1,14 +1,15 @@
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { Download, Package, User, Phone, Mail, ChevronLeft, ChevronRight } from "lucide-react";
+import { DateRangePicker } from "@/components/shared/date-range-picker";
+import { Download, Package, ChevronLeft, ChevronRight, Filter, ChevronDown, ChevronUp, RotateCcw } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { useState } from "react";
 import type { Sale } from "@shared/schema";
 
 interface DispatchTableProps {
@@ -17,6 +18,16 @@ interface DispatchTableProps {
   limit?: number;
   offset?: number;
   isLoading: boolean;
+  filters?: {
+    canal?: string;
+    estadoEntrega?: string;
+    transportistaId?: string;
+    startDate?: string;
+    endDate?: string;
+    search?: string;
+  };
+  onFilterChange?: (key: string, value: any) => void;
+  onClearFilters?: () => void;
   onPageChange?: (offset: number) => void;
 }
 
@@ -25,7 +36,10 @@ export default function DispatchTable({
   total = 0, 
   limit = 20, 
   offset = 0, 
-  isLoading, 
+  isLoading,
+  filters: parentFilters,
+  onFilterChange,
+  onClearFilters,
   onPageChange 
 }: DispatchTableProps) {
 
@@ -37,6 +51,55 @@ export default function DispatchTable({
   const [editingNotesId, setEditingNotesId] = useState<string | null>(null);
   const [notesValue, setNotesValue] = useState("");
   const [originalNotesValue, setOriginalNotesValue] = useState("");
+  const [filtersVisible, setFiltersVisible] = useState(false);
+  
+  // Debounced search - local state for immediate UI updates
+  const [searchInputValue, setSearchInputValue] = useState(parentFilters?.search || "");
+
+  const filters = {
+    canal: parentFilters?.canal || "",
+    estadoEntrega: parentFilters?.estadoEntrega || "",
+    transportistaId: parentFilters?.transportistaId || "",
+    search: parentFilters?.search || "",
+    startDate: parentFilters?.startDate || "",
+    endDate: parentFilters?.endDate || ""
+  };
+
+  // Check if any filters are active
+  const hasActiveFilters = !!(
+    parentFilters?.canal || 
+    parentFilters?.estadoEntrega || 
+    parentFilters?.transportistaId || 
+    parentFilters?.search || 
+    parentFilters?.startDate || 
+    parentFilters?.endDate
+  );
+
+  // Count active filters for badge
+  const activeFilterCount = [
+    parentFilters?.canal,
+    parentFilters?.estadoEntrega,
+    parentFilters?.transportistaId,
+    parentFilters?.search,
+    parentFilters?.startDate,
+    parentFilters?.endDate
+  ].filter(Boolean).length;
+
+  // Debounce search filter - trigger API call 500ms after user stops typing
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (searchInputValue !== parentFilters?.search) {
+        handleFilterChange('search', searchInputValue);
+      }
+    }, 500);
+
+    return () => clearTimeout(timeoutId);
+  }, [searchInputValue]);
+
+  // Sync input value when parent filter changes (e.g., on clear filters)
+  useEffect(() => {
+    setSearchInputValue(parentFilters?.search || "");
+  }, [parentFilters?.search]);
 
   // Fetch asesores data for displaying names
   const { data: asesores = [] } = useQuery<Array<{ id: string; nombre: string; activo?: boolean }>>({
@@ -53,6 +116,15 @@ export default function DispatchTable({
   const { data: transportistas = [] } = useQuery<Array<{ id: string; nombre: string; telefono?: string; email?: string }>>({
     queryKey: ["/api/admin/transportistas"],
   });
+
+  // Fetch canales data for the dropdown
+  const { data: canales = [] } = useQuery<Array<{ id: string; nombre: string; activo: boolean }>>({
+    queryKey: ["/api/admin/canales"],
+  });
+
+  const handleFilterChange = (key: string, value: string) => {
+    onFilterChange?.(key, value === "all" ? "" : value);
+  };
 
   const getChannelBadgeClass = (canal: string) => {
     switch (canal?.toLowerCase()) {
@@ -90,7 +162,6 @@ export default function DispatchTable({
       return apiRequest("PUT", `/api/sales/${saleId}/delivery-status`, { status });
     },
     onSuccess: () => {
-      // Invalidate all sales queries to refresh data across all pages
       queryClient.invalidateQueries({ 
         predicate: (query) => Array.isArray(query.queryKey) && typeof query.queryKey[0] === 'string' && query.queryKey[0].startsWith('/api/sales')
       });
@@ -239,18 +310,60 @@ export default function DispatchTable({
 
   return (
     <>
-      <div className="p-6 border-b border-border">
-        <div className="flex justify-between items-center">
-          <h2 className="text-lg font-semibold text-foreground">
-            Despachos
-          </h2>
+      {/* Top toolbar */}
+      <div className="p-3 border-b border-border flex items-center justify-between">
+        <h2 className="text-lg font-semibold text-foreground">
+          Despachos
+        </h2>
+        
+        {/* Right side - filter toggle and export buttons */}
+        <div className="flex items-center gap-2">
+          <Button 
+            variant="ghost" 
+            size="sm"
+            onClick={() => setFiltersVisible(!filtersVisible)}
+            data-testid="toggle-filters-button"
+            className="text-muted-foreground relative"
+          >
+            <Filter className="h-4 w-4 mr-2" />
+            {activeFilterCount > 0 && (
+              <Badge 
+                variant="destructive" 
+                className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs"
+              >
+                {activeFilterCount}
+              </Badge>
+            )}
+            {filtersVisible ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+          </Button>
+          
+          {hasActiveFilters && onClearFilters && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={onClearFilters}
+                  data-testid="clear-filters-button"
+                  className="text-muted-foreground"
+                >
+                  <RotateCcw className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Limpiar Filtros</p>
+              </TooltipContent>
+            </Tooltip>
+          )}
+          
           <Tooltip>
             <TooltipTrigger asChild>
               <Button 
                 onClick={handleExportExcel}
-                variant="outline"
-                size="icon"
+                variant="ghost"
+                size="sm"
                 data-testid="export-dispatch-excel"
+                className="text-muted-foreground"
               >
                 <Download className="h-4 w-4" />
               </Button>
@@ -261,6 +374,92 @@ export default function DispatchTable({
           </Tooltip>
         </div>
       </div>
+
+      {/* Filter section - collapsible */}
+      {filtersVisible && (
+        <div className="p-6 border-b border-border">
+          <div className="flex flex-wrap gap-3">
+            <div>
+              <label className="text-sm font-medium mb-1 block">Canal:</label>
+              <Select 
+                value={filters.canal || "all"} 
+                onValueChange={(value) => handleFilterChange('canal', value)}
+              >
+                <SelectTrigger className="w-40" data-testid="filter-canal">
+                  <SelectValue placeholder="Todos los canales" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos los canales</SelectItem>
+                  {canales
+                    .filter(canal => canal.activo !== false)
+                    .map(canal => (
+                      <SelectItem key={canal.id} value={canal.nombre.toLowerCase()}>
+                        {canal.nombre}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <label className="text-sm font-medium mb-1 block">Estado de Entrega:</label>
+              <Select 
+                value={filters.estadoEntrega || "all"} 
+                onValueChange={(value) => handleFilterChange('estadoEntrega', value)}
+              >
+                <SelectTrigger className="w-40" data-testid="filter-estado-entrega">
+                  <SelectValue placeholder="Todos los estados" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos los estados</SelectItem>
+                  <SelectItem value="En proceso">En proceso</SelectItem>
+                  <SelectItem value="A despachar">A despachar</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <label className="text-sm font-medium mb-1 block">Transportista:</label>
+              <Select 
+                value={filters.transportistaId || "all"} 
+                onValueChange={(value) => handleFilterChange('transportistaId', value)}
+              >
+                <SelectTrigger className="w-40" data-testid="filter-transportista">
+                  <SelectValue placeholder="Todos" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos</SelectItem>
+                  <SelectItem value="none">Sin asignar</SelectItem>
+                  {transportistas.map((transportista) => (
+                    <SelectItem key={transportista.id} value={transportista.id}>
+                      {transportista.nombre}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <DateRangePicker
+              startDate={filters.startDate}
+              endDate={filters.endDate}
+              onStartDateChange={(date) => handleFilterChange('startDate', date)}
+              onEndDateChange={(date) => handleFilterChange('endDate', date)}
+            />
+
+            <div>
+              <label className="text-sm font-medium mb-1 block">Buscar:</label>
+              <Input 
+                type="text"
+                placeholder="Buscar por orden, nombre, cédula o teléfono..."
+                value={searchInputValue}
+                onChange={(e) => setSearchInputValue(e.target.value)}
+                className="w-80"
+                data-testid="filter-search"
+              />
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="p-6">
         {data.length === 0 ? (

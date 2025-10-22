@@ -41,7 +41,14 @@ export interface IStorage {
   getSalesByOrderNumber(orderNumber: string): Promise<Sale[]>;
   getMaxOrderNumberInRange(minOrderNumber: number): Promise<number>;
   getCasheaOrders(limit?: number): Promise<Sale[]>;
-  getOrdersWithAddresses(limit?: number, offset?: number): Promise<{ data: Sale[]; total: number }>;
+  getOrdersWithAddresses(limit?: number, offset?: number, filters?: {
+    canal?: string;
+    estadoEntrega?: string;
+    transportistaId?: string;
+    startDate?: string;
+    endDate?: string;
+    search?: string;
+  }): Promise<{ data: Sale[]; total: number }>;
   updateSaleDeliveryStatus(saleId: string, newStatus: string): Promise<Sale | undefined>;
   updateSaleAddresses(saleId: string, addresses: {
     direccionFacturacionPais?: string;
@@ -876,17 +883,70 @@ export class DatabaseStorage implements IStorage {
       .limit(limit);
   }
 
-  async getOrdersWithAddresses(limit: number = 20, offset: number = 0): Promise<{ data: Sale[]; total: number }> {
-    // Get all orders in dispatch pipeline (estadoEntrega = 'En proceso' or 'A despachar')
-    const dispatchCondition = or(
-      eq(sales.estadoEntrega, 'En proceso'),
-      eq(sales.estadoEntrega, 'A despachar')
-    );
+  async getOrdersWithAddresses(
+    limit: number = 20, 
+    offset: number = 0, 
+    filters?: {
+      canal?: string;
+      estadoEntrega?: string;
+      transportistaId?: string;
+      startDate?: string;
+      endDate?: string;
+      search?: string;
+    }
+  ): Promise<{ data: Sale[]; total: number }> {
+    // Build conditions array
+    const conditions = [];
+    
+    // Base condition: only include orders in dispatch pipeline (unless specific status filter is provided)
+    if (filters?.estadoEntrega) {
+      // If specific status is provided, use that instead of base condition
+      conditions.push(eq(sales.estadoEntrega, filters.estadoEntrega));
+    } else {
+      // Otherwise, show all orders in dispatch pipeline
+      const dispatchStatuses = or(
+        eq(sales.estadoEntrega, 'En proceso'),
+        eq(sales.estadoEntrega, 'A despachar')
+      );
+      conditions.push(dispatchStatuses);
+    }
+    
+    // Apply other filters
+    if (filters?.canal) {
+      conditions.push(eq(sales.canal, filters.canal));
+    }
+    
+    if (filters?.transportistaId) {
+      conditions.push(eq(sales.transportistaId, filters.transportistaId));
+    }
+    
+    // Date range filter (using YYYY-MM-DD format to avoid timezone issues)
+    if (filters?.startDate) {
+      conditions.push(sql`DATE(${sales.fecha}) >= ${filters.startDate}`);
+    }
+    if (filters?.endDate) {
+      conditions.push(sql`DATE(${sales.fecha}) <= ${filters.endDate}`);
+    }
+    
+    // Search filter (orden, nombre, cedula, telefono)
+    if (filters?.search && filters.search.trim()) {
+      const searchTerm = `%${filters.search.trim()}%`;
+      conditions.push(
+        or(
+          ilike(sales.orden, searchTerm),
+          ilike(sales.nombre, searchTerm),
+          ilike(sales.cedula, searchTerm),
+          ilike(sales.telefono, searchTerm)
+        )
+      );
+    }
+
+    const whereClause = and(...conditions);
 
     const ordersForDispatch = await db
       .select()
       .from(sales)
-      .where(dispatchCondition)
+      .where(whereClause)
       .orderBy(asc(sales.fechaEntrega))
       .limit(limit)
       .offset(offset);
@@ -895,7 +955,7 @@ export class DatabaseStorage implements IStorage {
     const [{ totalCount }] = await db
       .select({ totalCount: count() })
       .from(sales)
-      .where(dispatchCondition);
+      .where(whereClause);
 
     return {
       data: ordersForDispatch,
@@ -2501,7 +2561,8 @@ export class DatabaseStorage implements IStorage {
     }
 
     // Get unique order numbers from the sales data
-    const uniqueOrders = [...new Set(salesData.map(s => s.orden).filter(o => o !== null))] as string[];
+    const uniqueOrdersSet = new Set(salesData.map(s => s.orden).filter(o => o !== null));
+    const uniqueOrders = Array.from(uniqueOrdersSet) as string[];
 
     // Fetch saldoPendiente from Pagos calculation for all orders
     // This ensures consistency with the Pagos tab

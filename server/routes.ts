@@ -847,8 +847,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const limit = parseInt(req.query.limit as string) || 20;
       const offset = parseInt(req.query.offset as string) || 0;
+      
+      // Extract filter parameters
+      const filters: {
+        canal?: string;
+        estadoEntrega?: string;
+        transportistaId?: string;
+        startDate?: string;
+        endDate?: string;
+        search?: string;
+      } = {};
+      
+      if (req.query.canal) filters.canal = req.query.canal as string;
+      if (req.query.estadoEntrega) filters.estadoEntrega = req.query.estadoEntrega as string;
+      if (req.query.transportistaId) filters.transportistaId = req.query.transportistaId as string;
+      if (req.query.startDate) filters.startDate = req.query.startDate as string;
+      if (req.query.endDate) filters.endDate = req.query.endDate as string;
+      if (req.query.search) filters.search = req.query.search as string;
 
-      const result = await storage.getOrdersWithAddresses(limit, offset);
+      const result = await storage.getOrdersWithAddresses(limit, offset, filters);
       res.json({
         data: result.data,
         total: result.total,
@@ -3853,7 +3870,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           },
           fase: 1 as const,
           fechaSeguimiento: new Date(),
-          respuestaAnterior: null
+          respuestaAnterior: null,
+          status: "overdue" as const
         },
         {
           prospecto: {
@@ -3865,7 +3883,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           },
           fase: 2 as const,
           fechaSeguimiento: new Date(),
-          respuestaAnterior: "Cliente interesado, solicitó cotización"
+          respuestaAnterior: "Cliente interesado, solicitó cotización",
+          status: "today" as const
         },
         {
           prospecto: {
@@ -3877,7 +3896,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           },
           fase: 3 as const,
           fechaSeguimiento: new Date(),
-          respuestaAnterior: "Comparando precios con competencia"
+          respuestaAnterior: "Comparando precios con competencia",
+          status: "overdue" as const
         }
       ];
       
