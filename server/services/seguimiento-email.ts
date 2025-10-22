@@ -14,6 +14,7 @@ interface FollowUpReminder {
   fase: 1 | 2 | 3;
   fechaSeguimiento: Date;
   respuestaAnterior?: string | null;
+  status: "overdue" | "today";
 }
 
 interface AsesorReminders {
@@ -43,14 +44,14 @@ function addDays(date: Date, days: number): Date {
 }
 
 /**
- * Get all follow-ups due today grouped by asesor
+ * Get all follow-ups due today and overdue grouped by asesor
  */
 export async function getFollowUpsDueToday(): Promise<AsesorReminders[]> {
   // Get today's date in local timezone (YYYY-MM-DD)
   const today = new Date();
   const todayDateOnly = getLocalDateString(today);
   
-  console.log(`📅 Checking for seguimientos due on: ${todayDateOnly} (local timezone)`);
+  console.log(`📅 Checking for seguimientos due on or before: ${todayDateOnly} (local timezone)`);
   
   // Get seguimiento configuration
   const config = await getEmailConfiguration();
@@ -144,10 +145,11 @@ export async function getFollowUpsDueToday(): Promise<AsesorReminders[]> {
     // Debug logging
     console.log(`📋 Checking ${prospecto.prospecto}: F1=${fase1DateOnly}, F2=${fase2DateOnly}, F3=${fase3DateOnly}`);
     
-    // Determine which phase is currently active and due today
+    // Determine which phase is currently active and due today or overdue
     let fase: 1 | 2 | 3 | null = null;
     let fechaSeguimiento: Date | null = null;
     let respuestaAnterior: string | null = null;
+    let status: "overdue" | "today" | null = null;
     
     // Start with Fase 1, then check if we've moved to Fase 2 or 3 based on responses
     let currentPhase = 1;
@@ -165,8 +167,8 @@ export async function getFollowUpsDueToday(): Promise<AsesorReminders[]> {
       currentCalculatedDate = calculatedFase3;
     }
     
-    // Check if the current phase is due today
-    if (currentDateOnly === todayDateOnly) {
+    // Check if the current phase is due today or overdue
+    if (currentDateOnly <= todayDateOnly) {
       fase = currentPhase as 1 | 2 | 3;
       fechaSeguimiento = currentCalculatedDate;
       respuestaAnterior = currentPhase === 2 
@@ -174,11 +176,19 @@ export async function getFollowUpsDueToday(): Promise<AsesorReminders[]> {
         : currentPhase === 3 
         ? prospecto.respuestaSeguimiento2 
         : null;
+      
+      // Determine status
+      if (currentDateOnly < todayDateOnly) {
+        status = "overdue";
+      } else {
+        status = "today";
+      }
     }
 
-    if (!fase || !fechaSeguimiento) continue;
+    if (!fase || !fechaSeguimiento || !status) continue;
     
-    console.log(`✅ Found seguimiento due today: ${prospecto.prospecto} - Fase ${fase}`);
+    const statusLabel = status === "overdue" ? "overdue" : "due today";
+    console.log(`✅ Found seguimiento ${statusLabel}: ${prospecto.prospecto} - Fase ${fase} (${currentDateOnly})`);
 
     const asesorId = prospecto.asesorId || 'sin-asesor';
     
@@ -197,21 +207,28 @@ export async function getFollowUpsDueToday(): Promise<AsesorReminders[]> {
       fase,
       fechaSeguimiento,
       respuestaAnterior,
+      status,
     });
   }
 
-  // Convert map to array with asesor info
+  // Convert map to array with asesor info and sort reminders (overdue first, then today)
   const result: AsesorReminders[] = [];
   
   for (const [asesorId, reminders] of Array.from(asesorMap.entries())) {
     const asesor = allAsesores.find(a => a.id === asesorId);
+    
+    // Sort reminders: overdue first (most urgent), then today's
+    const sortedReminders = reminders.sort((a, b) => {
+      if (a.status === b.status) return 0;
+      return a.status === "overdue" ? -1 : 1;
+    });
     
     if (asesor) {
       result.push({
         asesorId: asesor.id,
         asesorNombre: asesor.nombre,
         email: '', // Will be populated from config
-        reminders,
+        reminders: sortedReminders,
       });
     } else if (asesorId === 'sin-asesor') {
       // Include prospectos without asesor for fallback email
@@ -219,7 +236,7 @@ export async function getFollowUpsDueToday(): Promise<AsesorReminders[]> {
         asesorId: 'sin-asesor',
         asesorNombre: 'Sin Asesor Asignado',
         email: '', // Will use fallback general email
-        reminders,
+        reminders: sortedReminders,
       });
     }
   }
@@ -236,6 +253,11 @@ export function generateFollowUpEmailHtml(asesorNombre: string, reminders: Follo
       ? `<br><small style="color: #666;">Respuesta anterior: ${reminder.respuestaAnterior}</small>`
       : '';
     
+    // Badge color based on status
+    const badgeColor = reminder.status === "overdue" 
+      ? "#ef4444" // Red for overdue
+      : "#eab308"; // Yellow for today
+    
     return `
       <tr>
         <td style="padding: 12px; border-bottom: 1px solid #e5e7eb;">${reminder.prospecto.numeroProspecto}</td>
@@ -247,7 +269,7 @@ export function generateFollowUpEmailHtml(asesorNombre: string, reminders: Follo
         </td>
         <td style="padding: 12px; border-bottom: 1px solid #e5e7eb;">${reminder.prospecto.canal}</td>
         <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: center;">
-          <span style="background-color: #3b82f6; color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px;">
+          <span style="background-color: ${badgeColor}; color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 500;">
             ${reminder.fase}
           </span>
         </td>
@@ -278,7 +300,10 @@ export function generateFollowUpEmailHtml(asesorNombre: string, reminders: Follo
             Hola <strong>${asesorNombre}</strong>,
           </p>
           <p style="margin: 0 0 16px 0;">
-            Tienes <strong>${reminders.length}</strong> seguimiento${reminders.length !== 1 ? 's' : ''} programado${reminders.length !== 1 ? 's' : ''} para hoy:
+            Tienes <strong>${reminders.length}</strong> seguimiento${reminders.length !== 1 ? 's' : ''} pendiente${reminders.length !== 1 ? 's' : ''} (programados para hoy y vencidos):
+          </p>
+          <p style="margin: 0; font-size: 14px; color: #64748b;">
+            🔴 Rojo = Vencido &nbsp;&nbsp;|&nbsp;&nbsp; 🟡 Amarillo = Hoy
           </p>
         </div>
 
@@ -319,11 +344,13 @@ export function generateFollowUpEmailText(asesorNombre: string, reminders: Follo
       ? `\n   Respuesta anterior: ${reminder.respuestaAnterior}`
       : '';
     
+    const statusIndicator = reminder.status === "overdue" ? "🔴 VENCIDO" : "🟡 HOY";
+    
     return `
 ${index + 1}. ${reminder.prospecto.numeroProspecto} - ${reminder.prospecto.nombre}
    Teléfono: ${reminder.prospecto.telefono || 'Sin teléfono'}
    Canal: ${reminder.prospecto.canal}
-   Seguimiento: ${reminder.fase}
+   Seguimiento: ${reminder.fase} ${statusIndicator}
    Fecha: ${reminder.fechaSeguimiento.toLocaleDateString('es-ES')}${respuestaInfo}
     `;
   }).join('\n');
@@ -333,7 +360,7 @@ ${index + 1}. ${reminder.prospecto.numeroProspecto} - ${reminder.prospecto.nombr
 
 Hola ${asesorNombre},
 
-Tienes ${reminders.length} seguimiento${reminders.length !== 1 ? 's' : ''} programado${reminders.length !== 1 ? 's' : ''} para hoy:
+Tienes ${reminders.length} seguimiento${reminders.length !== 1 ? 's' : ''} pendiente${reminders.length !== 1 ? 's' : ''} (programados para hoy y vencidos):
 ${reminderList}
 
 ---
