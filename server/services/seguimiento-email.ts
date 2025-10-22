@@ -84,38 +84,62 @@ export async function getFollowUpsDueToday(): Promise<AsesorReminders[]> {
   const asesorMap = new Map<string, FollowUpReminder[]>();
 
   for (const prospecto of prospectosWithFollowUps) {
-    // Extract date-only string from ISO timestamp (same as UI logic)
-    const extractDate = (isoDate: string | Date) => {
-      const dateStr = typeof isoDate === 'string' ? isoDate : isoDate.toISOString();
-      return dateStr.split('T')[0]; // YYYY-MM-DD
+    // Extract UTC date components to avoid timezone conversion
+    const getUTCDateString = (date: Date) => {
+      const year = date.getUTCFullYear();
+      const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+      const day = String(date.getUTCDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
     };
     
-    const fechaCreacionStr = extractDate(prospecto.fechaCreacion);
-    const fechaCreacionDate = new Date(fechaCreacionStr + 'T00:00:00'); // Parse as local midnight
+    const fechaCreacionDate = new Date(prospecto.fechaCreacion);
+    const fechaCreacionStr = getUTCDateString(fechaCreacionDate);
     
     console.log(`🔍 ${prospecto.prospecto} registered on: ${fechaCreacionStr}`);
     
+    // Use UTC-safe date parsing for all date strings
+    const parseUTCDate = (dateStr: string) => {
+      const [year, month, day] = dateStr.split('-').map(Number);
+      const date = new Date(Date.UTC(year, month - 1, day));
+      return date;
+    };
+    
     // Calculate Fase 1 date
-    const calculatedFase1 = prospecto.fechaSeguimiento1 
+    const fase1Base = prospecto.fechaSeguimiento1 
       ? new Date(prospecto.fechaSeguimiento1)
-      : addDays(fechaCreacionDate, diasFase1);
-    const fase1DateOnly = getLocalDateString(calculatedFase1);
+      : parseUTCDate(fechaCreacionStr);
+    const calculatedFase1 = prospecto.fechaSeguimiento1 
+      ? fase1Base
+      : addDays(fase1Base, diasFase1);
+    const fase1DateOnly = getUTCDateString(calculatedFase1);
     
     // Calculate Fase 2 date
-    const calculatedFase2 = prospecto.fechaSeguimiento2 
+    const fase2Base = prospecto.fechaSeguimiento2 
       ? new Date(prospecto.fechaSeguimiento2)
       : (prospecto.fechaSeguimiento1 
-        ? addDays(new Date(prospecto.fechaSeguimiento1), diasFase2)
-        : addDays(fechaCreacionDate, diasFase1 + diasFase2));
-    const fase2DateOnly = getLocalDateString(calculatedFase2);
+        ? new Date(prospecto.fechaSeguimiento1)
+        : parseUTCDate(fechaCreacionStr));
+    const fase2Offset = prospecto.fechaSeguimiento2 
+      ? 0
+      : (prospecto.fechaSeguimiento1 
+        ? diasFase2
+        : diasFase1 + diasFase2);
+    const calculatedFase2 = addDays(fase2Base, fase2Offset);
+    const fase2DateOnly = getUTCDateString(calculatedFase2);
     
     // Calculate Fase 3 date
-    const calculatedFase3 = prospecto.fechaSeguimiento3 
+    const fase3Base = prospecto.fechaSeguimiento3 
       ? new Date(prospecto.fechaSeguimiento3)
       : (prospecto.fechaSeguimiento2 
-        ? addDays(new Date(prospecto.fechaSeguimiento2), diasFase3)
-        : addDays(fechaCreacionDate, diasFase1 + diasFase2 + diasFase3));
-    const fase3DateOnly = getLocalDateString(calculatedFase3);
+        ? new Date(prospecto.fechaSeguimiento2)
+        : parseUTCDate(fechaCreacionStr));
+    const fase3Offset = prospecto.fechaSeguimiento3 
+      ? 0
+      : (prospecto.fechaSeguimiento2 
+        ? diasFase3
+        : diasFase1 + diasFase2 + diasFase3);
+    const calculatedFase3 = addDays(fase3Base, fase3Offset);
+    const fase3DateOnly = getUTCDateString(calculatedFase3);
     
     // Debug logging
     console.log(`📋 Checking ${prospecto.prospecto}: F1=${fase1DateOnly}, F2=${fase2DateOnly}, F3=${fase3DateOnly}`);
