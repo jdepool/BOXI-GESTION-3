@@ -263,6 +263,7 @@ export default function ProspectosTable({
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/prospectos"] });
+      setSeguimientoDialogOpen(false);
     },
   });
 

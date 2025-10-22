@@ -17,11 +17,11 @@ interface SeguimientoDialogProps {
   onOpenChange: (open: boolean) => void;
   prospecto: Prospecto | null;
   onSave: (data: {
-    fechaSeguimiento1?: Date | null;
+    fechaSeguimiento1?: string | null;
     respuestaSeguimiento1?: string;
-    fechaSeguimiento2?: Date | null;
+    fechaSeguimiento2?: string | null;
     respuestaSeguimiento2?: string;
-    fechaSeguimiento3?: Date | null;
+    fechaSeguimiento3?: string | null;
     respuestaSeguimiento3?: string;
   }) => void;
   onMarkAsFallido?: (prospectoId: string) => void;
@@ -237,11 +237,11 @@ export default function SeguimientoDialog({
 
   const handleSave = () => {
     onSave({
-      fechaSeguimiento1: fecha1 || null,
+      fechaSeguimiento1: fecha1 ? fecha1.toISOString() : null,
       respuestaSeguimiento1: respuesta1 || "",
-      fechaSeguimiento2: fecha2 || null,
+      fechaSeguimiento2: fecha2 ? fecha2.toISOString() : null,
       respuestaSeguimiento2: respuesta2 || "",
-      fechaSeguimiento3: fecha3 || null,
+      fechaSeguimiento3: fecha3 ? fecha3.toISOString() : null,
       respuestaSeguimiento3: respuesta3 || "",
     });
   };
@@ -250,7 +250,6 @@ export default function SeguimientoDialog({
     if (prospecto && onMarkAsFallido) {
       onMarkAsFallido(prospecto.id);
       setShowFallidoConfirm(false);
-      onOpenChange(false);
     }
   };
 
