@@ -50,7 +50,7 @@ export default function Sales() {
 
   const [isManualReservaModalOpen, setIsManualReservaModalOpen] = useState(false);
   const [isSettingsDialogOpen, setIsSettingsDialogOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState("prospectos");
+  const [activeTab, setActiveTab] = useState("lista");
   const [convertingProspecto, setConvertingProspecto] = useState<{ tipo: "inmediata" | "reserva"; prospecto: Prospecto } | null>(null);
 
   const { data: salesData, isLoading } = useQuery<{
