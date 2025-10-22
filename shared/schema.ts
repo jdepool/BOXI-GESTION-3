@@ -463,6 +463,7 @@ export const prospectos = pgTable("prospectos", {
   telefono: text("telefono").notNull(),
   email: text("email"),
   canal: text("canal"),
+  estadoProspecto: text("estado_prospecto").notNull().default("Activo"),
   asesorId: varchar("asesor_id"),
   fechaEntrega: timestamp("fecha_entrega"),
   totalUsd: decimal("total_usd", { precision: 10, scale: 2 }),
@@ -492,7 +493,9 @@ export const prospectos = pgTable("prospectos", {
   fechaCreacion: timestamp("fecha_creacion").defaultNow().notNull(),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
-});
+}, (table) => ({
+  estadoProspectoCheck: check("estado_prospecto_check", sql`${table.estadoProspecto} IN ('Activo', 'Fallido', 'Convertido')`),
+}));
 
 export const insertProspectoSchema = createInsertSchema(prospectos).omit({
   id: true,
