@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -23,6 +24,7 @@ interface SeguimientoDialogProps {
     fechaSeguimiento3?: Date | null;
     respuestaSeguimiento3?: string;
   }) => void;
+  onMarkAsFallido?: (prospectoId: string) => void;
   isSaving?: boolean;
 }
 
@@ -31,6 +33,7 @@ export default function SeguimientoDialog({
   onOpenChange,
   prospecto,
   onSave,
+  onMarkAsFallido,
   isSaving,
 }: SeguimientoDialogProps) {
   const [fecha1, setFecha1] = useState<Date | undefined>();
@@ -39,6 +42,7 @@ export default function SeguimientoDialog({
   const [respuesta2, setRespuesta2] = useState("");
   const [fecha3, setFecha3] = useState<Date | undefined>();
   const [respuesta3, setRespuesta3] = useState("");
+  const [showFallidoConfirm, setShowFallidoConfirm] = useState(false);
   
   // Track manual edits during current session to prevent overwriting user changes
   const [manuallyEditedFecha1, setManuallyEditedFecha1] = useState(false);
@@ -242,6 +246,14 @@ export default function SeguimientoDialog({
     });
   };
 
+  const handleMarkAsFallido = () => {
+    if (prospecto && onMarkAsFallido) {
+      onMarkAsFallido(prospecto.id);
+      setShowFallidoConfirm(false);
+      onOpenChange(false);
+    }
+  };
+
   if (!prospecto) return null;
 
   return (
@@ -388,24 +400,57 @@ export default function SeguimientoDialog({
           </div>
         </div>
 
-        <div className="flex justify-end gap-2">
+        <div className="flex justify-between gap-2">
           <Button
-            variant="outline"
-            onClick={() => onOpenChange(false)}
+            variant="destructive"
+            onClick={() => setShowFallidoConfirm(true)}
             disabled={isSaving}
-            data-testid="button-cancel-seguimiento"
+            data-testid="button-mark-fallido"
           >
-            Cancelar
+            Marcar como Fallido
           </Button>
-          <Button
-            onClick={handleSave}
-            disabled={isSaving}
-            data-testid="button-save-seguimiento"
-          >
-            {isSaving ? "Guardando..." : "Guardar"}
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              disabled={isSaving}
+              data-testid="button-cancel-seguimiento"
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleSave}
+              disabled={isSaving}
+              data-testid="button-save-seguimiento"
+            >
+              {isSaving ? "Guardando..." : "Guardar"}
+            </Button>
+          </div>
         </div>
       </DialogContent>
+
+      <AlertDialog open={showFallidoConfirm} onOpenChange={setShowFallidoConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Marcar como Fallido?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta acción marcará el prospecto "{prospecto.nombre}" como Fallido. 
+              Los prospectos fallidos se ocultan de la vista predeterminada pero pueden verse usando el filtro de estado.
+              ¿Está seguro que desea continuar?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel data-testid="button-cancel-fallido">Cancelar</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleMarkAsFallido}
+              data-testid="button-confirm-fallido"
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Marcar como Fallido
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   );
 }

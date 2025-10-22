@@ -230,6 +230,21 @@ export default function ProspectosTable({
     },
   });
 
+  const markAsFallidoMutation = useMutation({
+    mutationFn: async (prospectoId: string) => {
+      const response = await fetch(`/api/prospectos/${prospectoId}`, {
+        method: "PUT",
+        body: JSON.stringify({ estadoProspecto: "Fallido" }),
+        headers: { "Content-Type": "application/json" },
+      });
+      if (!response.ok) throw new Error("Failed to mark as fallido");
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/prospectos"] });
+    },
+  });
+
   return (
     <>
       <div className="flex flex-col h-full">
@@ -535,7 +550,10 @@ export default function ProspectosTable({
             });
           }
         }}
-        isSaving={saveSeguimientoMutation.isPending}
+        onMarkAsFallido={(prospectoId) => {
+          markAsFallidoMutation.mutate(prospectoId);
+        }}
+        isSaving={saveSeguimientoMutation.isPending || markAsFallidoMutation.isPending}
       />
     </>
   );
