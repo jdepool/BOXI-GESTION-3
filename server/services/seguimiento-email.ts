@@ -1,6 +1,7 @@
 import { db } from '../db';
 import { prospectos, seguimientoConfig, asesores } from '@shared/schema';
 import { and, eq, or, lte, gte } from 'drizzle-orm';
+import { Client } from '@microsoft/microsoft-graph-client';
 
 interface FollowUpReminder {
   prospecto: {
@@ -260,4 +261,79 @@ Este es un recordatorio automático del Sistema de Gestión BoxiSleep
 export async function getEmailConfiguration() {
   const [config] = await db.select().from(seguimientoConfig).limit(1);
   return config;
+}
+
+/**
+ * Get Outlook client with fresh access token
+ */
+async function getAccessToken() {
+  const hostname = process.env.REPLIT_CONNECTORS_HOSTNAME;
+  const xReplitToken = process.env.REPL_IDENTITY 
+    ? 'repl ' + process.env.REPL_IDENTITY 
+    : process.env.WEB_REPL_RENEWAL 
+    ? 'depl ' + process.env.WEB_REPL_RENEWAL 
+    : null;
+
+  if (!xReplitToken) {
+    throw new Error('X_REPLIT_TOKEN not found for repl/depl');
+  }
+
+  const connectionSettings = await fetch(
+    'https://' + hostname + '/api/v2/connection?include_secrets=true&connector_names=outlook',
+    {
+      headers: {
+        'Accept': 'application/json',
+        'X_REPLIT_TOKEN': xReplitToken
+      }
+    }
+  ).then(res => res.json()).then(data => data.items?.[0]);
+
+  const accessToken = connectionSettings?.settings?.access_token || connectionSettings.settings?.oauth?.credentials?.access_token;
+
+  if (!connectionSettings || !accessToken) {
+    throw new Error('Outlook not connected');
+  }
+  return accessToken;
+}
+
+async function getOutlookClient() {
+  const accessToken = await getAccessToken();
+
+  return Client.initWithMiddleware({
+    authProvider: {
+      getAccessToken: async () => accessToken
+    }
+  });
+}
+
+/**
+ * Send email using Outlook
+ */
+export async function sendEmail(
+  to: string,
+  subject: string,
+  htmlContent: string,
+  textContent: string
+): Promise<void> {
+  const client = await getOutlookClient();
+
+  const message = {
+    message: {
+      subject,
+      body: {
+        contentType: 'HTML',
+        content: htmlContent
+      },
+      toRecipients: [
+        {
+          emailAddress: {
+            address: to
+          }
+        }
+      ]
+    }
+  };
+
+  await client.api('/me/sendMail').post(message);
+  console.log(`Email sent successfully to ${to}`);
 }
