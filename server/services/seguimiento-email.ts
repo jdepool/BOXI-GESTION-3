@@ -84,8 +84,13 @@ export async function getFollowUpsDueToday(): Promise<AsesorReminders[]> {
   const asesorMap = new Map<string, FollowUpReminder[]>();
 
   for (const prospecto of prospectosWithFollowUps) {
-    // Extract date-only string from fechaCreacion to avoid timezone issues
-    const fechaCreacionStr = getLocalDateString(new Date(prospecto.fechaCreacion));
+    // Extract date-only string from ISO timestamp (same as UI logic)
+    const extractDate = (isoDate: string | Date) => {
+      const dateStr = typeof isoDate === 'string' ? isoDate : isoDate.toISOString();
+      return dateStr.split('T')[0]; // YYYY-MM-DD
+    };
+    
+    const fechaCreacionStr = extractDate(prospecto.fechaCreacion);
     const fechaCreacionDate = new Date(fechaCreacionStr + 'T00:00:00'); // Parse as local midnight
     
     console.log(`🔍 ${prospecto.prospecto} registered on: ${fechaCreacionStr}`);
