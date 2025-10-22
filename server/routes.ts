@@ -3702,6 +3702,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/prospectos", async (req, res) => {
     try {
       const query = getProspectosQuerySchema.parse(req.query);
+      console.log("🔍 Prospectos query received:", query);
       
       const [prospectosData, totalCount] = await Promise.all([
         storage.getProspectos({
@@ -3875,7 +3876,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Prospecto not found" });
       }
 
-      const updatedProspecto = await storage.updateProspecto(id, seguimientoData);
+      // Convert ISO string dates to Date objects for Drizzle
+      const processedData: any = { ...seguimientoData };
+      if (processedData.fechaSeguimiento1) {
+        processedData.fechaSeguimiento1 = new Date(processedData.fechaSeguimiento1);
+      }
+      if (processedData.fechaSeguimiento2) {
+        processedData.fechaSeguimiento2 = new Date(processedData.fechaSeguimiento2);
+      }
+      if (processedData.fechaSeguimiento3) {
+        processedData.fechaSeguimiento3 = new Date(processedData.fechaSeguimiento3);
+      }
+
+      const updatedProspecto = await storage.updateProspecto(id, processedData);
       
       if (!updatedProspecto) {
         return res.status(500).json({ error: "Failed to update seguimiento" });

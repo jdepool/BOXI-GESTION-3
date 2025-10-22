@@ -2729,11 +2729,11 @@ export class DatabaseStorage implements IStorage {
     }
 
     if (filters?.startDate) {
-      whereConditions.push(gte(prospectos.fechaCreacion, filters.startDate));
+      whereConditions.push(gte(prospectos.fechaCreacion, new Date(filters.startDate)));
     }
 
     if (filters?.endDate) {
-      whereConditions.push(lte(prospectos.fechaCreacion, filters.endDate));
+      whereConditions.push(lte(prospectos.fechaCreacion, new Date(filters.endDate)));
     }
 
     return await db
@@ -2813,11 +2813,11 @@ export class DatabaseStorage implements IStorage {
     }
 
     if (filters?.startDate) {
-      whereConditions.push(gte(prospectos.fechaCreacion, filters.startDate));
+      whereConditions.push(gte(prospectos.fechaCreacion, new Date(filters.startDate)));
     }
 
     if (filters?.endDate) {
-      whereConditions.push(lte(prospectos.fechaCreacion, filters.endDate));
+      whereConditions.push(lte(prospectos.fechaCreacion, new Date(filters.endDate)));
     }
 
     const result = await db
