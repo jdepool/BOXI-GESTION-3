@@ -146,9 +146,8 @@ export default function ProspectosTable({
       let normalizedValue = value;
       if (key === "asesorId" && value === "all") {
         normalizedValue = "";
-      } else if (key === "estadoProspecto" && value === "Activo") {
-        normalizedValue = "";
       }
+      // Don't normalize estadoProspecto - pass the value directly
       onFilterChange({ [key]: normalizedValue });
     }
   };
