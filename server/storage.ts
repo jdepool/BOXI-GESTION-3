@@ -152,6 +152,7 @@ export interface IStorage {
 
   // Productos
   getProductos(): Promise<Producto[]>;
+  getProductoByNombre(nombre: string): Promise<Producto | undefined>;
   createProducto(producto: InsertProducto): Promise<Producto>;
   updateProducto(id: string, producto: Partial<InsertProducto>): Promise<Producto | undefined>;
   deleteProducto(id: string): Promise<boolean>;
@@ -202,6 +203,7 @@ export interface IStorage {
 
   // Precios
   getPrecios(): Promise<Precio[]>;
+  getPrecioBySkuLatest(sku: string): Promise<Precio | undefined>;
   createPrecio(precio: InsertPrecio): Promise<Precio>;
   updatePrecio(id: string, precio: Partial<InsertPrecio>): Promise<Precio | undefined>;
   deletePrecio(id: string): Promise<boolean>;
@@ -1532,6 +1534,15 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(productos).orderBy(productos.position, productos.categoria, productos.nombre);
   }
 
+  async getProductoByNombre(nombre: string): Promise<Producto | undefined> {
+    const [producto] = await db
+      .select()
+      .from(productos)
+      .where(eq(productos.nombre, nombre))
+      .limit(1);
+    return producto;
+  }
+
   async createProducto(producto: InsertProducto): Promise<Producto> {
     const [newProducto] = await db.insert(productos).values({
       ...producto,
@@ -1830,6 +1841,16 @@ export class DatabaseStorage implements IStorage {
   // Precios methods implementation
   async getPrecios(): Promise<Precio[]> {
     return await db.select().from(precios).orderBy(desc(precios.fechaVigenciaDesde));
+  }
+
+  async getPrecioBySkuLatest(sku: string): Promise<Precio | undefined> {
+    const [precio] = await db
+      .select()
+      .from(precios)
+      .where(eq(precios.sku, sku))
+      .orderBy(desc(precios.fechaVigenciaDesde))
+      .limit(1);
+    return precio;
   }
 
   async createPrecio(precio: InsertPrecio): Promise<Precio> {

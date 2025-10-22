@@ -170,7 +170,41 @@ async function transformCasheaData(rawData: any[], storage: IStorage): Promise<a
       const dateOnly = fechaStr.includes('T') ? fechaStr.split('T')[0] : fechaStr;
       fecha = new Date(dateOnly + 'T00:00:00');
     }
-    const totalUsdValue = String(totalesUSD[i] || '0');
+    
+    // totalOrderUsd remains from Cashea API "Total (USD)"
+    const totalOrderUsdValue = String(totalesUSD[i] || '0');
+    
+    // For totalUsd, look up pricing from precios table
+    const productName = productos[i] ? String(productos[i]) : 'CASHEA Product';
+    const cantidad = Number(cantidades[i] || 1);
+    let totalUsdValue = totalOrderUsdValue; // Default to order total if no pricing found
+    let sku = productName; // Default to product name if not found in productos table
+    
+    try {
+      // First, map product name to SKU via productos table
+      const producto = await storage.getProductoByNombre(productName);
+      if (producto && producto.sku) {
+        sku = producto.sku;
+        console.log(`📋 Mapped product "${productName}" to SKU "${sku}"`);
+        
+        // Then, look up pricing using the SKU
+        const precio = await storage.getPrecioBySkuLatest(sku);
+        if (precio && precio.precioInmediataUsd) {
+          // Calculate totalUsd = precioInmediataUsd × cantidad
+          const precioInmediata = parseFloat(precio.precioInmediataUsd);
+          const calculatedTotal = precioInmediata * cantidad;
+          totalUsdValue = calculatedTotal.toFixed(2);
+          console.log(`✅ Cashea pricing lookup: SKU "${sku}" x ${cantidad} = $${totalUsdValue} (from precios table)`);
+        } else {
+          console.warn(`⚠️ No pricing found for SKU "${sku}", using Cashea API total: $${totalUsdValue}`);
+        }
+      } else {
+        console.warn(`⚠️ Product "${productName}" not found in productos table, using Cashea API total: $${totalUsdValue}`);
+      }
+    } catch (error) {
+      console.error(`Error looking up pricing for product "${productName}":`, error);
+      // Keep default totalUsdValue (from Cashea API)
+    }
     
     records.push({
       nombre: String(nombres[i] || 'Unknown Customer'),
@@ -178,7 +212,7 @@ async function transformCasheaData(rawData: any[], storage: IStorage): Promise<a
       telefono: telefonos[i] ? String(telefonos[i]) : null,
       email: emails[i] ? String(emails[i]) : null,
       totalUsd: totalUsdValue,
-      totalOrderUsd: totalUsdValue,
+      totalOrderUsd: totalOrderUsdValue,
       fecha,
       canal: 'cashea',
       estadoEntrega: 'En proceso',
@@ -212,8 +246,8 @@ async function transformCasheaData(rawData: any[], storage: IStorage): Promise<a
       fleteGratis: false,
       notas: null,
       fechaAtencion: null,
-      product: productos[i] ? String(productos[i]) : 'CASHEA Product',
-      cantidad: Number(cantidades[i] || 1)
+      product: sku,
+      cantidad: cantidad
     });
   }
   
