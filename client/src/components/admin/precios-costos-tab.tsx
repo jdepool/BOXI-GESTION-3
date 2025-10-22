@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,7 +8,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { Plus, Edit, Trash2, CalendarIcon } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Plus, Edit, Trash2, CalendarIcon, Upload } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { format } from "date-fns";
@@ -27,6 +28,7 @@ export function PreciosCostosTab() {
     costoUnitarioUsd: "",
     fechaVigenciaDesde: new Date(),
   });
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -76,6 +78,43 @@ export function PreciosCostosTab() {
     },
     onError: () => {
       toast({ title: "Error al eliminar precio/costo", variant: "destructive" });
+    },
+  });
+
+  const uploadMutation = useMutation({
+    mutationFn: async (file: File) => {
+      const formData = new FormData();
+      formData.append("file", file);
+      const response = await fetch("/api/admin/precios/upload", {
+        method: "POST",
+        body: formData,
+        credentials: "include",
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Upload failed");
+      }
+      return response.json();
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/precios"] });
+      toast({ 
+        title: "Archivo cargado exitosamente",
+        description: `${data.recordsAdded} registros agregados`
+      });
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    },
+    onError: (error: Error) => {
+      toast({ 
+        title: "Error al cargar archivo", 
+        description: error.message,
+        variant: "destructive" 
+      });
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
     },
   });
 
@@ -136,6 +175,21 @@ export function PreciosCostosTab() {
     return producto ? producto.nombre : sku;
   };
 
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (!file.name.endsWith(".xlsx") && !file.name.endsWith(".xls")) {
+        toast({
+          title: "Formato de archivo inválido",
+          description: "Por favor selecciona un archivo Excel (.xlsx o .xls)",
+          variant: "destructive"
+        });
+        return;
+      }
+      uploadMutation.mutate(file);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -145,14 +199,32 @@ export function PreciosCostosTab() {
             Gestión de precios y costos por producto
           </p>
         </div>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={openCreateDialog} data-testid="add-precio-button">
-              <Plus className="h-4 w-4 mr-2" />
-              Agregar Precio/Costo
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl">
+        <div className="flex gap-2">
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileUpload}
+            accept=".xlsx,.xls"
+            className="hidden"
+            data-testid="file-input-precios"
+          />
+          <Button
+            variant="outline"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploadMutation.isPending}
+            data-testid="upload-precios-button"
+          >
+            <Upload className="h-4 w-4 mr-2" />
+            {uploadMutation.isPending ? "Cargando..." : "Cargar Excel"}
+          </Button>
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button onClick={openCreateDialog} data-testid="add-precio-button">
+                <Plus className="h-4 w-4 mr-2" />
+                Agregar Precio/Costo
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-2xl">
             <DialogHeader>
               <DialogTitle>
                 {editingPrecio ? "Editar Precio/Costo" : "Agregar Precio/Costo"}
@@ -306,7 +378,8 @@ export function PreciosCostosTab() {
               </div>
             </form>
           </DialogContent>
-        </Dialog>
+          </Dialog>
+        </div>
       </div>
 
       <div className="border rounded-lg">
@@ -350,29 +423,45 @@ export function PreciosCostosTab() {
                   <TableCell>${Number(precio.costoUnitarioUsd).toFixed(2)}</TableCell>
                   <TableCell>{format(new Date(precio.fechaVigenciaDesde), "dd/MM/yyyy")}</TableCell>
                   <TableCell>
-                    <div className="flex space-x-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => openEditDialog(precio)}
-                        data-testid={`edit-precio-${precio.id}`}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          if (window.confirm("¿Estás seguro de que quieres eliminar este precio/costo?")) {
-                            deleteMutation.mutate(precio.id);
-                          }
-                        }}
-                        disabled={deleteMutation.isPending}
-                        data-testid={`delete-precio-${precio.id}`}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
+                    <TooltipProvider>
+                      <div className="flex space-x-1">
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => openEditDialog(precio)}
+                              data-testid={`edit-precio-${precio.id}`}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Editar</p>
+                          </TooltipContent>
+                        </Tooltip>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => {
+                                if (window.confirm("¿Estás seguro de que quieres eliminar este precio/costo?")) {
+                                  deleteMutation.mutate(precio.id);
+                                }
+                              }}
+                              disabled={deleteMutation.isPending}
+                              data-testid={`delete-precio-${precio.id}`}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Eliminar</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </div>
+                    </TooltipProvider>
                   </TableCell>
                 </TableRow>
               ))

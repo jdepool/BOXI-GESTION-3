@@ -3619,6 +3619,143 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Excel upload for Precios/Costos
+  app.post("/api/admin/precios/upload", (req, res, next) => {
+    upload.single("file")(req, res, (err) => {
+      if (err) {
+        const errorMessage = err instanceof Error ? err.message : "Error al cargar el archivo";
+        return res.status(400).json({ 
+          error: errorMessage,
+          message: errorMessage 
+        });
+      }
+      next();
+    });
+  }, async (req, res) => {
+    try {
+      if (!req.file) {
+        const errorMessage = "No se ha seleccionado ningún archivo";
+        return res.status(400).json({ 
+          error: errorMessage,
+          message: errorMessage 
+        });
+      }
+
+      // Parse Excel file
+      const workbook = XLSX.read(req.file.buffer, { type: "buffer" });
+      const sheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[sheetName];
+      const data = XLSX.utils.sheet_to_json(worksheet);
+
+      if (data.length === 0) {
+        const errorMessage = "El archivo Excel está vacío";
+        return res.status(400).json({ 
+          error: errorMessage,
+          message: errorMessage 
+        });
+      }
+
+      // Required columns
+      const requiredColumns = [
+        "País",
+        "SKU",
+        "Precio Inmediata USD",
+        "Precio Reserva USD",
+        "Precio Cashea USD",
+        "Costo Unitario USD",
+        "Fecha Vigencia Desde"
+      ];
+
+      // Check if all required columns exist
+      const firstRow = data[0] as any;
+      const missingColumns = requiredColumns.filter(col => !(col in firstRow));
+      
+      if (missingColumns.length > 0) {
+        const errorMessage = `Faltan columnas requeridas: ${missingColumns.join(", ")}`;
+        return res.status(400).json({ 
+          error: errorMessage,
+          message: errorMessage 
+        });
+      }
+
+      // Parse and validate each row
+      const preciosToCreate: any[] = [];
+      const errors: string[] = [];
+
+      for (let i = 0; i < data.length; i++) {
+        const row = data[i] as any;
+        const rowNum = i + 2; // +2 because Excel is 1-indexed and has header row
+
+        try {
+          // Parse fecha - handle Excel date serial number or date string
+          let fechaVigenciaDesde: Date;
+          const fechaValue = row["Fecha Vigencia Desde"];
+          
+          if (typeof fechaValue === 'number') {
+            // Excel date serial number - convert to proper Date object
+            const parsed = XLSX.SSF.parse_date_code(fechaValue);
+            fechaVigenciaDesde = new Date(parsed.y, parsed.m - 1, parsed.d);
+          } else if (typeof fechaValue === 'string') {
+            fechaVigenciaDesde = new Date(fechaValue);
+          } else {
+            throw new Error("Formato de fecha inválido");
+          }
+
+          if (isNaN(fechaVigenciaDesde.getTime())) {
+            throw new Error("Fecha inválida");
+          }
+
+          const precioData = {
+            pais: String(row["País"] || "").trim(),
+            sku: String(row["SKU"] || "").trim(),
+            precioInmediataUsd: String(row["Precio Inmediata USD"] || "0"),
+            precioReservaUsd: String(row["Precio Reserva USD"] || "0"),
+            precioCasheaUsd: String(row["Precio Cashea USD"] || "0"),
+            costoUnitarioUsd: String(row["Costo Unitario USD"] || "0"),
+            fechaVigenciaDesde
+          };
+
+          // Validate with Zod schema
+          const validated = insertPrecioSchema.parse(precioData);
+          preciosToCreate.push(validated);
+        } catch (error) {
+          const errorMsg = error instanceof Error ? error.message : String(error);
+          errors.push(`Fila ${rowNum}: ${errorMsg}`);
+        }
+      }
+
+      // If there are validation errors, return them
+      if (errors.length > 0) {
+        const errorMessage = `Errores de validación: ${errors.join("; ")}`;
+        return res.status(400).json({ 
+          error: errorMessage,
+          message: errorMessage,
+          details: errors 
+        });
+      }
+
+      // Create all precios in database using batch insert
+      const createdPrecios = [];
+      for (const precioData of preciosToCreate) {
+        const precio = await storage.createPrecio(precioData);
+        createdPrecios.push(precio);
+      }
+
+      res.json({
+        success: true,
+        message: `Se importaron ${createdPrecios.length} precios/costos exitosamente`,
+        recordsAdded: createdPrecios.length
+      });
+    } catch (error) {
+      console.error("Upload precios error:", error);
+      const errorMessage = error instanceof Error ? error.message : "Error al procesar el archivo Excel";
+      res.status(500).json({ 
+        error: errorMessage,
+        message: errorMessage 
+      });
+    }
+  });
+
   // SEGUIMIENTO CONFIG endpoints
   app.get("/api/admin/seguimiento-config", async (req, res) => {
     try {
