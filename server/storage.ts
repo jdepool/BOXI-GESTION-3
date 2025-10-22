@@ -274,6 +274,7 @@ export interface IStorage {
   // Prospectos
   getProspectos(filters?: {
     asesorId?: string;
+    estadoProspecto?: string;
     limit?: number;
     offset?: number;
   }): Promise<Prospecto[]>;
@@ -283,6 +284,7 @@ export interface IStorage {
   deleteProspecto(id: string): Promise<boolean>;
   getTotalProspectosCount(filters?: {
     asesorId?: string;
+    estadoProspecto?: string;
   }): Promise<number>;
   getNextProspectoNumber(): Promise<string>;
 
@@ -2692,6 +2694,7 @@ export class DatabaseStorage implements IStorage {
   // Prospectos methods
   async getProspectos(filters?: {
     asesorId?: string;
+    estadoProspecto?: string;
     limit?: number;
     offset?: number;
   }): Promise<Prospecto[]> {
@@ -2700,6 +2703,10 @@ export class DatabaseStorage implements IStorage {
     if (filters?.asesorId) {
       whereConditions.push(eq(prospectos.asesorId, filters.asesorId));
     }
+
+    // Default to 'Activo' if no estadoProspecto filter is provided
+    const estadoFilter = filters?.estadoProspecto || 'Activo';
+    whereConditions.push(eq(prospectos.estadoProspecto, estadoFilter));
 
     return await db
       .select()
@@ -2753,12 +2760,17 @@ export class DatabaseStorage implements IStorage {
 
   async getTotalProspectosCount(filters?: {
     asesorId?: string;
+    estadoProspecto?: string;
   }): Promise<number> {
     const whereConditions = [];
 
     if (filters?.asesorId) {
       whereConditions.push(eq(prospectos.asesorId, filters.asesorId));
     }
+
+    // Default to 'Activo' if no estadoProspecto filter is provided
+    const estadoFilter = filters?.estadoProspecto || 'Activo';
+    whereConditions.push(eq(prospectos.estadoProspecto, estadoFilter));
 
     const result = await db
       .select({ count: count() })
