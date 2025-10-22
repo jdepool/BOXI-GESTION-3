@@ -427,7 +427,7 @@ export default function ProspectosTable({
                       {prospecto.notas || "-"}
                     </td>
                     <td className="p-3 text-xs" data-testid={`text-seguimiento-status-${prospecto.id}`}>
-                      {seguimientoStatus.phase !== null ? (
+                      {prospecto.estadoProspecto === "Activo" && seguimientoStatus.phase !== null ? (
                         <div className="flex items-center gap-2">
                           <Badge
                             className={`text-xs font-semibold px-2 py-1 ${
