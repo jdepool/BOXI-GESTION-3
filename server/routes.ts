@@ -3619,6 +3619,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Undo Precios/Costos endpoint
+  app.post("/api/admin/precios/undo", async (req, res) => {
+    try {
+      await storage.restorePreciosFromBackup();
+      res.json({ success: true, message: "Precios/Costos restored from backup" });
+    } catch (error) {
+      console.error("Undo precios error:", error);
+      res.status(500).json({ 
+        error: "Failed to restore precios",
+        message: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
   // Excel upload for Precios/Costos
   app.post("/api/admin/precios/upload", (req, res, next) => {
     upload.single("file")(req, res, (err) => {
@@ -3737,6 +3751,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           details: errors 
         });
       }
+
+      // Create backup before adding new records
+      await storage.backupPrecios();
 
       // Create all precios in database using batch insert
       const createdPrecios = [];

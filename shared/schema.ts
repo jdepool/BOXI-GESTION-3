@@ -136,6 +136,21 @@ export const precios = pgTable("precios", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+export const preciosBackup = pgTable("precios_backup", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  pais: text("pais").notNull(),
+  sku: text("sku").notNull(),
+  precioInmediataUsd: decimal("precio_inmediata_usd", { precision: 10, scale: 2 }).notNull(),
+  precioReservaUsd: decimal("precio_reserva_usd", { precision: 10, scale: 2 }).notNull(),
+  precioCasheaUsd: decimal("precio_cashea_usd", { precision: 10, scale: 2 }).notNull(),
+  costoUnitarioUsd: decimal("costo_unitario_usd", { precision: 10, scale: 2 }).notNull(),
+  fechaVigenciaDesde: timestamp("fecha_vigencia_desde").notNull(),
+  createdAt: timestamp("created_at"),
+  updatedAt: timestamp("updated_at"),
+  originalId: varchar("original_id"),
+  backedUpAt: timestamp("backed_up_at").defaultNow(),
+});
+
 export const sales = pgTable("sales", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   nombre: text("nombre").notNull(),

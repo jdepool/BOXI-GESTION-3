@@ -1,5 +1,5 @@
 import { 
-  sales, uploadHistory, users, bancos, bancosBackup, tiposEgresos, productos, productosBackup, metodosPago, monedas, categorias, canales, asesores, transportistas, seguimientoConfig, precios, egresos, egresosPorAprobar, paymentInstallments, prospectos,
+  sales, uploadHistory, users, bancos, bancosBackup, tiposEgresos, productos, productosBackup, metodosPago, monedas, categorias, canales, asesores, transportistas, seguimientoConfig, precios, preciosBackup, egresos, egresosPorAprobar, paymentInstallments, prospectos,
   type User, type InsertUser, type Sale, type InsertSale, type UploadHistory, type InsertUploadHistory,
   type Banco, type InsertBanco, type TipoEgreso, type InsertTipoEgreso,
   type Producto, type InsertProducto, type MetodoPago, type InsertMetodoPago,
@@ -205,6 +205,8 @@ export interface IStorage {
   createPrecio(precio: InsertPrecio): Promise<Precio>;
   updatePrecio(id: string, precio: Partial<InsertPrecio>): Promise<Precio | undefined>;
   deletePrecio(id: string): Promise<boolean>;
+  backupPrecios(): Promise<void>;
+  restorePreciosFromBackup(): Promise<void>;
 
   // Egresos
   getEgresos(filters?: {
@@ -1850,6 +1852,59 @@ export class DatabaseStorage implements IStorage {
   async deletePrecio(id: string): Promise<boolean> {
     const result = await db.delete(precios).where(eq(precios.id, id));
     return (result.rowCount ?? 0) > 0;
+  }
+
+  async backupPrecios(): Promise<void> {
+    // First, clear existing backup
+    await db.delete(preciosBackup);
+    
+    // Then, backup all current precios
+    const currentPrecios = await db.select().from(precios);
+    
+    if (currentPrecios.length > 0) {
+      await db.insert(preciosBackup).values(
+        currentPrecios.map(p => ({
+          pais: p.pais,
+          sku: p.sku,
+          precioInmediataUsd: p.precioInmediataUsd,
+          precioReservaUsd: p.precioReservaUsd,
+          precioCasheaUsd: p.precioCasheaUsd,
+          costoUnitarioUsd: p.costoUnitarioUsd,
+          fechaVigenciaDesde: p.fechaVigenciaDesde,
+          createdAt: p.createdAt,
+          updatedAt: p.updatedAt,
+          originalId: p.id,
+          backedUpAt: new Date(),
+        }))
+      );
+    }
+  }
+
+  async restorePreciosFromBackup(): Promise<void> {
+    // Get backup precios
+    const backup = await db.select().from(preciosBackup);
+    
+    if (backup.length === 0) {
+      throw new Error("No backup found");
+    }
+    
+    // Clear current precios
+    await db.delete(precios);
+    
+    // Restore from backup
+    await db.insert(precios).values(
+      backup.map(p => ({
+        pais: p.pais,
+        sku: p.sku,
+        precioInmediataUsd: p.precioInmediataUsd,
+        precioReservaUsd: p.precioReservaUsd,
+        precioCasheaUsd: p.precioCasheaUsd,
+        costoUnitarioUsd: p.costoUnitarioUsd,
+        fechaVigenciaDesde: p.fechaVigenciaDesde,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      }))
+    );
   }
 
   // Egresos methods
