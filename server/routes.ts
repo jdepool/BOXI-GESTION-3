@@ -3609,6 +3609,84 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Test endpoint to send a sample email with fake data
+  app.post("/api/admin/test-email", async (req, res) => {
+    try {
+      console.log("📧 Starting test email send...");
+      const { sendEmail, generateFollowUpEmailHtml, generateFollowUpEmailText } = await import("./services/seguimiento-email");
+      
+      // Create fake prospecto data
+      const fakeReminders = [
+        {
+          prospecto: {
+            id: "test-1",
+            numeroProspecto: "P-0042",
+            nombre: "María González",
+            telefono: "0412-1234567",
+            canal: "Tienda"
+          },
+          fase: 1 as const,
+          fechaSeguimiento: new Date(),
+          respuestaAnterior: null
+        },
+        {
+          prospecto: {
+            id: "test-2",
+            numeroProspecto: "P-0087",
+            nombre: "Carlos Rodríguez",
+            telefono: "0424-9876543",
+            canal: "Cashea"
+          },
+          fase: 2 as const,
+          fechaSeguimiento: new Date(),
+          respuestaAnterior: "Cliente interesado, solicitó cotización"
+        },
+        {
+          prospecto: {
+            id: "test-3",
+            numeroProspecto: "P-0125",
+            nombre: "Ana Martínez",
+            telefono: "0414-5555555",
+            canal: "Tienda"
+          },
+          fase: 3 as const,
+          fechaSeguimiento: new Date(),
+          respuestaAnterior: "Comparando precios con competencia"
+        }
+      ];
+      
+      console.log("📝 Generating email content...");
+      const htmlContent = generateFollowUpEmailHtml("Test Asesor", fakeReminders);
+      const textContent = generateFollowUpEmailText("Test Asesor", fakeReminders);
+      console.log(`📄 HTML content length: ${htmlContent.length} chars`);
+      console.log(`📄 Text content length: ${textContent.length} chars`);
+      
+      console.log("🚀 Sending email via Outlook...");
+      await sendEmail(
+        "labradormariaeugenia@gmail.com",
+        "Recordatorio de Seguimientos - BoxiSleep CRM (PRUEBA)",
+        htmlContent,
+        textContent
+      );
+      
+      console.log("✅ Test email sent successfully!");
+      res.json({ 
+        success: true, 
+        message: "Test email sent successfully to labradormariaeugenia@gmail.com" 
+      });
+    } catch (error) {
+      console.error("❌ Error sending test email:", error);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      console.error("Stack trace:", errorStack);
+      res.status(500).json({ 
+        error: "Failed to send test email", 
+        details: errorMessage,
+        stack: errorStack
+      });
+    }
+  });
+
   // PROSPECTOS endpoints
   const getProspectosQuerySchema = z.object({
     asesorId: z.string().optional(),
