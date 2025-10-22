@@ -387,7 +387,7 @@ export function PreciosCostosTab() {
           <TableHeader>
             <TableRow>
               <TableHead>País</TableHead>
-              <TableHead>Producto (SKU)</TableHead>
+              <TableHead>SKU</TableHead>
               <TableHead>Precio Inmediata USD</TableHead>
               <TableHead>Precio Reserva USD</TableHead>
               <TableHead>Precio Cashea USD</TableHead>
