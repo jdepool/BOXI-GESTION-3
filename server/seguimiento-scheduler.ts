@@ -22,10 +22,10 @@ export async function startSeguimientoScheduler() {
     currentTask = null;
   }
   
-  // Run every day at 8:00 AM
-  const cronExpression = '0 8 * * *';
+  // Run every day at 1:00 AM
+  const cronExpression = '0 1 * * *';
   
-  console.log(`✅ Starting Seguimiento scheduler (daily at 8:00 AM)`);
+  console.log(`✅ Starting Seguimiento scheduler (daily at 1:00 AM)`);
   
   // Create new scheduled task
   currentTask = cron.schedule(cronExpression, async () => {

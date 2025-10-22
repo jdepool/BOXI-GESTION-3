@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, Send } from "lucide-react";
 import type { SeguimientoConfig, Asesor } from "@shared/schema";
 
 type AsesorEmailPair = {
@@ -65,6 +65,23 @@ export function SeguimientoConfigTab() {
     },
     onError: () => {
       toast({ title: "Error al actualizar configuración", variant: "destructive" });
+    },
+  });
+
+  const triggerRemindersMutation = useMutation({
+    mutationFn: () => apiRequest("POST", "/api/admin/trigger-seguimiento-reminders", {}),
+    onSuccess: () => {
+      toast({ 
+        title: "Recordatorios enviados", 
+        description: "Se han enviado los recordatorios de seguimiento por email"
+      });
+    },
+    onError: () => {
+      toast({ 
+        title: "Error al enviar recordatorios", 
+        description: "Ocurrió un error al intentar enviar los recordatorios",
+        variant: "destructive" 
+      });
     },
   });
 
@@ -336,6 +353,37 @@ export function SeguimientoConfigTab() {
               </Button>
             </div>
           </form>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Probar Recordatorios de Email</CardTitle>
+          <CardDescription>
+            Envía inmediatamente los recordatorios de seguimiento para prospectos con seguimientos programados para hoy
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-between">
+            <div className="space-y-1">
+              <p className="text-sm text-muted-foreground">
+                Este botón enviará un email a cada asesor con los prospectos que tienen seguimiento programado para hoy.
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Los recordatorios automáticos se envían diariamente a la 1:00 AM.
+              </p>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => triggerRemindersMutation.mutate()}
+              disabled={triggerRemindersMutation.isPending}
+              data-testid="button-test-reminders"
+            >
+              <Send className="w-4 h-4 mr-2" />
+              {triggerRemindersMutation.isPending ? "Enviando..." : "Enviar Recordatorios Ahora"}
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </div>
