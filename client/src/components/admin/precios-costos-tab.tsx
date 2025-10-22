@@ -23,6 +23,7 @@ export function PreciosCostosTab() {
     sku: "",
     precioInmediataUsd: "",
     precioReservaUsd: "",
+    precioCasheaUsd: "",
     costoUnitarioUsd: "",
     fechaVigenciaDesde: new Date(),
   });
@@ -85,6 +86,7 @@ export function PreciosCostosTab() {
       sku: formData.sku,
       precioInmediataUsd: formData.precioInmediataUsd,
       precioReservaUsd: formData.precioReservaUsd,
+      precioCasheaUsd: formData.precioCasheaUsd,
       costoUnitarioUsd: formData.costoUnitarioUsd,
       fechaVigenciaDesde: formData.fechaVigenciaDesde,
     };
@@ -103,6 +105,7 @@ export function PreciosCostosTab() {
       sku: precio.sku,
       precioInmediataUsd: precio.precioInmediataUsd,
       precioReservaUsd: precio.precioReservaUsd,
+      precioCasheaUsd: precio.precioCasheaUsd,
       costoUnitarioUsd: precio.costoUnitarioUsd,
       fechaVigenciaDesde: new Date(precio.fechaVigenciaDesde),
     });
@@ -115,6 +118,7 @@ export function PreciosCostosTab() {
       sku: "",
       precioInmediataUsd: "",
       precioReservaUsd: "",
+      precioCasheaUsd: "",
       costoUnitarioUsd: "",
       fechaVigenciaDesde: new Date(),
     });
@@ -189,7 +193,7 @@ export function PreciosCostosTab() {
                 </Select>
               </div>
 
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="precioInmediataUsd">Precio Inmediata USD</Label>
                   <Input
@@ -217,6 +221,21 @@ export function PreciosCostosTab() {
                     placeholder="0.00"
                     required
                     data-testid="input-precio-reserva"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="precioCasheaUsd">Precio Cashea USD</Label>
+                  <Input
+                    id="precioCasheaUsd"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={formData.precioCasheaUsd}
+                    onChange={(e) => setFormData({ ...formData, precioCasheaUsd: e.target.value })}
+                    placeholder="0.00"
+                    required
+                    data-testid="input-precio-cashea"
                   />
                 </div>
 
@@ -298,6 +317,7 @@ export function PreciosCostosTab() {
               <TableHead>Producto (SKU)</TableHead>
               <TableHead>Precio Inmediata USD</TableHead>
               <TableHead>Precio Reserva USD</TableHead>
+              <TableHead>Precio Cashea USD</TableHead>
               <TableHead>Costo Unitario USD</TableHead>
               <TableHead>Vigencia Desde</TableHead>
               <TableHead className="w-[100px]">Acciones</TableHead>
@@ -306,13 +326,13 @@ export function PreciosCostosTab() {
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-4">
+                <TableCell colSpan={8} className="text-center py-4">
                   Cargando precios...
                 </TableCell>
               </TableRow>
             ) : precios.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-4 text-muted-foreground">
+                <TableCell colSpan={8} className="text-center py-4 text-muted-foreground">
                   No hay precios/costos registrados
                 </TableCell>
               </TableRow>
@@ -326,6 +346,7 @@ export function PreciosCostosTab() {
                   </TableCell>
                   <TableCell>${Number(precio.precioInmediataUsd).toFixed(2)}</TableCell>
                   <TableCell>${Number(precio.precioReservaUsd).toFixed(2)}</TableCell>
+                  <TableCell>${Number(precio.precioCasheaUsd).toFixed(2)}</TableCell>
                   <TableCell>${Number(precio.costoUnitarioUsd).toFixed(2)}</TableCell>
                   <TableCell>{format(new Date(precio.fechaVigenciaDesde), "dd/MM/yyyy")}</TableCell>
                   <TableCell>
