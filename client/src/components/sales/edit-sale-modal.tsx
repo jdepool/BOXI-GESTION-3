@@ -94,6 +94,7 @@ export default function EditSaleModal({ open, onOpenChange, sale }: EditSaleModa
           sku: item.sku || "",
           cantidad: item.cantidad,
           totalUsd: parseFloat(item.totalUsd?.toString() || "0"),
+          esObsequio: item.esObsequio || false,
           hasMedidaEspecial: !!item.medidaEspecial,
           medidaEspecial: item.medidaEspecial || "",
         }));
@@ -104,6 +105,12 @@ export default function EditSaleModal({ open, onOpenChange, sale }: EditSaleModa
       }
     }
   }, [sale, orderProducts, canales, open, form]);
+
+  // Recalculate Total Order USD whenever products change
+  useEffect(() => {
+    const total = products.reduce((sum, p) => sum + (p.totalUsd || 0), 0);
+    form.setValue("totalUsd", total.toFixed(2));
+  }, [products, form]);
 
   const handleSaveProduct = (product: ProductFormData, index?: number) => {
     if (index !== undefined) {
