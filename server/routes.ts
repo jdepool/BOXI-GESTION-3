@@ -3693,10 +3693,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           if (typeof fechaValue === 'number') {
             // Excel date serial number - convert to proper Date object
-            const parsed = XLSX.SSF.parse_date_code(fechaValue);
-            fechaVigenciaDesde = new Date(parsed.y, parsed.m - 1, parsed.d);
+            // Excel stores dates as days since 1900-01-01 (with 1900 leap year bug)
+            const excelEpoch = new Date(1899, 11, 30); // December 30, 1899
+            const msPerDay = 24 * 60 * 60 * 1000;
+            fechaVigenciaDesde = new Date(excelEpoch.getTime() + fechaValue * msPerDay);
           } else if (typeof fechaValue === 'string') {
             fechaVigenciaDesde = new Date(fechaValue);
+          } else if (fechaValue instanceof Date) {
+            fechaVigenciaDesde = fechaValue;
           } else {
             throw new Error("Formato de fecha inválido");
           }
