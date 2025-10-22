@@ -128,10 +128,11 @@ export default function DispatchTable({
 
   const getChannelBadgeClass = (canal: string) => {
     switch (canal?.toLowerCase()) {
-      case 'cashea': return 'bg-blue-600';
-      case 'shopify': return 'bg-green-600';
-      case 'treble': return 'bg-purple-600';
-      default: return 'bg-gray-600';
+      case 'cashea': return 'channel-badge-cashea';
+      case 'shopify': return 'channel-badge-shopify';
+      case 'treble': return 'channel-badge-treble';
+      case 'tienda': return 'channel-badge-tienda';
+      default: return 'bg-gray-500';
     }
   };
 
