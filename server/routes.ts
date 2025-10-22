@@ -3691,6 +3691,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const getProspectosQuerySchema = z.object({
     asesorId: z.string().optional(),
     estadoProspecto: z.string().optional(),
+    canal: z.string().optional(),
+    prospecto: z.string().optional(),
+    startDate: z.string().optional(),
+    endDate: z.string().optional(),
     limit: z.coerce.number().min(1).max(1000).default(100),
     offset: z.coerce.number().min(0).default(0),
   });
@@ -3703,12 +3707,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         storage.getProspectos({
           asesorId: query.asesorId,
           estadoProspecto: query.estadoProspecto,
+          canal: query.canal,
+          prospecto: query.prospecto,
+          startDate: query.startDate,
+          endDate: query.endDate,
           limit: query.limit,
           offset: query.offset,
         }),
         storage.getTotalProspectosCount({
           asesorId: query.asesorId,
           estadoProspecto: query.estadoProspecto,
+          canal: query.canal,
+          prospecto: query.prospecto,
+          startDate: query.startDate,
+          endDate: query.endDate,
         }),
       ]);
 
@@ -3732,6 +3744,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const prospectosData = await storage.getProspectos({
         asesorId: query.asesorId,
         estadoProspecto: query.estadoProspecto,
+        canal: query.canal,
+        prospecto: query.prospecto,
+        startDate: query.startDate,
+        endDate: query.endDate,
         limit: 10000, // Get all for export
         offset: 0,
       });
