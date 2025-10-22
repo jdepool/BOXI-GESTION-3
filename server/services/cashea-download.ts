@@ -189,14 +189,14 @@ async function transformCasheaData(rawData: any[], storage: IStorage): Promise<a
         
         // Then, look up pricing using the SKU
         const precio = await storage.getPrecioBySkuLatest(sku);
-        if (precio && precio.precioInmediataUsd) {
-          // Calculate totalUsd = precioInmediataUsd × cantidad
-          const precioInmediata = parseFloat(precio.precioInmediataUsd);
-          const calculatedTotal = precioInmediata * cantidad;
+        if (precio && precio.precioCasheaUsd) {
+          // Calculate totalUsd = precioCasheaUsd × cantidad
+          const precioCashea = parseFloat(precio.precioCasheaUsd);
+          const calculatedTotal = precioCashea * cantidad;
           totalUsdValue = calculatedTotal.toFixed(2);
-          console.log(`✅ Cashea pricing lookup: SKU "${sku}" x ${cantidad} = $${totalUsdValue} (from precios table)`);
+          console.log(`✅ Cashea pricing lookup: SKU "${sku}" x ${cantidad} = $${totalUsdValue} (precioCasheaUsd from precios table)`);
         } else {
-          console.warn(`⚠️ No pricing found for SKU "${sku}", using Cashea API total: $${totalUsdValue}`);
+          console.warn(`⚠️ No precioCasheaUsd found for SKU "${sku}", using Cashea API total: $${totalUsdValue}`);
         }
       } else {
         console.warn(`⚠️ Product "${productName}" not found in productos table, using Cashea API total: $${totalUsdValue}`);
