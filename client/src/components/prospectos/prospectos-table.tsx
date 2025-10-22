@@ -259,7 +259,7 @@ export default function ProspectosTable({
 
   const markAsFallidoMutation = useMutation({
     mutationFn: async (prospectoId: string) => {
-      const response = await apiRequest("PUT", `/api/prospectos/${prospectoId}`, { estadoProspecto: "Fallido" });
+      const response = await apiRequest("PATCH", `/api/prospectos/${prospectoId}`, { estadoProspecto: "Fallido" });
       return response.json();
     },
     onSuccess: () => {
