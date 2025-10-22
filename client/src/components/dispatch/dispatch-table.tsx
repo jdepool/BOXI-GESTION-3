@@ -481,6 +481,7 @@ export default function DispatchTable({
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[100px] sticky left-0 bg-muted z-20 border-r border-border shadow-[2px_0_5px_rgba(0,0,0,0.1)]">Orden</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[150px] sticky left-[100px] bg-muted z-20 border-r border-border shadow-[2px_0_5px_rgba(0,0,0,0.1)]">Estado de Entrega</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[150px] sticky left-[250px] bg-muted z-20 border-r border-border shadow-[2px_0_5px_rgba(0,0,0,0.1)]">Fecha de Entrega</th>
+                    <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[100px]">Canal</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[200px]">Nombre</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[150px]">Teléfono</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[120px]">Cédula</th>
@@ -490,7 +491,6 @@ export default function DispatchTable({
                     <th className="text-center p-2 text-xs font-medium text-muted-foreground min-w-[80px]">Cant.</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[200px]">Email</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[120px]">Fecha</th>
-                    <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[100px]">Canal</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[150px]">Asesor</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[200px]">Notas</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[180px]">Transportista</th>
@@ -545,6 +545,12 @@ export default function DispatchTable({
                             —
                           </div>
                         )}
+                      </td>
+                      
+                      <td className="p-2 min-w-[100px] text-xs">
+                        <Badge className={`${getChannelBadgeClass(sale.canal)} text-white text-xs`}>
+                          {sale.canal.charAt(0).toUpperCase() + sale.canal.slice(1)}
+                        </Badge>
                       </td>
                       
                       <td className="p-2 min-w-[200px] text-xs">
@@ -607,12 +613,6 @@ export default function DispatchTable({
                       
                       <td className="p-2 min-w-[120px] text-xs">
                         {new Date(sale.fecha).toLocaleDateString('es-ES')}
-                      </td>
-                      
-                      <td className="p-2 min-w-[100px] text-xs">
-                        <Badge className={`${getChannelBadgeClass(sale.canal)} text-white text-xs`}>
-                          {sale.canal.charAt(0).toUpperCase() + sale.canal.slice(1)}
-                        </Badge>
                       </td>
                       
                       <td className="p-2 min-w-[150px] text-xs">
