@@ -24,13 +24,24 @@ interface AsesorReminders {
 }
 
 /**
+ * Helper function to get date-only string in local timezone (YYYY-MM-DD)
+ */
+function getLocalDateString(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+/**
  * Get all follow-ups due today grouped by asesor
  */
 export async function getFollowUpsDueToday(): Promise<AsesorReminders[]> {
-  // Get today's date as a date-only string (YYYY-MM-DD) - timezone safe
-  const todayDateOnly = new Date().toISOString().split('T')[0];
+  // Get today's date in local timezone (YYYY-MM-DD)
+  const today = new Date();
+  const todayDateOnly = getLocalDateString(today);
   
-  console.log(`📅 Checking for seguimientos due on: ${todayDateOnly}`);
+  console.log(`📅 Checking for seguimientos due on: ${todayDateOnly} (local timezone)`);
   
   // Get all prospectos that have at least one seguimiento date set
   const prospectosWithFollowUps = await db
@@ -58,21 +69,26 @@ export async function getFollowUpsDueToday(): Promise<AsesorReminders[]> {
   const asesorMap = new Map<string, FollowUpReminder[]>();
 
   for (const prospecto of prospectosWithFollowUps) {
-    // Determine which phase is due today using date-only comparison
+    // Determine which phase is due today using local timezone date comparison
     let fase: 1 | 2 | 3 | null = null;
     let fechaSeguimiento: Date | null = null;
     let respuestaAnterior: string | null = null;
 
-    // Compare date-only strings (YYYY-MM-DD) to avoid timezone issues
+    // Compare date-only strings in local timezone
     const fecha1DateOnly = prospecto.fechaSeguimiento1 
-      ? new Date(prospecto.fechaSeguimiento1).toISOString().split('T')[0] 
+      ? getLocalDateString(new Date(prospecto.fechaSeguimiento1))
       : null;
     const fecha2DateOnly = prospecto.fechaSeguimiento2 
-      ? new Date(prospecto.fechaSeguimiento2).toISOString().split('T')[0] 
+      ? getLocalDateString(new Date(prospecto.fechaSeguimiento2))
       : null;
     const fecha3DateOnly = prospecto.fechaSeguimiento3 
-      ? new Date(prospecto.fechaSeguimiento3).toISOString().split('T')[0] 
+      ? getLocalDateString(new Date(prospecto.fechaSeguimiento3))
       : null;
+
+    // Debug logging for this prospecto
+    if (prospecto.prospecto) {
+      console.log(`📋 Checking ${prospecto.prospecto}: F1=${fecha1DateOnly}, F2=${fecha2DateOnly}, F3=${fecha3DateOnly}`);
+    }
 
     if (fecha1DateOnly === todayDateOnly) {
       fase = 1;
