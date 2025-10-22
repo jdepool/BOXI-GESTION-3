@@ -367,6 +367,8 @@ export const insertSeguimientoConfigSchema = createInsertSchema(seguimientoConfi
   id: true,
   createdAt: true,
   updatedAt: true,
+}).extend({
+  emailRecordatorio: z.string().nullable().optional(),
 });
 
 export const insertEgresoSchema = createInsertSchema(egresos).omit({

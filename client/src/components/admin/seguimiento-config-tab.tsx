@@ -35,7 +35,7 @@ export function SeguimientoConfigTab() {
   }, [config]);
 
   const updateMutation = useMutation({
-    mutationFn: (data: typeof formData) =>
+    mutationFn: (data: { diasFase1: number; diasFase2: number; diasFase3: number; emailRecordatorio: string | null }) =>
       apiRequest("PUT", "/api/admin/seguimiento-config", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/seguimiento-config"] });
@@ -48,7 +48,12 @@ export function SeguimientoConfigTab() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    updateMutation.mutate(formData);
+    // Convert empty string to null for optional email field
+    const dataToSubmit = {
+      ...formData,
+      emailRecordatorio: formData.emailRecordatorio.trim() || null,
+    };
+    updateMutation.mutate(dataToSubmit);
   };
 
   if (isLoading) {
