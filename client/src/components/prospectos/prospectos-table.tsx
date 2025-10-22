@@ -258,22 +258,57 @@ export default function ProspectosTable({
   });
 
   const markAsFallidoMutation = useMutation({
-    mutationFn: async (prospectoId: string) => {
-      const response = await apiRequest("PATCH", `/api/prospectos/${prospectoId}`, { estadoProspecto: "Fallido" });
-      return response.json();
+    mutationFn: async ({ prospectoId, seguimientoData }: { prospectoId: string; seguimientoData: any }) => {
+      try {
+        // First save seguimiento data - apiRequest throws on error
+        const seguimientoResponse = await apiRequest("PUT", `/api/prospectos/${prospectoId}/seguimiento`, seguimientoData);
+        await seguimientoResponse.json();
+      } catch (error) {
+        // Tag the error so we can identify it in onError
+        const wrappedError: any = new Error("SEGUIMIENTO_SAVE_FAILED");
+        wrappedError.originalError = error;
+        throw wrappedError;
+      }
+      
+      try {
+        // Only proceed to mark as Fallido if seguimiento was saved successfully
+        const fallidoResponse = await apiRequest("PATCH", `/api/prospectos/${prospectoId}`, { estadoProspecto: "Fallido" });
+        return fallidoResponse.json();
+      } catch (error) {
+        // Tag the error so we can identify it in onError
+        const wrappedError: any = new Error("FALLIDO_UPDATE_FAILED");
+        wrappedError.originalError = error;
+        throw wrappedError;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/prospectos"] });
       setSeguimientoDialogOpen(false);
       toast({ title: "Prospecto marcado como Fallido" });
     },
-    onError: (error) => {
+    onError: (error: any) => {
       console.error("Error marking as fallido:", error);
-      toast({
-        title: "Error",
-        description: "No se pudo marcar el prospecto como Fallido. Por favor intente de nuevo.",
-        variant: "destructive",
-      });
+      
+      // Provide specific error messages based on which step failed
+      if (error?.message === "SEGUIMIENTO_SAVE_FAILED") {
+        toast({
+          title: "Error al guardar seguimiento",
+          description: "No se pudieron guardar los cambios de seguimiento. Por favor intente de nuevo.",
+          variant: "destructive",
+        });
+      } else if (error?.message === "FALLIDO_UPDATE_FAILED") {
+        toast({
+          title: "Error al actualizar estado",
+          description: "El seguimiento se guardó pero no se pudo marcar como Fallido. Por favor intente de nuevo.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: "No se pudo completar la operación. Por favor intente de nuevo.",
+          variant: "destructive",
+        });
+      }
     },
   });
 
@@ -619,8 +654,8 @@ export default function ProspectosTable({
             });
           }
         }}
-        onMarkAsFallido={(prospectoId) => {
-          markAsFallidoMutation.mutate(prospectoId);
+        onMarkAsFallido={(prospectoId, seguimientoData) => {
+          markAsFallidoMutation.mutate({ prospectoId, seguimientoData });
         }}
         isSaving={saveSeguimientoMutation.isPending || markAsFallidoMutation.isPending}
       />
