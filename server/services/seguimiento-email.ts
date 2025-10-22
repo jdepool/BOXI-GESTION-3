@@ -34,6 +34,15 @@ function getLocalDateString(date: Date): string {
 }
 
 /**
+ * Helper function to add days to a date
+ */
+function addDays(date: Date, days: number): Date {
+  const result = new Date(date);
+  result.setDate(result.getDate() + days);
+  return result;
+}
+
+/**
  * Get all follow-ups due today grouped by asesor
  */
 export async function getFollowUpsDueToday(): Promise<AsesorReminders[]> {
@@ -43,14 +52,20 @@ export async function getFollowUpsDueToday(): Promise<AsesorReminders[]> {
   
   console.log(`📅 Checking for seguimientos due on: ${todayDateOnly} (local timezone)`);
   
-  // Get all prospectos that have at least one seguimiento date set
+  // Get seguimiento configuration
+  const config = await getEmailConfiguration();
+  const diasFase1 = config?.diasFase1 ?? 2;
+  const diasFase2 = config?.diasFase2 ?? 4;
+  const diasFase3 = config?.diasFase3 ?? 7;
+  
+  console.log(`⚙️  Using intervals: F1=${diasFase1} days, F2=${diasFase2} days, F3=${diasFase3} days`);
+  
+  // Get all active prospectos
   const prospectosWithFollowUps = await db
     .select()
     .from(prospectos)
     .where(
-      or(
-        eq(prospectos.estadoProspecto, 'Activo')
-      )
+      eq(prospectos.estadoProspecto, 'Activo')
     );
 
   console.log(`🔍 Found ${prospectosWithFollowUps.length} active prospectos to check`);
@@ -69,39 +84,64 @@ export async function getFollowUpsDueToday(): Promise<AsesorReminders[]> {
   const asesorMap = new Map<string, FollowUpReminder[]>();
 
   for (const prospecto of prospectosWithFollowUps) {
-    // Determine which phase is due today using local timezone date comparison
+    // Calculate seguimiento dates dynamically (same logic as UI)
+    const fechaCreacion = new Date(prospecto.fechaCreacion);
+    
+    // Calculate Fase 1 date
+    const calculatedFase1 = prospecto.fechaSeguimiento1 
+      ? new Date(prospecto.fechaSeguimiento1)
+      : addDays(fechaCreacion, diasFase1);
+    const fase1DateOnly = getLocalDateString(calculatedFase1);
+    
+    // Calculate Fase 2 date
+    const calculatedFase2 = prospecto.fechaSeguimiento2 
+      ? new Date(prospecto.fechaSeguimiento2)
+      : (prospecto.fechaSeguimiento1 
+        ? addDays(new Date(prospecto.fechaSeguimiento1), diasFase2)
+        : addDays(fechaCreacion, diasFase1 + diasFase2));
+    const fase2DateOnly = getLocalDateString(calculatedFase2);
+    
+    // Calculate Fase 3 date
+    const calculatedFase3 = prospecto.fechaSeguimiento3 
+      ? new Date(prospecto.fechaSeguimiento3)
+      : (prospecto.fechaSeguimiento2 
+        ? addDays(new Date(prospecto.fechaSeguimiento2), diasFase3)
+        : addDays(fechaCreacion, diasFase1 + diasFase2 + diasFase3));
+    const fase3DateOnly = getLocalDateString(calculatedFase3);
+    
+    // Debug logging
+    console.log(`📋 Checking ${prospecto.prospecto}: F1=${fase1DateOnly}, F2=${fase2DateOnly}, F3=${fase3DateOnly}`);
+    
+    // Determine which phase is currently active and due today
     let fase: 1 | 2 | 3 | null = null;
     let fechaSeguimiento: Date | null = null;
     let respuestaAnterior: string | null = null;
-
-    // Compare date-only strings in local timezone
-    const fecha1DateOnly = prospecto.fechaSeguimiento1 
-      ? getLocalDateString(new Date(prospecto.fechaSeguimiento1))
-      : null;
-    const fecha2DateOnly = prospecto.fechaSeguimiento2 
-      ? getLocalDateString(new Date(prospecto.fechaSeguimiento2))
-      : null;
-    const fecha3DateOnly = prospecto.fechaSeguimiento3 
-      ? getLocalDateString(new Date(prospecto.fechaSeguimiento3))
-      : null;
-
-    // Debug logging for this prospecto
-    if (prospecto.prospecto) {
-      console.log(`📋 Checking ${prospecto.prospecto}: F1=${fecha1DateOnly}, F2=${fecha2DateOnly}, F3=${fecha3DateOnly}`);
+    
+    // Start with Fase 1, then check if we've moved to Fase 2 or 3 based on responses
+    let currentPhase = 1;
+    let currentDateOnly = fase1DateOnly;
+    let currentCalculatedDate = calculatedFase1;
+    
+    if (prospecto.respuestaSeguimiento1) {
+      currentPhase = 2;
+      currentDateOnly = fase2DateOnly;
+      currentCalculatedDate = calculatedFase2;
     }
-
-    if (fecha1DateOnly === todayDateOnly) {
-      fase = 1;
-      fechaSeguimiento = prospecto.fechaSeguimiento1!;
-      respuestaAnterior = null;
-    } else if (fecha2DateOnly === todayDateOnly) {
-      fase = 2;
-      fechaSeguimiento = prospecto.fechaSeguimiento2!;
-      respuestaAnterior = prospecto.respuestaSeguimiento1;
-    } else if (fecha3DateOnly === todayDateOnly) {
-      fase = 3;
-      fechaSeguimiento = prospecto.fechaSeguimiento3!;
-      respuestaAnterior = prospecto.respuestaSeguimiento2;
+    if (prospecto.respuestaSeguimiento2) {
+      currentPhase = 3;
+      currentDateOnly = fase3DateOnly;
+      currentCalculatedDate = calculatedFase3;
+    }
+    
+    // Check if the current phase is due today
+    if (currentDateOnly === todayDateOnly) {
+      fase = currentPhase as 1 | 2 | 3;
+      fechaSeguimiento = currentCalculatedDate;
+      respuestaAnterior = currentPhase === 2 
+        ? prospecto.respuestaSeguimiento1 
+        : currentPhase === 3 
+        ? prospecto.respuestaSeguimiento2 
+        : null;
     }
 
     if (!fase || !fechaSeguimiento) continue;
