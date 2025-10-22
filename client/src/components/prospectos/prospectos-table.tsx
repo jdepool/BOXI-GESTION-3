@@ -2,12 +2,14 @@ import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
 import { ChevronLeft, ChevronRight, Edit, Plus, RotateCcw, Filter, ChevronDown, ChevronUp, Download, DollarSign, ClipboardCheck } from "lucide-react";
 import { format, startOfDay, addDays } from "date-fns";
 import { apiRequest, queryClient } from "@/lib/queryClient";
+import { DateRangePicker } from "@/components/shared/date-range-picker";
 import ProspectoDialog from "./prospecto-dialog";
 import ConvertProspectoDialog from "./convert-prospecto-dialog";
 import SeguimientoDialog from "./seguimiento-dialog";
@@ -22,6 +24,10 @@ interface ProspectosTableProps {
   filters?: {
     asesorId?: string;
     estadoProspecto?: string;
+    canal?: string;
+    prospecto?: string;
+    startDate?: string;
+    endDate?: string;
     limit: number;
     offset: number;
   };
@@ -132,7 +138,7 @@ export default function ProspectosTable({
   const currentPage = Math.floor(offset / limit) + 1;
   const totalPages = Math.ceil(total / limit);
 
-  const hasActiveFilters = !!(filters?.asesorId || (filters?.estadoProspecto && filters.estadoProspecto !== 'Activo'));
+  const hasActiveFilters = !!(filters?.asesorId || (filters?.estadoProspecto && filters.estadoProspecto !== 'Activo') || filters?.canal || filters?.prospecto || filters?.startDate || filters?.endDate);
 
   const { data: asesores = [] } = useQuery<Array<{ id: string; nombre: string; activo: boolean }>>({
     queryKey: ["/api/admin/asesores"],
@@ -189,6 +195,22 @@ export default function ProspectosTable({
 
       if (filters?.estadoProspecto) {
         queryParams.append('estadoProspecto', filters.estadoProspecto);
+      }
+
+      if (filters?.canal) {
+        queryParams.append('canal', filters.canal);
+      }
+
+      if (filters?.prospecto) {
+        queryParams.append('prospecto', filters.prospecto);
+      }
+
+      if (filters?.startDate) {
+        queryParams.append('startDate', filters.startDate);
+      }
+
+      if (filters?.endDate) {
+        queryParams.append('endDate', filters.endDate);
       }
 
       const response = await fetch(`/api/prospectos/export?${queryParams}`);
@@ -307,7 +329,27 @@ export default function ProspectosTable({
         {/* Filter section - collapsible */}
         {filtersVisible && (
           <div className="p-6 border-b border-border">
-            <div className="flex gap-3">
+            <div className="flex flex-wrap gap-3">
+              <div>
+                <label className="text-sm font-medium mb-1 block">Canal:</label>
+                <Select
+                  value={filters?.canal || "all"}
+                  onValueChange={(value) => handleFilterChange("canal", value === "all" ? "" : value)}
+                  data-testid="select-filter-canal"
+                >
+                  <SelectTrigger className="w-40">
+                    <SelectValue placeholder="Todos los canales" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all" data-testid="option-canal-all">Todos los canales</SelectItem>
+                    <SelectItem value="Cashea" data-testid="option-canal-cashea">Cashea</SelectItem>
+                    <SelectItem value="Shopify" data-testid="option-canal-shopify">Shopify</SelectItem>
+                    <SelectItem value="Treble" data-testid="option-canal-treble">Treble</SelectItem>
+                    <SelectItem value="Tienda" data-testid="option-canal-tienda">Tienda</SelectItem>
+                    <SelectItem value="Manual" data-testid="option-canal-manual">Manual</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
               <div>
                 <label className="text-sm font-medium mb-1 block">Estado:</label>
                 <Select
@@ -345,6 +387,23 @@ export default function ProspectosTable({
                   </SelectContent>
                 </Select>
               </div>
+              <div>
+                <label className="text-sm font-medium mb-1 block">Prospecto:</label>
+                <Input
+                  type="text"
+                  placeholder="Buscar número"
+                  value={filters?.prospecto || ""}
+                  onChange={(e) => handleFilterChange("prospecto", e.target.value)}
+                  data-testid="input-filter-prospecto"
+                  className="w-40"
+                />
+              </div>
+              <DateRangePicker
+                startDate={filters?.startDate || ""}
+                endDate={filters?.endDate || ""}
+                onStartDateChange={(date) => handleFilterChange("startDate", date)}
+                onEndDateChange={(date) => handleFilterChange("endDate", date)}
+              />
             </div>
           </div>
         )}
