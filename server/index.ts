@@ -2,6 +2,7 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { startCasheaScheduler, stopCasheaScheduler } from "./cashea-scheduler";
+import { startSeguimientoScheduler, stopSeguimientoScheduler } from "./seguimiento-scheduler";
 
 const app = express();
 app.use(express.json());
@@ -76,14 +77,22 @@ app.use((req, res, next) => {
     } catch (error) {
       console.error('Failed to start Cashea scheduler:', error);
     }
+    
+    // Start Seguimiento email reminder scheduler
+    try {
+      await startSeguimientoScheduler();
+    } catch (error) {
+      console.error('Failed to start Seguimiento scheduler:', error);
+    }
   });
 
   // Graceful shutdown handling
   async function gracefulShutdown(signal: string) {
     console.log(`Received ${signal}, shutting down gracefully...`);
     
-    // Stop scheduler first
+    // Stop schedulers first
     await stopCasheaScheduler();
+    await stopSeguimientoScheduler();
     
     // Close HTTP server
     server.close(async () => {

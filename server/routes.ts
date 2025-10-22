@@ -3597,6 +3597,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Test endpoint for triggering seguimiento reminders manually
+  app.post("/api/admin/trigger-seguimiento-reminders", async (req, res) => {
+    try {
+      const { triggerSeguimientoReminders } = await import("./seguimiento-scheduler");
+      await triggerSeguimientoReminders();
+      res.json({ success: true, message: "Seguimiento reminders triggered successfully" });
+    } catch (error) {
+      console.error("Error triggering seguimiento reminders:", error);
+      res.status(500).json({ error: "Failed to trigger seguimiento reminders" });
+    }
+  });
+
   // PROSPECTOS endpoints
   const getProspectosQuerySchema = z.object({
     asesorId: z.string().optional(),
