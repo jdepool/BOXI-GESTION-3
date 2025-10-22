@@ -56,7 +56,7 @@ export default function SeguimientoDialog({
   const previousDiasFase = useRef<{ fase1: number; fase2: number; fase3: number } | null>(null);
 
   // Fetch seguimiento config
-  const { data: config } = useQuery<SeguimientoConfig>({
+  const { data: config, isLoading: configLoading } = useQuery<SeguimientoConfig>({
     queryKey: ["/api/admin/seguimiento-config"],
   });
 
@@ -66,6 +66,11 @@ export default function SeguimientoDialog({
   const diasFase3 = config?.diasFase3 ?? 7;
 
   useEffect(() => {
+    // Wait for config to load before initializing dates
+    if (!config || configLoading) {
+      return;
+    }
+
     // Only initialize once per prospecto opening to prevent config changes from resetting user edits
     if (prospecto && open && initializedProspectoId.current !== prospecto.id) {
       initializedProspectoId.current = prospecto.id;
@@ -130,8 +135,7 @@ export default function SeguimientoDialog({
     if (!open) {
       initializedProspectoId.current = null;
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [prospecto, open]);
+  }, [prospecto, open, config, configLoading, diasFase1, diasFase2, diasFase3]);
 
   // Handle config loading: update dates when config values change from defaults
   // but only if user hasn't manually edited them
@@ -262,7 +266,13 @@ export default function SeguimientoDialog({
           <DialogTitle>Seguimiento - {prospecto.prospecto} - {prospecto.nombre}</DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-6 py-4">
+        {configLoading ? (
+          <div className="py-8 text-center text-muted-foreground">
+            Cargando configuración...
+          </div>
+        ) : (
+        <>
+          <div className="space-y-6 py-4">
           {/* Phase 1 */}
           <div className="space-y-3 p-4 border rounded-lg">
             <h3 className="font-semibold text-sm">Seguimiento 1</h3>
@@ -426,6 +436,8 @@ export default function SeguimientoDialog({
             </Button>
           </div>
         </div>
+        </>
+        )}
       </DialogContent>
 
       <AlertDialog open={showFallidoConfirm} onOpenChange={setShowFallidoConfirm}>
