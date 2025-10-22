@@ -877,8 +877,11 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getOrdersWithAddresses(limit: number = 20, offset: number = 0): Promise<{ data: Sale[]; total: number }> {
-    // Get all orders that are ready for dispatch (estadoEntrega = 'A despachar')
-    const dispatchCondition = eq(sales.estadoEntrega, 'A despachar');
+    // Get all orders in dispatch pipeline (estadoEntrega = 'En proceso' or 'A despachar')
+    const dispatchCondition = or(
+      eq(sales.estadoEntrega, 'En proceso'),
+      eq(sales.estadoEntrega, 'A despachar')
+    );
 
     const ordersForDispatch = await db
       .select()
