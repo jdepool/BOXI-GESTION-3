@@ -49,10 +49,16 @@ function getSeguimientoStatus(
   status: "overdue" | "today" | "future" | null;
   date: Date | null;
 } {
-  // Extract date-only string from ISO timestamp to avoid timezone issues
+  // Extract date-only string from ISO timestamp or date-only string
   const extractDate = (isoDate: string | Date) => {
     const dateStr = typeof isoDate === 'string' ? isoDate : isoDate.toISOString();
     return dateStr.split('T')[0]; // YYYY-MM-DD
+  };
+
+  // Parse date string to local Date object without timezone conversion
+  const parseLocalDate = (dateStr: string): Date => {
+    const [year, month, day] = dateStr.split('-').map(Number);
+    return new Date(year, month - 1, day);
   };
 
   const todayStr = format(new Date(), "yyyy-MM-dd");
@@ -61,19 +67,19 @@ function getSeguimientoStatus(
   const registrationDateStr = extractDate(prospecto.fechaCreacion);
   const fase1Str = prospecto.fechaSeguimiento1 
     ? extractDate(prospecto.fechaSeguimiento1) 
-    : format(addDays(new Date(registrationDateStr), diasFase1), "yyyy-MM-dd");
+    : format(addDays(parseLocalDate(registrationDateStr), diasFase1), "yyyy-MM-dd");
   
   const fase2Str = prospecto.fechaSeguimiento2 
     ? extractDate(prospecto.fechaSeguimiento2) 
     : (prospecto.fechaSeguimiento1 
-      ? format(addDays(new Date(extractDate(prospecto.fechaSeguimiento1)), diasFase2), "yyyy-MM-dd")
-      : format(addDays(new Date(registrationDateStr), diasFase1 + diasFase2), "yyyy-MM-dd"));
+      ? format(addDays(parseLocalDate(extractDate(prospecto.fechaSeguimiento1)), diasFase2), "yyyy-MM-dd")
+      : format(addDays(parseLocalDate(registrationDateStr), diasFase1 + diasFase2), "yyyy-MM-dd"));
   
   const fase3Str = prospecto.fechaSeguimiento3 
     ? extractDate(prospecto.fechaSeguimiento3) 
     : (prospecto.fechaSeguimiento2 
-      ? format(addDays(new Date(extractDate(prospecto.fechaSeguimiento2)), diasFase3), "yyyy-MM-dd")
-      : format(addDays(new Date(registrationDateStr), diasFase1 + diasFase2 + diasFase3), "yyyy-MM-dd"));
+      ? format(addDays(parseLocalDate(extractDate(prospecto.fechaSeguimiento2)), diasFase3), "yyyy-MM-dd")
+      : format(addDays(parseLocalDate(registrationDateStr), diasFase1 + diasFase2 + diasFase3), "yyyy-MM-dd"));
 
   // Determine current phase based on completed phases
   let currentPhase = 1;
@@ -105,7 +111,7 @@ function getSeguimientoStatus(
   return { 
     phase: currentPhase, 
     status, 
-    date: new Date(nextDateStr) 
+    date: parseLocalDate(nextDateStr) 
   };
 }
 
