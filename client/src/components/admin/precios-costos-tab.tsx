@@ -44,6 +44,13 @@ export function PreciosCostosTab() {
     queryKey: ["/api/admin/productos"],
   });
 
+  const { data: backupStatus } = useQuery<{ hasBackup: boolean }>({
+    queryKey: ["/api/admin/precios/has-backup"],
+  });
+
+  // Update hasBackup state when backupStatus changes
+  const effectiveHasBackup = hasBackup || (backupStatus?.hasBackup ?? false);
+
   const createMutation = useMutation({
     mutationFn: (data: any) =>
       apiRequest("POST", "/api/admin/precios", data),
@@ -105,6 +112,7 @@ export function PreciosCostosTab() {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/precios"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/precios/has-backup"] });
       setIsUploadDialogOpen(false);
       setSelectedFile(null);
       setHasBackup(true);
@@ -127,11 +135,11 @@ export function PreciosCostosTab() {
 
   const undoMutation = useMutation({
     mutationFn: async () => {
-      const response = await apiRequest("POST", "/api/admin/precios/undo");
-      return response.json();
+      return await apiRequest("POST", "/api/admin/precios/undo");
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/precios"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/precios/has-backup"] });
       setHasBackup(false);
       toast({ title: "Precios/Costos restaurados correctamente" });
     },
@@ -236,7 +244,7 @@ export function PreciosCostosTab() {
         </div>
         <div className="flex gap-2">
           <TooltipProvider>
-            {hasBackup && (
+            {effectiveHasBackup && (
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button

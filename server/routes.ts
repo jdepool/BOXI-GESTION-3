@@ -3619,6 +3619,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Check if Precios/Costos backup exists
+  app.get("/api/admin/precios/has-backup", async (req, res) => {
+    try {
+      const hasBackup = await storage.hasPreciosBackup();
+      res.json({ hasBackup });
+    } catch (error) {
+      console.error("Check precios backup error:", error);
+      res.status(500).json({ error: "Failed to check backup status" });
+    }
+  });
+
   // Undo Precios/Costos endpoint
   app.post("/api/admin/precios/undo", async (req, res) => {
     try {

@@ -207,6 +207,7 @@ export interface IStorage {
   deletePrecio(id: string): Promise<boolean>;
   backupPrecios(): Promise<void>;
   restorePreciosFromBackup(): Promise<void>;
+  hasPreciosBackup(): Promise<boolean>;
 
   // Egresos
   getEgresos(filters?: {
@@ -1905,6 +1906,11 @@ export class DatabaseStorage implements IStorage {
         updatedAt: new Date(),
       }))
     );
+  }
+
+  async hasPreciosBackup(): Promise<boolean> {
+    const backup = await db.select().from(preciosBackup).limit(1);
+    return backup.length > 0;
   }
 
   // Egresos methods
