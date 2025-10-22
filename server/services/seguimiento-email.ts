@@ -84,13 +84,16 @@ export async function getFollowUpsDueToday(): Promise<AsesorReminders[]> {
   const asesorMap = new Map<string, FollowUpReminder[]>();
 
   for (const prospecto of prospectosWithFollowUps) {
-    // Calculate seguimiento dates dynamically (same logic as UI)
-    const fechaCreacion = new Date(prospecto.fechaCreacion);
+    // Extract date-only string from fechaCreacion to avoid timezone issues
+    const fechaCreacionStr = getLocalDateString(new Date(prospecto.fechaCreacion));
+    const fechaCreacionDate = new Date(fechaCreacionStr + 'T00:00:00'); // Parse as local midnight
+    
+    console.log(`🔍 ${prospecto.prospecto} registered on: ${fechaCreacionStr}`);
     
     // Calculate Fase 1 date
     const calculatedFase1 = prospecto.fechaSeguimiento1 
       ? new Date(prospecto.fechaSeguimiento1)
-      : addDays(fechaCreacion, diasFase1);
+      : addDays(fechaCreacionDate, diasFase1);
     const fase1DateOnly = getLocalDateString(calculatedFase1);
     
     // Calculate Fase 2 date
@@ -98,7 +101,7 @@ export async function getFollowUpsDueToday(): Promise<AsesorReminders[]> {
       ? new Date(prospecto.fechaSeguimiento2)
       : (prospecto.fechaSeguimiento1 
         ? addDays(new Date(prospecto.fechaSeguimiento1), diasFase2)
-        : addDays(fechaCreacion, diasFase1 + diasFase2));
+        : addDays(fechaCreacionDate, diasFase1 + diasFase2));
     const fase2DateOnly = getLocalDateString(calculatedFase2);
     
     // Calculate Fase 3 date
@@ -106,7 +109,7 @@ export async function getFollowUpsDueToday(): Promise<AsesorReminders[]> {
       ? new Date(prospecto.fechaSeguimiento3)
       : (prospecto.fechaSeguimiento2 
         ? addDays(new Date(prospecto.fechaSeguimiento2), diasFase3)
-        : addDays(fechaCreacion, diasFase1 + diasFase2 + diasFase3));
+        : addDays(fechaCreacionDate, diasFase1 + diasFase2 + diasFase3));
     const fase3DateOnly = getLocalDateString(calculatedFase3);
     
     // Debug logging
