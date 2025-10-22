@@ -4,12 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Plus, Edit, Trash2, CalendarIcon, Upload } from "lucide-react";
+import { Plus, Edit, Trash2, CalendarIcon, Upload, RotateCcw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { format } from "date-fns";
@@ -18,6 +18,7 @@ import type { Precio, Producto } from "@shared/schema";
 
 export function PreciosCostosTab() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
   const [editingPrecio, setEditingPrecio] = useState<Precio | null>(null);
   const [formData, setFormData] = useState({
     pais: "Venezuela",
@@ -28,6 +29,9 @@ export function PreciosCostosTab() {
     costoUnitarioUsd: "",
     fechaVigenciaDesde: new Date(),
   });
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [hasBackup, setHasBackup] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -96,15 +100,18 @@ export function PreciosCostosTab() {
       }
       return response.json();
     },
+    onMutate: () => {
+      setIsUploading(true);
+    },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/precios"] });
+      setIsUploadDialogOpen(false);
+      setSelectedFile(null);
+      setHasBackup(true);
       toast({ 
         title: "Archivo cargado exitosamente",
         description: `${data.recordsAdded} registros agregados`
       });
-      if (fileInputRef.current) {
-        fileInputRef.current.value = "";
-      }
     },
     onError: (error: Error) => {
       toast({ 
@@ -112,9 +119,24 @@ export function PreciosCostosTab() {
         description: error.message,
         variant: "destructive" 
       });
-      if (fileInputRef.current) {
-        fileInputRef.current.value = "";
-      }
+    },
+    onSettled: () => {
+      setIsUploading(false);
+    },
+  });
+
+  const undoMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest("POST", "/api/admin/precios/undo");
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/precios"] });
+      setHasBackup(false);
+      toast({ title: "Precios/Costos restaurados correctamente" });
+    },
+    onError: () => {
+      toast({ title: "Error al restaurar precios/costos", variant: "destructive" });
     },
   });
 
@@ -175,18 +197,31 @@ export function PreciosCostosTab() {
     return producto ? producto.nombre : sku;
   };
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (!file.name.endsWith(".xlsx") && !file.name.endsWith(".xls")) {
+      const fileExtension = file.name.split('.').pop()?.toLowerCase();
+      if (fileExtension === 'xlsx' || fileExtension === 'xls') {
+        setSelectedFile(file);
+      } else {
         toast({
-          title: "Formato de archivo inválido",
-          description: "Por favor selecciona un archivo Excel (.xlsx o .xls)",
+          title: "Archivo inválido",
+          description: "Solo se permiten archivos .xlsx o .xls",
           variant: "destructive"
         });
-        return;
       }
-      uploadMutation.mutate(file);
+    }
+  };
+
+  const handleUpload = () => {
+    if (selectedFile) {
+      uploadMutation.mutate(selectedFile);
+    }
+  };
+
+  const handleUndo = () => {
+    if (confirm("¿Estás seguro de que deseas deshacer la última carga? Se eliminarán los registros agregados en la última carga.")) {
+      undoMutation.mutate();
     }
   };
 
@@ -200,23 +235,87 @@ export function PreciosCostosTab() {
           </p>
         </div>
         <div className="flex gap-2">
-          <input
-            type="file"
-            ref={fileInputRef}
-            onChange={handleFileUpload}
-            accept=".xlsx,.xls"
-            className="hidden"
-            data-testid="file-input-precios"
-          />
-          <Button
-            variant="outline"
-            onClick={() => fileInputRef.current?.click()}
-            disabled={uploadMutation.isPending}
-            data-testid="upload-precios-button"
-          >
-            <Upload className="h-4 w-4 mr-2" />
-            {uploadMutation.isPending ? "Cargando..." : "Cargar Excel"}
-          </Button>
+          <TooltipProvider>
+            {hasBackup && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={handleUndo}
+                    disabled={undoMutation.isPending}
+                    data-testid="undo-precios-button"
+                  >
+                    <RotateCcw className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Deshacer última carga</p>
+                </TooltipContent>
+              </Tooltip>
+            )}
+            <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" size="icon" data-testid="upload-precios-button">
+                      <Upload className="h-4 w-4" />
+                    </Button>
+                  </DialogTrigger>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Cargar Excel</p>
+                </TooltipContent>
+              </Tooltip>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Cargar Precios/Costos desde Excel</DialogTitle>
+                  <DialogDescription>
+                    Sube un archivo Excel con las columnas: País, SKU, Precio Inmediata USD, Precio Reserva USD, Precio Cashea USD, Costo Unitario USD, Fecha Vigencia Desde
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="file-upload-precios">Seleccionar archivo</Label>
+                    <Input
+                      id="file-upload-precios"
+                      type="file"
+                      accept=".xlsx,.xls"
+                      onChange={handleFileSelect}
+                      disabled={isUploading}
+                      data-testid="file-input-precios"
+                    />
+                    {selectedFile && (
+                      <p className="text-sm text-muted-foreground mt-2">
+                        Archivo seleccionado: {selectedFile.name}
+                      </p>
+                    )}
+                  </div>
+                  <div className="flex justify-end space-x-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => {
+                        setIsUploadDialogOpen(false);
+                        setSelectedFile(null);
+                      }}
+                      disabled={isUploading}
+                      data-testid="cancel-upload-button"
+                    >
+                      Cancelar
+                    </Button>
+                    <Button
+                      onClick={handleUpload}
+                      disabled={!selectedFile || isUploading}
+                      data-testid="confirm-upload-button"
+                    >
+                      {isUploading ? "Cargando..." : "Cargar"}
+                    </Button>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </TooltipProvider>
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
               <Button onClick={openCreateDialog} data-testid="add-precio-button">
