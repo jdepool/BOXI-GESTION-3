@@ -27,34 +27,22 @@ interface AsesorReminders {
  * Get all follow-ups due today grouped by asesor
  */
 export async function getFollowUpsDueToday(): Promise<AsesorReminders[]> {
-  // Get today's date range (timezone-safe comparison)
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const tomorrow = new Date(today);
-  tomorrow.setDate(tomorrow.getDate() + 1);
+  // Get today's date as a date-only string (YYYY-MM-DD) - timezone safe
+  const todayDateOnly = new Date().toISOString().split('T')[0];
   
-  // Get all prospectos with follow-ups due today
+  console.log(`📅 Checking for seguimientos due on: ${todayDateOnly}`);
+  
+  // Get all prospectos that have at least one seguimiento date set
   const prospectosWithFollowUps = await db
     .select()
     .from(prospectos)
     .where(
-      and(
-        or(
-          and(
-            lte(prospectos.fechaSeguimiento1, tomorrow),
-            gte(prospectos.fechaSeguimiento1, today)
-          ),
-          and(
-            lte(prospectos.fechaSeguimiento2, tomorrow),
-            gte(prospectos.fechaSeguimiento2, today)
-          ),
-          and(
-            lte(prospectos.fechaSeguimiento3, tomorrow),
-            gte(prospectos.fechaSeguimiento3, today)
-          )
-        )
+      or(
+        eq(prospectos.estadoProspecto, 'Activo')
       )
     );
+
+  console.log(`🔍 Found ${prospectosWithFollowUps.length} active prospectos to check`);
 
   if (prospectosWithFollowUps.length === 0) {
     return [];
@@ -70,32 +58,39 @@ export async function getFollowUpsDueToday(): Promise<AsesorReminders[]> {
   const asesorMap = new Map<string, FollowUpReminder[]>();
 
   for (const prospecto of prospectosWithFollowUps) {
-    // Determine which phase is due today
+    // Determine which phase is due today using date-only comparison
     let fase: 1 | 2 | 3 | null = null;
     let fechaSeguimiento: Date | null = null;
     let respuestaAnterior: string | null = null;
 
-    if (prospecto.fechaSeguimiento1 && 
-        prospecto.fechaSeguimiento1 >= today && 
-        prospecto.fechaSeguimiento1 < tomorrow) {
+    // Compare date-only strings (YYYY-MM-DD) to avoid timezone issues
+    const fecha1DateOnly = prospecto.fechaSeguimiento1 
+      ? new Date(prospecto.fechaSeguimiento1).toISOString().split('T')[0] 
+      : null;
+    const fecha2DateOnly = prospecto.fechaSeguimiento2 
+      ? new Date(prospecto.fechaSeguimiento2).toISOString().split('T')[0] 
+      : null;
+    const fecha3DateOnly = prospecto.fechaSeguimiento3 
+      ? new Date(prospecto.fechaSeguimiento3).toISOString().split('T')[0] 
+      : null;
+
+    if (fecha1DateOnly === todayDateOnly) {
       fase = 1;
-      fechaSeguimiento = prospecto.fechaSeguimiento1;
+      fechaSeguimiento = prospecto.fechaSeguimiento1!;
       respuestaAnterior = null;
-    } else if (prospecto.fechaSeguimiento2 && 
-               prospecto.fechaSeguimiento2 >= today && 
-               prospecto.fechaSeguimiento2 < tomorrow) {
+    } else if (fecha2DateOnly === todayDateOnly) {
       fase = 2;
-      fechaSeguimiento = prospecto.fechaSeguimiento2;
+      fechaSeguimiento = prospecto.fechaSeguimiento2!;
       respuestaAnterior = prospecto.respuestaSeguimiento1;
-    } else if (prospecto.fechaSeguimiento3 && 
-               prospecto.fechaSeguimiento3 >= today && 
-               prospecto.fechaSeguimiento3 < tomorrow) {
+    } else if (fecha3DateOnly === todayDateOnly) {
       fase = 3;
-      fechaSeguimiento = prospecto.fechaSeguimiento3;
+      fechaSeguimiento = prospecto.fechaSeguimiento3!;
       respuestaAnterior = prospecto.respuestaSeguimiento2;
     }
 
     if (!fase || !fechaSeguimiento) continue;
+    
+    console.log(`✅ Found seguimiento due today: ${prospecto.prospecto} - Fase ${fase}`);
 
     const asesorId = prospecto.asesorId || 'sin-asesor';
     
