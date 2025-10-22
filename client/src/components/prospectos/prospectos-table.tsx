@@ -21,6 +21,7 @@ interface ProspectosTableProps {
   isLoading: boolean;
   filters?: {
     asesorId?: string;
+    estadoProspecto?: string;
     limit: number;
     offset: number;
   };
@@ -131,7 +132,7 @@ export default function ProspectosTable({
   const currentPage = Math.floor(offset / limit) + 1;
   const totalPages = Math.ceil(total / limit);
 
-  const hasActiveFilters = !!(filters?.asesorId);
+  const hasActiveFilters = !!(filters?.asesorId || (filters?.estadoProspecto && filters.estadoProspecto !== 'Activo'));
 
   const { data: asesores = [] } = useQuery<Array<{ id: string; nombre: string; activo: boolean }>>({
     queryKey: ["/api/admin/asesores"],
@@ -142,7 +143,12 @@ export default function ProspectosTable({
 
   const handleFilterChange = (key: string, value: string) => {
     if (onFilterChange) {
-      const normalizedValue = (key === "asesorId" && value === "all") ? "" : value;
+      let normalizedValue = value;
+      if (key === "asesorId" && value === "all") {
+        normalizedValue = "";
+      } else if (key === "estadoProspecto" && value === "Activo") {
+        normalizedValue = "";
+      }
       onFilterChange({ [key]: normalizedValue });
     }
   };
@@ -180,6 +186,10 @@ export default function ProspectosTable({
       
       if (filters?.asesorId) {
         queryParams.append('asesorId', filters.asesorId);
+      }
+
+      if (filters?.estadoProspecto) {
+        queryParams.append('estadoProspecto', filters.estadoProspecto);
       }
 
       const response = await fetch(`/api/prospectos/export?${queryParams}`);
@@ -285,6 +295,23 @@ export default function ProspectosTable({
           <div className="p-6 border-b border-border">
             <div className="flex gap-3">
               <div>
+                <label className="text-sm font-medium mb-1 block">Estado:</label>
+                <Select
+                  value={filters?.estadoProspecto || "Activo"}
+                  onValueChange={(value) => handleFilterChange("estadoProspecto", value)}
+                  data-testid="select-filter-estado"
+                >
+                  <SelectTrigger className="w-40">
+                    <SelectValue placeholder="Filtrar por estado" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Activo" data-testid="option-estado-activo">Activos</SelectItem>
+                    <SelectItem value="Fallido" data-testid="option-estado-fallido">Fallidos</SelectItem>
+                    <SelectItem value="Convertido" data-testid="option-estado-convertido">Convertidos</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
                 <label className="text-sm font-medium mb-1 block">Asesor:</label>
                 <Select
                   value={filters?.asesorId || "all"}
@@ -316,6 +343,7 @@ export default function ProspectosTable({
                 <th className="text-left p-3 font-medium text-sm text-muted-foreground">Nombre</th>
                 <th className="text-left p-3 font-medium text-sm text-muted-foreground">Fecha</th>
                 <th className="text-left p-3 font-medium text-sm text-muted-foreground">Canal</th>
+                <th className="text-left p-3 font-medium text-sm text-muted-foreground">Estado</th>
                 <th className="text-left p-3 font-medium text-sm text-muted-foreground">Teléfono</th>
                 <th className="text-left p-3 font-medium text-sm text-muted-foreground">Asesor</th>
                 <th className="text-left p-3 font-medium text-sm text-muted-foreground">Notas</th>
@@ -327,14 +355,14 @@ export default function ProspectosTable({
               {isLoading ? (
                 Array.from({ length: 5 }).map((_, i) => (
                   <tr key={i} className="border-b border-border">
-                    <td className="p-3" colSpan={9}>
+                    <td className="p-3" colSpan={10}>
                       <Skeleton className="h-8 w-full" />
                     </td>
                   </tr>
                 ))
               ) : data.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="p-8 text-center text-muted-foreground" data-testid="text-no-prospectos">
+                  <td colSpan={10} className="p-8 text-center text-muted-foreground" data-testid="text-no-prospectos">
                     No se encontraron prospectos
                   </td>
                 </tr>
@@ -360,6 +388,19 @@ export default function ProspectosTable({
                       ) : (
                         "-"
                       )}
+                    </td>
+                    <td className="p-3 text-xs" data-testid={`text-estado-${prospecto.id}`}>
+                      <Badge 
+                        className={`text-xs ${
+                          prospecto.estadoProspecto === "Activo" 
+                            ? "bg-blue-100 text-blue-800 hover:bg-blue-200" 
+                            : prospecto.estadoProspecto === "Fallido" 
+                            ? "bg-red-100 text-red-800 hover:bg-red-200" 
+                            : "bg-green-100 text-green-800 hover:bg-green-200"
+                        }`}
+                      >
+                        {prospecto.estadoProspecto || "Activo"}
+                      </Badge>
                     </td>
                     <td className="p-3 text-xs" data-testid={`text-telefono-${prospecto.id}`}>
                       {prospecto.telefono}

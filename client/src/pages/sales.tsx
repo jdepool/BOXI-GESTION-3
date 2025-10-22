@@ -44,6 +44,7 @@ export default function Sales() {
 
   const [prospectosFilters, setProspectosFilters] = useState({
     asesorId: "",
+    estadoProspecto: "",
     limit: 20,
     offset: 0,
   });
@@ -209,6 +210,7 @@ export default function Sales() {
   const handleClearProspectosFilters = () => {
     setProspectosFilters({
       asesorId: "",
+      estadoProspecto: "",
       limit: 20,
       offset: 0,
     });
