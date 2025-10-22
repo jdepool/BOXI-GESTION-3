@@ -129,6 +129,7 @@ export const precios = pgTable("precios", {
   sku: text("sku").notNull(),
   precioInmediataUsd: decimal("precio_inmediata_usd", { precision: 10, scale: 2 }).notNull(),
   precioReservaUsd: decimal("precio_reserva_usd", { precision: 10, scale: 2 }).notNull(),
+  precioCasheaUsd: decimal("precio_cashea_usd", { precision: 10, scale: 2 }).notNull(),
   costoUnitarioUsd: decimal("costo_unitario_usd", { precision: 10, scale: 2 }).notNull(),
   fechaVigenciaDesde: timestamp("fecha_vigencia_desde").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
