@@ -240,13 +240,15 @@ export function generateFollowUpEmailHtml(asesorNombre: string, reminders: Follo
       <tr>
         <td style="padding: 12px; border-bottom: 1px solid #e5e7eb;">${reminder.prospecto.numeroProspecto}</td>
         <td style="padding: 12px; border-bottom: 1px solid #e5e7eb;">
-          <strong>${reminder.prospecto.nombre}</strong><br>
-          <small style="color: #666;">${reminder.prospecto.telefono || 'Sin teléfono'}</small>
+          <strong>${reminder.prospecto.nombre}</strong>
+        </td>
+        <td style="padding: 12px; border-bottom: 1px solid #e5e7eb;">
+          ${reminder.prospecto.telefono || 'Sin teléfono'}
         </td>
         <td style="padding: 12px; border-bottom: 1px solid #e5e7eb;">${reminder.prospecto.canal}</td>
         <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: center;">
           <span style="background-color: #3b82f6; color: white; padding: 4px 12px; border-radius: 12px; font-size: 12px;">
-            Fase ${reminder.fase}
+            ${reminder.fase}
           </span>
         </td>
         <td style="padding: 12px; border-bottom: 1px solid #e5e7eb;">
@@ -286,8 +288,9 @@ export function generateFollowUpEmailHtml(asesorNombre: string, reminders: Follo
               <tr style="background-color: #f8fafc;">
                 <th style="padding: 12px; text-align: left; font-weight: 600; color: #64748b; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #e5e7eb;">Prospecto</th>
                 <th style="padding: 12px; text-align: left; font-weight: 600; color: #64748b; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #e5e7eb;">Nombre</th>
+                <th style="padding: 12px; text-align: left; font-weight: 600; color: #64748b; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #e5e7eb;">Teléfono</th>
                 <th style="padding: 12px; text-align: left; font-weight: 600; color: #64748b; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #e5e7eb;">Canal</th>
-                <th style="padding: 12px; text-align: center; font-weight: 600; color: #64748b; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #e5e7eb;">Fase</th>
+                <th style="padding: 12px; text-align: center; font-weight: 600; color: #64748b; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #e5e7eb;">Seguimiento</th>
                 <th style="padding: 12px; text-align: left; font-weight: 600; color: #64748b; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #e5e7eb;">Fecha</th>
               </tr>
             </thead>
@@ -320,7 +323,7 @@ export function generateFollowUpEmailText(asesorNombre: string, reminders: Follo
 ${index + 1}. ${reminder.prospecto.numeroProspecto} - ${reminder.prospecto.nombre}
    Teléfono: ${reminder.prospecto.telefono || 'Sin teléfono'}
    Canal: ${reminder.prospecto.canal}
-   Fase: ${reminder.fase}
+   Seguimiento: ${reminder.fase}
    Fecha: ${reminder.fechaSeguimiento.toLocaleDateString('es-ES')}${respuestaInfo}
     `;
   }).join('\n');
