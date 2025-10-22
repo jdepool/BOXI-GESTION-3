@@ -45,6 +45,10 @@ export default function Sales() {
   const [prospectosFilters, setProspectosFilters] = useState({
     asesorId: "",
     estadoProspecto: "Activo",
+    canal: "",
+    prospecto: "",
+    startDate: "",
+    endDate: "",
     limit: 20,
     offset: 0,
   });
@@ -211,6 +215,10 @@ export default function Sales() {
     setProspectosFilters({
       asesorId: "",
       estadoProspecto: "Activo",
+      canal: "",
+      prospecto: "",
+      startDate: "",
+      endDate: "",
       limit: 20,
       offset: 0,
     });
