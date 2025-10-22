@@ -213,16 +213,9 @@ export function generateFollowUpEmailHtml(asesorNombre: string, reminders: Follo
           </table>
         </div>
 
-        <div style="background-color: #f8fafc; border-radius: 8px; padding: 16px; margin-bottom: 24px;">
-          <p style="margin: 0; font-size: 14px; color: #64748b;">
-            💡 <strong>Consejo:</strong> Revisa la respuesta del seguimiento anterior antes de contactar al prospecto.
-          </p>
-        </div>
-
         <div style="text-align: center; padding-top: 24px; border-top: 1px solid #e5e7eb;">
           <p style="color: #94a3b8; font-size: 12px; margin: 0;">
-            Este es un recordatorio automático del sistema BoxiSleep CRM<br>
-            ${new Date().toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+            Este es un recordatorio automático del Sistema de Gestión BoxiSleep
           </p>
         </div>
       </body>
@@ -256,11 +249,8 @@ Hola ${asesorNombre},
 Tienes ${reminders.length} seguimiento${reminders.length !== 1 ? 's' : ''} programado${reminders.length !== 1 ? 's' : ''} para hoy:
 ${reminderList}
 
-💡 Consejo: Revisa la respuesta del seguimiento anterior antes de contactar al prospecto.
-
 ---
-Este es un recordatorio automático del sistema BoxiSleep CRM
-${new Date().toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+Este es un recordatorio automático del Sistema de Gestión BoxiSleep
   `.trim();
 }
 
