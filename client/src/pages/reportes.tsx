@@ -27,9 +27,7 @@ export default function Reportes() {
                     <FileText className="h-8 w-8 text-primary" />
                   </div>
                   <CardTitle className="mt-4">Reporte temporal de Ordenes</CardTitle>
-                  <CardDescription>
-                    Detalle completo de ventas con información de pagos y entregas filtrado por rango de fechas
-                  </CardDescription>
+                  <CardDescription>Tabla de ventas con el mismo formato utilizado en el Drive de Ventas</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <Link href="/reportes/ordenes">
