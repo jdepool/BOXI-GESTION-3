@@ -370,6 +370,7 @@ export interface IStorage {
     montoFleteBs?: string;
     bancoReceptorFlete?: string;
     fleteGratis?: boolean;
+    fleteAPagar?: string;
   }): Promise<Sale[]>;
   updateOrderPagoInicial(orderNumber: string, pagoData: {
     fechaPagoInicial?: string | null;
@@ -1258,6 +1259,7 @@ export class DatabaseStorage implements IStorage {
     montoFleteBs?: string;
     bancoReceptorFlete?: string;
     fleteGratis?: boolean;
+    fleteAPagar?: string;
   }): Promise<Sale[]> {
     console.log('🔍 DEBUG updateOrderFlete - Order:', orderNumber);
     console.log('🔍 DEBUG updateOrderFlete - Received data:', JSON.stringify(flete, null, 2));
@@ -1286,6 +1288,11 @@ export class DatabaseStorage implements IStorage {
     }
     if (flete.fleteGratis !== undefined) {
       updateData.fleteGratis = flete.fleteGratis;
+    }
+    if (flete.fleteAPagar !== undefined) {
+      // Convert string to number, handle empty string as null
+      const numericValue = flete.fleteAPagar === "" ? null : parseFloat(flete.fleteAPagar);
+      updateData.fleteAPagar = numericValue;
     }
 
     // Add updated timestamp
