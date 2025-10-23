@@ -73,13 +73,8 @@ export default function SeguimientoDialog({
   const diasFase3 = config?.diasFase3 ?? 7;
 
   useEffect(() => {
-    // Wait for config to load before initializing dates
-    if (!config || configLoading) {
-      return;
-    }
-
     // Only initialize once per prospecto opening to prevent config changes from resetting user edits
-    if (prospecto && open && initializedProspectoId.current !== prospecto.id) {
+    if (prospecto && open && initializedProspectoId.current !== prospecto.id && !configLoading) {
       initializedProspectoId.current = prospecto.id;
       // Helper to parse date from ISO timestamp to Date object without timezone shift
       const parseDate = (isoDate: string | Date): Date => {

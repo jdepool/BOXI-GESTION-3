@@ -105,13 +105,8 @@ export default function SeguimientoDialogOrden({
   const diasFase3 = config?.diasFase3 ?? 7;
 
   useEffect(() => {
-    // Wait for config to load before initializing dates
-    if (!config || configLoading) {
-      return;
-    }
-
     // Only initialize once per sale opening to prevent config changes from resetting user edits
-    if (sale && open && initializedSaleId.current !== sale.id) {
+    if (sale && open && initializedSaleId.current !== sale.id && !configLoading) {
       initializedSaleId.current = sale.id;
       
       // Helper to parse date from ISO timestamp to Date object without timezone shift
