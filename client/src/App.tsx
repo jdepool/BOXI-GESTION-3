@@ -11,6 +11,7 @@ import Devoluciones from "@/pages/devoluciones";
 import Verificacion from "@/pages/verificacion";
 import Egresos from "@/pages/egresos";
 import Reportes from "@/pages/reportes";
+import ReporteOrdenes from "@/pages/reportes-ordenes";
 import Administracion from "@/pages/administracion";
 import Login from "@/pages/login";
 import NotFound from "@/pages/not-found";
@@ -41,6 +42,9 @@ function Router() {
       </Route>
       <Route path="/egresos">
         <ProtectedRoute component={Egresos} />
+      </Route>
+      <Route path="/reportes/ordenes">
+        <ProtectedRoute component={ReporteOrdenes} />
       </Route>
       <Route path="/reportes">
         <ProtectedRoute component={Reportes} />
