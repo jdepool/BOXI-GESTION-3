@@ -169,13 +169,29 @@ export default function FleteModal({ open, onOpenChange, sale }: FleteModalProps
   const handleCheckboxChange = (checked: boolean) => {
     setFleteData((prev) => ({
       ...prev,
-      fleteGratis: checked
+      fleteGratis: checked,
+      // Automatically set fleteAPagar to "0" when Flete Gratis is checked
+      fleteAPagar: checked ? "0" : prev.fleteAPagar
     }));
   };
 
 
   const validateFleteFields = () => {
-    // Only Pago Flete USD is mandatory OR fleteGratis must be checked
+    // Flete A Pagar is mandatory when Flete Gratis is NOT checked
+    if (!fleteData.fleteGratis) {
+      const hasFleteAPagar = fleteData.fleteAPagar !== "" && fleteData.fleteAPagar !== null && fleteData.fleteAPagar !== undefined;
+      
+      if (!hasFleteAPagar) {
+        toast({
+          title: "Campo obligatorio incompleto",
+          description: "Debes ingresar el Flete A Pagar o marcar Flete Gratis",
+          variant: "destructive",
+        });
+        return false;
+      }
+    }
+    
+    // Pago Flete USD is still mandatory OR fleteGratis must be checked
     const hasPagoFleteUsd = fleteData.pagoFleteUsd !== "" && fleteData.pagoFleteUsd !== null && fleteData.pagoFleteUsd !== undefined;
     const isFleteGratis = fleteData.fleteGratis === true;
     
@@ -270,7 +286,9 @@ export default function FleteModal({ open, onOpenChange, sale }: FleteModalProps
           <div className="space-y-4">
             {/* Flete A Pagar Input Field - Prominent placement */}
             <div className="space-y-2">
-              <Label htmlFor="fleteAPagar" className="text-base font-semibold">Flete A Pagar (USD)</Label>
+              <Label htmlFor="fleteAPagar" className="text-base font-semibold">
+                Flete A Pagar (USD) {!fleteData.fleteGratis && <span className="text-red-500">*</span>}
+              </Label>
               <div className="relative">
                 <DollarSign className="absolute left-3 top-3 h-5 w-5 text-primary" />
                 <Input
@@ -286,11 +304,16 @@ export default function FleteModal({ open, onOpenChange, sale }: FleteModalProps
                       setFleteData(prev => ({ ...prev, fleteAPagar: value }));
                     }
                   }}
-                  className="pl-10 text-base font-semibold"
+                  disabled={fleteData.fleteGratis}
+                  className={cn("pl-10 text-base font-semibold", fleteData.fleteGratis && "opacity-50 cursor-not-allowed")}
                   data-testid="input-flete-a-pagar"
                 />
               </div>
-              <p className="text-xs text-muted-foreground">Monto que debe pagarse por el flete de esta orden</p>
+              <p className="text-xs text-muted-foreground">
+                {fleteData.fleteGratis 
+                  ? "Automáticamente $0 cuando Flete Gratis está marcado" 
+                  : "Monto que debe pagarse por el flete de esta orden"}
+              </p>
             </div>
 
             <Separator />
