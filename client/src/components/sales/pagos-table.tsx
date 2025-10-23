@@ -3,7 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { format } from "date-fns";
-import { CreditCard, Truck, Banknote, Filter, ChevronUp, ChevronDown, Download, ChevronLeft, ChevronRight, XCircle, RotateCcw } from "lucide-react";
+import { CreditCard, Truck, Banknote, Filter, ChevronUp, ChevronDown, Download, ChevronLeft, ChevronRight, XCircle, RotateCcw, Package } from "lucide-react";
 import { cn } from "@/lib/utils";
 import PagoInicialModal from "./pago-inicial-modal";
 import FleteModal from "./flete-modal";
@@ -25,6 +25,13 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 
 interface Order {
   orden: string;
@@ -103,6 +110,9 @@ export default function PagosTable({
   const [selectedSale, setSelectedSale] = useState<any | null>(null);
   const [editingSeguimientoOrder, setEditingSeguimientoOrder] = useState<string | null>(null);
   const [seguimientoValue, setSeguimientoValue] = useState<string>("");
+  const [fletePopoverOpen, setFletePopoverOpen] = useState<string | null>(null);
+  const [fleteAPagarValue, setFleteAPagarValue] = useState<string>("");
+  const [fleteGratisValue, setFleteGratisValue] = useState<boolean>(false);
 
   // Fetch asesores for displaying asesor names
   const { data: asesores = [] } = useQuery<Array<{ id: string; nombre: string; activo?: boolean }>>({
@@ -234,6 +244,75 @@ export default function PagosTable({
       setEditingSeguimientoOrder(null);
       setSeguimientoValue("");
     }
+  };
+
+  // Mutation to update flete data (fleteAPagar and fleteGratis)
+  const updateFleteMutation = useMutation({
+    mutationFn: async ({ orden, fleteAPagar, fleteGratis }: { orden: string; fleteAPagar: string; fleteGratis: boolean }) => {
+      return apiRequest("PATCH", `/api/sales/${encodeURIComponent(orden)}/flete`, { 
+        fleteAPagar, 
+        fleteGratis 
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ 
+        predicate: (query) => Array.isArray(query.queryKey) && typeof query.queryKey[0] === 'string' && query.queryKey[0].startsWith('/api/sales')
+      });
+      toast({ title: "Flete actualizado" });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "No se pudo actualizar el flete",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleFletePopoverOpen = (order: Order) => {
+    setFletePopoverOpen(order.orden);
+    setFleteAPagarValue(order.fleteAPagar ? order.fleteAPagar.toString() : "");
+    // Fetch the sale to get fleteGratis value
+    fetch(`/api/sales?orden=${encodeURIComponent(order.orden)}&limit=1`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.data && data.data.length > 0) {
+          setFleteGratisValue(data.data[0].fleteGratis || false);
+        }
+      });
+  };
+
+  const handleFleteCheckboxChange = (checked: boolean) => {
+    setFleteGratisValue(checked);
+    if (checked) {
+      setFleteAPagarValue("0");
+    }
+  };
+
+  const handleFleteAPagarChange = (value: string) => {
+    // Allow empty, numbers, and decimal point
+    if (value === '' || /^\d*\.?\d*$/.test(value)) {
+      setFleteAPagarValue(value);
+    }
+  };
+
+  const handleFleteSave = (orden: string) => {
+    // Validation: fleteAPagar is required when fleteGratis is false
+    if (!fleteGratisValue && !fleteAPagarValue) {
+      toast({
+        title: "Campo obligatorio",
+        description: "Debes ingresar el Flete A Pagar o marcar Flete Gratis",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    updateFleteMutation.mutate({
+      orden,
+      fleteAPagar: fleteAPagarValue,
+      fleteGratis: fleteGratisValue
+    });
+    setFletePopoverOpen(null);
   };
 
   return (
@@ -398,6 +477,9 @@ export default function PagosTable({
                 <th className="p-2 text-left text-xs font-medium text-muted-foreground min-w-[140px]">
                   Total Orden USD
                 </th>
+                <th className="p-2 text-center text-xs font-medium text-muted-foreground min-w-[100px]">
+                  Flete
+                </th>
                 <th className="p-2 text-center text-xs font-medium text-muted-foreground min-w-[150px]">
                   Pago Inicial/Total
                 </th>
@@ -416,13 +498,13 @@ export default function PagosTable({
             <tbody>
               {isLoading ? (
                 <tr>
-                  <td colSpan={17} className="p-4 text-center text-muted-foreground">
+                  <td colSpan={18} className="p-4 text-center text-muted-foreground">
                     Cargando...
                   </td>
                 </tr>
               ) : data.length === 0 ? (
                 <tr>
-                  <td colSpan={17} className="p-4 text-center text-muted-foreground">
+                  <td colSpan={18} className="p-4 text-center text-muted-foreground">
                     No hay órdenes pendientes o en proceso
                   </td>
                 </tr>
@@ -504,6 +586,83 @@ export default function PagosTable({
                           ({order.productCount} productos)
                         </span>
                       )}
+                    </td>
+                    <td className="p-2 min-w-[100px] text-center">
+                      <Popover 
+                        open={fletePopoverOpen === order.orden} 
+                        onOpenChange={(open) => {
+                          if (open) {
+                            handleFletePopoverOpen(order);
+                          } else {
+                            setFletePopoverOpen(null);
+                          }
+                        }}
+                      >
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-7 text-xs"
+                            data-testid={`button-flete-inline-${order.orden}`}
+                          >
+                            <Package className="h-3 w-3 mr-1" />
+                            Flete
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-80" align="start">
+                          <div className="space-y-4">
+                            <h4 className="font-semibold text-sm">Flete A Pagar</h4>
+                            
+                            <div className="space-y-2">
+                              <Label htmlFor={`flete-a-pagar-${order.orden}`} className="text-sm">
+                                Flete A Pagar (USD) {!fleteGratisValue && <span className="text-red-500">*</span>}
+                              </Label>
+                              <Input
+                                id={`flete-a-pagar-${order.orden}`}
+                                type="text"
+                                inputMode="decimal"
+                                placeholder="0.00"
+                                value={fleteAPagarValue}
+                                onChange={(e) => handleFleteAPagarChange(e.target.value)}
+                                disabled={fleteGratisValue}
+                                className={cn("text-sm", fleteGratisValue && "opacity-50 cursor-not-allowed")}
+                                data-testid={`input-flete-a-pagar-inline-${order.orden}`}
+                              />
+                            </div>
+
+                            <div className="flex items-center space-x-2">
+                              <Checkbox
+                                id={`flete-gratis-${order.orden}`}
+                                checked={fleteGratisValue}
+                                onCheckedChange={handleFleteCheckboxChange}
+                                data-testid={`checkbox-flete-gratis-inline-${order.orden}`}
+                              />
+                              <Label htmlFor={`flete-gratis-${order.orden}`} className="text-sm font-semibold text-green-600 cursor-pointer">
+                                FLETE GRATIS
+                              </Label>
+                            </div>
+
+                            <div className="flex justify-end gap-2 pt-2">
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                onClick={() => setFletePopoverOpen(null)}
+                                data-testid={`button-cancel-flete-inline-${order.orden}`}
+                              >
+                                Cancelar
+                              </Button>
+                              <Button 
+                                size="sm" 
+                                onClick={() => handleFleteSave(order.orden)}
+                                disabled={updateFleteMutation.isPending}
+                                data-testid={`button-save-flete-inline-${order.orden}`}
+                              >
+                                {updateFleteMutation.isPending ? "Guardando..." : "Guardar"}
+                              </Button>
+                            </div>
+                          </div>
+                        </PopoverContent>
+                      </Popover>
                     </td>
                     <td className="p-2 min-w-[150px] text-center">
                       <Button
