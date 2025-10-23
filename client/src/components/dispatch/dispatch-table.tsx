@@ -537,13 +537,9 @@ export default function DispatchTable({
                           <div className="text-xs" data-testid={`fecha-entrega-${sale.id}`}>
                             {new Date(sale.fechaEntrega).toLocaleDateString('es-ES')}
                           </div>
-                        ) : sale.estadoEntrega === "A despachar" ? (
-                          <div className="text-xs text-amber-600 bg-amber-50 dark:bg-amber-950/20 p-2 rounded border border-amber-200 dark:border-amber-800 font-medium" data-testid={`warning-fecha-entrega-${sale.id}`}>
-                            ⚠️ Sin fecha
-                          </div>
                         ) : (
-                          <div className="text-xs text-muted-foreground" data-testid={`fecha-entrega-empty-${sale.id}`}>
-                            —
+                          <div className="text-xs text-amber-600 bg-amber-50 dark:bg-amber-950/20 p-2 rounded border border-amber-200 dark:border-amber-800 font-medium" data-testid={`warning-fecha-entrega-${sale.id}`}>
+                            ⚠️ SIN FECHA
                           </div>
                         )}
                       </td>

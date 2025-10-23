@@ -976,7 +976,7 @@ export class DatabaseStorage implements IStorage {
       .select()
       .from(sales)
       .where(whereClause)
-      .orderBy(asc(sales.fechaEntrega))
+      .orderBy(sql`${sales.fechaEntrega} ASC NULLS FIRST`)
       .limit(limit)
       .offset(offset);
 
