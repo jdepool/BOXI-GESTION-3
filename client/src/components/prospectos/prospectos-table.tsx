@@ -455,7 +455,6 @@ export default function ProspectosTable({
                 <th className="text-left p-3 font-medium text-sm text-muted-foreground">Nombre</th>
                 <th className="text-left p-3 font-medium text-sm text-muted-foreground">Fecha</th>
                 <th className="text-left p-3 font-medium text-sm text-muted-foreground">Canal</th>
-                <th className="text-left p-3 font-medium text-sm text-muted-foreground">Estado</th>
                 <th className="text-left p-3 font-medium text-sm text-muted-foreground">Teléfono</th>
                 <th className="text-left p-3 font-medium text-sm text-muted-foreground">Asesor</th>
                 <th className="text-left p-3 font-medium text-sm text-muted-foreground">Notas</th>
@@ -505,19 +504,6 @@ export default function ProspectosTable({
                       ) : (
                         "-"
                       )}
-                    </td>
-                    <td className="p-3 text-xs" data-testid={`text-estado-${prospecto.id}`}>
-                      <Badge 
-                        className={`text-xs ${
-                          prospecto.estadoProspecto === "Activo" 
-                            ? "bg-blue-100 text-blue-800 hover:bg-blue-200" 
-                            : prospecto.estadoProspecto === "Perdido" 
-                            ? "bg-red-100 text-red-800 hover:bg-red-200" 
-                            : "bg-green-100 text-green-800 hover:bg-green-200"
-                        }`}
-                      >
-                        {prospecto.estadoProspecto || "Activo"}
-                      </Badge>
                     </td>
                     <td className="p-3 text-xs" data-testid={`text-telefono-${prospecto.id}`}>
                       {prospecto.telefono}
