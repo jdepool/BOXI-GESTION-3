@@ -7,6 +7,7 @@ BoxiSleep is a sales management system for a sleep products company, designed to
 Preferred communication style: Simple, everyday language.
 Cargar Datos Implementation: Implemented as a settings/gear icon button positioned in the top-right of the tabs bar, opening a dialog with upload controls and automation settings. This separates administrative features from regular sales workflow tabs.
 Address Form Organization: All address forms (Direcciones, Manual Sales, Manual Reserva) display Dirección de Despacho first, followed by a checkbox (checked by default) labeled "La dirección de facturación es igual a la de despacho". Dirección de Facturación fields appear below only when the checkbox is unchecked. When checked, shipping address changes automatically sync to billing address. Despacho fields are required; facturación fields are optional when addresses differ.
+Reportes Organization: Reportes tab displays a dashboard with card-based layout where each report type is accessible via a dedicated button. Currently includes "Reporte temporal de Ordenes" card. This scalable structure allows easy addition of new report types as separate cards.
 
 # System Architecture
 
@@ -24,7 +25,7 @@ The backend is a RESTful API built with Express.js and TypeScript, featuring a m
 - **Follow-Up Protocols (Protocolos de Seguimiento)**: Dual follow-up protocol system with separate configurations for Prospectos and Ordenes Pendientes. Each protocol independently configures 3-phase follow-up intervals (días between phases), asesor-specific email recipients (max 5), and general fallback email. Implemented via `seguimiento_config` table with `tipo` field ('prospectos' or 'ordenes'), unique constraint ensuring one config per type, and admin UI with two separate configuration cards. Both Inmediatas and Reservas tables now include Próximo column (showing next follow-up date with color-coded status) and Seguimiento button to track 3-phase follow-up for pending orders. Follow-up updates apply to all products in the same order simultaneously since the customer is the same.
 - **Pricing & Cost Management**: Comprehensive system for tracking product prices (Inmediata, Reserva, Cashea) and unit costs in USD with effective dates, supporting multiple records per SKU, Excel uploads, and undo functionality. Dynamic Cashea pricing uses internal pricing for `totalUSD` calculation.
 - **Automation**: Configurable automated Cashea order downloads and automatic assignment of payment details for Cashea sales.
-- **Reporting**: Comprehensive sales reports (`Reporte de Ordenes`) with date filtering and Excel download.
+- **Reporting**: Dashboard-based reporting system with card interface for accessing different report types. Reporte temporal de Ordenes provides comprehensive sales data with date filtering and Excel download. Navigation structure uses `/reportes` for dashboard and `/reportes/ordenes` for the orders report view.
 - **Order Numbering**: Separate order number ranges for manual (20000+) and Tienda (30000+) orders.
 
 # External Dependencies
