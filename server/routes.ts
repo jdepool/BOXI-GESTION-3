@@ -5939,11 +5939,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           fechaCreacion: formatDateOnly(prospecto.fechaCreacion),
           totalUsd: prospecto.totalUsd,
           notas: prospecto.notas,
-          fechaSeguimiento1: prospecto.fechaSeguimiento1 ? formatDateOnly(prospecto.fechaSeguimiento1) : null,
+          fechaSeguimiento1: prospecto.fechaSeguimiento1 || null,
           respuestaSeguimiento1: prospecto.respuestaSeguimiento1,
-          fechaSeguimiento2: prospecto.fechaSeguimiento2 ? formatDateOnly(prospecto.fechaSeguimiento2) : null,
+          fechaSeguimiento2: prospecto.fechaSeguimiento2 || null,
           respuestaSeguimiento2: prospecto.respuestaSeguimiento2,
-          fechaSeguimiento3: prospecto.fechaSeguimiento3 ? formatDateOnly(prospecto.fechaSeguimiento3) : null,
+          fechaSeguimiento3: prospecto.fechaSeguimiento3 || null,
           respuestaSeguimiento3: prospecto.respuestaSeguimiento3,
         };
       });
@@ -5996,11 +5996,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           formatDateOnly(prospecto.fechaCreacion),
           prospecto.totalUsd || '',
           prospecto.notas || '',
-          formatDateOnly(prospecto.fechaSeguimiento1),
+          prospecto.fechaSeguimiento1 || '',
           prospecto.respuestaSeguimiento1 || '',
-          formatDateOnly(prospecto.fechaSeguimiento2),
+          prospecto.fechaSeguimiento2 || '',
           prospecto.respuestaSeguimiento2 || '',
-          formatDateOnly(prospecto.fechaSeguimiento3),
+          prospecto.fechaSeguimiento3 || '',
           prospecto.respuestaSeguimiento3 || ''
         ];
       });

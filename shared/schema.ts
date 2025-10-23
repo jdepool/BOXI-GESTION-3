@@ -228,12 +228,12 @@ export const sales = pgTable("sales", {
   // Verification fields for Flete
   estadoVerificacionFlete: text("estado_verificacion_flete").default("Por verificar"), // Por verificar, Verificado, Rechazado
   notasVerificacionFlete: text("notas_verificacion_flete"),
-  // Follow-up tracking (for pending orders)
-  fechaSeguimiento1: timestamp("fecha_seguimiento1"),
+  // Follow-up tracking (for pending orders) - stored as YYYY-MM-DD strings
+  fechaSeguimiento1: text("fecha_seguimiento1"),
   respuestaSeguimiento1: text("respuesta_seguimiento1"),
-  fechaSeguimiento2: timestamp("fecha_seguimiento2"),
+  fechaSeguimiento2: text("fecha_seguimiento2"),
   respuestaSeguimiento2: text("respuesta_seguimiento2"),
-  fechaSeguimiento3: timestamp("fecha_seguimiento3"),
+  fechaSeguimiento3: text("fecha_seguimiento3"),
   respuestaSeguimiento3: text("respuesta_seguimiento3"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
@@ -535,12 +535,12 @@ export const prospectos = pgTable("prospectos", {
   direccionDespachoUrbanizacion: text("direccion_despacho_urbanizacion"),
   direccionDespachoReferencia: text("direccion_despacho_referencia"),
   notas: text("notas"),
-  // Follow-up tracking
-  fechaSeguimiento1: timestamp("fecha_seguimiento1"),
+  // Follow-up tracking - stored as YYYY-MM-DD strings
+  fechaSeguimiento1: text("fecha_seguimiento1"),
   respuestaSeguimiento1: text("respuesta_seguimiento1"),
-  fechaSeguimiento2: timestamp("fecha_seguimiento2"),
+  fechaSeguimiento2: text("fecha_seguimiento2"),
   respuestaSeguimiento2: text("respuesta_seguimiento2"),
-  fechaSeguimiento3: timestamp("fecha_seguimiento3"),
+  fechaSeguimiento3: text("fecha_seguimiento3"),
   respuestaSeguimiento3: text("respuesta_seguimiento3"),
   fechaCreacion: timestamp("fecha_creacion").defaultNow().notNull(),
   createdAt: timestamp("created_at").defaultNow(),
