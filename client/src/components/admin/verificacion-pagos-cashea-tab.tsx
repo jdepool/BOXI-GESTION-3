@@ -82,6 +82,7 @@ export function VerificacionPagosCasheaTab() {
       queryClient.invalidateQueries({ queryKey: ["/api/sales"] });
       queryClient.invalidateQueries({ queryKey: ["/api/sales/verification-payments"] });
       queryClient.invalidateQueries({ queryKey: ["/api/sales/orders"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/sales/payments"] });
       
       // Append newly verified matches to existing ones (accumulate results)
       setVerifiedMatches(prev => [...prev, ...variables]);
