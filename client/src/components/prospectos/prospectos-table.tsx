@@ -50,7 +50,7 @@ function getSeguimientoStatus(
   date: Date | null;
   dateStr: string | null;
 } {
-  // Extract date-only string from ISO timestamp or YYYY-MM-DD string
+  // Extract date-only string from ISO timestamp, PostgreSQL timestamp, or YYYY-MM-DD string
   const extractDate = (dateValue: string | Date | null | undefined): string | null => {
     if (!dateValue) return null;
     
@@ -64,6 +64,11 @@ function getSeguimientoStatus(
     // Extract from ISO timestamp (has 'T')
     if (dateStr.includes('T')) {
       return dateStr.split('T')[0];
+    }
+    
+    // Extract from PostgreSQL timestamp format "YYYY-MM-DD HH:MM:SS"
+    if (dateStr.includes(' ')) {
+      return dateStr.split(' ')[0];
     }
     
     // Fallback: just return the string
