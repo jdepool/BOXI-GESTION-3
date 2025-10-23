@@ -106,6 +106,7 @@ export default function Sales() {
       installmentCount: number;
       pagoInicialUsd: number;
       pagoFleteUsd: number;
+      fleteAPagar: number;
       ordenPlusFlete: number;
       totalCuotas: number;
       totalPagado: number;

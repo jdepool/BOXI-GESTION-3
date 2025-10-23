@@ -127,6 +127,7 @@ export interface IStorage {
       installmentCount: number;
       pagoInicialUsd: number;
       pagoFleteUsd: number;
+      fleteAPagar: number;
       ordenPlusFlete: number;
       totalCuotas: number;
       totalPagado: number;
@@ -641,6 +642,7 @@ export class DatabaseStorage implements IStorage {
       installmentCount: number;
       pagoInicialUsd: number;
       pagoFleteUsd: number;
+      fleteAPagar: number;
       ordenPlusFlete: number;
       totalCuotas: number;
       totalPagado: number;
@@ -739,6 +741,7 @@ export class DatabaseStorage implements IStorage {
         hasFlete: sql<boolean>`BOOL_OR(${sales.pagoFleteUsd} IS NOT NULL OR ${sales.fleteGratis} = true)`.as('hasFlete'),
         pagoInicialUsd: sql<number | null>`MAX(${sales.pagoInicialUsd})`.as('pagoInicialUsd'),
         pagoFleteUsd: sql<number | null>`MAX(${sales.pagoFleteUsd})`.as('pagoFleteUsd'),
+        fleteAPagar: sql<number | null>`MAX(${sales.fleteAPagar})`.as('fleteAPagar'),
         fleteGratis: sql<boolean>`BOOL_OR(${sales.fleteGratis})`.as('fleteGratis'),
         estadoVerificacionInicial: sql<string | null>`MAX(${sales.estadoVerificacionInicial})`.as('estadoVerificacionInicial'),
         estadoVerificacionFlete: sql<string | null>`MAX(${sales.estadoVerificacionFlete})`.as('estadoVerificacionFlete'),
@@ -800,6 +803,7 @@ export class DatabaseStorage implements IStorage {
         // Convert decimal strings to numbers for calculations
         const pagoInicial = Number(order.pagoInicialUsd) || 0;
         const pagoFlete = Number(order.pagoFleteUsd) || 0;
+        const fleteAPagar = Number(order.fleteAPagar) || 0;
         const totalOrderUsd = Number(order.totalOrderUsd) || 0;
         
         // For Cashea orders, use pagoInicialUsd; for others, use totalOrderUsd
@@ -854,6 +858,7 @@ export class DatabaseStorage implements IStorage {
           installmentCount: installmentCountMap.get(order.orden!) || 0,
           pagoInicialUsd: pagoInicial,
           pagoFleteUsd: pagoFlete,
+          fleteAPagar: fleteAPagar,
           ordenPlusFlete,
           totalCuotas,
           totalPagado,

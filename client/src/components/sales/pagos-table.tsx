@@ -41,6 +41,7 @@ interface Order {
   installmentCount: number;
   pagoInicialUsd: number;
   pagoFleteUsd: number;
+  fleteAPagar: number;
   ordenPlusFlete: number;
   totalCuotas: number;
   totalPagado: number;
@@ -600,7 +601,7 @@ export default function PagosTable({
                     <td className="p-2 min-w-[120px] bg-purple-50 dark:bg-purple-950">
                       <div className="flex justify-center">
                         <div className="bg-purple-100 dark:bg-purple-900 text-purple-900 dark:text-purple-100 px-3 py-1 rounded-md text-xs" data-testid={`metric-flete-${order.orden}`}>
-                          {formatCurrency(order.pagoFleteUsd)}
+                          {formatCurrency(order.fleteAPagar)}
                         </div>
                       </div>
                     </td>
