@@ -866,7 +866,7 @@ export default function DispatchTable({
                               )}
                               data-testid={`fecha-despacho-button-${sale.id}`}
                             >
-                              <CalendarIcon className="mr-2 h-3 w-3" />
+                              <CalendarIcon className={cn("mr-2 h-3 w-3", !sale.fechaDespacho && "text-amber-500")} />
                               {sale.fechaDespacho ? formatFechaDespacho(sale.fechaDespacho) : "Seleccionar"}
                             </Button>
                           </PopoverTrigger>
@@ -895,7 +895,7 @@ export default function DispatchTable({
                               )}
                               data-testid={`fecha-cliente-button-${sale.id}`}
                             >
-                              <CalendarIcon className="mr-2 h-3 w-3" />
+                              <CalendarIcon className={cn("mr-2 h-3 w-3", !sale.fechaCliente && "text-amber-500")} />
                               {sale.fechaCliente ? formatFechaDespacho(sale.fechaCliente) : "Seleccionar"}
                             </Button>
                           </PopoverTrigger>
