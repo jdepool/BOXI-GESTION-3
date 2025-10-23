@@ -1716,11 +1716,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
             console.log(`Order ${orden} - A pagar + Flete: $${ordenPlusFlete}, Total Verificado: $${totalVerificado}, Pendiente: $${saldoPendiente}`);
 
-            // Only auto-update if Pendiente = 0 (exactly 0, with tolerance for floating point) and current status is "Pendiente" or "En proceso"
-            // CRITICAL: Balance must be exactly 0 (within 0.01 tolerance for floating point rounding errors)
+            // Only auto-update if Pendiente is in range -1 to +1 and current status is "Pendiente" or "En proceso"
+            // CRITICAL: Balance must be within -1 to +1 USD range to handle calculation inaccuracies
             // Use case-insensitive comparison to handle "En proceso" vs "En Proceso" data inconsistencies
             const currentStatus = firstSale.estadoEntrega?.toLowerCase() || '';
-            if (Math.abs(saldoPendiente) < 0.01 && (currentStatus === 'pendiente' || currentStatus === 'en proceso')) {
+            if (Math.abs(saldoPendiente) <= 1 && (currentStatus === 'pendiente' || currentStatus === 'en proceso')) {
               const updatePromises = salesInOrder.map(sale => 
                 withRetry(() => storage.updateSaleDeliveryStatus(sale.id, 'A despachar'))
               );
