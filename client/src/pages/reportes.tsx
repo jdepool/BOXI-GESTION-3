@@ -46,9 +46,7 @@ export default function Reportes() {
                     <FileText className="h-8 w-8 text-primary" />
                   </div>
                   <CardTitle className="mt-4">Ordenes Perdidas</CardTitle>
-                  <CardDescription>
-                    Detalle completo de ordenes marcadas como perdidas con información de pagos y entregas
-                  </CardDescription>
+                  <CardDescription>Detalle de ordenes marcadas como perdidas con información de contacto y productos</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <Link href="/reportes/perdidas">
