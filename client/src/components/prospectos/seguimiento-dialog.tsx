@@ -76,14 +76,20 @@ export default function SeguimientoDialog({
     // Only initialize once per prospecto opening to prevent config changes from resetting user edits
     if (prospecto && open && initializedProspectoId.current !== prospecto.id && !configLoading) {
       initializedProspectoId.current = prospecto.id;
-      // Helper to parse date from ISO timestamp to Date object without timezone shift
-      const parseDate = (isoDate: string | Date): Date => {
-        if (typeof isoDate === 'string') {
-          const dateOnly = isoDate.split('T')[0];
-          const [year, month, day] = dateOnly.split('-').map(Number);
-          return new Date(year, month - 1, day);
-        }
-        return isoDate;
+      // Helper to parse date string (YYYY-MM-DD or ISO timestamp) to Date object
+      const parseDate = (dateValue: string | Date | null | undefined): Date | undefined => {
+        if (!dateValue) return undefined;
+        if (dateValue instanceof Date) return dateValue;
+        
+        // Extract YYYY-MM-DD part (works for both YYYY-MM-DD and ISO timestamps)
+        const dateStr = typeof dateValue === 'string' ? dateValue : dateValue.toString();
+        const dateOnly = dateStr.includes('T') ? dateStr.split('T')[0] : dateStr;
+        
+        // Validate format
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(dateOnly)) return undefined;
+        
+        const [year, month, day] = dateOnly.split('-').map(Number);
+        return new Date(year, month - 1, day);
       };
 
       // Load existing data or calculate default dates
@@ -93,8 +99,10 @@ export default function SeguimientoDialog({
       } else {
         // Default: diasFase1 days after registration
         const registrationDate = parseDate(prospecto.fechaCreacion);
-        setFecha1(addDays(registrationDate, diasFase1));
-        setManuallyEditedFecha1(false);
+        if (registrationDate) {
+          setFecha1(addDays(registrationDate, diasFase1));
+          setManuallyEditedFecha1(false);
+        }
       }
       setRespuesta1(prospecto.respuestaSeguimiento1 || "");
 
@@ -105,13 +113,17 @@ export default function SeguimientoDialog({
       } else if (prospecto.fechaSeguimiento1) {
         // Default: diasFase2 days after first follow-up
         const fecha1Date = parseDate(prospecto.fechaSeguimiento1);
-        setFecha2(addDays(fecha1Date, diasFase2));
-        setManuallyEditedFecha2(false);
+        if (fecha1Date) {
+          setFecha2(addDays(fecha1Date, diasFase2));
+          setManuallyEditedFecha2(false);
+        }
       } else {
         // Calculate from registration + diasFase1 + diasFase2
         const registrationDate = parseDate(prospecto.fechaCreacion);
-        setFecha2(addDays(registrationDate, diasFase1 + diasFase2));
-        setManuallyEditedFecha2(false);
+        if (registrationDate) {
+          setFecha2(addDays(registrationDate, diasFase1 + diasFase2));
+          setManuallyEditedFecha2(false);
+        }
       }
       setRespuesta2(prospecto.respuestaSeguimiento2 || "");
 
@@ -122,13 +134,17 @@ export default function SeguimientoDialog({
       } else if (prospecto.fechaSeguimiento2) {
         // Default: diasFase3 days after second follow-up
         const fecha2Date = parseDate(prospecto.fechaSeguimiento2);
-        setFecha3(addDays(fecha2Date, diasFase3));
-        setManuallyEditedFecha3(false);
+        if (fecha2Date) {
+          setFecha3(addDays(fecha2Date, diasFase3));
+          setManuallyEditedFecha3(false);
+        }
       } else {
         // Calculate from registration + diasFase1 + diasFase2 + diasFase3
         const registrationDate = parseDate(prospecto.fechaCreacion);
-        setFecha3(addDays(registrationDate, diasFase1 + diasFase2 + diasFase3));
-        setManuallyEditedFecha3(false);
+        if (registrationDate) {
+          setFecha3(addDays(registrationDate, diasFase1 + diasFase2 + diasFase3));
+          setManuallyEditedFecha3(false);
+        }
       }
       setRespuesta3(prospecto.respuestaSeguimiento3 || "");
     }
