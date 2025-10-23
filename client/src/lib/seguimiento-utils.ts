@@ -49,23 +49,35 @@ export function getSeguimientoStatusOrden(
     return { phase: null, status: null, date: null, dateStr: null };
   }
   
-  const fase1Str = sale.fechaSeguimiento1 
-    ? extractDate(sale.fechaSeguimiento1) 
-    : format(addDays(parseLocalDate(orderDateStr), diasFase1), "yyyy-MM-dd");
-  
+  // Calculate fase 1 date
   const fase1Extracted = extractDate(sale.fechaSeguimiento1);
-  const fase2Str = sale.fechaSeguimiento2 
-    ? extractDate(sale.fechaSeguimiento2) 
-    : (fase1Extracted
-      ? format(addDays(parseLocalDate(fase1Extracted), diasFase2), "yyyy-MM-dd")
-      : format(addDays(parseLocalDate(orderDateStr), diasFase1 + diasFase2), "yyyy-MM-dd"));
+  const fase1Str = fase1Extracted || format(addDays(parseLocalDate(orderDateStr), diasFase1), "yyyy-MM-dd");
   
+  // Calculate fase 2 date
   const fase2Extracted = extractDate(sale.fechaSeguimiento2);
-  const fase3Str = sale.fechaSeguimiento3 
-    ? extractDate(sale.fechaSeguimiento3) 
-    : (fase2Extracted
-      ? format(addDays(parseLocalDate(fase2Extracted), diasFase3), "yyyy-MM-dd")
-      : format(addDays(parseLocalDate(orderDateStr), diasFase1 + diasFase2 + diasFase3), "yyyy-MM-dd"));
+  let fase2Str: string;
+  if (fase2Extracted) {
+    fase2Str = fase2Extracted;
+  } else if (fase1Extracted) {
+    // If fase1 was manually set, add diasFase2 to it
+    fase2Str = format(addDays(parseLocalDate(fase1Extracted), diasFase2), "yyyy-MM-dd");
+  } else {
+    // If fase1 was not set, calculate from order date
+    fase2Str = format(addDays(parseLocalDate(orderDateStr), diasFase1 + diasFase2), "yyyy-MM-dd");
+  }
+  
+  // Calculate fase 3 date
+  const fase3Extracted = extractDate(sale.fechaSeguimiento3);
+  let fase3Str: string;
+  if (fase3Extracted) {
+    fase3Str = fase3Extracted;
+  } else if (fase2Extracted) {
+    // If fase2 was manually set, add diasFase3 to it
+    fase3Str = format(addDays(parseLocalDate(fase2Extracted), diasFase3), "yyyy-MM-dd");
+  } else {
+    // If fase2 was not set, calculate from order date
+    fase3Str = format(addDays(parseLocalDate(orderDateStr), diasFase1 + diasFase2 + diasFase3), "yyyy-MM-dd");
+  }
 
   // Determine current phase based on completed phases
   let currentPhase = 1;
