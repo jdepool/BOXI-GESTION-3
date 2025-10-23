@@ -411,9 +411,7 @@ export default function PagosTable({
                 <th className="p-2 text-center text-xs font-medium text-muted-foreground min-w-[120px] bg-purple-50 dark:bg-purple-950">Flete a Pagar</th>
                 <th className="p-2 text-center text-xs font-medium text-muted-foreground min-w-[120px] bg-gray-100 dark:bg-gray-800">Total Pagado</th>
                 <th className="p-2 text-center text-xs font-medium text-muted-foreground min-w-[120px] bg-teal-50 dark:bg-teal-950">Total Verificado</th>
-                <th className="p-2 text-center text-xs font-medium text-muted-foreground min-w-[120px] bg-orange-50 dark:bg-orange-950">
-                  Pendiente
-                </th>
+                <th className="p-2 text-center text-xs font-medium text-muted-foreground min-w-[120px] bg-orange-50 dark:bg-orange-950">Saldo Pendiente</th>
                 <th className="p-2 text-left text-xs font-medium text-muted-foreground min-w-[250px]">
                   Seguimiento Pago
                 </th>
