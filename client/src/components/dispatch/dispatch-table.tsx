@@ -813,7 +813,7 @@ export default function DispatchTable({
                           onValueChange={(value) => handleTransportistaChange(sale.id, value === "unassigned" ? null : value)}
                           disabled={updateTransportistaMutation.isPending}
                         >
-                          <SelectTrigger className="w-full h-8 text-xs" data-testid={`transportista-select-${sale.id}`}>
+                          <SelectTrigger className={cn("w-full h-8 text-xs", !sale.transportistaId && "text-amber-500")} data-testid={`transportista-select-${sale.id}`}>
                             <SelectValue placeholder="Seleccionar..." />
                           </SelectTrigger>
                           <SelectContent>
