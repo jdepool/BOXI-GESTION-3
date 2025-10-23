@@ -680,12 +680,9 @@ export default function SalesTable({
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[120px]">Asesor</th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[150px]">Notas</th>
                 {showSeguimientoColumns && (
-                  <>
-                    <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[90px]">Próximo</th>
-                    <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[100px]"></th>
-                  </>
+                  <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[90px]">Próximo</th>
                 )}
-                <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[150px]">Acciones</th>
+                <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[200px]">Acciones</th>
                 {activeTab === "lista" && (
                   <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[180px]"></th>
                 )}
@@ -696,7 +693,7 @@ export default function SalesTable({
                 <tr>
                   <td colSpan={
                     (showDeliveryDateColumn ? 1 : 0) + 
-                    (showSeguimientoColumns ? 2 : 0) + 
+                    (showSeguimientoColumns ? 1 : 0) + 
                     (activeTab === "lista" ? 24 : 23)
                   } className="text-center p-8 text-muted-foreground">
                     No hay datos disponibles
@@ -931,34 +928,36 @@ export default function SalesTable({
                       )}
                     </td>
                     {showSeguimientoColumns && (
-                      <>
-                        <td className="p-2 min-w-[90px]">
-                          {(() => {
-                            const { status, date } = getSeguimientoStatusOrden(
-                              sale,
-                              seguimientoConfig?.diasFase1 ?? 2,
-                              seguimientoConfig?.diasFase2 ?? 4,
-                              seguimientoConfig?.diasFase3 ?? 7
-                            );
-                            
-                            if (!status || !date) {
-                              return <span className="text-xs text-muted-foreground">-</span>;
-                            }
-                            
-                            const colorClass = status === "overdue" 
-                              ? "text-red-600" 
-                              : status === "today" 
-                              ? "text-amber-600" 
-                              : "text-muted-foreground";
-                            
-                            return (
-                              <span className={`text-xs font-medium ${colorClass}`}>
-                                {format(date, "dd/MM/yy")}
-                              </span>
-                            );
-                          })()}
-                        </td>
-                        <td className="p-2 min-w-[100px]">
+                      <td className="p-2 min-w-[90px]">
+                        {(() => {
+                          const { phase, status } = getSeguimientoStatusOrden(
+                            sale,
+                            seguimientoConfig?.diasFase1 ?? 2,
+                            seguimientoConfig?.diasFase2 ?? 4,
+                            seguimientoConfig?.diasFase3 ?? 7
+                          );
+                          
+                          if (!status || !phase) {
+                            return <span className="text-xs text-muted-foreground">-</span>;
+                          }
+                          
+                          const badgeClass = status === "overdue" 
+                            ? "bg-red-600 hover:bg-red-700" 
+                            : status === "today" 
+                            ? "bg-amber-600 hover:bg-amber-700" 
+                            : "bg-muted hover:bg-muted/80 text-foreground";
+                          
+                          return (
+                            <Badge className={`${badgeClass} text-white font-bold px-2 py-1`}>
+                              {phase}
+                            </Badge>
+                          );
+                        })()}
+                      </td>
+                    )}
+                    <td className="p-2 min-w-[200px]">
+                      <div className="flex gap-1">
+                        {showSeguimientoColumns && (
                           <Button
                             variant="outline"
                             size="sm"
@@ -969,14 +968,11 @@ export default function SalesTable({
                             disabled={!sale.orden}
                             data-testid={`seguimiento-orden-${sale.id}`}
                             className="h-7 text-xs"
+                            title="Seguimiento"
                           >
                             <CalendarIcon className="h-3 w-3" />
                           </Button>
-                        </td>
-                      </>
-                    )}
-                    <td className="p-2 min-w-[150px]">
-                      <div className="flex gap-1">
+                        )}
                         <Button
                           variant="outline"
                           size="sm"
