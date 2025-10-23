@@ -57,6 +57,8 @@ export default function DispatchTable({
   const [editingNroGuiaId, setEditingNroGuiaId] = useState<string | null>(null);
   const [nroGuiaValue, setNroGuiaValue] = useState("");
   const [originalNroGuiaValue, setOriginalNroGuiaValue] = useState("");
+  const [openFechaDespachoId, setOpenFechaDespachoId] = useState<string | null>(null);
+  const [openFechaClienteId, setOpenFechaClienteId] = useState<string | null>(null);
   const [filtersVisible, setFiltersVisible] = useState(false);
   
   // Debounced search - local state for immediate UI updates
@@ -384,6 +386,8 @@ export default function DispatchTable({
     } else {
       updateFechaDespachoMutation.mutate({ saleId, fechaDespacho: null });
     }
+    // Close the popover after selection
+    setOpenFechaDespachoId(null);
   };
 
   const handleFechaClienteChange = (saleId: string, date: Date | undefined) => {
@@ -398,6 +402,8 @@ export default function DispatchTable({
     } else {
       updateFechaClienteMutation.mutate({ saleId, fechaCliente: null });
     }
+    // Close the popover after selection
+    setOpenFechaClienteId(null);
   };
 
   // Helper to parse date string to Date object
@@ -847,7 +853,10 @@ export default function DispatchTable({
                       </td>
                       
                       <td className="p-2 min-w-[150px] text-xs">
-                        <Popover>
+                        <Popover 
+                          open={openFechaDespachoId === sale.id}
+                          onOpenChange={(open) => setOpenFechaDespachoId(open ? sale.id : null)}
+                        >
                           <PopoverTrigger asChild>
                             <Button
                               variant="outline"
@@ -873,7 +882,10 @@ export default function DispatchTable({
                       </td>
                       
                       <td className="p-2 min-w-[150px] text-xs">
-                        <Popover>
+                        <Popover
+                          open={openFechaClienteId === sale.id}
+                          onOpenChange={(open) => setOpenFechaClienteId(open ? sale.id : null)}
+                        >
                           <PopoverTrigger asChild>
                             <Button
                               variant="outline"
