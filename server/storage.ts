@@ -66,6 +66,9 @@ export interface IStorage {
     direccionDespachoUrbanizacion?: string;
     direccionDespachoReferencia?: string;
   }): Promise<Sale | undefined>;
+  updateSaleNroGuia(id: string, nroGuia: string | null): Promise<Sale | undefined>;
+  updateSaleFechaDespacho(id: string, fechaDespacho: string | null): Promise<Sale | undefined>;
+  updateSaleFechaCliente(id: string, fechaCliente: string | null): Promise<Sale | undefined>;
   updateSaleFechaEntrega(saleId: string, fechaEntrega: Date | null): Promise<Sale | undefined>;
   getTotalSalesCount(filters?: {
     canal?: string;
