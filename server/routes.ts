@@ -5721,6 +5721,128 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // GET /api/reports/prospectos-perdidos - Get Reporte de Prospectos Perdidos data
+  app.get("/api/reports/prospectos-perdidos", async (req, res) => {
+    try {
+      const startDate = req.query.startDate as string | undefined;
+      const endDate = req.query.endDate as string | undefined;
+
+      const reportData = await storage.getReporteProspectosPerdidos({ startDate, endDate });
+
+      console.log(`📊 Prospectos Perdidos report data count: ${reportData.length}`);
+
+      // Helper function to format dates as YYYY-MM-DD without timezone shifting
+      const formatDateOnly = (date: Date | null | undefined): string => {
+        if (!date) return '';
+        const year = date.getUTCFullYear();
+        const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+        const day = String(date.getUTCDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+      };
+
+      // Transform data for frontend
+      const transformedData = reportData.map(row => {
+        const prospecto = row.prospecto;
+
+        return {
+          prospecto: prospecto.prospecto,
+          nombre: prospecto.nombre,
+          telefono: prospecto.telefono,
+          email: prospecto.email,
+          cedula: prospecto.cedula,
+          canal: prospecto.canal,
+          asesor: row.asesorNombre,
+          fechaCreacion: formatDateOnly(prospecto.fechaCreacion),
+          totalUsd: prospecto.totalUsd,
+          notas: prospecto.notas,
+          fechaSeguimiento1: prospecto.fechaSeguimiento1 ? formatDateOnly(prospecto.fechaSeguimiento1) : null,
+          respuestaSeguimiento1: prospecto.respuestaSeguimiento1,
+          fechaSeguimiento2: prospecto.fechaSeguimiento2 ? formatDateOnly(prospecto.fechaSeguimiento2) : null,
+          respuestaSeguimiento2: prospecto.respuestaSeguimiento2,
+          fechaSeguimiento3: prospecto.fechaSeguimiento3 ? formatDateOnly(prospecto.fechaSeguimiento3) : null,
+          respuestaSeguimiento3: prospecto.respuestaSeguimiento3,
+        };
+      });
+
+      res.json(transformedData);
+    } catch (error) {
+      console.error("Error fetching reporte de prospectos perdidos:", error);
+      res.status(500).json({ error: "Failed to fetch prospectos perdidos report" });
+    }
+  });
+
+  // GET /api/reports/prospectos-perdidos/download - Download Reporte de Prospectos Perdidos as Excel
+  app.get("/api/reports/prospectos-perdidos/download", async (req, res) => {
+    try {
+      const startDate = req.query.startDate as string | undefined;
+      const endDate = req.query.endDate as string | undefined;
+
+      const reportData = await storage.getReporteProspectosPerdidos({ startDate, endDate });
+
+      // Helper function to format dates as YYYY-MM-DD without timezone shifting
+      const formatDateOnly = (date: Date | null | undefined): string => {
+        if (!date) return '';
+        const year = date.getUTCFullYear();
+        const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+        const day = String(date.getUTCDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+      };
+
+      // Build headers array
+      const headers = [
+        'Prospecto', 'Nombre', 'Teléfono', 'Email', 'Cédula', 'Canal', 'Asesor',
+        'Fecha Creación', 'Total USD', 'Notas',
+        'Fecha Seguimiento 1', 'Respuesta Seguimiento 1',
+        'Fecha Seguimiento 2', 'Respuesta Seguimiento 2',
+        'Fecha Seguimiento 3', 'Respuesta Seguimiento 3'
+      ];
+
+      // Build data rows
+      const dataRows = reportData.map(row => {
+        const prospecto = row.prospecto;
+
+        return [
+          prospecto.prospecto || '',
+          prospecto.nombre || '',
+          prospecto.telefono || '',
+          prospecto.email || '',
+          prospecto.cedula || '',
+          prospecto.canal || '',
+          row.asesorNombre || '',
+          formatDateOnly(prospecto.fechaCreacion),
+          prospecto.totalUsd || '',
+          prospecto.notas || '',
+          formatDateOnly(prospecto.fechaSeguimiento1),
+          prospecto.respuestaSeguimiento1 || '',
+          formatDateOnly(prospecto.fechaSeguimiento2),
+          prospecto.respuestaSeguimiento2 || '',
+          formatDateOnly(prospecto.fechaSeguimiento3),
+          prospecto.respuestaSeguimiento3 || ''
+        ];
+      });
+
+      // Combine headers and data rows
+      const sheetData = [headers, ...dataRows];
+
+      // Create workbook and worksheet
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.aoa_to_sheet(sheetData);
+      XLSX.utils.book_append_sheet(wb, ws, "Prospectos Perdidos");
+
+      // Generate Excel file buffer
+      const excelBuffer = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
+
+      // Set response headers for file download
+      const filename = `Prospectos_Perdidos_${new Date().toISOString().split('T')[0]}.xlsx`;
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+      res.send(excelBuffer);
+    } catch (error) {
+      console.error("Error downloading reporte de prospectos perdidos:", error);
+      res.status(500).json({ error: "Failed to download prospectos perdidos report" });
+    }
+  });
+
   // GET /api/uat-protocol/download - Download UAT Protocol Excel with test cases
   app.get("/api/uat-protocol/download", async (req, res) => {
     try {

@@ -13,6 +13,7 @@ import Egresos from "@/pages/egresos";
 import Reportes from "@/pages/reportes";
 import ReporteOrdenes from "@/pages/reportes-ordenes";
 import ReportePerdidas from "@/pages/reportes-perdidas";
+import ReporteProspectosPerdidos from "@/pages/reportes-prospectos-perdidos";
 import Administracion from "@/pages/administracion";
 import Login from "@/pages/login";
 import NotFound from "@/pages/not-found";
@@ -49,6 +50,9 @@ function Router() {
       </Route>
       <Route path="/reportes/perdidas">
         <ProtectedRoute component={ReportePerdidas} />
+      </Route>
+      <Route path="/reportes/prospectos-perdidos">
+        <ProtectedRoute component={ReporteProspectosPerdidos} />
       </Route>
       <Route path="/reportes">
         <ProtectedRoute component={Reportes} />

@@ -339,6 +339,13 @@ export interface IStorage {
     installments: PaymentInstallment[];
     saldoPendiente: number;
   }>>;
+  getReporteProspectosPerdidos(filters?: {
+    startDate?: string;
+    endDate?: string;
+  }): Promise<Array<{
+    prospecto: Prospecto;
+    asesorNombre: string | null;
+  }>>;
   
   // Sale update methods
   updateSaleFlete(saleId: string, flete: {
@@ -2719,6 +2726,45 @@ export class DatabaseStorage implements IStorage {
       asesorNombre: sale.asesorId ? asesorMap.get(sale.asesorId) || null : null,
       installments: installmentsBySaleId.get(sale.id) || [],
       saldoPendiente: sale.orden ? (saldoPendienteMap.get(sale.orden) ?? 0) : 0,
+    }));
+  }
+
+  async getReporteProspectosPerdidos(filters?: {
+    startDate?: string;
+    endDate?: string;
+  }): Promise<Array<{
+    prospecto: Prospecto;
+    asesorNombre: string | null;
+  }>> {
+    const whereConditions = [eq(prospectos.estadoProspecto, 'Perdido')];
+
+    // Date filtering on fechaCreacion
+    if (filters?.startDate) {
+      whereConditions.push(gte(prospectos.fechaCreacion, new Date(filters.startDate)));
+    }
+    if (filters?.endDate) {
+      const endDate = new Date(filters.endDate);
+      endDate.setHours(23, 59, 59, 999);
+      whereConditions.push(lte(prospectos.fechaCreacion, endDate));
+    }
+
+    // Fetch all Perdido prospectos with date filter
+    const prospectosData = await db
+      .select()
+      .from(prospectos)
+      .where(and(...whereConditions))
+      .orderBy(desc(prospectos.fechaCreacion));
+
+    // Fetch asesores for lookup
+    const asesoresData = await db.select().from(asesores);
+
+    // Create lookup map
+    const asesorMap = new Map(asesoresData.map(a => [a.id, a.nombre]));
+
+    // Build result array
+    return prospectosData.map(prospecto => ({
+      prospecto,
+      asesorNombre: prospecto.asesorId ? asesorMap.get(prospecto.asesorId) || null : null,
     }));
   }
 
