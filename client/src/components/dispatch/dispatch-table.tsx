@@ -559,24 +559,24 @@ export default function DispatchTable({
               </Select>
             </div>
 
-            <DateRangePicker
-              startDate={filters.startDate}
-              endDate={filters.endDate}
-              onStartDateChange={(date) => handleFilterChange('startDate', date)}
-              onEndDateChange={(date) => handleFilterChange('endDate', date)}
-            />
-
             <div>
               <label className="text-sm font-medium mb-1 block">Buscar:</label>
               <Input 
                 type="text"
-                placeholder="Buscar por orden, nombre, cédula o teléfono..."
+                placeholder="Buscar por orden"
                 value={searchInputValue}
                 onChange={(e) => setSearchInputValue(e.target.value)}
                 className="w-80"
                 data-testid="filter-search"
               />
             </div>
+
+            <DateRangePicker
+              startDate={filters.startDate}
+              endDate={filters.endDate}
+              onStartDateChange={(date) => handleFilterChange('startDate', date)}
+              onEndDateChange={(date) => handleFilterChange('endDate', date)}
+            />
           </div>
         </div>
       )}
