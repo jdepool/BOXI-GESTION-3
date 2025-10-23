@@ -534,6 +534,7 @@ export default function DispatchTable({
                   <SelectItem value="all">Todos los estados</SelectItem>
                   <SelectItem value="En proceso">En proceso</SelectItem>
                   <SelectItem value="A despachar">A despachar</SelectItem>
+                  <SelectItem value="En tránsito">En tránsito</SelectItem>
                 </SelectContent>
               </Select>
             </div>
