@@ -8,7 +8,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { DateRangePicker } from "@/components/shared/date-range-picker";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Download, Package, ChevronLeft, ChevronRight, Filter, ChevronDown, ChevronUp, RotateCcw, CalendarIcon } from "lucide-react";
+import { Download, Package, ChevronLeft, ChevronRight, Filter, ChevronDown, ChevronUp, RotateCcw, CalendarIcon, Truck } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -323,14 +323,37 @@ export default function DispatchTable({
       });
       toast({
         title: "Fecha Cliente actualizada",
-        description: "La fecha de recepción del cliente ha sido actualizada correctamente.",
+        description: "La fecha de cliente ha sido actualizada correctamente.",
       });
     },
     onError: (error) => {
       console.error('Failed to update fecha cliente:', error);
       toast({
         title: "Error",
-        description: "No se pudo actualizar la fecha de recepción del cliente.",
+        description: "No se pudo actualizar la fecha de cliente.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Mark as delivered mutation
+  const markDeliveredMutation = useMutation({
+    mutationFn: async (saleId: string) => {
+      return apiRequest("PUT", `/api/sales/${saleId}/delivery-status`, { status: "Entregado" });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ 
+        predicate: (query) => Array.isArray(query.queryKey) && typeof query.queryKey[0] === 'string' && query.queryKey[0].startsWith('/api/sales')
+      });
+      toast({
+        title: "Venta entregada",
+        description: "El estado de la venta ha sido actualizado a Entregado",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "No se pudo actualizar el estado de la venta",
         variant: "destructive",
       });
     },
@@ -911,7 +934,21 @@ export default function DispatchTable({
                       </td>
                       
                       <td className="p-2 min-w-[150px] text-xs">
-                        {/* Empty for future actions */}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => markDeliveredMutation.mutate(sale.id)}
+                          disabled={sale.estadoEntrega === "Entregado" || markDeliveredMutation.isPending}
+                          data-testid={`delivered-sale-${sale.id}`}
+                          className={cn(
+                            "h-7 text-xs bg-green-600 text-white border-green-600 hover:bg-green-700 hover:border-green-700 dark:bg-green-600 dark:text-white dark:border-green-600 dark:hover:bg-green-700",
+                            sale.estadoEntrega === "Entregado" && "bg-green-800 text-white hover:bg-green-800 opacity-70 cursor-not-allowed border-green-700"
+                          )}
+                          title={sale.estadoEntrega === "Entregado" ? "Venta ya entregada" : "Marcar como entregado"}
+                        >
+                          <Truck className={cn("h-3 w-3 mr-1", sale.estadoEntrega === "Entregado" && "text-green-400")} />
+                          Entregado
+                        </Button>
                       </td>
                     </tr>
                   ))}
