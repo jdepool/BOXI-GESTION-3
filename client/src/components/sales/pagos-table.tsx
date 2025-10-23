@@ -401,9 +401,7 @@ export default function PagosTable({
                 <th className="p-2 text-center text-xs font-medium text-muted-foreground min-w-[150px]">
                   Pago Inicial/Total
                 </th>
-                <th className="p-2 text-center text-xs font-medium text-muted-foreground min-w-[100px]">
-                  Flete
-                </th>
+                <th className="p-2 text-center text-xs font-medium text-muted-foreground min-w-[100px]">Pago Flete</th>
                 <th className="p-2 text-center text-xs font-medium text-muted-foreground min-w-[100px]">
                   Cuotas
                 </th>
