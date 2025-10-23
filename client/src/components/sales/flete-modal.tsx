@@ -41,14 +41,12 @@ const extractDateFromTimestamp = (timestamp: string | Date) => {
 import type { Sale, Banco } from "@shared/schema";
 
 interface FleteData {
-  fleteAPagar: string;
   montoFleteUsd: string;
   fechaFlete: string;
   pagoFleteUsd: string;
   referenciaFlete: string;
   montoFleteBs: string;
   bancoReceptorFlete: string;
-  fleteGratis: boolean;
 }
 
 interface FleteModalProps {
@@ -59,14 +57,12 @@ interface FleteModalProps {
 
 export default function FleteModal({ open, onOpenChange, sale }: FleteModalProps) {
   const [fleteData, setFleteData] = useState<FleteData>({
-    fleteAPagar: "",
     montoFleteUsd: "",
     fechaFlete: "",
     pagoFleteUsd: "",
     referenciaFlete: "",
     montoFleteBs: "",
-    bancoReceptorFlete: "",
-    fleteGratis: false
+    bancoReceptorFlete: ""
   });
 
   const prevOpenRef = useRef(false);
@@ -129,14 +125,12 @@ export default function FleteModal({ open, onOpenChange, sale }: FleteModalProps
     if (sale && isOpening) {
       const fechaValue = sale.fechaFlete ? extractDateFromTimestamp(sale.fechaFlete) : formatLocalDate(new Date());
       setFleteData({
-        fleteAPagar: sale.fleteAPagar ? sale.fleteAPagar.toString() : "",
         montoFleteUsd: sale.montoFleteUsd ? sale.montoFleteUsd.toString() : "",
         fechaFlete: fechaValue,
         pagoFleteUsd: sale.pagoFleteUsd ? sale.pagoFleteUsd.toString() : "",
         referenciaFlete: sale.referenciaFlete || "",
         montoFleteBs: sale.montoFleteBs ? sale.montoFleteBs.toString() : "",
-        bancoReceptorFlete: sale.bancoReceptorFlete || "",
-        fleteGratis: sale.fleteGratis || false
+        bancoReceptorFlete: sale.bancoReceptorFlete || ""
       });
     }
     
@@ -146,14 +140,12 @@ export default function FleteModal({ open, onOpenChange, sale }: FleteModalProps
 
   const resetForm = () => {
     setFleteData({
-      fleteAPagar: "",
       montoFleteUsd: "",
       fechaFlete: "",
       pagoFleteUsd: "",
       referenciaFlete: "",
       montoFleteBs: "",
-      bancoReceptorFlete: "",
-      fleteGratis: false
+      bancoReceptorFlete: ""
     });
   };
 
@@ -166,44 +158,8 @@ export default function FleteModal({ open, onOpenChange, sale }: FleteModalProps
     }));
   };
 
-  const handleCheckboxChange = (checked: boolean) => {
-    setFleteData((prev) => ({
-      ...prev,
-      fleteGratis: checked,
-      // Automatically set fleteAPagar to "0" when Flete Gratis is checked
-      fleteAPagar: checked ? "0" : prev.fleteAPagar
-    }));
-  };
-
-
   const validateFleteFields = () => {
-    // Flete A Pagar is mandatory when Flete Gratis is NOT checked
-    if (!fleteData.fleteGratis) {
-      const hasFleteAPagar = fleteData.fleteAPagar !== "" && fleteData.fleteAPagar !== null && fleteData.fleteAPagar !== undefined;
-      
-      if (!hasFleteAPagar) {
-        toast({
-          title: "Campo obligatorio incompleto",
-          description: "Debes ingresar el Flete A Pagar o marcar Flete Gratis",
-          variant: "destructive",
-        });
-        return false;
-      }
-    }
-    
-    // Pago Flete USD is still mandatory OR fleteGratis must be checked
-    const hasPagoFleteUsd = fleteData.pagoFleteUsd !== "" && fleteData.pagoFleteUsd !== null && fleteData.pagoFleteUsd !== undefined;
-    const isFleteGratis = fleteData.fleteGratis === true;
-    
-    if (!hasPagoFleteUsd && !isFleteGratis) {
-      toast({
-        title: "Campo obligatorio incompleto",
-        description: "Debes ingresar Pago Flete USD o marcar Flete Gratis",
-        variant: "destructive",
-      });
-      return false;
-    }
-    
+    // No validation needed anymore - all fields are optional
     return true;
   };
 
@@ -273,40 +229,6 @@ export default function FleteModal({ open, onOpenChange, sale }: FleteModalProps
 
           {/* Flete Form */}
           <div className="space-y-4">
-            {/* Flete A Pagar Input Field - Prominent placement */}
-            <div className="space-y-2">
-              <Label htmlFor="fleteAPagar" className="text-base font-semibold">
-                Flete A Pagar (USD) {!fleteData.fleteGratis && <span className="text-red-500">*</span>}
-              </Label>
-              <div className="relative">
-                <DollarSign className="absolute left-3 top-3 h-5 w-5 text-primary" />
-                <Input
-                  id="fleteAPagar"
-                  type="text"
-                  inputMode="decimal"
-                  placeholder="0.00"
-                  value={fleteData.fleteAPagar}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    // Allow empty, numbers, and decimal point
-                    if (value === '' || /^\d*\.?\d*$/.test(value)) {
-                      setFleteData(prev => ({ ...prev, fleteAPagar: value }));
-                    }
-                  }}
-                  disabled={fleteData.fleteGratis}
-                  className={cn("pl-10 text-base font-semibold", fleteData.fleteGratis && "opacity-50 cursor-not-allowed")}
-                  data-testid="input-flete-a-pagar"
-                />
-              </div>
-              <p className="text-xs text-muted-foreground">
-                {fleteData.fleteGratis 
-                  ? "Automáticamente $0 cuando Flete Gratis está marcado" 
-                  : "Monto que debe pagarse por el flete de esta orden"}
-              </p>
-            </div>
-
-            <Separator />
-
             <h3 className="text-lg font-semibold flex items-center gap-2">
               <Truck className="h-5 w-5" />
               Información de Pago
@@ -345,9 +267,9 @@ export default function FleteModal({ open, onOpenChange, sale }: FleteModalProps
                 </Popover>
               </div>
 
-              {/* 2. Pago Flete USD (MANDATORY) */}
+              {/* 2. Pago Flete USD */}
               <div className="space-y-2">
-                <Label htmlFor="pagoFleteUsd">Pago Flete USD *</Label>
+                <Label htmlFor="pagoFleteUsd">Pago Flete USD</Label>
                 <div className="relative">
                   <DollarSign className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input
@@ -454,24 +376,6 @@ export default function FleteModal({ open, onOpenChange, sale }: FleteModalProps
                   />
                 </div>
               </div>
-            </div>
-
-            {/* Flete Gratis Section */}
-            <div className="space-y-2">
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="fleteGratis"
-                  checked={fleteData.fleteGratis}
-                  onCheckedChange={handleCheckboxChange}
-                  data-testid="checkbox-flete-gratis"
-                />
-                <Label htmlFor="fleteGratis" className="text-lg font-semibold text-green-600">
-                  FLETE GRATIS
-                </Label>
-              </div>
-              <p className="text-sm text-muted-foreground">
-                Si está marcado y la orden está en estado "A Despachar", puede ser procesada en Despachos.
-              </p>
             </div>
           </div>
 
