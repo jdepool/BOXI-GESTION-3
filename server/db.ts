@@ -11,10 +11,11 @@ if (!process.env.DATABASE_URL) {
 // Configure pool with proper error handling and connection settings
 export const pool = new Pool({ 
   connectionString: process.env.DATABASE_URL,
-  max: 10, // Connection pool size
-  idleTimeoutMillis: 30000, // Close idle clients after 30 seconds
-  connectionTimeoutMillis: 10000, // Wait 10 seconds for new client connections
-  allowExitOnIdle: false // Don't exit the process when idle
+  max: 20, // Increased connection pool size for production load
+  idleTimeoutMillis: 20000, // Close idle clients after 20 seconds
+  connectionTimeoutMillis: 15000, // Wait 15 seconds for new client connections
+  allowExitOnIdle: false, // Don't exit the process when idle
+  statement_timeout: 30000, // 30 second statement timeout
 });
 
 // Add error handling for the pool

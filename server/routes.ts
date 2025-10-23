@@ -2,7 +2,7 @@ import type { Express } from "express";
 import express from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { db } from "./db";
+import { db, withRetry } from "./db";
 import { sales } from "@shared/schema";
 import { eq } from "drizzle-orm";
 import { 
@@ -1598,11 +1598,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Payment ID and type are required" });
       }
 
-      const result = await storage.updatePaymentVerification({
-        paymentId,
-        paymentType,
-        estadoVerificacion,
-        notasVerificacion
+      // Wrap in retry logic to handle transient connection errors
+      const result = await withRetry(async () => {
+        return await storage.updatePaymentVerification({
+          paymentId,
+          paymentType,
+          estadoVerificacion,
+          notasVerificacion
+        });
       });
 
       if (!result) {
@@ -1616,22 +1619,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         let currentPaymentAmount = 0;
         
         if (paymentType === 'Inicial/Total') {
-          const sale = await storage.getSaleById(paymentId);
+          const sale = await withRetry(() => storage.getSaleById(paymentId));
           orden = sale?.orden || null;
           currentPaymentAmount = Number(sale?.pagoInicialUsd || 0);
         } else if (paymentType === 'Flete') {
-          const sale = await storage.getSaleById(paymentId);
+          const sale = await withRetry(() => storage.getSaleById(paymentId));
           orden = sale?.orden || null;
           currentPaymentAmount = Number(sale?.pagoFleteUsd || 0);
         } else if (paymentType === 'Cuota') {
-          const installment = await storage.getInstallmentById(paymentId);
+          const installment = await withRetry(() => storage.getInstallmentById(paymentId));
           orden = installment?.orden || null;
           currentPaymentAmount = Number(installment?.pagoCuotaUsd || 0); // Use agreed amount (Pago USD)
         }
 
         if (orden) {
           // Get all sales in the order to calculate Pendiente
-          const salesInOrder = await storage.getSalesByOrderNumber(orden);
+          const salesInOrder = await withRetry(() => storage.getSalesByOrderNumber(orden!));
           
           if (salesInOrder.length > 0) {
             // Calculate ordenPlusFlete (A pagar + Flete)
@@ -1670,7 +1673,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             }
             
             // Get verified cuotas (use agreed amounts - Pago USD)
-            const installments = await storage.getInstallmentsByOrder(orden);
+            const installments = await withRetry(() => storage.getInstallmentsByOrder(orden!));
             let cuotasVerificadas = 0;
             if (paymentType === 'Cuota') {
               // Include all previously verified cuotas PLUS the one being verified now
@@ -1693,7 +1696,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             // CRITICAL: Balance must be exactly 0 (within 0.01 tolerance for floating point rounding errors)
             if (Math.abs(saldoPendiente) < 0.01 && (firstSale.estadoEntrega === 'Pendiente' || firstSale.estadoEntrega === 'En proceso')) {
               const updatePromises = salesInOrder.map(sale => 
-                storage.updateSaleDeliveryStatus(sale.id, 'A despachar')
+                withRetry(() => storage.updateSaleDeliveryStatus(sale.id, 'A despachar'))
               );
               await Promise.all(updatePromises);
               console.log(`✅ Auto-updated order ${orden} to "A despachar" (Pendiente = $${saldoPendiente.toFixed(2)})`);
@@ -1703,8 +1706,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       res.json({ success: true, data: result });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Update verification error:", error);
+      
+      // Provide more specific error messages
+      if (error.message?.includes('connection')) {
+        return res.status(503).json({ error: "Database connection issue. Please try again in a moment." });
+      }
+      
+      if (error.code === '23505') { // Unique constraint violation
+        return res.status(409).json({ error: "A conflicting record already exists." });
+      }
+      
+      if (error.code === '23503') { // Foreign key violation
+        return res.status(400).json({ error: "Referenced record not found." });
+      }
+      
       res.status(500).json({ error: "Failed to update verification" });
     }
   });
