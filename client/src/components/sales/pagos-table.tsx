@@ -271,13 +271,19 @@ export default function PagosTable({
 
   const handleFletePopoverOpen = (order: Order) => {
     setFletePopoverOpen(order.orden);
-    setFleteAPagarValue(order.fleteAPagar ? order.fleteAPagar.toString() : "");
+    // Use nullish coalescing to handle zero values correctly
+    setFleteAPagarValue(order.fleteAPagar != null ? order.fleteAPagar.toString() : "");
     // Fetch the sale to get fleteGratis value
     fetch(`/api/sales?orden=${encodeURIComponent(order.orden)}&limit=1`)
       .then(res => res.json())
       .then(data => {
         if (data.data && data.data.length > 0) {
-          setFleteGratisValue(data.data[0].fleteGratis || false);
+          const fleteGratis = data.data[0].fleteGratis || false;
+          setFleteGratisValue(fleteGratis);
+          // If fleteGratis is true, ensure the field shows "0"
+          if (fleteGratis) {
+            setFleteAPagarValue("0");
+          }
         }
       });
   };
@@ -298,7 +304,8 @@ export default function PagosTable({
 
   const handleFleteSave = (orden: string) => {
     // Validation: fleteAPagar is required when fleteGratis is false
-    if (!fleteGratisValue && !fleteAPagarValue) {
+    // Use trim() to check for empty string and allow "0" as valid value
+    if (!fleteGratisValue && fleteAPagarValue.trim() === "") {
       toast({
         title: "Campo obligatorio",
         description: "Debes ingresar el Flete A Pagar o marcar Flete Gratis",
