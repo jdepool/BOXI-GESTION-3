@@ -114,8 +114,8 @@ export default function Sales() {
   }>({
     queryKey: ["/api/sales/orders", { 
       ...pagosFilters, 
-      // Exclude Perdida by default, only show when explicitly selected
-      excludePerdida: pagosFilters.estadoEntrega !== "Perdida"
+      // Always exclude Perdida orders from Pagos view
+      excludePerdida: true
     }],
     staleTime: 0, // Always fetch fresh data
     gcTime: 0, // Don't cache data
