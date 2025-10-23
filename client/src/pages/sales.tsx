@@ -140,6 +140,7 @@ export default function Sales() {
     const normalized = { ...newFilters };
     if (normalized.canal === "all") normalized.canal = "";
     if (normalized.estadoEntrega === "all") normalized.estadoEntrega = "";
+    console.log('🔄 Inmediata Filter Change:', { old: filters.estadoEntrega, new: normalized.estadoEntrega });
     setFilters(prev => ({ ...prev, ...normalized, offset: 0 }));
   };
 
