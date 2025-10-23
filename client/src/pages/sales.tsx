@@ -386,41 +386,6 @@ export default function Sales() {
             <DialogTitle>Configuración y Cargar Datos</DialogTitle>
           </DialogHeader>
           <div className="mt-4 space-y-6">
-            <div className="bg-muted/50 p-4 rounded-lg border border-border">
-              <h3 className="text-sm font-semibold mb-3">Reportes Especiales</h3>
-              <div className="flex items-center gap-3">
-                <Button
-                  variant="outline"
-                  onClick={async () => {
-                    try {
-                      const response = await fetch('/api/sales/perdida/export');
-                      if (!response.ok) throw new Error('Failed to download report');
-                      
-                      const blob = await response.blob();
-                      const url = window.URL.createObjectURL(blob);
-                      const link = document.createElement('a');
-                      link.href = url;
-                      link.download = `ordenes_perdidas_${new Date().toISOString().split('T')[0]}.xlsx`;
-                      document.body.appendChild(link);
-                      link.click();
-                      document.body.removeChild(link);
-                      window.URL.revokeObjectURL(url);
-                    } catch (error) {
-                      console.error('Error downloading Perdida report:', error);
-                    }
-                  }}
-                  data-testid="button-export-perdida"
-                  className="flex-shrink-0"
-                >
-                  <Download className="h-4 w-4 mr-2" />
-                  Exportar Ordenes Perdidas
-                </Button>
-                <p className="text-xs text-muted-foreground">
-                  Descarga un reporte Excel con todas las ordenes marcadas como perdidas.
-                </p>
-              </div>
-            </div>
-            
             <UploadZone recentUploads={recentUploads} />
           </div>
         </DialogContent>

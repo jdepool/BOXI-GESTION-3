@@ -5562,6 +5562,165 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // GET /api/reports/perdidas - Get Reporte de Perdidas data
+  app.get("/api/reports/perdidas", async (req, res) => {
+    try {
+      const startDate = req.query.startDate as string | undefined;
+      const endDate = req.query.endDate as string | undefined;
+
+      const reportData = await storage.getReportePerdidas({ startDate, endDate });
+
+      console.log(`📊 Perdidas report data count: ${reportData.length}`);
+
+      // Transform data for frontend (same structure as ordenes report)
+      const transformedData = reportData.map(row => {
+        const sale = row.sale;
+        const installments = row.installments;
+
+        const totalUsd = parseFloat(sale.totalUsd?.toString() || '0');
+        const pagoInicialUsd = parseFloat(sale.pagoInicialUsd?.toString() || '0');
+        const pagoFleteUsd = parseFloat(sale.pagoFleteUsd?.toString() || '0');
+
+        return {
+          orden: sale.orden,
+          fecha: sale.fecha?.toISOString() || '',
+          notas: sale.notas,
+          fechaEntrega: sale.fechaEntrega?.toISOString() || null,
+          estadoEntrega: sale.estadoEntrega,
+          nombre: sale.nombre,
+          telefono: sale.telefono,
+          cedula: sale.cedula,
+          email: sale.email,
+          estado: sale.direccionDespachoEstado,
+          ciudad: sale.direccionDespachoCiudad,
+          direccion: sale.direccionDespachoDireccion,
+          urbanizacion: sale.direccionDespachoUrbanizacion,
+          referencia: sale.direccionDespachoReferencia,
+          categoria: row.categoria,
+          producto: sale.product,
+          sku: sale.sku,
+          cantidad: sale.cantidad,
+          banco: row.bancoNombre,
+          pagoInicialUsd: pagoInicialUsd,
+          totalUsd: totalUsd,
+          installments: installments.map(inst => ({
+            installmentNumber: inst.installmentNumber,
+            pagoCuotaUsd: parseFloat(inst.pagoCuotaUsd?.toString() || '0'),
+          })),
+          pendiente: row.saldoPendiente,
+          canal: sale.canal,
+          asesor: row.asesorNombre,
+          flete: pagoFleteUsd,
+          tipo: sale.tipo,
+        };
+      });
+
+      res.json(transformedData);
+    } catch (error) {
+      console.error("Error fetching reporte de perdidas:", error);
+      res.status(500).json({ error: "Failed to fetch perdidas report" });
+    }
+  });
+
+  // GET /api/reports/perdidas/download - Download Reporte de Perdidas as Excel
+  app.get("/api/reports/perdidas/download", async (req, res) => {
+    try {
+      const startDate = req.query.startDate as string | undefined;
+      const endDate = req.query.endDate as string | undefined;
+
+      const reportData = await storage.getReportePerdidas({ startDate, endDate });
+
+      // Find max number of installments to create dynamic columns
+      const maxInstallments = Math.max(
+        ...reportData.map(row => row.installments.length),
+        0
+      );
+
+      // Build headers array
+      const headers = [
+        'Orden', 'Fecha', 'Notas', 'Fecha Entrega', 'Estado Entrega', 'Nombre', 
+        'Telefono', 'Cedula', 'Email', 'Estado', 'Ciudad', 'Dirección', 
+        'Urbanización', 'Referencia', 'Categoria', 'Producto', 'SKU', 'Cantidad', 
+        'Banco', 'Pago Inicial/Total USD', 'Total USD'
+      ];
+      
+      for (let i = 0; i < maxInstallments; i++) {
+        headers.push('Pago Cuota USD');
+      }
+      
+      headers.push('Pendiente', 'Canal', 'Asesor', 'Flete', 'Tipo');
+
+      // Build data rows
+      const dataRows = reportData.map(row => {
+        const sale = row.sale;
+        const installments = row.installments;
+
+        const totalUsd = parseFloat(sale.totalUsd?.toString() || '0');
+        const pagoInicialUsd = parseFloat(sale.pagoInicialUsd?.toString() || '0');
+        const pagoFleteUsd = parseFloat(sale.pagoFleteUsd?.toString() || '0');
+
+        const rowData = [
+          sale.orden || '',
+          sale.fecha ? sale.fecha.toISOString().split('T')[0] : '',
+          sale.notas || '',
+          sale.fechaEntrega ? sale.fechaEntrega.toISOString().split('T')[0] : '',
+          sale.estadoEntrega || '',
+          sale.nombre || '',
+          sale.telefono || '',
+          sale.cedula || '',
+          sale.email || '',
+          sale.direccionDespachoEstado || '',
+          sale.direccionDespachoCiudad || '',
+          sale.direccionDespachoDireccion || '',
+          sale.direccionDespachoUrbanizacion || '',
+          sale.direccionDespachoReferencia || '',
+          row.categoria || '',
+          sale.product || '',
+          sale.sku || '',
+          sale.cantidad || '',
+          row.bancoNombre || '',
+          pagoInicialUsd || '',
+          totalUsd || ''
+        ];
+
+        for (let i = 0; i < maxInstallments; i++) {
+          const installment = installments.find(inst => inst.installmentNumber === i + 1);
+          rowData.push(installment ? parseFloat(installment.pagoCuotaUsd?.toString() || '0') : '');
+        }
+
+        rowData.push(
+          row.saldoPendiente,
+          sale.canal || '',
+          row.asesorNombre || '',
+          pagoFleteUsd || '',
+          sale.tipo || ''
+        );
+
+        return rowData;
+      });
+
+      // Combine headers and data rows
+      const sheetData = [headers, ...dataRows];
+
+      // Create workbook and worksheet
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.aoa_to_sheet(sheetData);
+      XLSX.utils.book_append_sheet(wb, ws, "Ordenes Perdidas");
+
+      // Generate Excel file buffer
+      const excelBuffer = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
+
+      // Set response headers for file download
+      const filename = `Ordenes_Perdidas_${new Date().toISOString().split('T')[0]}.xlsx`;
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+      res.send(excelBuffer);
+    } catch (error) {
+      console.error("Error downloading reporte de perdidas:", error);
+      res.status(500).json({ error: "Failed to download perdidas report" });
+    }
+  });
+
   // GET /api/uat-protocol/download - Download UAT Protocol Excel with test cases
   app.get("/api/uat-protocol/download", async (req, res) => {
     try {

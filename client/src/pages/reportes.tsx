@@ -39,6 +39,25 @@ export default function Reportes() {
                   </Link>
                 </CardContent>
               </Card>
+
+              <Card className="hover:shadow-lg transition-shadow">
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <FileText className="h-8 w-8 text-primary" />
+                  </div>
+                  <CardTitle className="mt-4">Ordenes Perdidas</CardTitle>
+                  <CardDescription>
+                    Detalle completo de ordenes marcadas como perdidas con información de pagos y entregas
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Link href="/reportes/perdidas">
+                    <Button className="w-full" data-testid="button-reporte-perdidas">
+                      Ver Reporte
+                    </Button>
+                  </Link>
+                </CardContent>
+              </Card>
             </div>
           </div>
         </main>
