@@ -475,32 +475,18 @@ export default function DispatchTable({
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="p-6">
-        <div className="space-y-4">
-          {[...Array(5)].map((_, i) => (
-            <div key={i} className="flex items-center space-x-4 p-4 border border-border rounded-lg">
-              <Skeleton className="h-4 w-20" />
-              <Skeleton className="h-4 w-40" />
-              <Skeleton className="h-4 w-32" />
-              <Skeleton className="h-4 w-32" />
-              <Skeleton className="h-4 w-48" />
-              <Skeleton className="h-4 w-32" />
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  }
-
   return (
     <>
       {/* Top toolbar */}
       <div className="p-3 border-b border-border flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-foreground">
-          Despachos
-        </h2>
+        <div className="flex items-center gap-2">
+          <h2 className="text-lg font-semibold text-foreground">
+            Despachos
+          </h2>
+          {isLoading && (
+            <div className="animate-spin h-4 w-4 border-2 border-primary border-t-transparent rounded-full"></div>
+          )}
+        </div>
         
         {/* Right side - filter toggle and export buttons */}
         <div className="flex items-center gap-2">
@@ -661,7 +647,7 @@ export default function DispatchTable({
           </div>
         ) : (
           <div className="overflow-x-auto overflow-y-auto max-h-[calc(100vh-280px)] bg-background">
-            <div className="min-w-max">
+            <div className={cn("min-w-max transition-opacity duration-200", isLoading && "opacity-50")}>
               <table className="w-full min-w-[2860px] relative">
                 <thead className="bg-muted sticky top-0 z-10">
                   <tr>
