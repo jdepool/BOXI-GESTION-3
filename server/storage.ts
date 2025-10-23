@@ -930,6 +930,9 @@ export class DatabaseStorage implements IStorage {
     // Build conditions array
     const conditions = [];
     
+    // ALWAYS exclude "Entregado" orders from Despachos view
+    conditions.push(ne(sales.estadoEntrega, 'Entregado'));
+    
     // Base condition: only include orders in dispatch pipeline (unless specific status filter is provided)
     if (filters?.estadoEntrega) {
       // If specific status is provided, use that instead of base condition
