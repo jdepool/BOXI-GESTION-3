@@ -6,10 +6,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { DateRangePicker } from "@/components/shared/date-range-picker";
-import { Download, Package, ChevronLeft, ChevronRight, Filter, ChevronDown, ChevronUp, RotateCcw } from "lucide-react";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Download, Package, ChevronLeft, ChevronRight, Filter, ChevronDown, ChevronUp, RotateCcw, CalendarIcon } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
 import type { Sale } from "@shared/schema";
 
 interface DispatchTableProps {
@@ -51,6 +54,9 @@ export default function DispatchTable({
   const [editingNotesId, setEditingNotesId] = useState<string | null>(null);
   const [notesValue, setNotesValue] = useState("");
   const [originalNotesValue, setOriginalNotesValue] = useState("");
+  const [editingNroGuiaId, setEditingNroGuiaId] = useState<string | null>(null);
+  const [nroGuiaValue, setNroGuiaValue] = useState("");
+  const [originalNroGuiaValue, setOriginalNroGuiaValue] = useState("");
   const [filtersVisible, setFiltersVisible] = useState(false);
   
   // Debounced search - local state for immediate UI updates
@@ -256,6 +262,119 @@ export default function DispatchTable({
     } else {
       setEditingNotesId(null);
     }
+  };
+
+  const updateNroGuiaMutation = useMutation({
+    mutationFn: async ({ saleId, nroGuia }: { saleId: string; nroGuia: string }) => {
+      return apiRequest("PUT", `/api/sales/${saleId}/nro-guia`, { nroGuia });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ 
+        predicate: (query) => Array.isArray(query.queryKey) && typeof query.queryKey[0] === 'string' && query.queryKey[0].startsWith('/api/sales')
+      });
+      setEditingNroGuiaId(null);
+      toast({
+        title: "Nro Guía actualizado",
+        description: "El número de guía ha sido guardado correctamente.",
+      });
+    },
+    onError: (error) => {
+      console.error('Failed to update nro guia:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo guardar el número de guía.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const updateFechaDespachoMutation = useMutation({
+    mutationFn: async ({ saleId, fechaDespacho }: { saleId: string; fechaDespacho: string | null }) => {
+      return apiRequest("PUT", `/api/sales/${saleId}/fecha-despacho`, { fechaDespacho });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ 
+        predicate: (query) => Array.isArray(query.queryKey) && typeof query.queryKey[0] === 'string' && query.queryKey[0].startsWith('/api/sales')
+      });
+      toast({
+        title: "Fecha Despacho actualizada",
+        description: "La fecha de despacho ha sido actualizada correctamente.",
+      });
+    },
+    onError: (error) => {
+      console.error('Failed to update fecha despacho:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo actualizar la fecha de despacho.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleNroGuiaClick = (sale: Sale) => {
+    setEditingNroGuiaId(sale.id);
+    const currentNroGuia = sale.nroGuia || "";
+    setNroGuiaValue(currentNroGuia);
+    setOriginalNroGuiaValue(currentNroGuia);
+  };
+
+  const handleNroGuiaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setNroGuiaValue(e.target.value);
+  };
+
+  const handleNroGuiaBlur = () => {
+    if (editingNroGuiaId && nroGuiaValue.trim() !== originalNroGuiaValue) {
+      updateNroGuiaMutation.mutate({ 
+        saleId: editingNroGuiaId, 
+        nroGuia: nroGuiaValue.trim() 
+      });
+    } else {
+      setEditingNroGuiaId(null);
+    }
+  };
+
+  const handleNroGuiaKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (editingNroGuiaId && nroGuiaValue.trim() !== originalNroGuiaValue) {
+        updateNroGuiaMutation.mutate({ 
+          saleId: editingNroGuiaId, 
+          nroGuia: nroGuiaValue.trim() 
+        });
+      } else {
+        setEditingNroGuiaId(null);
+      }
+    } else if (e.key === 'Escape') {
+      setEditingNroGuiaId(null);
+    }
+  };
+
+  const handleFechaDespachoChange = (saleId: string, date: Date | undefined) => {
+    if (date) {
+      // Format date as YYYY-MM-DD
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const fechaDespacho = `${year}-${month}-${day}`;
+      
+      updateFechaDespachoMutation.mutate({ saleId, fechaDespacho });
+    } else {
+      updateFechaDespachoMutation.mutate({ saleId, fechaDespacho: null });
+    }
+  };
+
+  // Helper to parse date string to Date object
+  const parseFechaDespacho = (dateStr: string | null): Date | undefined => {
+    if (!dateStr) return undefined;
+    const [year, month, day] = dateStr.split('-').map(Number);
+    return new Date(year, month - 1, day);
+  };
+
+  // Helper to format date for display
+  const formatFechaDespacho = (dateStr: string | null): string => {
+    if (!dateStr) return '-';
+    const [year, month, day] = dateStr.split('-');
+    return `${day}/${month}/${year}`;
   };
 
   const handleNotesKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -495,6 +614,8 @@ export default function DispatchTable({
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[150px]">Asesor</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[200px]">Notas</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[180px]">Transportista</th>
+                    <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[150px]">Nro Guía</th>
+                    <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[150px]">Fecha Despacho</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[150px]">Acciones</th>
                   </tr>
                 </thead>
@@ -659,6 +780,57 @@ export default function DispatchTable({
                             ))}
                           </SelectContent>
                         </Select>
+                      </td>
+                      
+                      <td className="p-2 min-w-[150px] text-xs">
+                        {editingNroGuiaId === sale.id ? (
+                          <Input
+                            value={nroGuiaValue}
+                            onChange={handleNroGuiaChange}
+                            onBlur={handleNroGuiaBlur}
+                            onKeyDown={handleNroGuiaKeyDown}
+                            maxLength={100}
+                            placeholder="Agregar nro guía..."
+                            className="h-7 text-xs"
+                            autoFocus
+                            data-testid={`nro-guia-input-${sale.id}`}
+                          />
+                        ) : (
+                          <div 
+                            className="text-xs text-muted-foreground truncate cursor-pointer hover:bg-muted/50 rounded px-2 py-1 min-h-[28px] flex items-center"
+                            title={sale.nroGuia || "Click para agregar nro guía"}
+                            onClick={() => handleNroGuiaClick(sale)}
+                            data-testid={`nro-guia-display-${sale.id}`}
+                          >
+                            {sale.nroGuia || 'Click para agregar'}
+                          </div>
+                        )}
+                      </td>
+                      
+                      <td className="p-2 min-w-[150px] text-xs">
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="outline"
+                              className={cn(
+                                "w-full h-8 justify-start text-left font-normal text-xs",
+                                !sale.fechaDespacho && "text-muted-foreground"
+                              )}
+                              data-testid={`fecha-despacho-button-${sale.id}`}
+                            >
+                              <CalendarIcon className="mr-2 h-3 w-3" />
+                              {sale.fechaDespacho ? formatFechaDespacho(sale.fechaDespacho) : "Seleccionar"}
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar
+                              mode="single"
+                              selected={parseFechaDespacho(sale.fechaDespacho)}
+                              onSelect={(date) => handleFechaDespachoChange(sale.id, date)}
+                              initialFocus
+                            />
+                          </PopoverContent>
+                        </Popover>
                       </td>
                       
                       <td className="p-2 min-w-[150px] text-xs">

@@ -1038,6 +1038,24 @@ export class DatabaseStorage implements IStorage {
     return updatedSale || undefined;
   }
 
+  async updateSaleNroGuia(id: string, nroGuia: string | null): Promise<Sale | undefined> {
+    const [updatedSale] = await db
+      .update(sales)
+      .set({ nroGuia, updatedAt: new Date() })
+      .where(eq(sales.id, id))
+      .returning();
+    return updatedSale || undefined;
+  }
+
+  async updateSaleFechaDespacho(id: string, fechaDespacho: string | null): Promise<Sale | undefined> {
+    const [updatedSale] = await db
+      .update(sales)
+      .set({ fechaDespacho, updatedAt: new Date() })
+      .where(eq(sales.id, id))
+      .returning();
+    return updatedSale || undefined;
+  }
+
   async updateSaleTipo(id: string, tipo: string): Promise<Sale | undefined> {
     const [updatedSale] = await db
       .update(sales)

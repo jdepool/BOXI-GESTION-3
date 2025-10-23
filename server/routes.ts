@@ -1169,6 +1169,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         'Fecha': new Date(sale.fecha).toLocaleDateString('es-ES'),
         'Total USD': sale.totalUsd,
         
+        // Shipping fields
+        'Nro Guía': sale.nroGuia || '',
+        'Fecha Despacho': sale.fechaDespacho ? (() => {
+          const [year, month, day] = sale.fechaDespacho.split('-');
+          return `${day}/${month}/${year}`;
+        })() : '',
+        
         // Billing Address
         'País (Facturación)': sale.direccionFacturacionPais || '',
         'Estado (Facturación)': sale.direccionFacturacionEstado || '',
@@ -2440,6 +2447,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Update transportista error:", error);
       res.status(500).json({ error: "Failed to update transportista" });
+    }
+  });
+
+  // Update sale nroGuia
+  app.put("/api/sales/:saleId/nro-guia", async (req, res) => {
+    try {
+      const { saleId } = req.params;
+      const { nroGuia } = req.body;
+
+      // Validate that sale exists
+      const existingSale = await storage.getSaleById(saleId);
+      if (!existingSale) {
+        return res.status(404).json({ error: "Sale not found" });
+      }
+
+      const updatedSale = await storage.updateSaleNroGuia(saleId, nroGuia || null);
+      
+      if (!updatedSale) {
+        return res.status(500).json({ error: "Failed to update nro guia" });
+      }
+
+      res.json({ success: true, sale: updatedSale });
+    } catch (error) {
+      console.error("Update nro guia error:", error);
+      res.status(500).json({ error: "Failed to update nro guia" });
+    }
+  });
+
+  // Update sale fechaDespacho
+  app.put("/api/sales/:saleId/fecha-despacho", async (req, res) => {
+    try {
+      const { saleId } = req.params;
+      const { fechaDespacho } = req.body;
+
+      // Validate that sale exists
+      const existingSale = await storage.getSaleById(saleId);
+      if (!existingSale) {
+        return res.status(404).json({ error: "Sale not found" });
+      }
+
+      const updatedSale = await storage.updateSaleFechaDespacho(saleId, fechaDespacho || null);
+      
+      if (!updatedSale) {
+        return res.status(500).json({ error: "Failed to update fecha despacho" });
+      }
+
+      res.json({ success: true, sale: updatedSale });
+    } catch (error) {
+      console.error("Update fecha despacho error:", error);
+      res.status(500).json({ error: "Failed to update fecha despacho" });
     }
   });
 

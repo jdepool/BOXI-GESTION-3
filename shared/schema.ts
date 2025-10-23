@@ -217,6 +217,9 @@ export const sales = pgTable("sales", {
   asesorId: varchar("asesor_id"),
   // Transportista asignado
   transportistaId: varchar("transportista_id"),
+  // Shipping tracking
+  nroGuia: varchar("nro_guia", { length: 100 }),
+  fechaDespacho: varchar("fecha_despacho", { length: 10 }),
   // Email tracking
   emailSentAt: timestamp("email_sent_at"),
   // Verification fields for Pago Inicial
