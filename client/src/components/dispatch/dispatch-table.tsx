@@ -566,7 +566,7 @@ export default function DispatchTable({
                 placeholder="Buscar por orden"
                 value={searchInputValue}
                 onChange={(e) => setSearchInputValue(e.target.value)}
-                className="w-80"
+                className="w-40"
                 data-testid="filter-search"
               />
             </div>
