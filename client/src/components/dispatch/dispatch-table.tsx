@@ -311,6 +311,29 @@ export default function DispatchTable({
     },
   });
 
+  const updateFechaClienteMutation = useMutation({
+    mutationFn: async ({ saleId, fechaCliente }: { saleId: string; fechaCliente: string | null }) => {
+      return apiRequest("PUT", `/api/sales/${saleId}/fecha-cliente`, { fechaCliente });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ 
+        predicate: (query) => Array.isArray(query.queryKey) && typeof query.queryKey[0] === 'string' && query.queryKey[0].startsWith('/api/sales')
+      });
+      toast({
+        title: "Fecha Cliente actualizada",
+        description: "La fecha de recepción del cliente ha sido actualizada correctamente.",
+      });
+    },
+    onError: (error) => {
+      console.error('Failed to update fecha cliente:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo actualizar la fecha de recepción del cliente.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleNroGuiaClick = (sale: Sale) => {
     setEditingNroGuiaId(sale.id);
     const currentNroGuia = sale.nroGuia || "";
@@ -360,6 +383,20 @@ export default function DispatchTable({
       updateFechaDespachoMutation.mutate({ saleId, fechaDespacho });
     } else {
       updateFechaDespachoMutation.mutate({ saleId, fechaDespacho: null });
+    }
+  };
+
+  const handleFechaClienteChange = (saleId: string, date: Date | undefined) => {
+    if (date) {
+      // Format date as YYYY-MM-DD
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const fechaCliente = `${year}-${month}-${day}`;
+      
+      updateFechaClienteMutation.mutate({ saleId, fechaCliente });
+    } else {
+      updateFechaClienteMutation.mutate({ saleId, fechaCliente: null });
     }
   };
 
@@ -617,6 +654,7 @@ export default function DispatchTable({
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[180px]">Transportista</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[150px]">Nro Guía</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[150px]">Fecha Despacho</th>
+                    <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[150px]">Fecha Cliente</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[150px]">Acciones</th>
                   </tr>
                 </thead>
@@ -828,6 +866,32 @@ export default function DispatchTable({
                               mode="single"
                               selected={parseFechaDespacho(sale.fechaDespacho)}
                               onSelect={(date) => handleFechaDespachoChange(sale.id, date)}
+                              initialFocus
+                            />
+                          </PopoverContent>
+                        </Popover>
+                      </td>
+                      
+                      <td className="p-2 min-w-[150px] text-xs">
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="outline"
+                              className={cn(
+                                "w-full h-8 justify-start text-left font-normal text-xs",
+                                !sale.fechaCliente && "text-muted-foreground"
+                              )}
+                              data-testid={`fecha-cliente-button-${sale.id}`}
+                            >
+                              <CalendarIcon className="mr-2 h-3 w-3" />
+                              {sale.fechaCliente ? formatFechaDespacho(sale.fechaCliente) : "Seleccionar"}
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar
+                              mode="single"
+                              selected={parseFechaDespacho(sale.fechaCliente)}
+                              onSelect={(date) => handleFechaClienteChange(sale.id, date)}
                               initialFocus
                             />
                           </PopoverContent>
