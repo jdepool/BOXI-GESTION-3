@@ -543,7 +543,7 @@ export const prospectos = pgTable("prospectos", {
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => ({
-  estadoProspectoCheck: check("estado_prospecto_check", sql`${table.estadoProspecto} IN ('Activo', 'Fallido', 'Convertido')`),
+  estadoProspectoCheck: check("estado_prospecto_check", sql`${table.estadoProspecto} IN ('Activo', 'Perdido', 'Convertido')`),
 }));
 
 export const insertProspectoSchema = createInsertSchema(prospectos).omit({

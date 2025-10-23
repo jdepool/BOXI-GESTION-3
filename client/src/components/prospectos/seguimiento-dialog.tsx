@@ -24,7 +24,7 @@ interface SeguimientoDialogProps {
     fechaSeguimiento3?: string | null;
     respuestaSeguimiento3?: string;
   }) => void;
-  onMarkAsFallido?: (prospectoId: string, seguimientoData: {
+  onMarkAsPerdido?: (prospectoId: string, seguimientoData: {
     fechaSeguimiento1?: string | null;
     respuestaSeguimiento1?: string;
     fechaSeguimiento2?: string | null;
@@ -40,7 +40,7 @@ export default function SeguimientoDialog({
   onOpenChange,
   prospecto,
   onSave,
-  onMarkAsFallido,
+  onMarkAsPerdido,
   isSaving,
 }: SeguimientoDialogProps) {
   const [fecha1, setFecha1] = useState<Date | undefined>();
@@ -49,7 +49,7 @@ export default function SeguimientoDialog({
   const [respuesta2, setRespuesta2] = useState("");
   const [fecha3, setFecha3] = useState<Date | undefined>();
   const [respuesta3, setRespuesta3] = useState("");
-  const [showFallidoConfirm, setShowFallidoConfirm] = useState(false);
+  const [showPerdidoConfirm, setShowPerdidoConfirm] = useState(false);
   
   // Track manual edits during current session to prevent overwriting user changes
   const [manuallyEditedFecha1, setManuallyEditedFecha1] = useState(false);
@@ -265,8 +265,8 @@ export default function SeguimientoDialog({
     });
   };
 
-  const handleMarkAsFallido = () => {
-    if (prospecto && onMarkAsFallido) {
+  const handleMarkAsPerdido = () => {
+    if (prospecto && onMarkAsPerdido) {
       const seguimientoData = {
         fechaSeguimiento1: fecha1 ? formatDateOnly(fecha1) : null,
         respuestaSeguimiento1: respuesta1 || "",
@@ -275,8 +275,8 @@ export default function SeguimientoDialog({
         fechaSeguimiento3: fecha3 ? formatDateOnly(fecha3) : null,
         respuestaSeguimiento3: respuesta3 || "",
       };
-      onMarkAsFallido(prospecto.id, seguimientoData);
-      setShowFallidoConfirm(false);
+      onMarkAsPerdido(prospecto.id, seguimientoData);
+      setShowPerdidoConfirm(false);
     }
   };
 
@@ -435,11 +435,11 @@ export default function SeguimientoDialog({
         <div className="flex justify-between gap-2">
           <Button
             variant="destructive"
-            onClick={() => setShowFallidoConfirm(true)}
+            onClick={() => setShowPerdidoConfirm(true)}
             disabled={isSaving}
-            data-testid="button-mark-fallido"
+            data-testid="button-mark-perdido"
           >
-            Marcar como Fallido
+            Perdido
           </Button>
           <div className="flex gap-2">
             <Button
@@ -463,24 +463,24 @@ export default function SeguimientoDialog({
         )}
       </DialogContent>
 
-      <AlertDialog open={showFallidoConfirm} onOpenChange={setShowFallidoConfirm}>
+      <AlertDialog open={showPerdidoConfirm} onOpenChange={setShowPerdidoConfirm}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>¿Marcar como Fallido?</AlertDialogTitle>
+            <AlertDialogTitle>¿Marcar como Perdido?</AlertDialogTitle>
             <AlertDialogDescription>
-              Esta acción marcará el prospecto "{prospecto.nombre}" como Fallido. 
-              Los prospectos fallidos se ocultan de la vista predeterminada pero pueden verse usando el filtro de estado.
+              Esta acción marcará el prospecto "{prospecto.nombre}" como Perdido. 
+              Los prospectos perdidos podrán consultarse posteriormente a través de un reporte dedicado.
               ¿Está seguro que desea continuar?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel data-testid="button-cancel-fallido">Cancelar</AlertDialogCancel>
+            <AlertDialogCancel data-testid="button-cancel-perdido">Cancelar</AlertDialogCancel>
             <AlertDialogAction 
-              onClick={handleMarkAsFallido}
-              data-testid="button-confirm-fallido"
+              onClick={handleMarkAsPerdido}
+              data-testid="button-confirm-perdido"
               className="bg-red-600 hover:bg-red-700"
             >
-              Marcar como Fallido
+              Marcar como Perdido
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

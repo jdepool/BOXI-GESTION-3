@@ -151,7 +151,7 @@ export default function ProspectosTable({
   const currentPage = Math.floor(offset / limit) + 1;
   const totalPages = Math.ceil(total / limit);
 
-  const hasActiveFilters = !!(filters?.asesorId || (filters?.estadoProspecto && filters.estadoProspecto !== 'Activo') || filters?.canal || filters?.prospecto || filters?.startDate || filters?.endDate);
+  const hasActiveFilters = !!(filters?.asesorId || filters?.canal || filters?.prospecto || filters?.startDate || filters?.endDate);
 
   const { data: asesores = [] } = useQuery<Array<{ id: string; nombre: string; activo: boolean }>>({
     queryKey: ["/api/admin/asesores"],
@@ -170,7 +170,6 @@ export default function ProspectosTable({
       if (key === "asesorId" && value === "all") {
         normalizedValue = "";
       }
-      // Don't normalize estadoProspecto - pass the value directly
       onFilterChange({ [key]: normalizedValue });
     }
   };
@@ -208,10 +207,6 @@ export default function ProspectosTable({
       
       if (filters?.asesorId) {
         queryParams.append('asesorId', filters.asesorId);
-      }
-
-      if (filters?.estadoProspecto) {
-        queryParams.append('estadoProspecto', filters.estadoProspecto);
       }
 
       if (filters?.canal) {
@@ -272,7 +267,7 @@ export default function ProspectosTable({
     },
   });
 
-  const markAsFallidoMutation = useMutation({
+  const markAsPerdidoMutation = useMutation({
     mutationFn: async ({ prospectoId, seguimientoData }: { prospectoId: string; seguimientoData: any }) => {
       try {
         // First save seguimiento data - apiRequest throws on error
@@ -286,12 +281,12 @@ export default function ProspectosTable({
       }
       
       try {
-        // Only proceed to mark as Fallido if seguimiento was saved successfully
-        const fallidoResponse = await apiRequest("PATCH", `/api/prospectos/${prospectoId}`, { estadoProspecto: "Fallido" });
-        return fallidoResponse.json();
+        // Only proceed to mark as Perdido if seguimiento was saved successfully
+        const perdidoResponse = await apiRequest("PATCH", `/api/prospectos/${prospectoId}`, { estadoProspecto: "Perdido" });
+        return perdidoResponse.json();
       } catch (error) {
         // Tag the error so we can identify it in onError
-        const wrappedError: any = new Error("FALLIDO_UPDATE_FAILED");
+        const wrappedError: any = new Error("PERDIDO_UPDATE_FAILED");
         wrappedError.originalError = error;
         throw wrappedError;
       }
@@ -299,10 +294,10 @@ export default function ProspectosTable({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/prospectos"] });
       setSeguimientoDialogOpen(false);
-      toast({ title: "Prospecto marcado como Fallido" });
+      toast({ title: "Prospecto marcado como Perdido" });
     },
     onError: (error: any) => {
-      console.error("Error marking as fallido:", error);
+      console.error("Error marking as perdido:", error);
       
       // Provide specific error messages based on which step failed
       if (error?.message === "SEGUIMIENTO_SAVE_FAILED") {
@@ -311,10 +306,10 @@ export default function ProspectosTable({
           description: "No se pudieron guardar los cambios de seguimiento. Por favor intente de nuevo.",
           variant: "destructive",
         });
-      } else if (error?.message === "FALLIDO_UPDATE_FAILED") {
+      } else if (error?.message === "PERDIDO_UPDATE_FAILED") {
         toast({
           title: "Error al actualizar estado",
-          description: "El seguimiento se guardó pero no se pudo marcar como Fallido. Por favor intente de nuevo.",
+          description: "El seguimiento se guardó pero no se pudo marcar como Perdido. Por favor intente de nuevo.",
           variant: "destructive",
         });
       } else {
@@ -408,23 +403,6 @@ export default function ProspectosTable({
                     <SelectItem value="Treble" data-testid="option-canal-treble">Treble</SelectItem>
                     <SelectItem value="Tienda" data-testid="option-canal-tienda">Tienda</SelectItem>
                     <SelectItem value="Manual" data-testid="option-canal-manual">Manual</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <label className="text-sm font-medium mb-1 block">Estado:</label>
-                <Select
-                  value={filters?.estadoProspecto || "Activo"}
-                  onValueChange={(value) => handleFilterChange("estadoProspecto", value)}
-                  data-testid="select-filter-estado"
-                >
-                  <SelectTrigger className="w-40">
-                    <SelectValue placeholder="Filtrar por estado" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Activo" data-testid="option-estado-activo">Activos</SelectItem>
-                    <SelectItem value="Fallido" data-testid="option-estado-fallido">Fallidos</SelectItem>
-                    <SelectItem value="Convertido" data-testid="option-estado-convertido">Convertidos</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -533,7 +511,7 @@ export default function ProspectosTable({
                         className={`text-xs ${
                           prospecto.estadoProspecto === "Activo" 
                             ? "bg-blue-100 text-blue-800 hover:bg-blue-200" 
-                            : prospecto.estadoProspecto === "Fallido" 
+                            : prospecto.estadoProspecto === "Perdido" 
                             ? "bg-red-100 text-red-800 hover:bg-red-200" 
                             : "bg-green-100 text-green-800 hover:bg-green-200"
                         }`}
@@ -674,10 +652,10 @@ export default function ProspectosTable({
             });
           }
         }}
-        onMarkAsFallido={(prospectoId, seguimientoData) => {
-          markAsFallidoMutation.mutate({ prospectoId, seguimientoData });
+        onMarkAsPerdido={(prospectoId, seguimientoData) => {
+          markAsPerdidoMutation.mutate({ prospectoId, seguimientoData });
         }}
-        isSaving={saveSeguimientoMutation.isPending || markAsFallidoMutation.isPending}
+        isSaving={saveSeguimientoMutation.isPending || markAsPerdidoMutation.isPending}
       />
     </>
   );
