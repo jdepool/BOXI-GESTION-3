@@ -267,17 +267,6 @@ export default function FleteModal({ open, onOpenChange, sale }: FleteModalProps
                 <Badge variant="secondary">{sale.tipo || 'Inmediato'}</Badge>
               </div>
             </div>
-            
-            {/* Centered Flete A Pagar Display */}
-            <div className="mt-4 pt-4 border-t border-border flex justify-center">
-              <div className="flex items-center gap-2 bg-primary/10 px-6 py-3 rounded-lg">
-                <DollarSign className="h-5 w-5 text-primary" />
-                <span className="text-base font-bold text-primary">Flete A Pagar:</span>
-                <span className="text-lg font-bold text-primary" data-testid="display-flete-a-pagar">
-                  {fleteData.fleteAPagar ? `$${parseFloat(fleteData.fleteAPagar).toFixed(2)}` : '$0.00'}
-                </span>
-              </div>
-            </div>
           </div>
 
           <Separator />
