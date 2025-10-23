@@ -70,6 +70,17 @@ function getSeguimientoStatus(
     return dateStr;
   };
 
+  // Add days to a YYYY-MM-DD string without using date-fns
+  const addDaysToDateStr = (dateStr: string, days: number): string => {
+    const [year, month, day] = dateStr.split('-').map(Number);
+    const date = new Date(year, month - 1, day);
+    date.setDate(date.getDate() + days);
+    const newYear = date.getFullYear();
+    const newMonth = String(date.getMonth() + 1).padStart(2, '0');
+    const newDay = String(date.getDate()).padStart(2, '0');
+    return `${newYear}-${newMonth}-${newDay}`;
+  };
+
   // Parse date string to local Date object without timezone conversion
   const parseLocalDate = (dateStr: string): Date => {
     const [year, month, day] = dateStr.split('-').map(Number);
@@ -86,7 +97,7 @@ function getSeguimientoStatus(
   
   // Calculate fase 1 date
   const fase1Extracted = extractDate(prospecto.fechaSeguimiento1);
-  const fase1Str = fase1Extracted || format(addDays(parseLocalDate(registrationDateStr), diasFase1), "yyyy-MM-dd");
+  const fase1Str = fase1Extracted || addDaysToDateStr(registrationDateStr, diasFase1);
   
   // Calculate fase 2 date
   const fase2Extracted = extractDate(prospecto.fechaSeguimiento2);
@@ -95,10 +106,10 @@ function getSeguimientoStatus(
     fase2Str = fase2Extracted;
   } else if (fase1Extracted) {
     // If fase1 was manually set, add diasFase2 to it
-    fase2Str = format(addDays(parseLocalDate(fase1Extracted), diasFase2), "yyyy-MM-dd");
+    fase2Str = addDaysToDateStr(fase1Extracted, diasFase2);
   } else {
     // If fase1 was not set, calculate from registration date
-    fase2Str = format(addDays(parseLocalDate(registrationDateStr), diasFase1 + diasFase2), "yyyy-MM-dd");
+    fase2Str = addDaysToDateStr(registrationDateStr, diasFase1 + diasFase2);
   }
   
   // Calculate fase 3 date
@@ -108,10 +119,10 @@ function getSeguimientoStatus(
     fase3Str = fase3Extracted;
   } else if (fase2Extracted) {
     // If fase2 was manually set, add diasFase3 to it
-    fase3Str = format(addDays(parseLocalDate(fase2Extracted), diasFase3), "yyyy-MM-dd");
+    fase3Str = addDaysToDateStr(fase2Extracted, diasFase3);
   } else {
     // If fase2 was not set, calculate from registration date
-    fase3Str = format(addDays(parseLocalDate(registrationDateStr), diasFase1 + diasFase2 + diasFase3), "yyyy-MM-dd");
+    fase3Str = addDaysToDateStr(registrationDateStr, diasFase1 + diasFase2 + diasFase3);
   }
 
   // Determine current phase based on completed phases
