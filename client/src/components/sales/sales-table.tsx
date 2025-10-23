@@ -337,7 +337,6 @@ export default function SalesTable({
   // Seguimiento mutation - updates ALL sales with same order number
   const saveSeguimientoOrdenMutation = useMutation({
     mutationFn: async ({ orden, seguimientoData }: { orden: string; seguimientoData: any }) => {
-      console.log('[DEBUG] Saving seguimiento for orden:', orden, 'data:', seguimientoData);
       if (!orden || orden.trim() === '') {
         throw new Error('Order number is required');
       }
@@ -947,7 +946,7 @@ export default function SalesTable({
                     {showSeguimientoColumns && (
                       <td className="p-2 min-w-[90px]">
                         {(() => {
-                          const { phase, status } = getSeguimientoStatusOrden(
+                          const { phase, status, dateStr } = getSeguimientoStatusOrden(
                             sale,
                             seguimientoConfig?.diasFase1 ?? 2,
                             seguimientoConfig?.diasFase2 ?? 4,
@@ -965,9 +964,19 @@ export default function SalesTable({
                             : "bg-green-500 hover:bg-green-600";
                           
                           return (
-                            <Badge className={`${badgeClass} text-white font-semibold px-2 py-1`}>
-                              {phase}
-                            </Badge>
+                            <div className="flex items-center gap-2">
+                              <Badge className={`${badgeClass} text-white font-semibold px-2 py-1`}>
+                                {phase}
+                              </Badge>
+                              {status === "future" && dateStr && (
+                                <span className="text-xs text-muted-foreground">
+                                  {(() => {
+                                    const [year, month, day] = dateStr.split('-');
+                                    return `${day}/${month}`;
+                                  })()}
+                                </span>
+                              )}
+                            </div>
                           );
                         })()}
                       </td>
@@ -1147,8 +1156,6 @@ export default function SalesTable({
           sale={selectedSaleForSeguimiento}
           allOrderItems={data.filter(s => s.orden === selectedSaleForSeguimiento.orden)}
           onSave={(seguimientoData) => {
-            console.log('[DEBUG] onSave called, selectedSale:', selectedSaleForSeguimiento);
-            console.log('[DEBUG] orden value:', selectedSaleForSeguimiento?.orden);
             if (selectedSaleForSeguimiento?.orden) {
               saveSeguimientoOrdenMutation.mutate({
                 orden: selectedSaleForSeguimiento.orden,

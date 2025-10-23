@@ -13,11 +13,26 @@ export function getSeguimientoStatusOrden(
   phase: number | null;
   status: "overdue" | "today" | "future" | null;
   date: Date | null;
+  dateStr: string | null;
 } {
-  // Extract date-only string from ISO timestamp or date-only string
-  const extractDate = (isoDate: string | Date) => {
-    const dateStr = typeof isoDate === 'string' ? isoDate : isoDate.toISOString();
-    return dateStr.split('T')[0]; // YYYY-MM-DD
+  // Extract date-only string from ISO timestamp or YYYY-MM-DD string
+  const extractDate = (dateValue: string | Date | null | undefined): string | null => {
+    if (!dateValue) return null;
+    
+    const dateStr = typeof dateValue === 'string' ? dateValue : dateValue.toISOString();
+    
+    // If already in YYYY-MM-DD format (10 chars, matches pattern)
+    if (dateStr.length === 10 && /^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+      return dateStr;
+    }
+    
+    // Extract from ISO timestamp (has 'T')
+    if (dateStr.includes('T')) {
+      return dateStr.split('T')[0];
+    }
+    
+    // Fallback: just return the string
+    return dateStr;
   };
 
   // Parse date string to local Date object without timezone conversion
@@ -30,20 +45,26 @@ export function getSeguimientoStatusOrden(
   
   // Determine which phase we're in and the next follow-up date
   const orderDateStr = extractDate(sale.fecha);
+  if (!orderDateStr) {
+    return { phase: null, status: null, date: null, dateStr: null };
+  }
+  
   const fase1Str = sale.fechaSeguimiento1 
     ? extractDate(sale.fechaSeguimiento1) 
     : format(addDays(parseLocalDate(orderDateStr), diasFase1), "yyyy-MM-dd");
   
+  const fase1Extracted = extractDate(sale.fechaSeguimiento1);
   const fase2Str = sale.fechaSeguimiento2 
     ? extractDate(sale.fechaSeguimiento2) 
-    : (sale.fechaSeguimiento1 
-      ? format(addDays(parseLocalDate(extractDate(sale.fechaSeguimiento1)), diasFase2), "yyyy-MM-dd")
+    : (fase1Extracted
+      ? format(addDays(parseLocalDate(fase1Extracted), diasFase2), "yyyy-MM-dd")
       : format(addDays(parseLocalDate(orderDateStr), diasFase1 + diasFase2), "yyyy-MM-dd"));
   
+  const fase2Extracted = extractDate(sale.fechaSeguimiento2);
   const fase3Str = sale.fechaSeguimiento3 
     ? extractDate(sale.fechaSeguimiento3) 
-    : (sale.fechaSeguimiento2 
-      ? format(addDays(parseLocalDate(extractDate(sale.fechaSeguimiento2)), diasFase3), "yyyy-MM-dd")
+    : (fase2Extracted
+      ? format(addDays(parseLocalDate(fase2Extracted), diasFase3), "yyyy-MM-dd")
       : format(addDays(parseLocalDate(orderDateStr), diasFase1 + diasFase2 + diasFase3), "yyyy-MM-dd"));
 
   // Determine current phase based on completed phases
@@ -61,7 +82,12 @@ export function getSeguimientoStatusOrden(
 
   // If all phases completed, no more follow-ups needed
   if (sale.respuestaSeguimiento3) {
-    return { phase: null, status: null, date: null };
+    return { phase: null, status: null, date: null, dateStr: null };
+  }
+
+  // Ensure nextDateStr is not null
+  if (!nextDateStr) {
+    return { phase: null, status: null, date: null, dateStr: null };
   }
 
   // Determine status relative to today
@@ -77,6 +103,7 @@ export function getSeguimientoStatusOrden(
   return {
     phase: currentPhase,
     status,
-    date: parseLocalDate(nextDateStr)
+    date: parseLocalDate(nextDateStr),
+    dateStr: nextDateStr
   };
 }
