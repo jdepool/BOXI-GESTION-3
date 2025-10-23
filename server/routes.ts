@@ -797,11 +797,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const query = getSalesQuerySchema.parse(req.query);
       
-      console.log('🔍 Sales API Query:', { 
-        estadoEntrega: query.estadoEntrega, 
-        excludePerdida: query.excludePerdida 
-      });
-      
       // Normalize asesorId filter values
       let normalizedAsesorId = query.asesorId;
       if (query.asesorId === 'all') {

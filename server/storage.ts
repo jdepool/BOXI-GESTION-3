@@ -493,7 +493,9 @@ export class DatabaseStorage implements IStorage {
         ne(sales.estadoEntrega, "A despachar")
       );
     }
-    if (filters?.excludePerdida) {
+    // Only apply excludePerdida if estadoEntrega is not explicitly set
+    // This prevents conflict when user explicitly filters for "Perdida" status
+    if (filters?.excludePerdida && !filters?.estadoEntrega) {
       // Exclude orders with estadoEntrega "Perdida" - lost sales hidden by default
       conditions.push(
         ne(sales.estadoEntrega, "Perdida")
@@ -1352,7 +1354,9 @@ export class DatabaseStorage implements IStorage {
         ne(sales.estadoEntrega, "A despachar")
       );
     }
-    if (filters?.excludePerdida) {
+    // Only apply excludePerdida if estadoEntrega is not explicitly set
+    // This prevents conflict when user explicitly filters for "Perdida" status
+    if (filters?.excludePerdida && !filters?.estadoEntrega) {
       // Exclude orders with estadoEntrega "Perdida" - lost sales hidden by default
       conditions.push(
         ne(sales.estadoEntrega, "Perdida")
