@@ -670,10 +670,14 @@ export default function SalesTable({
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[140px]">Producto</th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[100px]">SKU</th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[80px]">Cantidad</th>
-                <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[110px]">Pago Inicial/Total USD</th>
-                <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[120px]">Referencia</th>
-                <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[100px]">Banco</th>
-                <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[110px]">Monto Bs</th>
+                {activeTab !== "inmediatas" && activeTab !== "reservas" && (
+                  <>
+                    <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[110px]">Pago Inicial/Total USD</th>
+                    <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[120px]">Referencia</th>
+                    <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[100px]">Banco</th>
+                    <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[110px]">Monto Bs</th>
+                  </>
+                )}
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[100px]">Cedula</th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[120px]">Telefono</th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[160px]">Email</th>
@@ -698,7 +702,8 @@ export default function SalesTable({
                   <td colSpan={
                     (showDeliveryDateColumn ? 1 : 0) + 
                     (showSeguimientoColumns ? 1 : 0) + 
-                    (activeTab === "lista" ? 24 : 23)
+                    (activeTab === "lista" ? 24 : 23) -
+                    ((activeTab === "inmediatas" || activeTab === "reservas") ? 4 : 0)
                   } className="text-center p-8 text-muted-foreground">
                     No hay datos disponibles
                   </td>
@@ -790,23 +795,27 @@ export default function SalesTable({
                     <td className="p-2 min-w-[80px] text-xs text-center font-medium text-foreground">
                       {sale.cantidad}
                     </td>
-                    <td className="p-2 min-w-[110px] text-xs text-muted-foreground">
-                      {sale.pagoInicialUsd ? `$${Number(sale.pagoInicialUsd).toLocaleString()}` : 'N/A'}
-                    </td>
-                    <td className="p-2 min-w-[120px] text-xs font-mono text-muted-foreground truncate" title={sale.referenciaInicial || undefined}>
-                      {sale.referenciaInicial || 'N/A'}
-                    </td>
-                    <td className="p-2 min-w-[100px] text-xs text-muted-foreground truncate">
-                      {(() => {
-                        if (!sale.bancoReceptorInicial) return 'N/A';
-                        if (sale.bancoReceptorInicial === 'otro') return 'Otro($)';
-                        const bank = (banks as any[]).find((b: any) => b.id === sale.bancoReceptorInicial);
-                        return bank ? bank.banco : 'N/A';
-                      })()}
-                    </td>
-                    <td className="p-2 min-w-[110px] text-xs text-muted-foreground">
-                      {sale.montoInicialBs ? `Bs ${Number(sale.montoInicialBs).toLocaleString()}` : 'N/A'}
-                    </td>
+                    {activeTab !== "inmediatas" && activeTab !== "reservas" && (
+                      <>
+                        <td className="p-2 min-w-[110px] text-xs text-muted-foreground">
+                          {sale.pagoInicialUsd ? `$${Number(sale.pagoInicialUsd).toLocaleString()}` : 'N/A'}
+                        </td>
+                        <td className="p-2 min-w-[120px] text-xs font-mono text-muted-foreground truncate" title={sale.referenciaInicial || undefined}>
+                          {sale.referenciaInicial || 'N/A'}
+                        </td>
+                        <td className="p-2 min-w-[100px] text-xs text-muted-foreground truncate">
+                          {(() => {
+                            if (!sale.bancoReceptorInicial) return 'N/A';
+                            if (sale.bancoReceptorInicial === 'otro') return 'Otro($)';
+                            const bank = (banks as any[]).find((b: any) => b.id === sale.bancoReceptorInicial);
+                            return bank ? bank.banco : 'N/A';
+                          })()}
+                        </td>
+                        <td className="p-2 min-w-[110px] text-xs text-muted-foreground">
+                          {sale.montoInicialBs ? `Bs ${Number(sale.montoInicialBs).toLocaleString()}` : 'N/A'}
+                        </td>
+                      </>
+                    )}
                     <td className="p-2 min-w-[100px] text-xs text-muted-foreground truncate">
                       {sale.cedula || 'N/A'}
                     </td>
