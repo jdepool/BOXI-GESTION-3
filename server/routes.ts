@@ -2673,6 +2673,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { orden } = req.params;
       const seguimientoData = req.body;
 
+      // Validate orden parameter
+      if (!orden || orden.trim() === '' || orden === 'undefined' || orden === 'null') {
+        return res.status(400).json({ error: "Order number is required" });
+      }
+
       // Validate that order exists
       const existingSales = await storage.getSalesByOrderNumber(orden);
       if (!existingSales || existingSales.length === 0) {

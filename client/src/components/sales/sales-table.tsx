@@ -337,7 +337,11 @@ export default function SalesTable({
   // Seguimiento mutation - updates ALL sales with same order number
   const saveSeguimientoOrdenMutation = useMutation({
     mutationFn: async ({ orden, seguimientoData }: { orden: string; seguimientoData: any }) => {
-      return apiRequest("PATCH", `/api/sales/seguimiento/${orden}`, seguimientoData);
+      console.log('[DEBUG] Saving seguimiento for orden:', orden, 'data:', seguimientoData);
+      if (!orden || orden.trim() === '') {
+        throw new Error('Order number is required');
+      }
+      return apiRequest("PATCH", `/api/sales/seguimiento/${encodeURIComponent(orden)}`, seguimientoData);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ 
@@ -1143,10 +1147,19 @@ export default function SalesTable({
           sale={selectedSaleForSeguimiento}
           allOrderItems={data.filter(s => s.orden === selectedSaleForSeguimiento.orden)}
           onSave={(seguimientoData) => {
-            if (selectedSaleForSeguimiento.orden) {
+            console.log('[DEBUG] onSave called, selectedSale:', selectedSaleForSeguimiento);
+            console.log('[DEBUG] orden value:', selectedSaleForSeguimiento?.orden);
+            if (selectedSaleForSeguimiento?.orden) {
               saveSeguimientoOrdenMutation.mutate({
                 orden: selectedSaleForSeguimiento.orden,
                 seguimientoData
+              });
+            } else {
+              console.error('[ERROR] No orden found in selectedSaleForSeguimiento!');
+              toast({
+                title: "Error",
+                description: "No se puede guardar el seguimiento: falta el número de orden.",
+                variant: "destructive",
               });
             }
           }}
