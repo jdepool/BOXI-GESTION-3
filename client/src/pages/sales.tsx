@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Download } from "lucide-react";
 import Sidebar from "@/components/layout/sidebar";
 import Header from "@/components/layout/header";
 import SalesTable from "@/components/sales/sales-table";
@@ -67,9 +68,9 @@ export default function Sales() {
     queryKey: ["/api/sales", { 
       ...filters, 
       excludePendingManual: true,
-      // When estadoEntrega is explicitly set to "Perdida", include Perdida orders
-      // When estadoEntrega is anything else or empty, exclude Perdida orders  
-      excludePerdida: filters.estadoEntrega !== "Perdida"
+      // Lista de Ventas always excludes Pendiente and Perdida orders
+      excludePerdida: true,
+      excludePendiente: true
     }],
   });
 
@@ -325,6 +326,7 @@ export default function Sales() {
                   hidePagination={false}
                   showDeliveryDateColumn={true}
                   showSeguimientoColumns={true}
+                  hideEstadoEntregaFilter={true}
                   activeTab={activeTab}
                   filters={reservasFilters}
                   extraExportParams={{
@@ -383,7 +385,42 @@ export default function Sales() {
           <DialogHeader>
             <DialogTitle>Configuración y Cargar Datos</DialogTitle>
           </DialogHeader>
-          <div className="mt-4">
+          <div className="mt-4 space-y-6">
+            <div className="bg-muted/50 p-4 rounded-lg border border-border">
+              <h3 className="text-sm font-semibold mb-3">Reportes Especiales</h3>
+              <div className="flex items-center gap-3">
+                <Button
+                  variant="outline"
+                  onClick={async () => {
+                    try {
+                      const response = await fetch('/api/sales/perdida/export');
+                      if (!response.ok) throw new Error('Failed to download report');
+                      
+                      const blob = await response.blob();
+                      const url = window.URL.createObjectURL(blob);
+                      const link = document.createElement('a');
+                      link.href = url;
+                      link.download = `ordenes_perdidas_${new Date().toISOString().split('T')[0]}.xlsx`;
+                      document.body.appendChild(link);
+                      link.click();
+                      document.body.removeChild(link);
+                      window.URL.revokeObjectURL(url);
+                    } catch (error) {
+                      console.error('Error downloading Perdida report:', error);
+                    }
+                  }}
+                  data-testid="button-export-perdida"
+                  className="flex-shrink-0"
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  Exportar Ordenes Perdidas
+                </Button>
+                <p className="text-xs text-muted-foreground">
+                  Descarga un reporte Excel con todas las ordenes marcadas como perdidas.
+                </p>
+              </div>
+            </div>
+            
             <UploadZone recentUploads={recentUploads} />
           </div>
         </DialogContent>

@@ -34,6 +34,7 @@ export interface IStorage {
     excludeReservas?: boolean;
     excludeADespachar?: boolean;
     excludePerdida?: boolean;
+    excludePendiente?: boolean;
     limit?: number;
     offset?: number;
   }): Promise<Sale[]>;
@@ -78,6 +79,7 @@ export interface IStorage {
     excludeReservas?: boolean;
     excludeADespachar?: boolean;
     excludePerdida?: boolean;
+    excludePendiente?: boolean;
   }): Promise<number>;
   getExistingOrderNumbers(orders: string[]): Promise<string[]>;
   getOrdersByOrderNumber(orderNumber: string): Promise<{orden: string; product: string}[]>;
@@ -437,6 +439,7 @@ export class DatabaseStorage implements IStorage {
     excludeReservas?: boolean;
     excludeADespachar?: boolean;
     excludePerdida?: boolean;
+    excludePendiente?: boolean;
     limit?: number;
     offset?: number;
   }): Promise<Sale[]> {
@@ -499,6 +502,12 @@ export class DatabaseStorage implements IStorage {
       // Exclude orders with estadoEntrega "Perdida" - lost sales hidden by default
       conditions.push(
         ne(sales.estadoEntrega, "Perdida")
+      );
+    }
+    if (filters?.excludePendiente) {
+      // Exclude orders with estadoEntrega "Pendiente" - for Lista de Ventas to show only completed sales
+      conditions.push(
+        ne(sales.estadoEntrega, "Pendiente")
       );
     }
     
@@ -1300,6 +1309,7 @@ export class DatabaseStorage implements IStorage {
     excludeReservas?: boolean;
     excludeADespachar?: boolean;
     excludePerdida?: boolean;
+    excludePendiente?: boolean;
   }): Promise<number> {
     const conditions = [];
     if (filters?.canal) {
@@ -1360,6 +1370,12 @@ export class DatabaseStorage implements IStorage {
       // Exclude orders with estadoEntrega "Perdida" - lost sales hidden by default
       conditions.push(
         ne(sales.estadoEntrega, "Perdida")
+      );
+    }
+    if (filters?.excludePendiente) {
+      // Exclude orders with estadoEntrega "Pendiente" - for Lista de Ventas to show only completed sales
+      conditions.push(
+        ne(sales.estadoEntrega, "Pendiente")
       );
     }
     

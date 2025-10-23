@@ -33,6 +33,7 @@ interface SalesTableProps {
   showEditActions?: boolean;
   showDeliveryDateColumn?: boolean;
   showSeguimientoColumns?: boolean;
+  hideEstadoEntregaFilter?: boolean;
   filters?: any;
   extraExportParams?: Record<string, any>;
   onFilterChange?: (filters: any) => void;
@@ -55,6 +56,7 @@ export default function SalesTable({
   showEditActions = false,
   showDeliveryDateColumn = false,
   showSeguimientoColumns = false,
+  hideEstadoEntregaFilter = false,
   filters: parentFilters,
   extraExportParams = {},
   onFilterChange,
@@ -581,29 +583,31 @@ export default function SalesTable({
                   </Select>
                 </div>
 
-                <div>
-                  <label className="text-sm font-medium mb-1 block">Estado de Entrega:</label>
-                  <Select 
-                    value={filters.estadoEntrega || "all"} 
-                    onValueChange={(value) => handleFilterChange('estadoEntrega', value)}
-                  >
-                    <SelectTrigger className="w-40" data-testid="filter-status">
-                      <SelectValue placeholder="Todos los estados" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Todos los estados</SelectItem>
-                      <SelectItem value="Pendiente">Pendiente</SelectItem>
-                      <SelectItem value="Perdida">Perdida</SelectItem>
-                      <SelectItem value="En proceso">En proceso</SelectItem>
-                      <SelectItem value="A despachar">A despachar</SelectItem>
-                      <SelectItem value="En tránsito">En tránsito</SelectItem>
-                      <SelectItem value="Entregado">Entregado</SelectItem>
-                      <SelectItem value="A devolver">A devolver</SelectItem>
-                      <SelectItem value="Devuelto">Devuelto</SelectItem>
-                      <SelectItem value="Cancelada">Cancelada</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                {!hideEstadoEntregaFilter && (
+                  <div>
+                    <label className="text-sm font-medium mb-1 block">Estado de Entrega:</label>
+                    <Select 
+                      value={filters.estadoEntrega || "all"} 
+                      onValueChange={(value) => handleFilterChange('estadoEntrega', value)}
+                    >
+                      <SelectTrigger className="w-40" data-testid="filter-status">
+                        <SelectValue placeholder="Todos los estados" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Todos los estados</SelectItem>
+                        <SelectItem value="En proceso">En proceso</SelectItem>
+                        <SelectItem value="A despachar">A despachar</SelectItem>
+                        <SelectItem value="En tránsito">En tránsito</SelectItem>
+                        <SelectItem value="Entregado">Entregado</SelectItem>
+                        <SelectItem value="A devolver">A devolver</SelectItem>
+                        <SelectItem value="Devuelto">Devuelto</SelectItem>
+                        <SelectItem value="Cancelada">Cancelada</SelectItem>
+                        <SelectItem value="Despachado">Despachado</SelectItem>
+                        <SelectItem value="Retirado en tienda">Retirado en tienda</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
 
                 <div>
                   <label className="text-sm font-medium mb-1 block">Asesor:</label>

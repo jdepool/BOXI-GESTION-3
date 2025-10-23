@@ -98,6 +98,7 @@ const getSalesQuerySchema = z.object({
   excludeReservas: z.coerce.boolean().optional(),
   excludeADespachar: z.coerce.boolean().optional(),
   excludePerdida: z.coerce.boolean().optional(),
+  excludePendiente: z.coerce.boolean().optional(),
   limit: z.coerce.number().min(1).max(100).default(20),
   offset: z.coerce.number().min(0).default(0),
 });
@@ -817,6 +818,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         excludeReservas: query.excludeReservas,
         excludeADespachar: query.excludeADespachar,
         excludePerdida: query.excludePerdida,
+        excludePendiente: query.excludePendiente,
         limit: query.limit,
         offset: query.offset,
       };
@@ -932,6 +934,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         excludeReservas: query.excludeReservas,
         excludeADespachar: query.excludeADespachar,
         excludePerdida: query.excludePerdida,
+        excludePendiente: query.excludePendiente,
         // For export, get all data without pagination
         limit: 10000,
         offset: 0,
@@ -1034,6 +1037,115 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error exporting sales:", error);
       res.status(500).json({ error: "Failed to export sales data" });
+    }
+  });
+
+  // Export Perdida orders to Excel
+  app.get("/api/sales/perdida/export", async (req, res) => {
+    try {
+      // Get all Perdida orders (no pagination for export)
+      const filters = {
+        estadoEntrega: "Perdida",
+        limit: 10000,
+        offset: 0,
+      };
+
+      const [salesData, bancos] = await Promise.all([
+        storage.getSales(filters),
+        storage.getBancos()
+      ]);
+      
+      // Create banco lookup map (ID -> banco name)
+      const bancoMap = new Map(bancos.map(banco => [banco.id, banco.banco]));
+      
+      // Map to Excel columns
+      const excelData = salesData.map(sale => {
+        // Get banco name
+        let bancoNombre = 'N/A';
+        if (sale.bancoReceptorInicial) {
+          if (sale.bancoReceptorInicial === 'otro') {
+            bancoNombre = 'Otro($)';
+          } else {
+            bancoNombre = bancoMap.get(sale.bancoReceptorInicial) || 'N/A';
+          }
+        }
+        
+        return {
+          // Basic fields
+          'Número de Orden': sale.orden,
+          'Nombre': sale.nombre,
+          'Cédula': sale.cedula,
+          'Teléfono': sale.telefono,
+          'Correo': sale.email,
+          'Producto': sale.product,
+          'SKU': sale.sku,
+          'Cantidad': sale.cantidad,
+          'Canal': sale.canal,
+          'Estado de Entrega': sale.estadoEntrega,
+          'Tipo': sale.tipo,
+          'Fecha': new Date(sale.fecha).toLocaleDateString('es-ES'),
+          
+          // Totals
+          'Total Orden USD': sale.totalOrderUsd,
+          'Total USD': sale.totalUsd,
+          
+          // Payment fields
+          'Pago Inicial USD': sale.pagoInicialUsd,
+          'Referencia': sale.referenciaInicial,
+          'Banco Receptor': bancoNombre,
+          'Monto Bs': sale.montoInicialBs,
+        
+          // Asesor
+          'Asesor': sale.asesorId,
+          
+          // Billing Address
+          'País (Facturación)': sale.direccionFacturacionPais || '',
+          'Estado (Facturación)': sale.direccionFacturacionEstado || '',
+          'Ciudad (Facturación)': sale.direccionFacturacionCiudad || '',
+          'Dirección (Facturación)': sale.direccionFacturacionDireccion || '',
+          'Urbanización (Facturación)': sale.direccionFacturacionUrbanizacion || '',
+          'Referencia (Facturación)': sale.direccionFacturacionReferencia || '',
+          
+          // Shipping Address
+          'Despacho Igual a Facturación': sale.direccionDespachoIgualFacturacion === "true" ? 'Sí' : 'No',
+          'País (Despacho)': sale.direccionDespachoIgualFacturacion === "true" 
+            ? sale.direccionFacturacionPais || '' 
+            : sale.direccionDespachoPais || '',
+          'Estado (Despacho)': sale.direccionDespachoIgualFacturacion === "true" 
+            ? sale.direccionFacturacionEstado || '' 
+            : sale.direccionDespachoEstado || '',
+          'Ciudad (Despacho)': sale.direccionDespachoIgualFacturacion === "true" 
+            ? sale.direccionFacturacionCiudad || '' 
+            : sale.direccionDespachoCiudad || '',
+          'Dirección (Despacho)': sale.direccionDespachoIgualFacturacion === "true" 
+            ? sale.direccionFacturacionDireccion || '' 
+            : sale.direccionDespachoDireccion || '',
+          'Urbanización (Despacho)': sale.direccionDespachoIgualFacturacion === "true" 
+            ? sale.direccionFacturacionUrbanizacion || '' 
+            : sale.direccionDespachoUrbanizacion || '',
+          'Referencia (Despacho)': sale.direccionDespachoIgualFacturacion === "true" 
+            ? sale.direccionFacturacionReferencia || '' 
+            : sale.direccionDespachoReferencia || '',
+          
+          // Notas
+          'Notas': sale.notas || '',
+        };
+      });
+
+      // Convert to Excel format
+      const worksheet = XLSX.utils.json_to_sheet(excelData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Ordenes Perdidas');
+
+      const buffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' });
+
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+      res.setHeader('Content-Disposition', `attachment; filename="ordenes_perdidas_${new Date().toISOString().split('T')[0]}.xlsx"`);
+      res.send(buffer);
+
+    } catch (error) {
+      console.error("Error exporting Perdida orders:", error);
+      res.status(500).json({ error: "Failed to export Perdida orders" });
     }
   });
 

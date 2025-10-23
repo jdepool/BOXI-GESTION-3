@@ -211,6 +211,7 @@ export default function ManualSalesEntry({ convertingProspecto, onConversionComp
             showEditActions={true}
             showDeliveryDateColumn={true}
             showSeguimientoColumns={true}
+            hideEstadoEntregaFilter={true}
             filters={filters}
             extraExportParams={{ estadoEntrega: "Pendiente", excludeReservas: true }}
             onFilterChange={handleFilterChange}
