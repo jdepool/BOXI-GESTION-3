@@ -3,7 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { format } from "date-fns";
-import { CreditCard, Truck, Banknote, Filter, ChevronUp, ChevronDown, Download, ChevronLeft, ChevronRight, XCircle, Ban, RotateCcw } from "lucide-react";
+import { CreditCard, Truck, Banknote, Filter, ChevronUp, ChevronDown, Download, ChevronLeft, ChevronRight, XCircle, RotateCcw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import PagoInicialModal from "./pago-inicial-modal";
 import FleteModal from "./flete-modal";
@@ -19,16 +19,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import {
   Tooltip,
   TooltipContent,
@@ -110,8 +100,6 @@ export default function PagosTable({
   const [cuotasModalOpen, setCuotasModalOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [selectedSale, setSelectedSale] = useState<any | null>(null);
-  const [perdidaConfirmOpen, setPerdidaConfirmOpen] = useState(false);
-  const [selectedOrderForPerdida, setSelectedOrderForPerdida] = useState<Order | null>(null);
   const [editingSeguimientoOrder, setEditingSeguimientoOrder] = useState<string | null>(null);
   const [seguimientoValue, setSeguimientoValue] = useState<string>("");
 
@@ -198,29 +186,6 @@ export default function PagosTable({
       toast({
         title: "Error",
         description: "No se pudo actualizar el estado de entrega",
-        variant: "destructive",
-      });
-    },
-  });
-
-  // Mutation to mark an order as Perdida
-  const markAsPerdidaMutation = useMutation({
-    mutationFn: async (orderNumber: string) => {
-      return apiRequest("PUT", `/api/sales/orders/${encodeURIComponent(orderNumber)}/mark-perdida`, {});
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ 
-        predicate: (query) => Array.isArray(query.queryKey) && typeof query.queryKey[0] === 'string' && query.queryKey[0].startsWith('/api/sales')
-      });
-      toast({ 
-        title: "Orden marcada como perdida",
-        description: "La orden ha sido marcada como perdida y se ocultará de las vistas principales."
-      });
-    },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "No se pudo marcar la orden como perdida",
         variant: "destructive",
       });
     },
@@ -468,21 +433,18 @@ export default function PagosTable({
                 <th className="p-2 text-left text-xs font-medium text-muted-foreground min-w-[250px]">
                   Seguimiento Pago
                 </th>
-                <th className="p-2 text-center text-xs font-medium text-muted-foreground min-w-[100px]">
-                  Acción
-                </th>
               </tr>
             </thead>
             <tbody>
               {isLoading ? (
                 <tr>
-                  <td colSpan={18} className="p-4 text-center text-muted-foreground">
+                  <td colSpan={17} className="p-4 text-center text-muted-foreground">
                     Cargando...
                   </td>
                 </tr>
               ) : data.length === 0 ? (
                 <tr>
-                  <td colSpan={18} className="p-4 text-center text-muted-foreground">
+                  <td colSpan={17} className="p-4 text-center text-muted-foreground">
                     No hay órdenes pendientes o en proceso
                   </td>
                 </tr>
@@ -707,28 +669,6 @@ export default function PagosTable({
                         </div>
                       )}
                     </td>
-                    <td className="p-2 min-w-[100px]">
-                      <div className="flex justify-center">
-                        <Button
-                          variant={order.estadoEntrega === "Perdida" ? "outline" : "destructive"}
-                          size="sm"
-                          onClick={() => {
-                            setSelectedOrderForPerdida(order);
-                            setPerdidaConfirmOpen(true);
-                          }}
-                          disabled={order.estadoEntrega === "Perdida" || markAsPerdidaMutation.isPending}
-                          data-testid={`perdida-order-${order.orden}`}
-                          className={cn(
-                            "h-7 text-xs",
-                            order.estadoEntrega === "Perdida" && "bg-green-800 text-white hover:bg-green-800 opacity-70 cursor-not-allowed border-green-700"
-                          )}
-                          title={order.estadoEntrega === "Perdida" ? "Orden ya marcada como perdida" : "Marcar orden como perdida"}
-                        >
-                          <Ban className={cn("h-3 w-3 mr-1", order.estadoEntrega === "Perdida" && "text-green-400")} />
-                          Perdida
-                        </Button>
-                      </div>
-                    </td>
                   </tr>
                 ))
               )}
@@ -782,39 +722,6 @@ export default function PagosTable({
         open={cuotasModalOpen}
         onOpenChange={setCuotasModalOpen}
       />
-
-      {/* Perdida Confirmation Dialog */}
-      <AlertDialog open={perdidaConfirmOpen} onOpenChange={setPerdidaConfirmOpen}>
-        <AlertDialogContent data-testid="perdida-confirm-dialog">
-          <AlertDialogHeader>
-            <AlertDialogTitle>¿Confirmar orden perdida?</AlertDialogTitle>
-            <AlertDialogDescription>
-              ¿Está seguro que desea marcar esta orden como perdida? Esta acción ocultará todas las ventas de esta orden de las vistas principales.
-              {selectedOrderForPerdida && (
-                <div className="mt-2 text-sm font-medium">
-                  Orden: {selectedOrderForPerdida.orden} - {selectedOrderForPerdida.nombre}
-                </div>
-              )}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel data-testid="perdida-cancel">Cancelar</AlertDialogCancel>
-            <AlertDialogAction
-              data-testid="perdida-confirm"
-              onClick={() => {
-                if (selectedOrderForPerdida) {
-                  markAsPerdidaMutation.mutate(selectedOrderForPerdida.orden);
-                }
-                setPerdidaConfirmOpen(false);
-                setSelectedOrderForPerdida(null);
-              }}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              Confirmar
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </>
   );
 }

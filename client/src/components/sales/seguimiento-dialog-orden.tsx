@@ -1,14 +1,26 @@
 import { useState, useEffect, useRef } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, Ban } from "lucide-react";
 import { addDays, format } from "date-fns";
 import { cn } from "@/lib/utils";
+import { queryClient, apiRequest } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import type { Sale, SeguimientoConfig } from "@shared/schema";
 
 interface SeguimientoDialogOrdenProps {
@@ -35,6 +47,8 @@ export default function SeguimientoDialogOrden({
   onSave,
   isSaving,
 }: SeguimientoDialogOrdenProps) {
+  const { toast } = useToast();
+  
   const [fecha1, setFecha1] = useState<Date | undefined>();
   const [respuesta1, setRespuesta1] = useState("");
   const [fecha2, setFecha2] = useState<Date | undefined>();
@@ -47,6 +61,9 @@ export default function SeguimientoDialogOrden({
   const [manuallyEditedFecha2, setManuallyEditedFecha2] = useState(false);
   const [manuallyEditedFecha3, setManuallyEditedFecha3] = useState(false);
 
+  // Perdida confirmation dialog state
+  const [perdidaConfirmOpen, setPerdidaConfirmOpen] = useState(false);
+
   // Track if we've initialized for current sale to prevent config loading from resetting dates
   const initializedSaleId = useRef<string | null>(null);
   
@@ -56,6 +73,30 @@ export default function SeguimientoDialogOrden({
   // Fetch seguimiento config for 'ordenes' tipo
   const { data: config, isLoading: configLoading } = useQuery<SeguimientoConfig>({
     queryKey: ["/api/admin/seguimiento-config", "ordenes"],
+  });
+
+  // Mutation to mark an order as Perdida
+  const markAsPerdidaMutation = useMutation({
+    mutationFn: async (orderNumber: string) => {
+      return apiRequest("PUT", `/api/sales/orders/${encodeURIComponent(orderNumber)}/mark-perdida`, {});
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ 
+        predicate: (query) => Array.isArray(query.queryKey) && typeof query.queryKey[0] === 'string' && query.queryKey[0].startsWith('/api/sales')
+      });
+      toast({ 
+        title: "Orden marcada como perdida",
+        description: "La orden ha sido marcada como perdida y se ocultará de las vistas principales."
+      });
+      onOpenChange(false); // Close the seguimiento dialog after marking as perdida
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "No se pudo marcar la orden como perdida",
+        variant: "destructive",
+      });
+    },
   });
 
   // Use config values or defaults
@@ -438,26 +479,69 @@ export default function SeguimientoDialogOrden({
           </div>
         </div>
 
-        <div className="flex justify-end gap-2">
+        <div className="flex justify-between gap-2">
           <Button
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-            disabled={isSaving}
-            data-testid="button-cancel-seguimiento"
+            variant="destructive"
+            onClick={() => setPerdidaConfirmOpen(true)}
+            disabled={isSaving || markAsPerdidaMutation.isPending}
+            data-testid="button-perdida-seguimiento"
           >
-            Cancelar
+            <Ban className="h-4 w-4 mr-1" />
+            Perdida
           </Button>
-          <Button
-            onClick={handleSave}
-            disabled={isSaving}
-            data-testid="button-save-seguimiento"
-          >
-            {isSaving ? "Guardando..." : "Guardar"}
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              disabled={isSaving}
+              data-testid="button-cancel-seguimiento"
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleSave}
+              disabled={isSaving}
+              data-testid="button-save-seguimiento"
+            >
+              {isSaving ? "Guardando..." : "Guardar"}
+            </Button>
+          </div>
         </div>
         </>
         )}
       </DialogContent>
+
+      {/* Perdida Confirmation Dialog */}
+      <AlertDialog open={perdidaConfirmOpen} onOpenChange={setPerdidaConfirmOpen}>
+        <AlertDialogContent data-testid="perdida-confirm-dialog-seguimiento">
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Confirmar orden perdida?</AlertDialogTitle>
+            <AlertDialogDescription>
+              ¿Está seguro que desea marcar esta orden como perdida? Esta acción ocultará todas las ventas de esta orden de las vistas principales.
+              {sale && (
+                <div className="mt-2 text-sm font-medium">
+                  Orden: {sale.orden} - {sale.nombre}
+                </div>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel data-testid="perdida-cancel-seguimiento">Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              data-testid="perdida-confirm-seguimiento"
+              onClick={() => {
+                if (sale?.orden) {
+                  markAsPerdidaMutation.mutate(sale.orden);
+                }
+                setPerdidaConfirmOpen(false);
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Confirmar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   );
 }
