@@ -292,23 +292,19 @@ export default function PagosTable({
 
   const handleFleteCheckboxChange = (checked: boolean) => {
     setFleteGratisValue(checked);
-    const newValue = checked ? "0" : fleteAPagarValue;
     if (checked) {
       setFleteAPagarValue("0");
     }
-    // Auto-save when checkbox changes
-    if (currentFleteOrder) {
-      updateFleteMutation.mutate({
-        orden: currentFleteOrder,
-        fleteAPagar: newValue,
-        fleteGratis: checked
-      });
+  };
+
+  const handleFleteAPagarChange = (value: string) => {
+    // Allow empty, numbers, and decimal point
+    if (value === '' || /^\d*\.?\d*$/.test(value)) {
+      setFleteAPagarValue(value);
     }
   };
 
-  const handleFleteBlur = () => {
-    if (!currentFleteOrder) return;
-    
+  const handleFleteSave = (orden: string) => {
     // Validation: fleteAPagar is required when fleteGratis is false
     if (!fleteGratisValue && fleteAPagarValue.trim() === "") {
       toast({
@@ -319,19 +315,12 @@ export default function PagosTable({
       return;
     }
 
-    // Auto-save on blur
     updateFleteMutation.mutate({
-      orden: currentFleteOrder,
+      orden,
       fleteAPagar: fleteAPagarValue,
       fleteGratis: fleteGratisValue
     });
-  };
-
-  const handleFleteAPagarChange = (value: string) => {
-    // Allow empty, numbers, and decimal point
-    if (value === '' || /^\d*\.?\d*$/.test(value)) {
-      setFleteAPagarValue(value);
-    }
+    setFletePopoverOpen(null);
   };
 
   return (
@@ -646,7 +635,6 @@ export default function PagosTable({
                                 placeholder="0.00"
                                 value={fleteAPagarValue}
                                 onChange={(e) => handleFleteAPagarChange(e.target.value)}
-                                onBlur={handleFleteBlur}
                                 disabled={fleteGratisValue}
                                 className={cn("text-sm", fleteGratisValue && "opacity-50 cursor-not-allowed")}
                                 data-testid={`input-flete-a-pagar-inline-${order.orden}`}
@@ -663,6 +651,25 @@ export default function PagosTable({
                               <Label htmlFor={`flete-gratis-${order.orden}`} className="text-sm font-semibold text-green-600 cursor-pointer">
                                 FLETE GRATIS
                               </Label>
+                            </div>
+
+                            <div className="flex justify-end gap-2 pt-2">
+                              <Button 
+                                variant="outline" 
+                                size="sm" 
+                                onClick={() => setFletePopoverOpen(null)}
+                                data-testid={`button-cancel-flete-inline-${order.orden}`}
+                              >
+                                Cancelar
+                              </Button>
+                              <Button 
+                                size="sm" 
+                                onClick={() => handleFleteSave(order.orden)}
+                                disabled={updateFleteMutation.isPending}
+                                data-testid={`button-save-flete-inline-${order.orden}`}
+                              >
+                                {updateFleteMutation.isPending ? "Guardando..." : "Guardar"}
+                              </Button>
                             </div>
                           </div>
                         </PopoverContent>
