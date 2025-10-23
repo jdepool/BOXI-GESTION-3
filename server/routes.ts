@@ -22,6 +22,30 @@ import fetch from "node-fetch";
 import { sendOrderConfirmationEmail, type OrderEmailData } from "./services/email-service";
 import { performCasheaDownload } from "./services/cashea-download";
 
+// Helper function to normalize estadoEntrega casing
+// Prevents case-sensitivity bugs in status comparisons and database storage
+// Returns null for invalid/empty input to preserve validation
+function normalizeEstadoEntrega(status: string | null | undefined): string | null {
+  if (!status || status.trim() === '') return null; // Return null for empty/invalid input
+  
+  const normalized = status.toLowerCase().trim();
+  
+  // Map lowercase to correct casing
+  const statusMap: Record<string, string> = {
+    'pendiente': 'Pendiente',
+    'perdida': 'Perdida',
+    'en proceso': 'En proceso',
+    'a despachar': 'A despachar',
+    'en tránsito': 'En tránsito',
+    'entregado': 'Entregado',
+    'a devolver': 'A devolver',
+    'devuelto': 'Devuelto',
+    'cancelada': 'Cancelada'
+  };
+  
+  return statusMap[normalized] || status; // Return original if not found in map
+}
+
 // Configure multer for file uploads
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -282,7 +306,7 @@ function parseFile(buffer: Buffer, canal: string, filename: string) {
           montoInicialUsd: null,
           estadoEntrega: canal.toLowerCase() === 'cashea' ? 
             'En proceso' : // All Cashea orders start with "En proceso"
-            String(row['Estado de entrega'] || 'En proceso'),
+            (normalizeEstadoEntrega(String(row['Estado de entrega'] || '')) || 'En proceso'), // Default to 'En proceso' if normalization fails
           product: String(row.Product || ''),
           cantidad: Number(row.Cantidad || 1),
           // New fields for sales system overhaul
@@ -1694,7 +1718,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
             // Only auto-update if Pendiente = 0 (exactly 0, with tolerance for floating point) and current status is "Pendiente" or "En proceso"
             // CRITICAL: Balance must be exactly 0 (within 0.01 tolerance for floating point rounding errors)
-            if (Math.abs(saldoPendiente) < 0.01 && (firstSale.estadoEntrega === 'Pendiente' || firstSale.estadoEntrega === 'En proceso')) {
+            // Use case-insensitive comparison to handle "En proceso" vs "En Proceso" data inconsistencies
+            const currentStatus = firstSale.estadoEntrega?.toLowerCase() || '';
+            if (Math.abs(saldoPendiente) < 0.01 && (currentStatus === 'pendiente' || currentStatus === 'en proceso')) {
               const updatePromises = salesInOrder.map(sale => 
                 withRetry(() => storage.updateSaleDeliveryStatus(sale.id, 'A despachar'))
               );
@@ -2415,9 +2441,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { saleId } = req.params;
       const { status } = req.body;
 
+      // Normalize status casing to prevent case-sensitivity bugs
+      const normalizedStatus = normalizeEstadoEntrega(status);
+
       // Validate status
       const validStatuses = ['Pendiente', 'Perdida', 'En proceso', 'A despachar', 'En tránsito', 'Entregado', 'A devolver', 'Devuelto', 'Cancelada'];
-      if (!status || !validStatuses.includes(status)) {
+      if (!normalizedStatus || !validStatuses.includes(normalizedStatus)) {
         return res.status(400).json({ 
           error: "Invalid status. Must be one of: " + validStatuses.join(', ')
         });
@@ -2429,7 +2458,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Sale not found" });
       }
 
-      const updatedSale = await storage.updateSaleDeliveryStatus(saleId, status);
+      const updatedSale = await storage.updateSaleDeliveryStatus(saleId, normalizedStatus);
       
       if (!updatedSale) {
         return res.status(500).json({ error: "Failed to update delivery status" });
@@ -5074,7 +5103,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
             const saldoPendiente = ordenPlusFlete - totalPagado;
 
             // Only auto-update if Pendiente = 0 and current status is "Pendiente" or "En proceso"
-            if (Math.abs(saldoPendiente) < 0.01 && (firstSale.estadoEntrega === 'Pendiente' || firstSale.estadoEntrega === 'En proceso')) {
+            // Use case-insensitive comparison to handle "En proceso" vs "En Proceso" data inconsistencies
+            const currentStatus = firstSale.estadoEntrega?.toLowerCase() || '';
+            if (Math.abs(saldoPendiente) < 0.01 && (currentStatus === 'pendiente' || currentStatus === 'en proceso')) {
               const updatePromises = salesInOrder.map(sale => 
                 storage.updateSaleDeliveryStatus(sale.id, 'A despachar')
               );
@@ -5113,6 +5144,80 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error('Cashea status update error:', error);
       res.status(500).json({ 
         error: 'Failed to update Cashea orders',
+        details: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
+  // Fix incorrect casing in estadoEntrega field
+  app.post('/api/admin/fix-estado-casing', async (req, res) => {
+    try {
+      const result = await withRetry(async () => {
+        const allSales = await db.select().from(sales);
+        
+        // Map of incorrect casing -> correct casing
+        const casingMap: Record<string, string> = {
+          'pendiente': 'Pendiente',
+          'PENDIENTE': 'Pendiente',
+          'perdida': 'Perdida',
+          'PERDIDA': 'Perdida',
+          'en proceso': 'En proceso',
+          'En Proceso': 'En proceso',
+          'EN PROCESO': 'En proceso',
+          'a despachar': 'A despachar',
+          'A Despachar': 'A despachar',
+          'A DESPACHAR': 'A despachar',
+          'en tránsito': 'En tránsito',
+          'En Tránsito': 'En tránsito',
+          'EN TRÁNSITO': 'En tránsito',
+          'entregado': 'Entregado',
+          'ENTREGADO': 'Entregado',
+          'a devolver': 'A devolver',
+          'A Devolver': 'A devolver',
+          'A DEVOLVER': 'A devolver',
+          'devuelto': 'Devuelto',
+          'DEVUELTO': 'Devuelto',
+          'cancelada': 'Cancelada',
+          'CANCELADA': 'Cancelada'
+        };
+        
+        const updates: Array<{ id: string; orden: string; oldValue: string; newValue: string }> = [];
+        
+        for (const sale of allSales) {
+          const currentStatus = sale.estadoEntrega || '';
+          const correctStatus = casingMap[currentStatus];
+          
+          if (correctStatus && correctStatus !== currentStatus) {
+            await db.update(sales)
+              .set({ estadoEntrega: correctStatus })
+              .where(eq(sales.id, sale.id));
+            
+            updates.push({
+              id: sale.id,
+              orden: sale.orden || 'N/A',
+              oldValue: currentStatus,
+              newValue: correctStatus
+            });
+          }
+        }
+        
+        return updates;
+      });
+      
+      console.log(`✅ Fixed ${result.length} records with incorrect estadoEntrega casing`);
+      result.forEach(update => {
+        console.log(`  - Order ${update.orden}: "${update.oldValue}" → "${update.newValue}"`);
+      });
+      
+      res.json({
+        fixed: result.length,
+        updates: result,
+        message: `Successfully fixed ${result.length} records with incorrect casing`
+      });
+    } catch (error) {
+      console.error('Fix casing error:', error);
+      res.status(500).json({ 
+        error: 'Failed to fix status casing',
         details: error instanceof Error ? error.message : 'Unknown error'
       });
     }
