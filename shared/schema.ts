@@ -225,6 +225,13 @@ export const sales = pgTable("sales", {
   // Verification fields for Flete
   estadoVerificacionFlete: text("estado_verificacion_flete").default("Por verificar"), // Por verificar, Verificado, Rechazado
   notasVerificacionFlete: text("notas_verificacion_flete"),
+  // Follow-up tracking (for pending orders)
+  fechaSeguimiento1: timestamp("fecha_seguimiento1"),
+  respuestaSeguimiento1: text("respuesta_seguimiento1"),
+  fechaSeguimiento2: timestamp("fecha_seguimiento2"),
+  respuestaSeguimiento2: text("respuesta_seguimiento2"),
+  fechaSeguimiento3: timestamp("fecha_seguimiento3"),
+  respuestaSeguimiento3: text("respuesta_seguimiento3"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => ({

@@ -322,6 +322,7 @@ export default function Sales() {
                   hideFilters={false}
                   hidePagination={false}
                   showDeliveryDateColumn={true}
+                  showSeguimientoColumns={true}
                   activeTab={activeTab}
                   filters={reservasFilters}
                   extraExportParams={{

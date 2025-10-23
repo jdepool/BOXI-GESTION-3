@@ -2452,6 +2452,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update seguimiento (follow-up tracking) for all sales in an order
+  app.patch("/api/sales/seguimiento/:orden", async (req, res) => {
+    try {
+      const { orden } = req.params;
+      const seguimientoData = req.body;
+
+      // Validate that order exists
+      const existingSales = await storage.getSalesByOrderNumber(orden);
+      if (!existingSales || existingSales.length === 0) {
+        return res.status(404).json({ error: "Order not found" });
+      }
+
+      // Update seguimiento data for all sales with this order number
+      const updatedSales = await storage.updateSalesByOrderNumber(orden, seguimientoData);
+      
+      if (!updatedSales || updatedSales.length === 0) {
+        return res.status(500).json({ error: "Failed to update seguimiento" });
+      }
+
+      res.json({ 
+        success: true, 
+        message: `Updated seguimiento for ${updatedSales.length} sale(s)`,
+        salesUpdated: updatedSales.length 
+      });
+    } catch (error) {
+      console.error("Update order seguimiento error:", error);
+      res.status(500).json({ error: "Failed to update seguimiento" });
+    }
+  });
+
   // Update sale addresses
   app.put("/api/sales/:saleId/addresses", async (req, res) => {
     try {

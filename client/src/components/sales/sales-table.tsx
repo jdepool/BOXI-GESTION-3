@@ -12,13 +12,15 @@ import { DateRangePicker } from "@/components/shared/date-range-picker";
 import SaleDetailModal from "./sale-detail-modal";
 import AddressModal from "@/components/addresses/address-modal";
 import EditSaleModal from "./edit-sale-modal";
+import SeguimientoDialogOrden from "@/components/sales/seguimiento-dialog-orden";
 import { MapPin, Edit, CalendarIcon, Filter, ChevronDown, ChevronUp, Download, ChevronLeft, ChevronRight, RotateCcw, XCircle, Gift, Eye, Plus, Truck } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { format, parse } from "date-fns";
 import { cn } from "@/lib/utils";
-import type { Sale } from "@shared/schema";
+import { getSeguimientoStatusOrden } from "@/lib/seguimiento-utils";
+import type { Sale, SeguimientoConfig } from "@shared/schema";
 
 interface SalesTableProps {
   data: Sale[];
@@ -30,6 +32,7 @@ interface SalesTableProps {
   hidePagination?: boolean;
   showEditActions?: boolean;
   showDeliveryDateColumn?: boolean;
+  showSeguimientoColumns?: boolean;
   filters?: any;
   extraExportParams?: Record<string, any>;
   onFilterChange?: (filters: any) => void;
@@ -51,6 +54,7 @@ export default function SalesTable({
   hidePagination = false,
   showEditActions = false,
   showDeliveryDateColumn = false,
+  showSeguimientoColumns = false,
   filters: parentFilters,
   extraExportParams = {},
   onFilterChange,
@@ -161,6 +165,8 @@ export default function SalesTable({
   const [selectedSaleForCancel, setSelectedSaleForCancel] = useState<Sale | null>(null);
   const [selectedSaleForReturn, setSelectedSaleForReturn] = useState<Sale | null>(null);
   const [filtersVisible, setFiltersVisible] = useState(false);
+  const [seguimientoDialogOpen, setSeguimientoDialogOpen] = useState(false);
+  const [selectedSaleForSeguimiento, setSelectedSaleForSeguimiento] = useState<Sale | null>(null);
   
   // Debounced order filter - local state for immediate UI updates
   const [orderInputValue, setOrderInputValue] = useState(parentFilters?.orden || "");
@@ -203,6 +209,12 @@ export default function SalesTable({
   // Fetch canales data for the dropdown
   const { data: canales = [] } = useQuery<Array<{ id: string; nombre: string; activo: boolean }>>({
     queryKey: ["/api/admin/canales"],
+  });
+
+  // Fetch seguimiento config for 'ordenes' (only when showSeguimientoColumns is true)
+  const { data: seguimientoConfig } = useQuery<SeguimientoConfig>({
+    queryKey: ["/api/admin/seguimiento-config", "ordenes"],
+    enabled: showSeguimientoColumns,
   });
 
   const updateDeliveryStatusMutation = useMutation({
@@ -315,6 +327,32 @@ export default function SalesTable({
       toast({
         title: "Error",
         description: "No se pudo actualizar la fecha de entrega.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Seguimiento mutation - updates ALL sales with same order number
+  const saveSeguimientoOrdenMutation = useMutation({
+    mutationFn: async ({ orden, seguimientoData }: { orden: string; seguimientoData: any }) => {
+      return apiRequest("PATCH", `/api/sales/seguimiento/${orden}`, seguimientoData);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ 
+        predicate: (query) => Array.isArray(query.queryKey) && typeof query.queryKey[0] === 'string' && query.queryKey[0].startsWith('/api/sales')
+      });
+      toast({
+        title: "Seguimiento actualizado",
+        description: "El seguimiento de la orden ha sido actualizado correctamente.",
+      });
+      setSeguimientoDialogOpen(false);
+      setSelectedSaleForSeguimiento(null);
+    },
+    onError: (error) => {
+      console.error('Failed to update seguimiento:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo actualizar el seguimiento de la orden.",
         variant: "destructive",
       });
     },
@@ -641,6 +679,12 @@ export default function SalesTable({
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[120px]">Direcciones</th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[120px]">Asesor</th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[150px]">Notas</th>
+                {showSeguimientoColumns && (
+                  <>
+                    <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[90px]">Próximo</th>
+                    <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[100px]"></th>
+                  </>
+                )}
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[150px]">Acciones</th>
                 {activeTab === "lista" && (
                   <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[180px]"></th>
@@ -650,7 +694,11 @@ export default function SalesTable({
             <tbody>
               {data.length === 0 ? (
                 <tr>
-                  <td colSpan={showDeliveryDateColumn ? (activeTab === "lista" ? 24 : 23) : (activeTab === "lista" ? 23 : 22)} className="text-center p-8 text-muted-foreground">
+                  <td colSpan={
+                    (showDeliveryDateColumn ? 1 : 0) + 
+                    (showSeguimientoColumns ? 2 : 0) + 
+                    (activeTab === "lista" ? 24 : 23)
+                  } className="text-center p-8 text-muted-foreground">
                     No hay datos disponibles
                   </td>
                 </tr>
@@ -882,6 +930,51 @@ export default function SalesTable({
                         </div>
                       )}
                     </td>
+                    {showSeguimientoColumns && (
+                      <>
+                        <td className="p-2 min-w-[90px]">
+                          {(() => {
+                            const { status, date } = getSeguimientoStatusOrden(
+                              sale,
+                              seguimientoConfig?.diasFase1 ?? 2,
+                              seguimientoConfig?.diasFase2 ?? 4,
+                              seguimientoConfig?.diasFase3 ?? 7
+                            );
+                            
+                            if (!status || !date) {
+                              return <span className="text-xs text-muted-foreground">-</span>;
+                            }
+                            
+                            const colorClass = status === "overdue" 
+                              ? "text-red-600" 
+                              : status === "today" 
+                              ? "text-amber-600" 
+                              : "text-muted-foreground";
+                            
+                            return (
+                              <span className={`text-xs font-medium ${colorClass}`}>
+                                {format(date, "dd/MM/yy")}
+                              </span>
+                            );
+                          })()}
+                        </td>
+                        <td className="p-2 min-w-[100px]">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedSaleForSeguimiento(sale);
+                              setSeguimientoDialogOpen(true);
+                            }}
+                            disabled={!sale.orden}
+                            data-testid={`seguimiento-orden-${sale.id}`}
+                            className="h-7 text-xs"
+                          >
+                            <CalendarIcon className="h-3 w-3" />
+                          </Button>
+                        </td>
+                      </>
+                    )}
                     <td className="p-2 min-w-[150px]">
                       <div className="flex gap-1">
                         <Button
@@ -1032,6 +1125,24 @@ export default function SalesTable({
         }}
         sale={selectedSaleForEdit}
       />
+
+      {showSeguimientoColumns && selectedSaleForSeguimiento && (
+        <SeguimientoDialogOrden
+          open={seguimientoDialogOpen}
+          onOpenChange={setSeguimientoDialogOpen}
+          sale={selectedSaleForSeguimiento}
+          allOrderItems={data.filter(s => s.orden === selectedSaleForSeguimiento.orden)}
+          onSave={(seguimientoData) => {
+            if (selectedSaleForSeguimiento.orden) {
+              saveSeguimientoOrdenMutation.mutate({
+                orden: selectedSaleForSeguimiento.orden,
+                seguimientoData
+              });
+            }
+          }}
+          isSaving={saveSeguimientoOrdenMutation.isPending}
+        />
+      )}
 
       {/* Cancel Confirmation Dialog */}
       <AlertDialog open={cancelConfirmOpen} onOpenChange={setCancelConfirmOpen}>
