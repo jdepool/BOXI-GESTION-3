@@ -282,7 +282,6 @@ export default function PagosTable({
           <Download className="h-4 w-4" />
         </Button>
       </div>
-
       {/* Filter section - collapsible */}
       {filtersVisible && (
         <div className="p-6 border-b border-border">
@@ -370,7 +369,6 @@ export default function PagosTable({
           </div>
         </div>
       )}
-
       <div className="overflow-auto max-h-[calc(100vh-280px)] relative">
         <table className="w-full text-sm border-collapse">
           <thead className="sticky top-0 z-10 bg-muted">
@@ -408,9 +406,7 @@ export default function PagosTable({
                 <th className="p-2 text-center text-xs font-medium text-muted-foreground min-w-[100px]">
                   Cuotas
                 </th>
-                <th className="p-2 text-center text-xs font-medium text-muted-foreground min-w-[120px] bg-blue-50 dark:bg-blue-950">
-                  A Pagar
-                </th>
+                <th className="p-2 text-center text-xs font-medium text-muted-foreground min-w-[120px] bg-blue-50 dark:bg-blue-950">Orden a Pagar</th>
                 <th className="p-2 text-center text-xs font-medium text-muted-foreground min-w-[120px] bg-purple-50 dark:bg-purple-950">
                   Flete
                 </th>
@@ -668,7 +664,6 @@ export default function PagosTable({
             </tbody>
           </table>
       </div>
-
       {total > 0 && (
         <div className="p-4 border-t border-border flex justify-between items-center">
           <div className="text-sm text-muted-foreground">
@@ -698,7 +693,6 @@ export default function PagosTable({
           </div>
         </div>
       )}
-
       {/* Payment Modals */}
       <PagoInicialModal
         sale={selectedSale}
