@@ -670,7 +670,7 @@ export default function SalesTable({
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[140px]">Producto</th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[100px]">SKU</th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[80px]">Cantidad</th>
-                {activeTab !== "inmediatas" && activeTab !== "reservas" && (
+                {activeTab !== "manual" && activeTab !== "reservas" && (
                   <>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[110px]">Pago Inicial/Total USD</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[120px]">Referencia</th>
@@ -703,7 +703,7 @@ export default function SalesTable({
                     (showDeliveryDateColumn ? 1 : 0) + 
                     (showSeguimientoColumns ? 1 : 0) + 
                     (activeTab === "lista" ? 24 : 23) -
-                    ((activeTab === "inmediatas" || activeTab === "reservas") ? 4 : 0)
+                    ((activeTab === "manual" || activeTab === "reservas") ? 4 : 0)
                   } className="text-center p-8 text-muted-foreground">
                     No hay datos disponibles
                   </td>
@@ -795,7 +795,7 @@ export default function SalesTable({
                     <td className="p-2 min-w-[80px] text-xs text-center font-medium text-foreground">
                       {sale.cantidad}
                     </td>
-                    {activeTab !== "inmediatas" && activeTab !== "reservas" && (
+                    {activeTab !== "manual" && activeTab !== "reservas" && (
                       <>
                         <td className="p-2 min-w-[110px] text-xs text-muted-foreground">
                           {sale.pagoInicialUsd ? `$${Number(sale.pagoInicialUsd).toLocaleString()}` : 'N/A'}
