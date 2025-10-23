@@ -400,11 +400,13 @@ export default function SalesTable({
   };
 
   const handleFilterChange = (key: string, value: string) => {
+    console.log('📋 SalesTable handleFilterChange:', { key, value, parentFilters });
     const newFilters = { 
       ...parentFilters, 
       [key]: value === "all" ? "" : value,
       offset: 0 // Reset to first page when filtering
     };
+    console.log('📋 SalesTable newFilters:', newFilters);
     onFilterChange?.(newFilters);
   };
 
