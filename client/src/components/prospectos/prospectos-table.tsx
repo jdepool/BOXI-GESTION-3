@@ -511,8 +511,8 @@ export default function ProspectosTable({
                     <td className="p-3 text-xs" data-testid={`text-asesor-${prospecto.id}`}>
                       {prospecto.asesorId ? asesorMap.get(prospecto.asesorId) || "-" : "-"}
                     </td>
-                    <td className="p-3 text-xs text-muted-foreground" data-testid={`text-notas-${prospecto.id}`}>
-                      {prospecto.notas || "-"}
+                    <td className="p-3 text-xs text-muted-foreground" data-testid={`text-notas-${prospecto.id}`} title={prospecto.notas || undefined}>
+                      {prospecto.notas ? (prospecto.notas.length > 20 ? prospecto.notas.substring(0, 20) + '...' : prospecto.notas) : "-"}
                     </td>
                     <td className="p-3 text-xs" data-testid={`text-seguimiento-status-${prospecto.id}`}>
                       {prospecto.estadoProspecto === "Activo" && seguimientoStatus.phase !== null ? (

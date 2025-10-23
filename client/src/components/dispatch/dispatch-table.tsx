@@ -752,12 +752,12 @@ export default function DispatchTable({
                           />
                         ) : (
                           <div 
-                            className="text-xs text-muted-foreground truncate cursor-pointer hover:bg-muted/50 rounded px-2 py-1 min-h-[28px] flex items-center"
+                            className="text-xs text-muted-foreground cursor-pointer hover:bg-muted/50 rounded px-2 py-1 min-h-[28px] flex items-center"
                             title={sale.notas || "Click para agregar nota"}
                             onClick={() => handleNotesClick(sale)}
                             data-testid={`notes-display-${sale.id}`}
                           >
-                            {sale.notas || 'Click para agregar nota'}
+                            {sale.notas ? (sale.notas.length > 20 ? sale.notas.substring(0, 20) + '...' : sale.notas) : 'Click para agregar nota'}
                           </div>
                         )}
                       </td>
