@@ -41,6 +41,7 @@ const extractDateFromTimestamp = (timestamp: string | Date) => {
 import type { Sale, Banco } from "@shared/schema";
 
 interface FleteData {
+  fleteAPagar: string;
   montoFleteUsd: string;
   fechaFlete: string;
   pagoFleteUsd: string;
@@ -58,6 +59,7 @@ interface FleteModalProps {
 
 export default function FleteModal({ open, onOpenChange, sale }: FleteModalProps) {
   const [fleteData, setFleteData] = useState<FleteData>({
+    fleteAPagar: "",
     montoFleteUsd: "",
     fechaFlete: "",
     pagoFleteUsd: "",
@@ -127,6 +129,7 @@ export default function FleteModal({ open, onOpenChange, sale }: FleteModalProps
     if (sale && isOpening) {
       const fechaValue = sale.fechaFlete ? extractDateFromTimestamp(sale.fechaFlete) : formatLocalDate(new Date());
       setFleteData({
+        fleteAPagar: sale.fleteAPagar ? sale.fleteAPagar.toString() : "",
         montoFleteUsd: sale.montoFleteUsd ? sale.montoFleteUsd.toString() : "",
         fechaFlete: fechaValue,
         pagoFleteUsd: sale.pagoFleteUsd ? sale.pagoFleteUsd.toString() : "",
@@ -143,6 +146,7 @@ export default function FleteModal({ open, onOpenChange, sale }: FleteModalProps
 
   const resetForm = () => {
     setFleteData({
+      fleteAPagar: "",
       montoFleteUsd: "",
       fechaFlete: "",
       pagoFleteUsd: "",
@@ -247,12 +251,50 @@ export default function FleteModal({ open, onOpenChange, sale }: FleteModalProps
                 <Badge variant="secondary">{sale.tipo || 'Inmediato'}</Badge>
               </div>
             </div>
+            
+            {/* Centered Flete A Pagar Display */}
+            <div className="mt-4 pt-4 border-t border-border flex justify-center">
+              <div className="flex items-center gap-2 bg-primary/10 px-6 py-3 rounded-lg">
+                <DollarSign className="h-5 w-5 text-primary" />
+                <span className="text-base font-bold text-primary">Flete A Pagar:</span>
+                <span className="text-lg font-bold text-primary" data-testid="display-flete-a-pagar">
+                  {fleteData.fleteAPagar ? `$${parseFloat(fleteData.fleteAPagar).toFixed(2)}` : '$0.00'}
+                </span>
+              </div>
+            </div>
           </div>
 
           <Separator />
 
           {/* Flete Form */}
           <div className="space-y-4">
+            {/* Flete A Pagar Input Field - Prominent placement */}
+            <div className="space-y-2">
+              <Label htmlFor="fleteAPagar" className="text-base font-semibold">Flete A Pagar (USD)</Label>
+              <div className="relative">
+                <DollarSign className="absolute left-3 top-3 h-5 w-5 text-primary" />
+                <Input
+                  id="fleteAPagar"
+                  type="text"
+                  inputMode="decimal"
+                  placeholder="0.00"
+                  value={fleteData.fleteAPagar}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    // Allow empty, numbers, and decimal point
+                    if (value === '' || /^\d*\.?\d*$/.test(value)) {
+                      setFleteData(prev => ({ ...prev, fleteAPagar: value }));
+                    }
+                  }}
+                  className="pl-10 text-base font-semibold"
+                  data-testid="input-flete-a-pagar"
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">Monto que debe pagarse por el flete de esta orden</p>
+            </div>
+
+            <Separator />
+
             <h3 className="text-lg font-semibold flex items-center gap-2">
               <Truck className="h-5 w-5" />
               Información de Pago
