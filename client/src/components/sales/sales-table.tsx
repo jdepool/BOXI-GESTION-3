@@ -942,13 +942,13 @@ export default function SalesTable({
                           }
                           
                           const badgeClass = status === "overdue" 
-                            ? "bg-red-600 hover:bg-red-700" 
+                            ? "bg-red-500 hover:bg-red-600" 
                             : status === "today" 
-                            ? "bg-amber-600 hover:bg-amber-700" 
-                            : "bg-muted hover:bg-muted/80 text-foreground";
+                            ? "bg-yellow-500 hover:bg-yellow-600" 
+                            : "bg-green-500 hover:bg-green-600";
                           
                           return (
-                            <Badge className={`${badgeClass} text-white font-bold px-2 py-1`}>
+                            <Badge className={`${badgeClass} text-white font-semibold px-2 py-1`}>
                               {phase}
                             </Badge>
                           );
@@ -970,7 +970,8 @@ export default function SalesTable({
                             className="h-7 text-xs"
                             title="Seguimiento"
                           >
-                            <CalendarIcon className="h-3 w-3" />
+                            <CalendarIcon className="h-3 w-3 mr-1" />
+                            Seguimiento
                           </Button>
                         )}
                         <Button
