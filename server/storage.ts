@@ -128,6 +128,7 @@ export interface IStorage {
       pagoInicialUsd: number;
       pagoFleteUsd: number;
       fleteAPagar: number;
+      fleteGratis: boolean;
       ordenPlusFlete: number;
       totalCuotas: number;
       totalPagado: number;
@@ -860,6 +861,7 @@ export class DatabaseStorage implements IStorage {
           pagoInicialUsd: pagoInicial,
           pagoFleteUsd: pagoFlete,
           fleteAPagar: fleteAPagar,
+          fleteGratis: order.fleteGratis || false,
           ordenPlusFlete,
           totalCuotas,
           totalPagado,

@@ -49,6 +49,7 @@ interface Order {
   pagoInicialUsd: number;
   pagoFleteUsd: number;
   fleteAPagar: number;
+  fleteGratis: boolean;
   ordenPlusFlete: number;
   totalCuotas: number;
   totalPagado: number;
@@ -615,7 +616,7 @@ export default function PagosTable({
                           >
                             <Package className={cn(
                               "h-3 w-3 mr-1",
-                              (order.fleteAPagar == null || order.fleteAPagar === 0) && "text-amber-500"
+                              (order.fleteAPagar == null || order.fleteAPagar === 0) && !order.fleteGratis && "text-amber-500"
                             )} />
                             Flete
                           </Button>
