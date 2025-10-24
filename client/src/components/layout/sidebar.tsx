@@ -6,7 +6,8 @@ const navigationItems = [
   {
     href: "/sales",
     icon: "fas fa-table", 
-    label: "Ventas",
+    label: "Ventas Boxi",
+    testId: "nav-ventas", // Keep test ID stable
   },
   {
     href: "/mompox",
@@ -78,7 +79,7 @@ export default function Sidebar() {
                         ? "bg-primary text-primary-foreground" 
                         : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
                     )}
-                    data-testid={`nav-${item.label.toLowerCase().replace(' ', '-')}`}
+                    data-testid={item.testId || `nav-${item.label.toLowerCase().replace(' ', '-')}`}
                   >
                     <i className={item.icon}></i>
                     <span>{item.label}</span>
