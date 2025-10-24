@@ -547,7 +547,6 @@ export default function DispatchTable({
           </Tooltip>
         </div>
       </div>
-
       {/* Filter section - collapsible */}
       {filtersVisible && (
         <div className="p-6 border-b border-border">
@@ -634,7 +633,6 @@ export default function DispatchTable({
           </div>
         </div>
       )}
-
       <div className="p-6">
         {data.length === 0 ? (
           <div className="text-center py-12">
@@ -941,9 +939,7 @@ export default function DispatchTable({
                           <AlertDialogContent>
                             <AlertDialogHeader>
                               <AlertDialogTitle>Confirmar entrega</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                ¿Está seguro que desea marcar esta orden como entregada? Esta acción cambiará el estado de entrega a "Entregado".
-                              </AlertDialogDescription>
+                              <AlertDialogDescription>¿Está seguro que desea marcar esta orden como entregada? Esta acción cambiará el estado de entrega y la eliminará de esta vista.</AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
                               <AlertDialogCancel data-testid={`cancel-delivered-${sale.id}`}>Cancelar</AlertDialogCancel>
@@ -966,7 +962,6 @@ export default function DispatchTable({
           </div>
         )}
       </div>
-
       {total > 0 && (
         <div className="p-6 border-t border-border flex justify-between items-center">
           <div className="text-sm text-muted-foreground">
