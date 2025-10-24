@@ -947,7 +947,14 @@ export default function DispatchTable({
                           <AlertDialogContent>
                             <AlertDialogHeader>
                               <AlertDialogTitle>Confirmar entrega</AlertDialogTitle>
-                              <AlertDialogDescription>¿Está seguro que desea marcar esta orden como entregada? Esta acción cambiará el estado de entrega y la eliminará de esta vista.</AlertDialogDescription>
+                              <AlertDialogDescription className="space-y-2">
+                                <p>
+                                  ¿Está seguro que desea marcar esta orden como entregada?
+                                </p>
+                                <p className="font-medium text-foreground">
+                                  Esta acción marcará la venta <span className="font-mono">#{sale.orden}</span> de {sale.nombre} ({sale.sku || <span className="text-muted-foreground">Sin SKU</span>}) como "Entregado" y la removerá de esta vista.
+                                </p>
+                              </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
                               <AlertDialogCancel data-testid={`cancel-delivered-${sale.id}`}>Cancelar</AlertDialogCancel>
