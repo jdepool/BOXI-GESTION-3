@@ -314,6 +314,7 @@ export default function VentasMompox() {
               <ManualSalesEntry 
                 convertingProspecto={convertingProspecto?.tipo === "inmediata" ? convertingProspecto.prospecto : null}
                 onConversionComplete={() => setConvertingProspecto(null)}
+                canal="ShopMom"
               />
             </TabsContent>
             

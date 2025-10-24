@@ -20,13 +20,14 @@ interface SalesResponse {
 interface ManualSalesEntryProps {
   convertingProspecto?: Prospecto | null;
   onConversionComplete?: () => void;
+  canal?: string; // Optional canal filter (e.g., "ShopMom", "shopify")
 }
 
-export default function ManualSalesEntry({ convertingProspecto, onConversionComplete }: ManualSalesEntryProps) {
+export default function ManualSalesEntry({ convertingProspecto, onConversionComplete, canal = "" }: ManualSalesEntryProps) {
   const [showForm, setShowForm] = useState(false);
   const [editSale, setEditSale] = useState<Sale | null>(null);
   const [filters, setFilters] = useState({
-    canal: "",
+    canal: canal, // Use the canal prop if provided
     estadoEntrega: "",
     asesorId: "",
     orden: "",
