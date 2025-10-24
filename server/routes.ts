@@ -2571,6 +2571,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update sale fechaDevolucion
+  app.put("/api/sales/:saleId/fecha-devolucion", async (req, res) => {
+    try {
+      const { saleId } = req.params;
+      const { fechaDevolucion } = req.body;
+
+      // Validate that sale exists
+      const existingSale = await storage.getSaleById(saleId);
+      if (!existingSale) {
+        return res.status(404).json({ error: "Sale not found" });
+      }
+
+      const updatedSale = await storage.updateSaleFechaDevolucion(saleId, fechaDevolucion || null);
+      
+      if (!updatedSale) {
+        return res.status(500).json({ error: "Failed to update fecha devolucion" });
+      }
+
+      res.json({ success: true, sale: updatedSale });
+    } catch (error) {
+      console.error("Update fecha devolucion error:", error);
+      res.status(500).json({ error: "Failed to update fecha devolucion" });
+    }
+  });
+
   // Mark all sales in an order as Perdida
   app.put("/api/sales/orders/:orderNumber/mark-perdida", async (req, res) => {
     try {

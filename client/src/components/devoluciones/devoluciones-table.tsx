@@ -14,7 +14,9 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { CheckCircle, Package, ChevronLeft, ChevronRight, AlertTriangle } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { CheckCircle, Package, ChevronLeft, ChevronRight, AlertTriangle, Calendar as CalendarIcon } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -48,6 +50,7 @@ export default function DevolucionesTable({
   const [editingNotesId, setEditingNotesId] = useState<string | null>(null);
   const [notesValue, setNotesValue] = useState("");
   const [originalNotesValue, setOriginalNotesValue] = useState("");
+  const [openFechaDevolucionId, setOpenFechaDevolucionId] = useState<string | null>(null);
 
   const getStatusBadgeVariant = (status: string) => {
     switch (status) {
@@ -94,6 +97,59 @@ export default function DevolucionesTable({
 
   const handleStatusChange = (saleId: string, newStatus: string) => {
     updateDeliveryStatusMutation.mutate({ saleId, status: newStatus });
+  };
+
+  const updateFechaDevolucionMutation = useMutation({
+    mutationFn: async ({ saleId, fechaDevolucion }: { saleId: string; fechaDevolucion: string | null }) => {
+      return apiRequest("PUT", `/api/sales/${saleId}/fecha-devolucion`, { fechaDevolucion });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ 
+        predicate: (query) => Array.isArray(query.queryKey) && typeof query.queryKey[0] === 'string' && query.queryKey[0].startsWith('/api/sales')
+      });
+      toast({
+        title: "Fecha Devolución actualizada",
+        description: "La fecha de devolución ha sido actualizada correctamente.",
+      });
+    },
+    onError: (error) => {
+      console.error('Failed to update fecha devolucion:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo actualizar la fecha de devolución.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleFechaDevolucionChange = (saleId: string, date: Date | undefined) => {
+    if (date) {
+      // Format date as YYYY-MM-DD
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const fechaDevolucion = `${year}-${month}-${day}`;
+      
+      updateFechaDevolucionMutation.mutate({ saleId, fechaDevolucion });
+    } else {
+      updateFechaDevolucionMutation.mutate({ saleId, fechaDevolucion: null });
+    }
+    // Close the popover after selection
+    setOpenFechaDevolucionId(null);
+  };
+
+  // Helper to parse date string to Date object
+  const parseFechaDevolucion = (dateStr: string | null): Date | undefined => {
+    if (!dateStr) return undefined;
+    const [year, month, day] = dateStr.split('-').map(Number);
+    return new Date(year, month - 1, day);
+  };
+
+  // Helper to format date for display
+  const formatFechaDevolucion = (dateStr: string | null): string => {
+    if (!dateStr) return '-';
+    const [year, month, day] = dateStr.split('-');
+    return `${day}/${month}/${year}`;
   };
 
   const updateNotesMutation = useMutation({
@@ -216,6 +272,7 @@ export default function DevolucionesTable({
                     <th className="text-center p-2 text-xs font-medium text-muted-foreground min-w-[80px]">Cantidad</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[200px]">Email</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[200px]">Notas</th>
+                    <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[150px]">Fecha Devolución</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[120px]">Acciones</th>
                   </tr>
                 </thead>
@@ -332,6 +389,35 @@ export default function DevolucionesTable({
                             {sale.notas || 'Click para agregar nota'}
                           </div>
                         )}
+                      </td>
+                      
+                      <td className="p-2 pr-6 min-w-[150px] text-xs">
+                        <Popover
+                          open={openFechaDevolucionId === sale.id}
+                          onOpenChange={(open) => setOpenFechaDevolucionId(open ? sale.id : null)}
+                        >
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="outline"
+                              className={cn(
+                                "w-full h-8 justify-start text-left font-normal text-xs",
+                                !sale.fechaDevolucion && "text-muted-foreground"
+                              )}
+                              data-testid={`fecha-devolucion-button-${sale.id}`}
+                            >
+                              <CalendarIcon className={cn("mr-2 h-3 w-3", !sale.fechaDevolucion && "text-amber-500")} />
+                              {sale.fechaDevolucion ? formatFechaDevolucion(sale.fechaDevolucion) : "Seleccionar"}
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar
+                              mode="single"
+                              selected={parseFechaDevolucion(sale.fechaDevolucion)}
+                              onSelect={(date) => handleFechaDevolucionChange(sale.id, date)}
+                              initialFocus
+                            />
+                          </PopoverContent>
+                        </Popover>
                       </td>
                       
                       <td className="p-2 min-w-[120px] text-xs">

@@ -69,6 +69,7 @@ export interface IStorage {
   updateSaleNroGuia(id: string, nroGuia: string | null): Promise<Sale | undefined>;
   updateSaleFechaDespacho(id: string, fechaDespacho: string | null): Promise<Sale | undefined>;
   updateSaleFechaCliente(id: string, fechaCliente: string | null): Promise<Sale | undefined>;
+  updateSaleFechaDevolucion(id: string, fechaDevolucion: string | null): Promise<Sale | undefined>;
   updateSaleFechaEntrega(saleId: string, fechaEntrega: Date | null): Promise<Sale | undefined>;
   getTotalSalesCount(filters?: {
     canal?: string;
@@ -1074,6 +1075,15 @@ export class DatabaseStorage implements IStorage {
     const [updatedSale] = await db
       .update(sales)
       .set({ fechaCliente, updatedAt: new Date() })
+      .where(eq(sales.id, id))
+      .returning();
+    return updatedSale || undefined;
+  }
+
+  async updateSaleFechaDevolucion(id: string, fechaDevolucion: string | null): Promise<Sale | undefined> {
+    const [updatedSale] = await db
+      .update(sales)
+      .set({ fechaDevolucion, updatedAt: new Date() })
       .where(eq(sales.id, id))
       .returning();
     return updatedSale || undefined;
