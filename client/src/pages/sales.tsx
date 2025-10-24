@@ -286,7 +286,7 @@ export default function Sales() {
       
       <main className="flex-1 flex flex-col overflow-hidden">
         <Header 
-          title="Ventas"
+          title="Ventas Boxi"
         />
         
         <div className="flex-1 overflow-auto p-6">
