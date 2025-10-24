@@ -481,12 +481,7 @@ export class DatabaseStorage implements IStorage {
       );
     } else if (filters?.canalBoxi === "true") {
       // Filter for Boxi channels (exclude ShopMom and any canal containing "MP")
-      conditions.push(
-        and(
-          ne(sales.canal, "ShopMom"),
-          not(like(sales.canal, "%MP%"))
-        )
-      );
+      conditions.push(sql`${sales.canal} != 'ShopMom' AND ${sales.canal} NOT LIKE '%MP%'`);
     } else if (filters?.canal) {
       conditions.push(eq(sales.canal, filters.canal));
     }
@@ -724,12 +719,7 @@ export class DatabaseStorage implements IStorage {
       );
     } else if (filters?.canalBoxi === "true") {
       // Filter for Boxi channels (exclude ShopMom and any canal containing "MP")
-      conditions.push(
-        and(
-          ne(sales.canal, "ShopMom"),
-          not(like(sales.canal, "%MP%"))
-        )
-      );
+      conditions.push(sql`${sales.canal} != 'ShopMom' AND ${sales.canal} NOT LIKE '%MP%'`);
     } else if (filters?.canal) {
       conditions.push(eq(sales.canal, filters.canal));
     }
@@ -1435,12 +1425,7 @@ export class DatabaseStorage implements IStorage {
       );
     } else if (filters?.canalBoxi === "true") {
       // Filter for Boxi channels (exclude ShopMom and any canal containing "MP")
-      conditions.push(
-        and(
-          ne(sales.canal, "ShopMom"),
-          not(like(sales.canal, "%MP%"))
-        )
-      );
+      conditions.push(sql`${sales.canal} != 'ShopMom' AND ${sales.canal} NOT LIKE '%MP%'`);
     } else if (filters?.canal) {
       conditions.push(eq(sales.canal, filters.canal));
     }
@@ -3196,12 +3181,7 @@ export class DatabaseStorage implements IStorage {
       );
     } else if (filters?.canalBoxi === "true") {
       // Filter for Boxi channels (exclude ShopMom and any canal containing "MP")
-      whereConditions.push(
-        and(
-          ne(prospectos.canal, "ShopMom"),
-          not(like(prospectos.canal, "%MP%"))
-        )
-      );
+      whereConditions.push(sql`${prospectos.canal} != 'ShopMom' AND ${prospectos.canal} NOT LIKE '%MP%'`);
     } else if (filters?.canal) {
       whereConditions.push(eq(prospectos.canal, filters.canal));
     }
@@ -3298,12 +3278,7 @@ export class DatabaseStorage implements IStorage {
       );
     } else if (filters?.canalBoxi === "true") {
       // Filter for Boxi channels (exclude ShopMom and any canal containing "MP")
-      whereConditions.push(
-        and(
-          ne(prospectos.canal, "ShopMom"),
-          not(like(prospectos.canal, "%MP%"))
-        )
-      );
+      whereConditions.push(sql`${prospectos.canal} != 'ShopMom' AND ${prospectos.canal} NOT LIKE '%MP%'`);
     } else if (filters?.canal) {
       whereConditions.push(eq(prospectos.canal, filters.canal));
     }
