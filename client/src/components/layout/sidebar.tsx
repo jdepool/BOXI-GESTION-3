@@ -9,6 +9,11 @@ const navigationItems = [
     label: "Ventas",
   },
   {
+    href: "/mompox",
+    icon: "fas fa-shopping-bag",
+    label: "Ventas Mompox",
+  },
+  {
     href: "/despachos",
     icon: "fas fa-truck",
     label: "Despachos",

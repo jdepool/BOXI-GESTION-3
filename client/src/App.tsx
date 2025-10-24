@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/theme-provider";
 import { useAuth } from "@/hooks/useAuth";
 import Sales from "@/pages/sales";
+import VentasMompox from "@/pages/ventas-mompox";
 import Despachos from "@/pages/despachos";
 import Devoluciones from "@/pages/devoluciones";
 import Verificacion from "@/pages/verificacion";
@@ -32,6 +33,9 @@ function Router() {
       </Route>
       <Route path="/sales">
         <ProtectedRoute component={Sales} />
+      </Route>
+      <Route path="/mompox">
+        <ProtectedRoute component={VentasMompox} />
       </Route>
       <Route path="/despachos">
         <ProtectedRoute component={Despachos} />
