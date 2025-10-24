@@ -36,6 +36,14 @@ export default function Sales() {
     offset: 0,
   });
 
+  const [inmediatasFilters, setInmediatasFilters] = useState({
+    canalBoxi: "true", // Filter for Boxi channels (exclude ShopMom and MP canals)
+    startDate: "",
+    endDate: "",
+    limit: 20,
+    offset: 0,
+  });
+
   const [reservasFilters, setReservasFilters] = useState({
     canalBoxi: "true", // Filter for Boxi channels (exclude ShopMom and MP canals)
     startDate: "",
@@ -55,6 +63,7 @@ export default function Sales() {
     offset: 0,
   });
 
+  const [isManualInmediataModalOpen, setIsManualInmediataModalOpen] = useState(false);
   const [isManualReservaModalOpen, setIsManualReservaModalOpen] = useState(false);
   const [isSettingsDialogOpen, setIsSettingsDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("lista");
@@ -72,6 +81,21 @@ export default function Sales() {
       // Lista de Ventas always excludes Pendiente and Perdida orders
       excludePerdida: true,
       excludePendiente: true
+    }],
+  });
+
+  // Query for Inmediato orders that are still pending (excludePerdida always true)
+  const { data: inmediatasData, isLoading: inmediatasLoading } = useQuery<{
+    data: any[];
+    total: number;
+    limit: number;
+    offset: number;
+  }>({
+    queryKey: ["/api/sales", { 
+      ...inmediatasFilters,
+      tipo: "Inmediato", 
+      estadoEntrega: "Pendiente", 
+      excludePerdida: true 
     }],
   });
 
@@ -187,6 +211,24 @@ export default function Sales() {
     });
   };
 
+  const handleInmediatasFilterChange = (newFilters: Partial<typeof inmediatasFilters>) => {
+    setInmediatasFilters(prev => ({ ...prev, ...newFilters, offset: 0, canalBoxi: "true" }));
+  };
+
+  const handleInmediatasPageChange = (newOffset: number) => {
+    setInmediatasFilters(prev => ({ ...prev, offset: newOffset }));
+  };
+
+  const handleClearInmediatasFilters = () => {
+    setInmediatasFilters({
+      canalBoxi: "true",
+      startDate: "",
+      endDate: "",
+      limit: 20,
+      offset: 0,
+    });
+  };
+
   const handleReservasFilterChange = (newFilters: Partial<typeof reservasFilters>) => {
     setReservasFilters(prev => ({ ...prev, ...newFilters, offset: 0, canalBoxi: "true" }));
   };
@@ -230,11 +272,10 @@ export default function Sales() {
 
   const handleProspectoConvert = (tipo: "inmediata" | "reserva", prospecto: Prospecto) => {
     setConvertingProspecto({ tipo, prospecto });
-    // Switch to the appropriate tab and open the form
+    // Open the appropriate modal
     if (tipo === "inmediata") {
-      setActiveTab("manual");
+      setIsManualInmediataModalOpen(true);
     } else {
-      setActiveTab("reservas");
       setIsManualReservaModalOpen(true);
     }
   };
@@ -309,11 +350,32 @@ export default function Sales() {
             </TabsContent>
             
             <TabsContent value="manual" className="h-full">
-              <ManualSalesEntry 
-                convertingProspecto={convertingProspecto?.tipo === "inmediata" ? convertingProspecto.prospecto : null}
-                onConversionComplete={() => setConvertingProspecto(null)}
-                canal="Manual"
-              />
+              <div className="bg-card rounded-lg border border-border h-full">
+                <SalesTable 
+                  data={inmediatasData?.data || []} 
+                  total={inmediatasData?.total || 0}
+                  limit={inmediatasFilters.limit}
+                  offset={inmediatasFilters.offset}
+                  isLoading={inmediatasLoading}
+                  hideFilters={false}
+                  hidePagination={false}
+                  showDeliveryDateColumn={true}
+                  showSeguimientoColumns={true}
+                  hideEstadoEntregaFilter={true}
+                  activeTab={activeTab}
+                  filters={inmediatasFilters}
+                  extraExportParams={{
+                    canalBoxi: 'true',
+                    tipo: 'Inmediato',
+                    estadoEntrega: 'Pendiente',
+                    excludePerdida: 'true'
+                  }}
+                  onFilterChange={handleInmediatasFilterChange}
+                  onPageChange={handleInmediatasPageChange}
+                  onClearFilters={handleClearInmediatasFilters}
+                  onNewReserva={() => setIsManualInmediataModalOpen(true)}
+                />
+              </div>
             </TabsContent>
             
             <TabsContent value="reservas" className="h-full">
@@ -363,6 +425,27 @@ export default function Sales() {
           </Tabs>
         </div>
       </main>
+
+      <Dialog open={isManualInmediataModalOpen} onOpenChange={(open) => {
+        setIsManualInmediataModalOpen(open);
+        if (!open && convertingProspecto?.tipo === "inmediata") {
+          setConvertingProspecto(null);
+        }
+      }}>
+        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto" data-testid="dialog-manual-inmediata">
+          <DialogHeader>
+            <DialogTitle>Nueva Venta Inmediata</DialogTitle>
+          </DialogHeader>
+          <ManualSalesEntry 
+            convertingProspecto={convertingProspecto?.tipo === "inmediata" ? convertingProspecto.prospecto : null}
+            onConversionComplete={() => {
+              setIsManualInmediataModalOpen(false);
+              setConvertingProspecto(null);
+            }}
+            canal="Manual"
+          />
+        </DialogContent>
+      </Dialog>
 
       <ManualReservaModal 
         isOpen={isManualReservaModalOpen}
