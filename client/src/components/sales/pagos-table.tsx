@@ -184,7 +184,15 @@ export default function PagosTable({
   };
 
   const getChannelBadgeClass = (canal: string | null) => {
-    switch (canal?.toLowerCase()) {
+    const lowerCanal = canal?.toLowerCase();
+    
+    // Check for ShopMom and MP-related channels (Mompox product line)
+    const mompoxChannels = ['shopmom', 'manual mp', 'cashea mp', 'tienda mp'];
+    if (lowerCanal && mompoxChannels.includes(lowerCanal)) {
+      return 'bg-[#51675d]'; // Green color for ShopMom/MP channels
+    }
+    
+    switch (lowerCanal) {
       case 'cashea': return 'channel-badge-cashea';
       case 'shopify': return 'channel-badge-shopify';
       case 'treble': return 'channel-badge-treble';

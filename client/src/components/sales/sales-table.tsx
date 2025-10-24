@@ -452,7 +452,15 @@ export default function SalesTable({
   };
 
   const getChannelBadgeClass = (canal: string) => {
-    switch (canal?.toLowerCase()) {
+    const lowerCanal = canal?.toLowerCase();
+    
+    // Check for ShopMom and MP-related channels (Mompox product line)
+    const mompoxChannels = ['shopmom', 'manual mp', 'cashea mp', 'tienda mp'];
+    if (mompoxChannels.includes(lowerCanal)) {
+      return 'bg-[#51675d]'; // Green color for ShopMom/MP channels
+    }
+    
+    switch (lowerCanal) {
       case 'cashea': return 'channel-badge-cashea';
       case 'shopify': return 'channel-badge-shopify';
       case 'treble': return 'channel-badge-treble';
@@ -736,7 +744,7 @@ export default function SalesTable({
                       })()}
                     </td>
                     <td className="p-2 min-w-[80px]">
-                      <Badge className="inline-flex items-center rounded-md border px-2.5 py-0.5 font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent shadow hover:bg-primary/80 text-white text-xs bg-[#51675d]">
+                      <Badge className={`${getChannelBadgeClass(sale.canal)} text-white text-xs`}>
                         {sale.canal.charAt(0).toUpperCase() + sale.canal.slice(1)}
                       </Badge>
                     </td>
