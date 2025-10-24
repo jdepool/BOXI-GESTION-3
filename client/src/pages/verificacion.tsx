@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
@@ -86,9 +86,24 @@ export default function VerificacionPage() {
   const [ordenFilter, setOrdenFilter] = useState("");
   const [tipoPagoFilter, setTipoPagoFilter] = useState("all");
   
+  // Debounced order filter - local state for immediate UI updates
+  const [ordenInputValue, setOrdenInputValue] = useState("");
+  
   // Pagination
   const [limit] = useState(20);
   const [offset, setOffset] = useState(0);
+
+  // Debounce order filter - trigger filter update 500ms after user stops typing
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (ordenInputValue !== ordenFilter) {
+        setOrdenFilter(ordenInputValue);
+        setOffset(0); // Reset to first page when filter changes
+      }
+    }, 500);
+
+    return () => clearTimeout(timeoutId);
+  }, [ordenInputValue]);
 
   const { data, isLoading } = useQuery<{ data: VerificationPayment[]; total: number }>({
     queryKey: [
@@ -193,6 +208,7 @@ export default function VerificacionPage() {
     setSelectedBanco("all");
     setEstadoFilter("all");
     setOrdenFilter("");
+    setOrdenInputValue("");
     setTipoPagoFilter("all");
     setOffset(0);
   };
@@ -345,8 +361,8 @@ export default function VerificacionPage() {
                   <label className="text-sm font-medium mb-1 block">Orden:</label>
                   <Input
                     placeholder="Buscar orden..."
-                    value={ordenFilter}
-                    onChange={(e) => setOrdenFilter(e.target.value)}
+                    value={ordenInputValue}
+                    onChange={(e) => setOrdenInputValue(e.target.value)}
                     className="w-40"
                     data-testid="input-orden"
                   />

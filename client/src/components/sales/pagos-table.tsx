@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -115,6 +115,25 @@ export default function PagosTable({
   const [fleteAPagarValue, setFleteAPagarValue] = useState<string>("");
   const [fleteGratisValue, setFleteGratisValue] = useState<boolean>(false);
   const [currentFleteOrder, setCurrentFleteOrder] = useState<string | null>(null);
+  
+  // Debounced order filter - local state for immediate UI updates
+  const [orderInputValue, setOrderInputValue] = useState(filters?.orden || "");
+
+  // Debounce order filter - trigger API call 500ms after user stops typing
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (orderInputValue !== filters?.orden) {
+        handleFilterChange('orden', orderInputValue);
+      }
+    }, 500);
+
+    return () => clearTimeout(timeoutId);
+  }, [orderInputValue]);
+
+  // Sync input value when parent filter changes (e.g., on clear filters)
+  useEffect(() => {
+    setOrderInputValue(filters?.orden || "");
+  }, [filters?.orden]);
 
   // Fetch asesores for displaying asesor names
   const { data: asesores = [] } = useQuery<Array<{ id: string; nombre: string; activo?: boolean }>>({
@@ -442,8 +461,8 @@ export default function PagosTable({
               <Input 
                 type="text"
                 placeholder="Buscar por # orden"
-                value={filters?.orden || ""}
-                onChange={(e) => handleFilterChange('orden', e.target.value)}
+                value={orderInputValue}
+                onChange={(e) => setOrderInputValue(e.target.value)}
                 className="w-40"
                 data-testid="filter-order-number"
               />
