@@ -1049,7 +1049,7 @@ export default function SalesTable({
                             <AlertDialogContent>
                               <AlertDialogHeader>
                                 <AlertDialogTitle>Confirmar entrega</AlertDialogTitle>
-                                <AlertDialogDescription>¿Está seguro que desea marcar esta orden como entregada? Esta acción cambiará el estado de entrega y la eliminará de esta vista.</AlertDialogDescription>
+                                <AlertDialogDescription>¿Está seguro que desea marcar esta orden como entregada? Esta acción cambiará el Estado de Entrega, la eliminará de la vista de Despacho pero permanecerá en Lista de Ventas.</AlertDialogDescription>
                               </AlertDialogHeader>
                               <AlertDialogFooter>
                                 <AlertDialogCancel data-testid={`cancel-delivered-${sale.id}`}>Cancelar</AlertDialogCancel>
