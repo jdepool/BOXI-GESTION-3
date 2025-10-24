@@ -139,6 +139,10 @@ export function VerificacionPagosCasheaTab() {
     }
 
     setIsProcessing(true);
+    
+    // Clear previous verified matches to prevent duplicates when processing a new file
+    setVerifiedMatches([]);
+    
     try {
       const formData = new FormData();
       formData.append('file', selectedFile);
