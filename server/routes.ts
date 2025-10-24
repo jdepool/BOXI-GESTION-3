@@ -112,6 +112,7 @@ async function sendWebhookToZapier(data: any, canal: string): Promise<void> {
 
 const getSalesQuerySchema = z.object({
   canal: z.string().optional(),
+  canalMompox: z.string().optional(), // Filter for ShopMom OR canals containing "MP"
   estadoEntrega: z.string().optional(),
   orden: z.string().optional(),
   startDate: z.string().optional(),
@@ -832,6 +833,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const filters = {
         canal: query.canal,
+        canalMompox: query.canalMompox,
         estadoEntrega: query.estadoEntrega,
         orden: query.orden,
         startDate: query.startDate,
@@ -1343,6 +1345,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const limit = req.query.limit ? parseInt(req.query.limit as string) : 20;
       const offset = req.query.offset ? parseInt(req.query.offset as string) : 0;
       const canal = req.query.canal && req.query.canal !== 'all' ? req.query.canal as string : undefined;
+      const canalMompox = req.query.canalMompox as string | undefined;
       const orden = req.query.orden as string | undefined;
       const startDate = req.query.startDate as string | undefined;
       const endDate = req.query.endDate as string | undefined;
@@ -1368,7 +1371,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const result = await storage.getOrdersForPayments({ 
         limit, 
         offset, 
-        canal, 
+        canal,
+        canalMompox,
         orden, 
         startDate, 
         endDate,
@@ -4437,6 +4441,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     asesorId: z.string().optional(),
     estadoProspecto: z.string().optional(),
     canal: z.string().optional(),
+    canalMompox: z.string().optional(), // Filter for ShopMom OR canals containing "MP"
     prospecto: z.string().optional(),
     startDate: z.string().optional(),
     endDate: z.string().optional(),
@@ -4453,6 +4458,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           asesorId: query.asesorId,
           estadoProspecto: query.estadoProspecto,
           canal: query.canal,
+          canalMompox: query.canalMompox,
           prospecto: query.prospecto,
           startDate: query.startDate,
           endDate: query.endDate,
@@ -4463,6 +4469,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           asesorId: query.asesorId,
           estadoProspecto: query.estadoProspecto,
           canal: query.canal,
+          canalMompox: query.canalMompox,
           prospecto: query.prospecto,
           startDate: query.startDate,
           endDate: query.endDate,
