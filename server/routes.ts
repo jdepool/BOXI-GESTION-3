@@ -1967,6 +1967,189 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ShopMom (Mompox Shopify) webhook endpoint for order creation
+  app.post("/api/webhooks/shopify-mompox", async (req, res) => {
+    try {
+      console.log("📥 Received ShopMom webhook request");
+      console.log("📦 Webhook payload:", JSON.stringify(req.body, null, 2));
+      
+      const shopifyOrder = req.body;
+      
+      // Basic validation that this is a Shopify order
+      if (!shopifyOrder || !shopifyOrder.id || !shopifyOrder.name) {
+        console.log("❌ Invalid ShopMom order data received");
+        return res.status(400).json({ error: "Invalid ShopMom order data" });
+      }
+
+      console.log(`📦 Received ShopMom webhook for order: ${shopifyOrder.name} (ID: ${shopifyOrder.id}) with ${shopifyOrder.line_items?.length || 0} line items`);
+      
+      // Transform Shopify webhook data to CSV format for existing mapping logic
+      // This now returns an array of records, one per line item
+      const csvFormatData = transformShopifyWebhookToCSV(shopifyOrder);
+      
+      
+      if (csvFormatData.length === 0) {
+        console.log(`⚠️ No line items found in ShopMom order ${shopifyOrder.name}`);
+        return res.status(400).json({ error: "No line items found in order" });
+      }
+
+      // Process each line item (product) in the order
+      const salesData = csvFormatData.map((row: any) => {
+        // Parse date based on channel
+        let fecha = new Date();
+        
+        if (row['Created at']) {
+          fecha = new Date(row['Created at']);
+        }
+
+        // Use existing Shopify mapping logic from parseFile function
+        const totalUsdValue = String(row['Lineitem price'] || '0');
+        
+        return {
+          nombre: String(row['Billing Name'] || ''),
+          cedula: null, // Shopify doesn't have cedula field
+          telefono: row['Billing Phone'] ? String(row['Billing Phone']) : null,
+          email: row.Email ? String(row.Email) : null,
+          totalUsd: totalUsdValue,
+          totalOrderUsd: row['Total'] ? String(row['Total']) : null, // Full order total from Shopify
+          fecha,
+          canal: 'ShopMom', // *** KEY DIFFERENCE: Use ShopMom canal instead of shopify ***
+          estadoPagoInicial: null,
+          pagoInicialUsd: null,
+          metodoPagoId: null,
+          bancoReceptorInicial: null,
+          orden: row.Name ? String(row.Name) : null, // Name maps to Order
+          factura: null,
+          referenciaInicial: null,
+          montoInicialBs: null,
+          montoInicialUsd: null,
+          estadoEntrega: 'Pendiente', // Route ShopMom orders to "Ventas por Completar"
+          product: String(row['Lineitem name'] || ''),
+          sku: row['Lineitem sku'] || row['Lineitem SKU'] || row['lineitem sku'] || row['SKU'] ? 
+               String(row['Lineitem sku'] || row['Lineitem SKU'] || row['lineitem sku'] || row['SKU']) : null,
+          cantidad: Number(row['Lineitem quantity'] || 1),
+          // Billing address mapping
+          direccionFacturacionPais: row['Billing Country'] ? String(row['Billing Country']) : null,
+          direccionFacturacionEstado: row['Billing Province name'] ? String(row['Billing Province name']) : null,
+          direccionFacturacionCiudad: row['Billing City'] ? String(row['Billing City']) : null,
+          direccionFacturacionDireccion: row['Billing Address1'] ? String(row['Billing Address1']) : null,
+          direccionFacturacionUrbanizacion: row['Billing Address2'] ? String(row['Billing Address2']) : null,
+          direccionFacturacionReferencia: null,
+          direccionDespachoIgualFacturacion: 'false',
+          // Shipping address mapping  
+          direccionDespachoPais: row['Shipping Country'] ? String(row['Shipping Country']) : null,
+          direccionDespachoEstado: row['Shipping Province name'] ? String(row['Shipping Province name']) : null,
+          direccionDespachoCiudad: row['Shipping City'] ? String(row['Shipping City']) : null,
+          direccionDespachoDireccion: row['Shipping Address1'] ? String(row['Shipping Address1']) : null,
+          direccionDespachoUrbanizacion: row['Shipping Address2'] ? String(row['Shipping Address2']) : null,
+          direccionDespachoReferencia: null,
+          // Default freight values
+          montoFleteUsd: null,
+          fechaFlete: null,
+          referenciaFlete: null,
+          montoFleteBs: null,
+          bancoReceptorFlete: null,
+          statusFlete: 'Pendiente',
+          fleteGratis: false,
+          notas: null,
+          // Auto-detect RESERVA products and set tipo accordingly
+          tipo: String(row['Lineitem name'] || '').toUpperCase().includes('RESERVA') ? 'Reserva' : 'Inmediato',
+          fechaEntrega: undefined,
+        };
+      });
+
+      // Validate the sales data
+      const validatedSales = [];
+      const errors = [];
+      
+      for (let i = 0; i < salesData.length; i++) {
+        try {
+          const validatedSale = insertSaleSchema.parse(salesData[i]);
+          validatedSales.push(validatedSale);
+        } catch (error) {
+          errors.push({
+            row: i + 1,
+            error: error instanceof z.ZodError ? error.errors : String(error)
+          });
+        }
+      }
+
+      if (errors.length > 0) {
+        console.error(`❌ Validation errors in ShopMom webhook order ${shopifyOrder.name}:`, errors);
+        return res.status(400).json({
+          error: "Validation errors found",
+          details: errors
+        });
+      }
+
+      // Smart deduplication for ShopMom webhooks: check order number + product combination
+      const newSales = [];
+      let duplicatesSkipped = 0;
+      
+      for (const sale of validatedSales) {
+        if (!sale.orden || !sale.product) {
+          // If no order number or product, include it (shouldn't happen with good data)
+          newSales.push(sale);
+          continue;
+        }
+        
+        // Get all existing orders with the same order number
+        const existingOrdersWithSameNumber = await storage.getOrdersByOrderNumber(sale.orden);
+        
+        // Check if any existing order has the same product (case-insensitive comparison)
+        const hasMatchingProduct = existingOrdersWithSameNumber.some(existing => 
+          existing.product?.toLowerCase().trim() === sale.product?.toLowerCase().trim()
+        );
+        
+        if (!hasMatchingProduct) {
+          // No existing order with same order number + product combination, so include it
+          newSales.push(sale);
+          console.log(`✅ Processing ShopMom line item: ${sale.orden} - ${sale.product}`);
+        } else {
+          // Skip this sale (it's a duplicate)
+          duplicatesSkipped++;
+          console.log(`⚠️ Skipping duplicate ShopMom item: ${sale.orden} - ${sale.product}`);
+        }
+      }
+      
+      if (newSales.length === 0) {
+        console.log(`⚠️ All line items in ShopMom order ${shopifyOrder.name} already exist - ${duplicatesSkipped} duplicates skipped`);
+        return res.status(200).json({ 
+          message: "All products in order already exist",
+          duplicate: true,
+          duplicatesSkipped: duplicatesSkipped
+        });
+      }
+
+      // Save to database
+      await storage.createSales(newSales);
+
+      // Log successful webhook processing
+      await storage.createUploadHistory({
+        filename: `shopmom_webhook_${shopifyOrder.name}`,
+        canal: 'ShopMom',
+        recordsCount: newSales.length,
+        status: 'success',
+        errorMessage: null,
+      });
+
+      console.log(`✅ Successfully processed ShopMom webhook for order ${shopifyOrder.name}`);
+      
+      res.status(200).json({ 
+        success: true, 
+        message: "ShopMom order processed successfully",
+        ordersCreated: newSales.length 
+      });
+
+    } catch (error) {
+      console.error("ShopMom webhook error:", error);
+      res.status(500).json({ 
+        error: "Failed to process ShopMom webhook",
+        message: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
   // Upload Excel file
   app.post("/api/upload", upload.single('file'), async (req, res) => {
     try {
