@@ -561,6 +561,7 @@ export const insertProspectoSchema = createInsertSchema(prospectos).omit({
 }).extend({
   nombre: z.string().min(1, "Nombre es requerido"),
   telefono: z.string().min(1, "Teléfono es requerido"),
+  estadoProspecto: z.enum(["Activo", "Perdido", "Convertido"]).optional(),
   cedula: z.preprocess((val) => (val === "" || val === null) ? undefined : val, z.string().optional()),
   email: z.preprocess((val) => (val === "" || val === null) ? undefined : val, z.string().email("Email inválido").optional()),
   canal: z.preprocess((val) => (val === "" || val === null) ? undefined : val, z.string().optional()),
