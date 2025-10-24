@@ -64,9 +64,10 @@ interface ManualSalesFormProps {
   onCancel: () => void;
   isSubmitting?: boolean;
   convertingProspecto?: Prospecto | null;
+  defaultCanal?: string; // Default canal to pre-fill (e.g., "ShopMom", "shopify")
 }
 
-export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = false, convertingProspecto }: ManualSalesFormProps) {
+export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = false, convertingProspecto, defaultCanal = "" }: ManualSalesFormProps) {
   const [products, setProducts] = useState<ProductFormData[]>([]);
   const [isProductDialogOpen, setIsProductDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<{product: ProductFormData; index: number} | null>(null);
