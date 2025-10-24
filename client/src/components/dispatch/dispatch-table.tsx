@@ -8,6 +8,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { DateRangePicker } from "@/components/shared/date-range-picker";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Download, Package, ChevronLeft, ChevronRight, Filter, ChevronDown, ChevronUp, RotateCcw, CalendarIcon, Truck } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
@@ -920,21 +921,42 @@ export default function DispatchTable({
                       </td>
                       
                       <td className="p-2 min-w-[150px] text-xs">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => markDeliveredMutation.mutate(sale.id)}
-                          disabled={sale.estadoEntrega === "Entregado" || markDeliveredMutation.isPending}
-                          data-testid={`delivered-sale-${sale.id}`}
-                          className={cn(
-                            "h-7 text-xs bg-green-600 text-white border-green-600 hover:bg-green-700 hover:border-green-700 dark:bg-green-600 dark:text-white dark:border-green-600 dark:hover:bg-green-700",
-                            sale.estadoEntrega === "Entregado" && "bg-green-800 text-white hover:bg-green-800 opacity-70 cursor-not-allowed border-green-700"
-                          )}
-                          title={sale.estadoEntrega === "Entregado" ? "Venta ya entregada" : "Marcar como entregado"}
-                        >
-                          <Truck className={cn("h-3 w-3 mr-1", sale.estadoEntrega === "Entregado" && "text-green-400")} />
-                          Entregado
-                        </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              disabled={sale.estadoEntrega === "Entregado" || markDeliveredMutation.isPending}
+                              data-testid={`delivered-sale-${sale.id}`}
+                              className={cn(
+                                "h-7 text-xs bg-green-600 text-white border-green-600 hover:bg-green-700 hover:border-green-700 dark:bg-green-600 dark:text-white dark:border-green-600 dark:hover:bg-green-700",
+                                sale.estadoEntrega === "Entregado" && "bg-green-800 text-white hover:bg-green-800 opacity-70 cursor-not-allowed border-green-700"
+                              )}
+                              title={sale.estadoEntrega === "Entregado" ? "Venta ya entregada" : "Marcar como entregado"}
+                            >
+                              <Truck className={cn("h-3 w-3 mr-1", sale.estadoEntrega === "Entregado" && "text-green-400")} />
+                              Entregado
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Confirmar entrega</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                ¿Está seguro que desea marcar esta orden como entregada? Esta acción cambiará el estado de entrega a "Entregado".
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel data-testid={`cancel-delivered-${sale.id}`}>Cancelar</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() => markDeliveredMutation.mutate(sale.id)}
+                                data-testid={`confirm-delivered-${sale.id}`}
+                                className="bg-green-600 hover:bg-green-700"
+                              >
+                                Confirmar
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       </td>
                     </tr>
                   ))}
