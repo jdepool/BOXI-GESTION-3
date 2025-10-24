@@ -443,6 +443,7 @@ export default function Sales() {
               setConvertingProspecto(null);
             }}
             canal="Manual"
+            openFormImmediately={true}
           />
         </DialogContent>
       </Dialog>

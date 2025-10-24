@@ -444,6 +444,7 @@ export default function VentasMompox() {
               setConvertingProspecto(null);
             }}
             canal="Manual MP"
+            openFormImmediately={true}
           />
         </DialogContent>
       </Dialog>

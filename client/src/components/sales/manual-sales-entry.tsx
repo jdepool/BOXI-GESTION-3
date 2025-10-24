@@ -21,10 +21,11 @@ interface ManualSalesEntryProps {
   convertingProspecto?: Prospecto | null;
   onConversionComplete?: () => void;
   canal?: string; // Optional canal filter (e.g., "ShopMom", "shopify")
+  openFormImmediately?: boolean; // Whether to show the form immediately instead of the table
 }
 
-export default function ManualSalesEntry({ convertingProspecto, onConversionComplete, canal = "" }: ManualSalesEntryProps) {
-  const [showForm, setShowForm] = useState(false);
+export default function ManualSalesEntry({ convertingProspecto, onConversionComplete, canal = "", openFormImmediately = false }: ManualSalesEntryProps) {
+  const [showForm, setShowForm] = useState(openFormImmediately);
   const [editSale, setEditSale] = useState<Sale | null>(null);
   const [filters, setFilters] = useState({
     canal: canal, // Use the canal prop if provided
