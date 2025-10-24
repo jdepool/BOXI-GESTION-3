@@ -51,6 +51,7 @@ export default function DevolucionesTable({
   const [notesValue, setNotesValue] = useState("");
   const [originalNotesValue, setOriginalNotesValue] = useState("");
   const [openFechaDevolucionId, setOpenFechaDevolucionId] = useState<string | null>(null);
+  const [openFechaClienteId, setOpenFechaClienteId] = useState<string | null>(null);
 
   const getStatusBadgeVariant = (status: string) => {
     switch (status) {
@@ -136,6 +137,45 @@ export default function DevolucionesTable({
     }
     // Close the popover after selection
     setOpenFechaDevolucionId(null);
+  };
+
+  const updateFechaClienteMutation = useMutation({
+    mutationFn: async ({ saleId, fechaCliente }: { saleId: string; fechaCliente: string | null }) => {
+      return apiRequest("PUT", `/api/sales/${saleId}/fecha-cliente`, { fechaCliente });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ 
+        predicate: (query) => Array.isArray(query.queryKey) && typeof query.queryKey[0] === 'string' && query.queryKey[0].startsWith('/api/sales')
+      });
+      toast({
+        title: "Recepción de Cliente actualizada",
+        description: "La fecha de recepción de cliente ha sido actualizada correctamente.",
+      });
+    },
+    onError: (error) => {
+      console.error('Failed to update fecha cliente:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo actualizar la fecha de recepción de cliente.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleFechaClienteChange = (saleId: string, date: Date | undefined) => {
+    if (date) {
+      // Format date as YYYY-MM-DD
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const fechaCliente = `${year}-${month}-${day}`;
+      
+      updateFechaClienteMutation.mutate({ saleId, fechaCliente });
+    } else {
+      updateFechaClienteMutation.mutate({ saleId, fechaCliente: null });
+    }
+    // Close the popover after selection
+    setOpenFechaClienteId(null);
   };
 
   // Helper to parse date string to Date object
@@ -258,7 +298,7 @@ export default function DevolucionesTable({
         ) : (
           <div className="overflow-x-auto overflow-y-auto max-h-[calc(100vh-280px)] bg-background">
             <div className="min-w-max">
-              <table className="w-full min-w-[2200px] relative">
+              <table className="w-full min-w-[2350px] relative">
                 <thead className="bg-muted sticky top-0 z-10">
                   <tr>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[100px] sticky left-0 bg-muted z-20 border-r border-border shadow-[2px_0_5px_rgba(0,0,0,0.1)]">Orden</th>
@@ -270,6 +310,7 @@ export default function DevolucionesTable({
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[200px]">Producto</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[120px]">SKU</th>
                     <th className="text-center p-2 text-xs font-medium text-muted-foreground min-w-[80px]">Cantidad</th>
+                    <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[150px]">Recepción de Cliente</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[200px]">Email</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[200px]">Notas</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[150px]">Fecha Devolución</th>
@@ -363,6 +404,35 @@ export default function DevolucionesTable({
                       </td>
                       
                       <td className="p-2 min-w-[80px] text-center text-xs">{sale.cantidad}</td>
+                      
+                      <td className="p-2 min-w-[150px] text-xs">
+                        <Popover
+                          open={openFechaClienteId === sale.id}
+                          onOpenChange={(open) => setOpenFechaClienteId(open ? sale.id : null)}
+                        >
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="outline"
+                              className={cn(
+                                "w-full h-8 justify-start text-left font-normal text-xs",
+                                !sale.fechaCliente && "text-muted-foreground"
+                              )}
+                              data-testid={`fecha-cliente-button-${sale.id}`}
+                            >
+                              <CalendarIcon className={cn("mr-2 h-3 w-3", !sale.fechaCliente && "text-amber-500")} />
+                              {sale.fechaCliente ? formatFechaDevolucion(sale.fechaCliente) : "Seleccionar"}
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar
+                              mode="single"
+                              selected={parseFechaDevolucion(sale.fechaCliente)}
+                              onSelect={(date) => handleFechaClienteChange(sale.id, date)}
+                              initialFocus
+                            />
+                          </PopoverContent>
+                        </Popover>
+                      </td>
                       
                       <td className="p-2 min-w-[200px] text-xs">{sale.email}</td>
                       
