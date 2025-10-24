@@ -373,7 +373,7 @@ export default function Sales() {
                   onFilterChange={handleInmediatasFilterChange}
                   onPageChange={handleInmediatasPageChange}
                   onClearFilters={handleClearInmediatasFilters}
-                  onNewReserva={() => setIsManualInmediataModalOpen(true)}
+                  onNewManualSale={() => setIsManualInmediataModalOpen(true)}
                 />
               </div>
             </TabsContent>
