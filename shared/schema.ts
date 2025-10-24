@@ -222,6 +222,7 @@ export const sales = pgTable("sales", {
   nroGuia: varchar("nro_guia", { length: 100 }),
   fechaDespacho: varchar("fecha_despacho", { length: 10 }),
   fechaCliente: varchar("fecha_cliente", { length: 10 }),
+  fechaDevolucion: varchar("fecha_devolucion", { length: 10 }),
   // Email tracking
   emailSentAt: timestamp("email_sent_at"),
   // Verification fields for Pago Inicial
