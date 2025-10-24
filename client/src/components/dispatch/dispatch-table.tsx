@@ -660,7 +660,7 @@ export default function DispatchTable({
                   <tr>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[100px] sticky left-0 bg-muted z-20 border-r border-border shadow-[2px_0_5px_rgba(0,0,0,0.1)]">Orden</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[150px] sticky left-[100px] bg-muted z-20 border-r border-border shadow-[2px_0_5px_rgba(0,0,0,0.1)]">Estado de Entrega</th>
-                    <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[150px] sticky left-[250px] bg-muted z-20 border-r border-border shadow-[2px_0_5px_rgba(0,0,0,0.1)]">Fecha de Entrega</th>
+                    <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[150px] sticky left-[250px] bg-muted z-20 border-r border-border shadow-[2px_0_5px_rgba(0,0,0,0.1)]">Fecha Compromiso Entrega</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[100px]">Canal</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[200px]">Nombre</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[150px]">Teléfono</th>
@@ -676,7 +676,7 @@ export default function DispatchTable({
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[180px]">Transportista</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[150px]">Nro Guía</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[150px]">Fecha Despacho</th>
-                    <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[150px]">Fecha Cliente</th>
+                    <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[150px]">Recepción de Cliente</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[150px]">Acciones</th>
                   </tr>
                 </thead>

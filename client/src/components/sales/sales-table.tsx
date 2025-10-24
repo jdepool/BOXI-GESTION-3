@@ -692,7 +692,7 @@ export default function SalesTable({
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[120px]">Telefono</th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[160px]">Email</th>
                 {showDeliveryDateColumn && (
-                  <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[130px]">Fecha Entrega</th>
+                  <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[130px]">Fecha Compromiso Entrega</th>
                 )}
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[120px]">Direcciones</th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[120px]">Asesor</th>
