@@ -890,7 +890,7 @@ export default function DispatchTable({
                         </Popover>
                       </td>
                       
-                      <td className="p-2 min-w-[150px] text-xs">
+                      <td className="p-2 pr-6 min-w-[150px] text-xs">
                         <Popover
                           open={openFechaClienteId === sale.id}
                           onOpenChange={(open) => setOpenFechaClienteId(open ? sale.id : null)}
