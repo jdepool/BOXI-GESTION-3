@@ -752,7 +752,7 @@ export class DatabaseStorage implements IStorage {
       .from(sales)
       .where(estadoCondition)
       .groupBy(sales.orden)
-      .orderBy(desc(sql`MAX(${sales.fecha})`))
+      .orderBy(desc(sql`MAX(${sales.fecha})`), desc(sql`MAX(${sales.orden})`))
       .limit(filters?.limit || 20)
       .offset(filters?.offset || 0);
 
