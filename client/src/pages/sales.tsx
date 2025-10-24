@@ -16,7 +16,7 @@ import type { Prospecto } from "@shared/schema";
 
 export default function Sales() {
   const [filters, setFilters] = useState({
-    canal: "",
+    canalBoxi: "true", // Filter for Boxi channels (exclude ShopMom and MP canals)
     estadoEntrega: "",
     orden: "",
     startDate: "",
@@ -26,7 +26,7 @@ export default function Sales() {
   });
 
   const [pagosFilters, setPagosFilters] = useState({
-    canal: "",
+    canalBoxi: "true", // Filter for Boxi channels (exclude ShopMom and MP canals)
     orden: "",
     startDate: "",
     endDate: "",
@@ -37,6 +37,7 @@ export default function Sales() {
   });
 
   const [reservasFilters, setReservasFilters] = useState({
+    canalBoxi: "true", // Filter for Boxi channels (exclude ShopMom and MP canals)
     startDate: "",
     endDate: "",
     limit: 20,
@@ -46,7 +47,7 @@ export default function Sales() {
   const [prospectosFilters, setProspectosFilters] = useState({
     asesorId: "",
     estadoProspecto: "Activo",
-    canal: "",
+    canalBoxi: "true", // Filter for Boxi channels (exclude ShopMom and MP canals)
     prospecto: "",
     startDate: "",
     endDate: "",
@@ -142,9 +143,8 @@ export default function Sales() {
 
   const handleFilterChange = (newFilters: Partial<typeof filters>) => {
     const normalized = { ...newFilters };
-    if (normalized.canal === "all") normalized.canal = "";
     if (normalized.estadoEntrega === "all") normalized.estadoEntrega = "";
-    setFilters(prev => ({ ...prev, ...normalized, offset: 0 }));
+    setFilters(prev => ({ ...prev, ...normalized, offset: 0, canalBoxi: "true" }));
   };
 
   const handlePageChange = (newOffset: number) => {
@@ -153,7 +153,7 @@ export default function Sales() {
 
   const handleClearFilters = () => {
     setFilters({
-      canal: "",
+      canalBoxi: "true",
       estadoEntrega: "",
       orden: "",
       startDate: "",
@@ -165,10 +165,9 @@ export default function Sales() {
 
   const handlePagosFilterChange = (newFilters: Partial<typeof pagosFilters>) => {
     const normalized = { ...newFilters };
-    if (normalized.canal === "all") normalized.canal = "";
     if (normalized.asesorId === "all") normalized.asesorId = "";
     if (normalized.estadoEntrega === "all") normalized.estadoEntrega = "";
-    setPagosFilters(prev => ({ ...prev, ...normalized, offset: 0 }));
+    setPagosFilters(prev => ({ ...prev, ...normalized, offset: 0, canalBoxi: "true" }));
   };
 
   const handlePagosPageChange = (newOffset: number) => {
@@ -177,7 +176,7 @@ export default function Sales() {
 
   const handleClearPagosFilters = () => {
     setPagosFilters({
-      canal: "",
+      canalBoxi: "true",
       orden: "",
       startDate: "",
       endDate: "",
@@ -189,7 +188,7 @@ export default function Sales() {
   };
 
   const handleReservasFilterChange = (newFilters: Partial<typeof reservasFilters>) => {
-    setReservasFilters(prev => ({ ...prev, ...newFilters, offset: 0 }));
+    setReservasFilters(prev => ({ ...prev, ...newFilters, offset: 0, canalBoxi: "true" }));
   };
 
   const handleReservasPageChange = (newOffset: number) => {
@@ -198,6 +197,7 @@ export default function Sales() {
 
   const handleClearReservasFilters = () => {
     setReservasFilters({
+      canalBoxi: "true",
       startDate: "",
       endDate: "",
       limit: 20,
@@ -208,7 +208,7 @@ export default function Sales() {
   const handleProspectosFilterChange = (newFilters: Partial<typeof prospectosFilters>) => {
     const normalized = { ...newFilters };
     if (normalized.asesorId === "all") normalized.asesorId = "";
-    setProspectosFilters(prev => ({ ...prev, ...normalized, offset: 0 }));
+    setProspectosFilters(prev => ({ ...prev, ...normalized, offset: 0, canalBoxi: "true" }));
   };
 
   const handleProspectosPageChange = (newOffset: number) => {
@@ -219,7 +219,7 @@ export default function Sales() {
     setProspectosFilters({
       asesorId: "",
       estadoProspecto: "Activo",
-      canal: "",
+      canalBoxi: "true",
       prospecto: "",
       startDate: "",
       endDate: "",

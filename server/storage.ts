@@ -455,6 +455,7 @@ export class DatabaseStorage implements IStorage {
   async getSales(filters?: {
     canal?: string;
     canalMompox?: string; // Filter for ShopMom OR canals containing "MP"
+    canalBoxi?: string; // Filter for Boxi channels (exclude ShopMom and MP)
     estadoEntrega?: string;
     orden?: string;
     startDate?: string;
@@ -476,6 +477,14 @@ export class DatabaseStorage implements IStorage {
         or(
           eq(sales.canal, "ShopMom"),
           like(sales.canal, "%MP%")
+        )
+      );
+    } else if (filters?.canalBoxi === "true") {
+      // Filter for Boxi channels (exclude ShopMom and any canal containing "MP")
+      conditions.push(
+        and(
+          ne(sales.canal, "ShopMom"),
+          not(like(sales.canal, "%MP%"))
         )
       );
     } else if (filters?.canal) {
@@ -633,6 +642,7 @@ export class DatabaseStorage implements IStorage {
     offset?: number;
     canal?: string;
     canalMompox?: string; // Filter for ShopMom OR canals containing "MP"
+    canalBoxi?: string; // Filter for Boxi channels (exclude ShopMom and MP)
     orden?: string;
     startDate?: string;
     endDate?: string;
@@ -710,6 +720,14 @@ export class DatabaseStorage implements IStorage {
         or(
           eq(sales.canal, "ShopMom"),
           like(sales.canal, "%MP%")
+        )
+      );
+    } else if (filters?.canalBoxi === "true") {
+      // Filter for Boxi channels (exclude ShopMom and any canal containing "MP")
+      conditions.push(
+        and(
+          ne(sales.canal, "ShopMom"),
+          not(like(sales.canal, "%MP%"))
         )
       );
     } else if (filters?.canal) {
@@ -1393,6 +1411,7 @@ export class DatabaseStorage implements IStorage {
   async getTotalSalesCount(filters?: {
     canal?: string;
     canalMompox?: string; // Filter for ShopMom OR canals containing "MP"
+    canalBoxi?: string; // Filter for Boxi channels (exclude ShopMom and MP)
     estadoEntrega?: string;
     orden?: string;
     startDate?: string;
@@ -1412,6 +1431,14 @@ export class DatabaseStorage implements IStorage {
         or(
           eq(sales.canal, "ShopMom"),
           like(sales.canal, "%MP%")
+        )
+      );
+    } else if (filters?.canalBoxi === "true") {
+      // Filter for Boxi channels (exclude ShopMom and any canal containing "MP")
+      conditions.push(
+        and(
+          ne(sales.canal, "ShopMom"),
+          not(like(sales.canal, "%MP%"))
         )
       );
     } else if (filters?.canal) {
@@ -3142,6 +3169,7 @@ export class DatabaseStorage implements IStorage {
     estadoProspecto?: string;
     canal?: string;
     canalMompox?: string; // Filter for ShopMom OR canals containing "MP"
+    canalBoxi?: string; // Filter for Boxi channels (exclude ShopMom and MP)
     prospecto?: string;
     startDate?: string;
     endDate?: string;
@@ -3164,6 +3192,14 @@ export class DatabaseStorage implements IStorage {
         or(
           eq(prospectos.canal, "ShopMom"),
           like(prospectos.canal, "%MP%")
+        )
+      );
+    } else if (filters?.canalBoxi === "true") {
+      // Filter for Boxi channels (exclude ShopMom and any canal containing "MP")
+      whereConditions.push(
+        and(
+          ne(prospectos.canal, "ShopMom"),
+          not(like(prospectos.canal, "%MP%"))
         )
       );
     } else if (filters?.canal) {
@@ -3237,6 +3273,7 @@ export class DatabaseStorage implements IStorage {
     estadoProspecto?: string;
     canal?: string;
     canalMompox?: string; // Filter for ShopMom OR canals containing "MP"
+    canalBoxi?: string; // Filter for Boxi channels (exclude ShopMom and MP)
     prospecto?: string;
     startDate?: string;
     endDate?: string;
@@ -3257,6 +3294,14 @@ export class DatabaseStorage implements IStorage {
         or(
           eq(prospectos.canal, "ShopMom"),
           like(prospectos.canal, "%MP%")
+        )
+      );
+    } else if (filters?.canalBoxi === "true") {
+      // Filter for Boxi channels (exclude ShopMom and any canal containing "MP")
+      whereConditions.push(
+        and(
+          ne(prospectos.canal, "ShopMom"),
+          not(like(prospectos.canal, "%MP%"))
         )
       );
     } else if (filters?.canal) {
