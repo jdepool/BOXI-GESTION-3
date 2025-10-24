@@ -100,7 +100,7 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
       direccionDespachoDireccion: "",
       direccionDespachoUrbanizacion: "",
       direccionDespachoReferencia: "",
-      canal: "",
+      canal: defaultCanal, // Pre-fill with defaultCanal prop
       products: [],
     },
   });

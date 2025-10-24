@@ -454,6 +454,7 @@ export class DatabaseStorage implements IStorage {
 
   async getSales(filters?: {
     canal?: string;
+    canalMompox?: string; // Filter for ShopMom OR canals containing "MP"
     estadoEntrega?: string;
     orden?: string;
     startDate?: string;
@@ -469,7 +470,15 @@ export class DatabaseStorage implements IStorage {
     offset?: number;
   }): Promise<Sale[]> {
     const conditions = [];
-    if (filters?.canal) {
+    if (filters?.canalMompox === "true") {
+      // Filter for ShopMom OR any canal containing "MP" (Manual MP, Cashea MP, Tienda MP)
+      conditions.push(
+        or(
+          eq(sales.canal, "ShopMom"),
+          like(sales.canal, "%MP%")
+        )
+      );
+    } else if (filters?.canal) {
       conditions.push(eq(sales.canal, filters.canal));
     }
     if (filters?.estadoEntrega) {
@@ -623,6 +632,7 @@ export class DatabaseStorage implements IStorage {
     limit?: number;
     offset?: number;
     canal?: string;
+    canalMompox?: string; // Filter for ShopMom OR canals containing "MP"
     orden?: string;
     startDate?: string;
     endDate?: string;
@@ -694,7 +704,15 @@ export class DatabaseStorage implements IStorage {
     }
 
     // Add canal filter if provided
-    if (filters?.canal) {
+    if (filters?.canalMompox === "true") {
+      // Filter for ShopMom OR any canal containing "MP" (Manual MP, Cashea MP, Tienda MP)
+      conditions.push(
+        or(
+          eq(sales.canal, "ShopMom"),
+          like(sales.canal, "%MP%")
+        )
+      );
+    } else if (filters?.canal) {
       conditions.push(eq(sales.canal, filters.canal));
     }
 
@@ -3114,6 +3132,7 @@ export class DatabaseStorage implements IStorage {
     asesorId?: string;
     estadoProspecto?: string;
     canal?: string;
+    canalMompox?: string; // Filter for ShopMom OR canals containing "MP"
     prospecto?: string;
     startDate?: string;
     endDate?: string;
@@ -3130,7 +3149,15 @@ export class DatabaseStorage implements IStorage {
     const estadoFilter = filters?.estadoProspecto || 'Activo';
     whereConditions.push(eq(prospectos.estadoProspecto, estadoFilter));
 
-    if (filters?.canal) {
+    if (filters?.canalMompox === "true") {
+      // Filter for ShopMom OR any canal containing "MP" (Manual MP, Cashea MP, Tienda MP)
+      whereConditions.push(
+        or(
+          eq(prospectos.canal, "ShopMom"),
+          like(prospectos.canal, "%MP%")
+        )
+      );
+    } else if (filters?.canal) {
       whereConditions.push(eq(prospectos.canal, filters.canal));
     }
 

@@ -15,7 +15,7 @@ import type { Prospecto } from "@shared/schema";
 
 export default function VentasMompox() {
   const [filters, setFilters] = useState({
-    canal: "ShopMom", // Always filter by ShopMom
+    canalMompox: "true", // Filter for ShopMom OR canals containing "MP"
     estadoEntrega: "",
     orden: "",
     startDate: "",
@@ -25,7 +25,7 @@ export default function VentasMompox() {
   });
 
   const [pagosFilters, setPagosFilters] = useState({
-    canal: "ShopMom", // Always filter by ShopMom
+    canalMompox: "true", // Filter for ShopMom OR canals containing "MP"
     orden: "",
     startDate: "",
     endDate: "",
@@ -36,7 +36,7 @@ export default function VentasMompox() {
   });
 
   const [reservasFilters, setReservasFilters] = useState({
-    canal: "ShopMom", // Always filter by ShopMom
+    canalMompox: "true", // Filter for ShopMom OR canals containing "MP"
     startDate: "",
     endDate: "",
     limit: 20,
@@ -46,7 +46,7 @@ export default function VentasMompox() {
   const [prospectosFilters, setProspectosFilters] = useState({
     asesorId: "",
     estadoProspecto: "Activo",
-    canal: "ShopMom", // Always filter by ShopMom
+    canalMompox: "true", // Filter for ShopMom OR canals containing "MP"
     prospecto: "",
     startDate: "",
     endDate: "",
@@ -142,9 +142,8 @@ export default function VentasMompox() {
 
   const handleFilterChange = (newFilters: Partial<typeof filters>) => {
     const normalized = { ...newFilters };
-    if (normalized.canal === "all") normalized.canal = "ShopMom"; // Keep ShopMom filter
     if (normalized.estadoEntrega === "all") normalized.estadoEntrega = "";
-    setFilters(prev => ({ ...prev, ...normalized, offset: 0, canal: "ShopMom" })); // Always maintain ShopMom filter
+    setFilters(prev => ({ ...prev, ...normalized, offset: 0, canalMompox: "true" })); // Always maintain Mompox filter
   };
 
   const handlePageChange = (newOffset: number) => {
@@ -153,7 +152,7 @@ export default function VentasMompox() {
 
   const handleClearFilters = () => {
     setFilters({
-      canal: "ShopMom", // Keep ShopMom filter
+      canalMompox: "true", // Keep Mompox filter
       estadoEntrega: "",
       orden: "",
       startDate: "",
@@ -165,10 +164,9 @@ export default function VentasMompox() {
 
   const handlePagosFilterChange = (newFilters: Partial<typeof pagosFilters>) => {
     const normalized = { ...newFilters };
-    if (normalized.canal === "all") normalized.canal = "ShopMom"; // Keep ShopMom filter
     if (normalized.asesorId === "all") normalized.asesorId = "";
     if (normalized.estadoEntrega === "all") normalized.estadoEntrega = "";
-    setPagosFilters(prev => ({ ...prev, ...normalized, offset: 0, canal: "ShopMom" })); // Always maintain ShopMom filter
+    setPagosFilters(prev => ({ ...prev, ...normalized, offset: 0, canalMompox: "true" })); // Always maintain Mompox filter
   };
 
   const handlePagosPageChange = (newOffset: number) => {
@@ -177,7 +175,7 @@ export default function VentasMompox() {
 
   const handleClearPagosFilters = () => {
     setPagosFilters({
-      canal: "ShopMom", // Keep ShopMom filter
+      canalMompox: "true", // Keep Mompox filter
       orden: "",
       startDate: "",
       endDate: "",
@@ -189,7 +187,7 @@ export default function VentasMompox() {
   };
 
   const handleReservasFilterChange = (newFilters: Partial<typeof reservasFilters>) => {
-    setReservasFilters(prev => ({ ...prev, ...newFilters, offset: 0, canal: "ShopMom" })); // Always maintain ShopMom filter
+    setReservasFilters(prev => ({ ...prev, ...newFilters, offset: 0, canalMompox: "true" })); // Always maintain Mompox filter
   };
 
   const handleReservasPageChange = (newOffset: number) => {
@@ -198,7 +196,7 @@ export default function VentasMompox() {
 
   const handleClearReservasFilters = () => {
     setReservasFilters({
-      canal: "ShopMom", // Keep ShopMom filter
+      canalMompox: "true", // Keep Mompox filter
       startDate: "",
       endDate: "",
       limit: 20,
@@ -209,7 +207,7 @@ export default function VentasMompox() {
   const handleProspectosFilterChange = (newFilters: Partial<typeof prospectosFilters>) => {
     const normalized = { ...newFilters };
     if (normalized.asesorId === "all") normalized.asesorId = "";
-    setProspectosFilters(prev => ({ ...prev, ...normalized, offset: 0, canal: "ShopMom" })); // Always maintain ShopMom filter
+    setProspectosFilters(prev => ({ ...prev, ...normalized, offset: 0, canalMompox: "true" })); // Always maintain Mompox filter
   };
 
   const handleProspectosPageChange = (newOffset: number) => {
@@ -220,7 +218,7 @@ export default function VentasMompox() {
     setProspectosFilters({
       asesorId: "",
       estadoProspecto: "Activo",
-      canal: "ShopMom", // Keep ShopMom filter
+      canalMompox: "true", // Keep Mompox filter
       prospecto: "",
       startDate: "",
       endDate: "",
@@ -314,7 +312,7 @@ export default function VentasMompox() {
               <ManualSalesEntry 
                 convertingProspecto={convertingProspecto?.tipo === "inmediata" ? convertingProspecto.prospecto : null}
                 onConversionComplete={() => setConvertingProspecto(null)}
-                canal="ShopMom"
+                canal="Manual MP"
               />
             </TabsContent>
             

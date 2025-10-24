@@ -312,7 +312,7 @@ export default function Sales() {
               <ManualSalesEntry 
                 convertingProspecto={convertingProspecto?.tipo === "inmediata" ? convertingProspecto.prospecto : null}
                 onConversionComplete={() => setConvertingProspecto(null)}
-                canal="shopify"
+                canal="Manual"
               />
             </TabsContent>
             

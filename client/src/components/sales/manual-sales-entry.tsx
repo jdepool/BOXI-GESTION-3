@@ -193,6 +193,7 @@ export default function ManualSalesEntry({ convertingProspecto, onConversionComp
           }}
           isSubmitting={createManualSaleMutation.isPending}
           convertingProspecto={convertingProspecto}
+          defaultCanal={canal}
         />
       </div>
     );
