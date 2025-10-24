@@ -656,7 +656,6 @@ export default function SalesTable({
           )}
         </>
       )}
-
       <div className="overflow-x-auto overflow-y-auto max-h-[calc(100vh-280px)] bg-background">
         <div className="min-w-max">
           <table className="w-full min-w-[2560px] relative">
@@ -1050,9 +1049,7 @@ export default function SalesTable({
                             <AlertDialogContent>
                               <AlertDialogHeader>
                                 <AlertDialogTitle>Confirmar entrega</AlertDialogTitle>
-                                <AlertDialogDescription>
-                                  ¿Está seguro que desea marcar esta orden como entregada? Esta acción cambiará el estado de entrega a "Entregado".
-                                </AlertDialogDescription>
+                                <AlertDialogDescription>¿Está seguro que desea marcar esta orden como entregada? Esta acción cambiará el estado de entrega y la eliminará de esta vista.</AlertDialogDescription>
                               </AlertDialogHeader>
                               <AlertDialogFooter>
                                 <AlertDialogCancel data-testid={`cancel-delivered-${sale.id}`}>Cancelar</AlertDialogCancel>
@@ -1112,7 +1109,6 @@ export default function SalesTable({
           </table>
         </div>
       </div>
-
       {!hidePagination && total > 0 && (
         <div className="p-4 border-t border-border flex justify-between items-center">
           <div className="text-sm text-muted-foreground">
@@ -1142,12 +1138,10 @@ export default function SalesTable({
           </div>
         </div>
       )}
-
       <SaleDetailModal 
         sale={selectedSale} 
         onClose={() => setSelectedSale(null)} 
       />
-
       <AddressModal
         open={addressModalOpen}
         onOpenChange={(open) => {
@@ -1158,7 +1152,6 @@ export default function SalesTable({
         }}
         sale={selectedSaleForAddress}
       />
-
       <EditSaleModal
         open={editSaleModalOpen}
         onOpenChange={(open) => {
@@ -1169,7 +1162,6 @@ export default function SalesTable({
         }}
         sale={selectedSaleForEdit}
       />
-
       {showSeguimientoColumns && selectedSaleForSeguimiento && (
         <SeguimientoDialogOrden
           open={seguimientoDialogOpen}
@@ -1194,7 +1186,6 @@ export default function SalesTable({
           isSaving={saveSeguimientoOrdenMutation.isPending}
         />
       )}
-
       {/* Cancel Confirmation Dialog */}
       <AlertDialog open={cancelConfirmOpen} onOpenChange={setCancelConfirmOpen}>
         <AlertDialogContent data-testid="cancel-confirm-dialog" className="max-w-2xl">
@@ -1240,7 +1231,6 @@ export default function SalesTable({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
       {/* Return Confirmation Dialog */}
       <AlertDialog open={returnConfirmOpen} onOpenChange={setReturnConfirmOpen}>
         <AlertDialogContent data-testid="return-confirm-dialog" className="max-w-2xl">
