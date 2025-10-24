@@ -196,8 +196,8 @@ function parseFile(buffer: Buffer, canal: string, filename: string) {
       // Parse date based on channel
       let fecha = new Date();
       
-      if (canal.toLowerCase() === 'shopify') {
-        // For Shopify: Created at field
+      if (canal.toLowerCase() === 'shopify' || canal.toLowerCase() === 'shopmom') {
+        // For Shopify and ShopMom: Created at field
         if (row['Created at']) {
           if (typeof row['Created at'] === 'number') {
             // Excel date serial number
@@ -226,8 +226,8 @@ function parseFile(buffer: Buffer, canal: string, filename: string) {
         }
       }
 
-      if (canal.toLowerCase() === 'shopify') {
-        // Shopify specific mapping
+      if (canal.toLowerCase() === 'shopify' || canal.toLowerCase() === 'shopmom') {
+        // Shopify and ShopMom specific mapping
         return {
           nombre: String(row['Billing Name'] || ''),
           cedula: null, // Shopify doesn't have cedula field
@@ -2158,12 +2158,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const { canal } = req.body;
-      if (!canal || !['cashea', 'shopify', 'treble'].includes(canal)) {
-        return res.status(400).json({ error: "Invalid or missing canal. Must be: cashea, shopify, or treble" });
+      const canalLower = canal ? canal.toLowerCase() : '';
+      if (!canal || !['cashea', 'shopify', 'shopmom', 'treble'].includes(canalLower)) {
+        return res.status(400).json({ error: "Invalid or missing canal. Must be: cashea, shopify, ShopMom, or treble" });
       }
 
+      // Normalize canal to canonical casing for database storage
+      const canonicalCanal = canalLower === 'shopmom' ? 'ShopMom' : canal;
+
       // Parse file (Excel or CSV)
-      const salesData = parseFile(req.file.buffer, canal, req.file.originalname);
+      const salesData = parseFile(req.file.buffer, canonicalCanal, req.file.originalname);
       
       // Validate each row
       const validatedSales = [];
@@ -2185,7 +2189,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Log upload attempt with errors
         await storage.createUploadHistory({
           filename: req.file.originalname,
-          canal,
+          canal: canonicalCanal,
           recordsCount: 0,
           status: 'error',
           errorMessage: `Validation errors in ${errors.length} rows`,
@@ -2201,7 +2205,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Check for existing order numbers to avoid duplicates
       let newSales = validatedSales;
       
-      if (canal.toLowerCase() === 'shopify') {
+      if (canalLower === 'shopify' || canalLower === 'shopmom') {
         // Smart deduplication for Shopify: check order number + product combination
         const salesAfterDeduplication = [];
         
@@ -2248,14 +2252,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Log successful upload
       await storage.createUploadHistory({
         filename: req.file.originalname,
-        canal,
+        canal: canonicalCanal,
         recordsCount: newSales.length,
         status: 'success',
         errorMessage: duplicatesCount > 0 ? `${duplicatesCount} duplicate order(s) ignored` : undefined,
       });
 
       // Send webhook notification for Cashea uploads
-      if (canal.toLowerCase() === 'cashea' && newSales.length > 0) {
+      if (canalLower === 'cashea' && newSales.length > 0) {
         try {
           await sendWebhookToZapier({
             recordsProcessed: newSales.length,

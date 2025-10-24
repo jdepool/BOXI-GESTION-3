@@ -1,6 +1,6 @@
 # Overview
 
-BoxiSleep is a sales management system for a sleep products company, designed to streamline sales operations from data ingestion to analytics. It enables users to upload sales data, manage sales records with advanced filtering and export functionalities, track financial payments, and provides real-time analytics on sales performance, delivery status, and channel-specific metrics to empower informed business decisions.
+BoxiSleep is a sales management system for a sleep products company, designed to streamline sales operations from data ingestion to analytics. It enables users to upload sales data, manage sales records with advanced filtering and export functionalities, track financial payments, and provides real-time analytics on sales performance, delivery status, and channel-specific metrics to empower informed business decisions. The system now supports multiple product lines including Boxi and Mompox products with separate workflow tracking through distinct sales channels (Shopify for Boxi, ShopMom for Mompox).
 
 # User Preferences
 
@@ -12,13 +12,13 @@ Reportes Organization: Reportes tab displays a dashboard with card-based layout 
 # System Architecture
 
 ## UI/UX Design
-The application features a React 18 and TypeScript frontend, using Wouter for routing and shadcn/ui components (based on Radix UI) styled with Tailwind CSS for an accessible and customizable user interface. The design emphasizes a tabbed structure for sales management, payment verification, and specialized pages, with administrative functions accessed via a dedicated settings icon. Date filtering is handled by a reusable `DateRangePicker`.
+The application features a React 18 and TypeScript frontend, using Wouter for routing and shadcn/ui components (based on Radix UI) styled with Tailwind CSS for an accessible and customizable user interface. The design emphasizes a tabbed structure for sales management, payment verification, and specialized pages, with administrative functions accessed via a dedicated settings icon. Date filtering is handled by a reusable `DateRangePicker`. The system includes two separate sales workflow pages: "Ventas" (for Boxi products via Shopify canal) and "Ventas Mompox" (for Mompox products via ShopMom canal), each with identical tab structure (Prospectos, Inmediatas, Reservas, Pagos, Lista de Ventas) but filtered by their respective canal.
 
 ## Technical Implementations
 The backend is a RESTful API built with Express.js and TypeScript, featuring a modular structure. PostgreSQL is the primary database, accessed via Drizzle ORM. Authentication uses basic username/password with PostgreSQL session storage. A critical date handling standard ensures all date-only fields are stored as `YYYY-MM-DD` strings, parsed using `parseLocalDate()`, and formatted using `formatDateOnly()` to prevent timezone issues.
 
 ## Feature Specifications
-- **Sales Data Upload & Management**: Excel uploads from multiple channels with replacement logic, filtering, searching, and export.
+- **Sales Data Upload & Management**: Excel uploads from multiple channels with replacement logic, filtering, searching, and export. Supports webhook integration for automated order ingestion from Shopify (Boxi products via `/api/webhooks/shopify`) and ShopMom (Mompox products via `/api/webhooks/shopify-mompox`).
 - **Order & Payment Tracking**: Detailed tracking of sales, nine delivery statuses, multi-product orders, manual sales, and reservations. Includes payment verification, multi-currency support, and a centralized `Pendiente` (balance) calculation.
 - **Delivery Workflow**: Channel-specific delivery status progression and management of returns and cancellations. Simplified filtering: Lista de Ventas excludes Pendiente/Perdida from dropdown and results; Inmediata/Reservas tables hide Estado Entrega filter completely (all orders are Pendiente); Pagos filter restricted to Pendiente/En Proceso only. Perdida orders accessible via dedicated report in Reportes dashboard with date filtering and Excel export.
 - **Lead Management (Prospectos)**: Full lead tracking system with a 3-phase CRM follow-up workflow, automatic date calculations, and visual status tracking, including automated daily email reminders to asesores. Prospectos table always displays only active leads (estadoProspecto = 'Activo'). Perdido prospectos are excluded from the table view and are accessible via a dedicated report in Reportes dashboard with date filtering and Excel export. Convertido prospectos automatically transition to Pendiente estado when converted to orders.
