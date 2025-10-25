@@ -1674,12 +1674,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
             const totalOrderUsd = Number(firstSale.totalOrderUsd || 0);
             const pagoInicialUsd = Number(firstSale.pagoInicialUsd || 0);
             const pagoFleteUsd = Number(firstSale.pagoFleteUsd || 0);
-            const fleteAPagar = Number(firstSale.fleteAPagar || 0);
             const fleteGratis = firstSale.fleteGratis || false;
             // For Cashea orders, use pagoInicialUsd; for others, use totalOrderUsd (matching Pagos table logic)
             const isCasheaOrder = firstSale.canal === 'cashea';
             const baseAmount = isCasheaOrder ? pagoInicialUsd : totalOrderUsd;
-            const ordenPlusFlete = baseAmount + (fleteGratis ? 0 : fleteAPagar);
+            const ordenPlusFlete = baseAmount + (fleteGratis ? 0 : pagoFleteUsd);
 
             // Calculate totalPagado (sum of all verified payments)
             // Note: We need to check old status from DB and include current payment being verified
@@ -5343,9 +5342,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             const firstSale = salesInOrder[0];
             const totalOrderUsd = Number(firstSale.totalOrderUsd || 0);
             const pagoFleteUsd = Number(firstSale.pagoFleteUsd || 0);
-            const fleteAPagar = Number(firstSale.fleteAPagar || 0);
             const fleteGratis = firstSale.fleteGratis || false;
-            const ordenPlusFlete = totalOrderUsd + (fleteGratis ? 0 : fleteAPagar);
+            const ordenPlusFlete = totalOrderUsd + (fleteGratis ? 0 : pagoFleteUsd);
 
             // Calculate total verified payments
             const pagoInicialVerificado = firstSale.estadoVerificacionInicial === 'Verificado' ? Number(firstSale.pagoInicialUsd || 0) : 0;
