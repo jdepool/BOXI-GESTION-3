@@ -63,7 +63,11 @@ export const productosBackup = pgTable("productos_backup", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   nombre: text("nombre").notNull(),
   sku: text("sku"),
-  categoria: text("categoria").notNull(),
+  categoria: text("categoria"), // Legacy field - kept for backward compatibility
+  marcaId: varchar("marca_id"),
+  categoriaId: varchar("categoria_id"),
+  subcategoriaId: varchar("subcategoria_id"),
+  caracteristicaId: varchar("caracteristica_id"),
   position: integer("position"),
   originalId: varchar("original_id"),
   backedUpAt: timestamp("backed_up_at").defaultNow(),
