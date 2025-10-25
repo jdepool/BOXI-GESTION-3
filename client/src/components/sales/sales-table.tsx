@@ -14,7 +14,7 @@ import SaleDetailModal from "./sale-detail-modal";
 import AddressModal from "@/components/addresses/address-modal";
 import EditSaleModal from "./edit-sale-modal";
 import SeguimientoDialogOrden from "@/components/sales/seguimiento-dialog-orden";
-import { MapPin, Edit, CalendarIcon, Filter, ChevronDown, ChevronUp, Download, ChevronLeft, ChevronRight, RotateCcw, XCircle, Gift, Eye, Plus } from "lucide-react";
+import { MapPin, Edit, CalendarIcon, Filter, ChevronDown, ChevronUp, Download, ChevronLeft, ChevronRight, RotateCcw, XCircle, Gift, Eye, Plus, Package, Banknote } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -25,6 +25,21 @@ import { getChannelBadgeClass } from "@/lib/channelBadges";
 import { filterCanalesByProductLine, type ProductLine } from "@/lib/canalFilters";
 import { useDebouncedSearch } from "@/hooks/use-debounced-search";
 import type { Sale, SeguimientoConfig } from "@shared/schema";
+import type { QuickMessage } from "@/components/ui/auto-expanding-textarea";
+
+// Quick select messages for notes
+const QUICK_NOTES_MESSAGES: QuickMessage[] = [
+  {
+    text: "ENTREGADO EN TIENDA",
+    icon: <Package className="h-4 w-4 text-amber-600" />,
+    tooltipText: "ENTREGADO EN TIENDA"
+  },
+  {
+    text: "EFECTIVO CONTRA ENTREGA",
+    icon: <Banknote className="h-4 w-4 text-green-600" />,
+    tooltipText: "EFECTIVO CONTRA ENTREGA"
+  }
+];
 
 interface SalesTableProps {
   data: Sale[];
@@ -894,6 +909,8 @@ export default function SalesTable({
                             maxRows={10}
                             maxLength={500}
                             autoFocus
+                            label="Notas"
+                            quickMessages={QUICK_NOTES_MESSAGES}
                             data-testid={`notes-input-${sale.id}`}
                           />
                         ) : (

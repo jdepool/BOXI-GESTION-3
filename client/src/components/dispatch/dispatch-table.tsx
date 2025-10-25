@@ -10,13 +10,28 @@ import { DateRangePicker } from "@/components/shared/date-range-picker";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Download, Package, ChevronLeft, ChevronRight, Filter, ChevronDown, ChevronUp, RotateCcw, CalendarIcon, Truck } from "lucide-react";
+import { Download, Package, ChevronLeft, ChevronRight, Filter, ChevronDown, ChevronUp, RotateCcw, CalendarIcon, Truck, Banknote } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { getChannelBadgeClass } from "@/lib/channelBadges";
 import type { Sale } from "@shared/schema";
+import type { QuickMessage } from "@/components/ui/auto-expanding-textarea";
+
+// Quick select messages for notes
+const QUICK_NOTES_MESSAGES: QuickMessage[] = [
+  {
+    text: "ENTREGADO EN TIENDA",
+    icon: <Package className="h-4 w-4 text-amber-600" />,
+    tooltipText: "ENTREGADO EN TIENDA"
+  },
+  {
+    text: "EFECTIVO CONTRA ENTREGA",
+    icon: <Banknote className="h-4 w-4 text-green-600" />,
+    tooltipText: "EFECTIVO CONTRA ENTREGA"
+  }
+];
 
 interface DispatchTableProps {
   data: Sale[];
@@ -785,6 +800,8 @@ export default function DispatchTable({
                             maxRows={10}
                             maxLength={500}
                             autoFocus
+                            label="Notas"
+                            quickMessages={QUICK_NOTES_MESSAGES}
                             data-testid={`notes-input-${sale.id}`}
                           />
                         ) : (

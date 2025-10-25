@@ -35,6 +35,21 @@ import {
 } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import type { QuickMessage } from "@/components/ui/auto-expanding-textarea";
+
+// Quick select messages for notes
+const QUICK_NOTES_MESSAGES: QuickMessage[] = [
+  {
+    text: "ENTREGADO EN TIENDA",
+    icon: <Package className="h-4 w-4 text-amber-600" />,
+    tooltipText: "ENTREGADO EN TIENDA"
+  },
+  {
+    text: "EFECTIVO CONTRA ENTREGA",
+    icon: <Banknote className="h-4 w-4 text-green-600" />,
+    tooltipText: "EFECTIVO CONTRA ENTREGA"
+  }
+];
 
 interface Order {
   orden: string;
@@ -820,6 +835,8 @@ export default function PagosTable({
                             maxRows={10}
                             maxLength={500}
                             autoFocus
+                            label="Notas"
+                            quickMessages={QUICK_NOTES_MESSAGES}
                             data-testid={`notes-input-${order.orden}`}
                           />
                         ) : (
