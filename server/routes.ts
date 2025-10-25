@@ -3151,6 +3151,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update notes for all sales in an order (used by Pagos table)
+  app.put("/api/sales/orders/:orderNumber/notes", async (req, res) => {
+    try {
+      const { orderNumber } = req.params;
+      const { notas } = req.body;
+
+      // Validate notes length (max 500 characters)
+      if (notas && notas.length > 500) {
+        return res.status(400).json({ error: "Notes cannot exceed 500 characters" });
+      }
+
+      // Find all sales with this order number
+      const salesInOrder = await storage.getSalesByOrderNumber(orderNumber);
+      if (!salesInOrder || salesInOrder.length === 0) {
+        return res.status(404).json({ error: "Order not found" });
+      }
+
+      // Update notes for all sales in the order
+      const updatePromises = salesInOrder.map(sale => 
+        storage.updateSaleNotes(sale.id, notas)
+      );
+      const updatedSales = await Promise.all(updatePromises);
+
+      res.json({ 
+        success: true, 
+        count: salesInOrder.length,
+        sales: updatedSales
+      });
+    } catch (error) {
+      console.error("Update order notes error:", error);
+      res.status(500).json({ error: "Failed to update order notes" });
+    }
+  });
+
   // Update estado entrega for all sales in an order
   app.patch("/api/sales/orders/:orderNumber/estado-entrega", async (req, res) => {
     try {
