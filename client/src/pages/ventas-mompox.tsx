@@ -136,6 +136,7 @@ export default function VentasMompox() {
       totalPagado: number;
       totalVerificado: number;
       saldoPendiente: number;
+      notas: string | null;
     }>;
     total: number;
   }>({

@@ -57,6 +57,7 @@ interface Order {
   totalPagado: number;
   totalVerificado: number;
   saldoPendiente: number;
+  notas: string | null;
 }
 
 interface PagosTableProps {
@@ -454,18 +455,19 @@ export default function PagosTable({
                 <th className="p-2 text-center text-xs font-medium text-muted-foreground min-w-[120px] bg-gray-100 dark:bg-gray-800">Total Pagado</th>
                 <th className="p-2 text-center text-xs font-medium text-muted-foreground min-w-[120px] bg-teal-50 dark:bg-teal-950">Total Verificado</th>
                 <th className="p-2 text-center text-xs font-medium text-muted-foreground min-w-[120px] bg-orange-50 dark:bg-orange-950">Saldo Pendiente</th>
+                <th className="p-2 text-left text-xs font-medium text-muted-foreground min-w-[250px]">Notas</th>
               </tr>
             </thead>
             <tbody>
               {isLoading ? (
                 <tr>
-                  <td colSpan={18} className="p-4 text-center text-muted-foreground">
+                  <td colSpan={19} className="p-4 text-center text-muted-foreground">
                     Cargando...
                   </td>
                 </tr>
               ) : data.length === 0 ? (
                 <tr>
-                  <td colSpan={18} className="p-4 text-center text-muted-foreground">
+                  <td colSpan={19} className="p-4 text-center text-muted-foreground">
                     No hay órdenes pendientes o en proceso
                   </td>
                 </tr>
@@ -747,6 +749,11 @@ export default function PagosTable({
                         } px-3 py-1 rounded-md text-xs`} data-testid={`metric-pendiente-${order.orden}`}>
                           {formatCurrency(order.saldoPendiente)}
                         </div>
+                      </div>
+                    </td>
+                    <td className="p-2 min-w-[250px]">
+                      <div className="text-xs text-foreground" data-testid={`notas-${order.orden}`}>
+                        {order.notas || <span className="text-muted-foreground italic">Sin notas</span>}
                       </div>
                     </td>
                   </tr>

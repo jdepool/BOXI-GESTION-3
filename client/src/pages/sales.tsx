@@ -137,6 +137,7 @@ export default function Sales() {
       totalPagado: number;
       totalVerificado: number;
       saldoPendiente: number;
+      notas: string | null;
     }>;
     total: number;
   }>({
