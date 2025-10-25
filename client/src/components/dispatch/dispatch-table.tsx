@@ -607,10 +607,10 @@ export default function DispatchTable({
               <label className="text-sm font-medium mb-1 block">Buscar:</label>
               <Input 
                 type="text"
-                placeholder="Buscar por orden"
+                placeholder="Buscar por orden o nombre"
                 value={searchInputValue}
                 onChange={(e) => setSearchInputValue(e.target.value)}
-                className="w-40"
+                className="w-60"
                 data-testid="filter-search"
               />
             </div>
