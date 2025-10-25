@@ -3020,8 +3020,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Auto-update estadoEntrega from "Pendiente" to "En Proceso" when payment is complete
+      // CRITICAL: Only update if still in "Pendiente" - don't overwrite more advanced statuses like "A despachar"
       let finalSales = updatedSales;
-      if (currentEstadoEntrega === 'Pendiente' && updatedSales.length > 0) {
+      
+      // Refetch current status to check if it was auto-updated to "A despachar" by verification
+      const currentSales = await storage.getSalesByOrderNumber(orderNumber);
+      const latestEstadoEntrega = currentSales[0]?.estadoEntrega;
+      
+      if (currentEstadoEntrega === 'Pendiente' && latestEstadoEntrega === 'Pendiente' && updatedSales.length > 0) {
         const firstSale = updatedSales[0];
         // Check if all three payment fields are now filled
         const hasPaymentAmount = firstSale.pagoInicialUsd != null && Number(firstSale.pagoInicialUsd) > 0;
