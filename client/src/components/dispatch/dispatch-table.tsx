@@ -783,6 +783,7 @@ export default function DispatchTable({
                             className="text-xs"
                             minRows={5}
                             maxRows={10}
+                            maxLength={500}
                             autoFocus
                             data-testid={`notes-input-${sale.id}`}
                           />

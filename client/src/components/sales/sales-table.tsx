@@ -892,6 +892,7 @@ export default function SalesTable({
                             className="text-xs w-full"
                             minRows={5}
                             maxRows={10}
+                            maxLength={500}
                             autoFocus
                             data-testid={`notes-input-${sale.id}`}
                           />

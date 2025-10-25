@@ -818,6 +818,7 @@ export default function PagosTable({
                             className="text-xs w-full"
                             minRows={5}
                             maxRows={10}
+                            maxLength={500}
                             autoFocus
                             data-testid={`notes-input-${order.orden}`}
                           />

@@ -6,12 +6,14 @@ export interface AutoExpandingTextareaProps
   extends React.ComponentProps<"textarea"> {
   minRows?: number;
   maxRows?: number;
+  maxLength?: number;
+  showCharacterCount?: boolean;
 }
 
 const AutoExpandingTextarea = React.forwardRef<
   HTMLTextAreaElement,
   AutoExpandingTextareaProps
->(({ className, minRows = 5, maxRows = 10, onChange, value, ...props }, ref) => {
+>(({ className, minRows = 5, maxRows = 10, maxLength, showCharacterCount = true, onChange, value, ...props }, ref) => {
   const textareaRef = React.useRef<HTMLTextAreaElement | null>(null);
   const [rows, setRows] = React.useState(minRows);
 
@@ -40,25 +42,42 @@ const AutoExpandingTextarea = React.forwardRef<
     onChange?.(e);
   };
 
+  const currentLength = typeof value === 'string' ? value.length : 0;
+  const isAtLimit = maxLength && currentLength >= maxLength * 0.9; // Red at 90% (450+ chars)
+  const isNearLimit = maxLength && currentLength >= maxLength * 0.8 && currentLength < maxLength * 0.9; // Amber at 80-90% (400-449 chars)
+
   return (
-    <textarea
-      className={cn(
-        "flex w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm resize-none",
-        className
+    <div className="relative">
+      <textarea
+        className={cn(
+          "flex w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm resize-none",
+          className
+        )}
+        ref={(node) => {
+          textareaRef.current = node;
+          if (typeof ref === "function") {
+            ref(node);
+          } else if (ref) {
+            ref.current = node;
+          }
+        }}
+        rows={rows}
+        value={value}
+        onChange={handleChange}
+        maxLength={maxLength}
+        {...props}
+      />
+      {showCharacterCount && maxLength && (
+        <div className="flex justify-end mt-1">
+          <span className={cn(
+            "text-xs",
+            isAtLimit ? "text-red-500 font-semibold" : isNearLimit ? "text-amber-500" : "text-muted-foreground"
+          )}>
+            {currentLength} / {maxLength}
+          </span>
+        </div>
       )}
-      ref={(node) => {
-        textareaRef.current = node;
-        if (typeof ref === "function") {
-          ref(node);
-        } else if (ref) {
-          ref.current = node;
-        }
-      }}
-      rows={rows}
-      value={value}
-      onChange={handleChange}
-      {...props}
-    />
+    </div>
   )
 })
 AutoExpandingTextarea.displayName = "AutoExpandingTextarea"
