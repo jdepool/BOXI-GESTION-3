@@ -20,6 +20,7 @@ import { useToast } from "@/hooks/use-toast";
 import { insertSaleSchema, type Prospecto } from "@shared/schema";
 import { z } from "zod";
 import ProductDialog, { ProductFormData } from "./product-dialog";
+import { type ProductLine, filterCanalesByProductLine } from "@/lib/canalFilters";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -28,6 +29,7 @@ interface ManualReservaModalProps {
   onClose: () => void;
   onSuccess: () => void;
   convertingProspecto?: Prospecto | null;
+  productLine?: ProductLine;
 }
 
 // Form schema based on insertSaleSchema with proper numeric coercion
@@ -59,7 +61,7 @@ type ManualReservaFormData = z.infer<typeof manualReservaSchema> & {
   products: ProductFormData[];
 };
 
-export default function ManualReservaModal({ isOpen, onClose, onSuccess, convertingProspecto }: ManualReservaModalProps) {
+export default function ManualReservaModal({ isOpen, onClose, onSuccess, convertingProspecto, productLine = 'boxi' }: ManualReservaModalProps) {
   const { toast } = useToast();
   const [products, setProducts] = useState<ProductFormData[]>([]);
   const [isProductDialogOpen, setIsProductDialogOpen] = useState(false);
@@ -445,6 +447,7 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess, convert
                         <SelectContent>
                           {canales
                             .filter(canal => canal.activo === "true")
+                            .filter(canal => filterCanalesByProductLine([canal.nombre], productLine).length > 0)
                             .map((canal) => (
                               <SelectItem key={canal.id} value={canal.nombre}>
                                 {canal.nombre}
