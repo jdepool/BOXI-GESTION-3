@@ -6,9 +6,10 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Edit, Trash2, Upload, RotateCcw } from "lucide-react";
+import { Plus, Edit, Trash2, Upload, RotateCcw, Download } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import type { Producto, Categoria } from "@shared/schema";
@@ -277,6 +278,30 @@ export function ProductosTab() {
     }
   };
 
+  const handleExport = async () => {
+    try {
+      const response = await fetch('/api/admin/productos/download-excel');
+      if (!response.ok) throw new Error('Export failed');
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'productos.xlsx';
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      
+      toast({ title: "Productos exportados exitosamente" });
+    } catch (error) {
+      toast({ 
+        title: "Error al exportar productos", 
+        variant: "destructive" 
+      });
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -299,6 +324,25 @@ export function ProductosTab() {
               <RotateCcw className="h-4 w-4" />
             </Button>
           )}
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleExport}
+                  disabled={isLoading || (productos as any[]).length === 0}
+                  aria-label="Exportar Excel"
+                  data-testid="export-productos-button"
+                >
+                  <Download className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Exportar Excel</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
           <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
             <DialogTrigger asChild>
               <Button 

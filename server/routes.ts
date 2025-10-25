@@ -3819,6 +3819,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/admin/productos/download-excel", async (req, res) => {
+    try {
+      const productos = await storage.getProductos();
+      const categorias = await storage.getCategorias();
+      
+      // Create a helper to get classification name by ID
+      const getClasificacionNombre = (id: string | null | undefined) => {
+        if (!id) return "";
+        const clasificacion = categorias.find(c => c.id === id);
+        return clasificacion?.nombre || "";
+      };
+      
+      // Prepare data for Excel
+      const excelData = productos.map(prod => ({
+        Nombre: prod.nombre,
+        SKU: prod.sku || "",
+        Marca: getClasificacionNombre(prod.marcaId),
+        Categoría: getClasificacionNombre(prod.categoriaId),
+        Subcategoría: getClasificacionNombre(prod.subcategoriaId),
+        Característica: getClasificacionNombre(prod.caracteristicaId)
+      }));
+
+      // Create workbook and worksheet
+      const worksheet = XLSX.utils.json_to_sheet(excelData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Productos");
+
+      // Generate buffer
+      const buffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' });
+
+      // Set headers for download
+      res.setHeader('Content-Disposition', 'attachment; filename=productos.xlsx');
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+      res.send(buffer);
+    } catch (error) {
+      console.error("Download productos error:", error);
+      res.status(500).json({ error: "Failed to download productos" });
+    }
+  });
+
   // MÉTODOS DE PAGO endpoints
   app.get("/api/admin/metodos-pago", async (req, res) => {
     try {
