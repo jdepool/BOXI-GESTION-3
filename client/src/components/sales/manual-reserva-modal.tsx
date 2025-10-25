@@ -52,7 +52,7 @@ const manualReservaSchema = z.object({
   direccionFacturacionUrbanizacion: z.string().optional(),
   direccionFacturacionReferencia: z.string().optional(),
   canal: z.string().min(1, "Canal es requerido"),
-  asesorId: z.string().optional(),
+  asesorId: z.string().min(1, "Asesor es requerido"),
 });
 
 type ManualReservaFormData = z.infer<typeof manualReservaSchema> & {
@@ -89,7 +89,8 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess, convert
       direccionDespachoUrbanizacion: "",
       direccionDespachoReferencia: "",
       fechaEntrega: undefined,
-      canal: "",
+      canal: "", // No default - force user selection
+      asesorId: "", // No default - force user selection
       products: [],
     },
   });
@@ -116,11 +117,7 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess, convert
       lastProspectoId.current = convertingProspecto.id;
     }
     
-    if (convertingProspecto && isOpen && !hasInitialized.current && asesoresList.length > 0) {
-      // Find Héctor's ID for default asesor
-      const hectorAsesor = asesoresList.find((a) => a.nombre === "Héctor");
-      const defaultAsesorId = hectorAsesor?.id || undefined;
-      
+    if (convertingProspecto && isOpen && !hasInitialized.current) {
       form.reset({
         nombre: convertingProspecto.nombre || "",
         cedula: convertingProspecto.cedula || "",
@@ -141,8 +138,8 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess, convert
         direccionDespachoDireccion: convertingProspecto.direccionDespachoDireccion || "",
         direccionDespachoUrbanizacion: convertingProspecto.direccionDespachoUrbanizacion || "",
         direccionDespachoReferencia: convertingProspecto.direccionDespachoReferencia || "",
-        canal: convertingProspecto.canal || "",
-        asesorId: convertingProspecto.asesorId || defaultAsesorId,
+        canal: "", // No default - force user selection even when converting
+        asesorId: "", // No default - force user selection even when converting
         products: [],
       });
       hasInitialized.current = true;
@@ -153,7 +150,7 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess, convert
       hasInitialized.current = false;
       lastProspectoId.current = null;
     }
-  }, [convertingProspecto, isOpen, form, asesoresList]);
+  }, [convertingProspecto, isOpen, form]);
 
   // Auto-calculate Total Orden USD from sum of products
   useEffect(() => {

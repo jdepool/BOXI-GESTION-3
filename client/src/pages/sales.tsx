@@ -442,7 +442,6 @@ export default function Sales() {
               setIsManualInmediataModalOpen(false);
               setConvertingProspecto(null);
             }}
-            canal="Manual"
             openFormImmediately={true}
           />
         </DialogContent>

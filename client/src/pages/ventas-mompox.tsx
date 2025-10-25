@@ -443,7 +443,6 @@ export default function VentasMompox() {
               setIsManualInmediataModalOpen(false);
               setConvertingProspecto(null);
             }}
-            canal="Manual MP"
             openFormImmediately={true}
           />
         </DialogContent>
