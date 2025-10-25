@@ -20,7 +20,7 @@ import { useToast } from "@/hooks/use-toast";
 import { insertSaleSchema, type Prospecto } from "@shared/schema";
 import { z } from "zod";
 import ProductDialog, { ProductFormData } from "./product-dialog";
-import { type ProductLine, filterCanalesByProductLine } from "@/lib/canalFilters";
+import { type ProductLine, getAllowedCanales } from "@/lib/canalFilters";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -447,7 +447,7 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess, convert
                         <SelectContent>
                           {canales
                             .filter(canal => canal.activo === "true")
-                            .filter(canal => filterCanalesByProductLine([canal.nombre], productLine).length > 0)
+                            .filter(canal => getAllowedCanales(productLine).includes(canal.nombre))
                             .map((canal) => (
                               <SelectItem key={canal.id} value={canal.nombre}>
                                 {canal.nombre}
