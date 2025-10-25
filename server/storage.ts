@@ -3002,13 +3002,18 @@ export class DatabaseStorage implements IStorage {
       }
 
       // Process Flete payments
+      // DEBUG: Log if we even reach this section
+      if (filters?.orden === '20005') {
+        console.log(`DEBUG: Reached flete section for sale`);
+      }
+      
       // COMPLETE PAYMENT CRITERIA: Must have agreed amount (pagoFleteUsd) + Banco + Referencia
       // Note: Customers can pay in Bs or USD, so we check agreed amount, not actual Monto USD
       const hasAgreedFleteAmount = sale.pagoFleteUsd && parseFloat(sale.pagoFleteUsd) > 0;
       
       // DEBUG for order 20005
       if (filters?.orden === '20005') {
-        console.log(`DEBUG Flete Check - hasAgreedFleteAmount: ${hasAgreedFleteAmount}, bancoReceptorFlete: ${sale.bancoReceptorFlete}, referenciaFlete: ${sale.referenciaFlete}`);
+        console.log(`DEBUG Flete Check - hasAgreedFleteAmount: ${hasAgreedFleteAmount}, bancoReceptorFlete: ${sale.bancoReceptorFlete}, referenciaFlete: ${sale.referenciaFlete}, filters.estadoVerificacion: ${filters?.estadoVerificacion}`);
       }
       
       if (hasAgreedFleteAmount) {
