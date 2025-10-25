@@ -880,30 +880,32 @@ export default function SalesTable({
                         </SelectContent>
                       </Select>
                     </td>
-                    <td className="p-2 min-w-[250px]">
-                      {editingNotesId === sale.id ? (
-                        <AutoExpandingTextarea
-                          value={notesValue}
-                          onChange={handleNotesChange}
-                          onBlur={handleNotesBlur}
-                          onKeyDown={handleNotesKeyDown}
-                          placeholder="Agregar nota..."
-                          className="text-xs"
-                          minRows={5}
-                          maxRows={10}
-                          autoFocus
-                          data-testid={`notes-input-${sale.id}`}
-                        />
-                      ) : (
-                        <div 
-                          className="text-xs cursor-pointer hover:bg-muted/50 rounded px-2 py-1 min-h-[28px]"
-                          title={sale.notas || "Click para agregar nota"}
-                          onClick={() => handleNotesClick(sale)}
-                          data-testid={`notes-display-${sale.id}`}
-                        >
-                          {sale.notas || <span className="text-muted-foreground italic">Click para agregar nota</span>}
-                        </div>
-                      )}
+                    <td className="p-2">
+                      <div style={{ width: '250px', maxWidth: '250px' }}>
+                        {editingNotesId === sale.id ? (
+                          <AutoExpandingTextarea
+                            value={notesValue}
+                            onChange={handleNotesChange}
+                            onBlur={handleNotesBlur}
+                            onKeyDown={handleNotesKeyDown}
+                            placeholder="Agregar nota..."
+                            className="text-xs w-full"
+                            minRows={5}
+                            maxRows={10}
+                            autoFocus
+                            data-testid={`notes-input-${sale.id}`}
+                          />
+                        ) : (
+                          <div 
+                            className="text-xs cursor-pointer hover:bg-muted/50 rounded px-2 py-1 min-h-[28px] break-words overflow-hidden"
+                            title={sale.notas || "Click para agregar nota"}
+                            onClick={() => handleNotesClick(sale)}
+                            data-testid={`notes-display-${sale.id}`}
+                          >
+                            {sale.notas || <span className="text-muted-foreground italic">Click para agregar nota</span>}
+                          </div>
+                        )}
+                      </div>
                     </td>
                     {showSeguimientoColumns && (
                       <td className="p-2 min-w-[90px]">

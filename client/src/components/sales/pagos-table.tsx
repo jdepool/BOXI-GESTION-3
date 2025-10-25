@@ -806,30 +806,32 @@ export default function PagosTable({
                         </div>
                       </div>
                     </td>
-                    <td className="p-2 min-w-[250px]">
-                      {editingNotesId === order.orden ? (
-                        <AutoExpandingTextarea
-                          value={notesValue}
-                          onChange={handleNotesChange}
-                          onBlur={handleNotesBlur}
-                          onKeyDown={handleNotesKeyDown}
-                          placeholder="Agregar nota..."
-                          className="text-xs max-w-[250px]"
-                          minRows={5}
-                          maxRows={10}
-                          autoFocus
-                          data-testid={`notes-input-${order.orden}`}
-                        />
-                      ) : (
-                        <div 
-                          className="text-xs cursor-pointer hover:bg-muted/50 rounded px-2 py-1 min-h-[28px] break-words max-w-[250px]"
-                          title={order.notas || "Click para agregar nota"}
-                          onClick={() => handleNotesClick(order)}
-                          data-testid={`notes-display-${order.orden}`}
-                        >
-                          {order.notas || <span className="text-muted-foreground italic">Click para agregar nota</span>}
-                        </div>
-                      )}
+                    <td className="p-2">
+                      <div style={{ width: '250px', maxWidth: '250px' }}>
+                        {editingNotesId === order.orden ? (
+                          <AutoExpandingTextarea
+                            value={notesValue}
+                            onChange={handleNotesChange}
+                            onBlur={handleNotesBlur}
+                            onKeyDown={handleNotesKeyDown}
+                            placeholder="Agregar nota..."
+                            className="text-xs w-full"
+                            minRows={5}
+                            maxRows={10}
+                            autoFocus
+                            data-testid={`notes-input-${order.orden}`}
+                          />
+                        ) : (
+                          <div 
+                            className="text-xs cursor-pointer hover:bg-muted/50 rounded px-2 py-1 min-h-[28px] break-words overflow-hidden"
+                            title={order.notas || "Click para agregar nota"}
+                            onClick={() => handleNotesClick(order)}
+                            data-testid={`notes-display-${order.orden}`}
+                          >
+                            {order.notas || <span className="text-muted-foreground italic">Click para agregar nota</span>}
+                          </div>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))
