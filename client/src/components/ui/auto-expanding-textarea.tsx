@@ -64,6 +64,11 @@ const AutoExpandingTextarea = React.forwardRef<
     } as React.ChangeEvent<HTMLTextAreaElement>;
     
     onChange?.(syntheticEvent);
+    
+    // Ensure textarea remains focused after update
+    setTimeout(() => {
+      textareaRef.current?.focus();
+    }, 0);
   };
 
   const currentLength = typeof value === 'string' ? value.length : 0;
@@ -107,7 +112,9 @@ const AutoExpandingTextarea = React.forwardRef<
           className
         )}
         ref={(node) => {
+          // Always set internal ref first
           textareaRef.current = node;
+          // Then forward to external ref if provided
           if (typeof ref === "function") {
             ref(node);
           } else if (ref) {
