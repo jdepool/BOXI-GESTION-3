@@ -21,6 +21,7 @@ import { format, parse } from "date-fns";
 import { cn } from "@/lib/utils";
 import { getSeguimientoStatusOrden } from "@/lib/seguimiento-utils";
 import { getChannelBadgeClass } from "@/lib/channelBadges";
+import { filterCanalesByProductLine, type ProductLine } from "@/lib/canalFilters";
 import type { Sale, SeguimientoConfig } from "@shared/schema";
 
 interface SalesTableProps {
@@ -44,6 +45,7 @@ interface SalesTableProps {
   onNewManualSale?: () => void;
   onNewReserva?: () => void;
   onClearFilters?: () => void;
+  productLine?: ProductLine;
 }
 
 export default function SalesTable({ 
@@ -63,6 +65,7 @@ export default function SalesTable({
   onFilterChange,
   onPageChange,
   onEditSale,
+  productLine = 'boxi',
   activeTab,
   onNewManualSale,
   onNewReserva,
@@ -542,9 +545,10 @@ export default function SalesTable({
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">Todos los canales</SelectItem>
-                      {canales
-                        .filter(canal => canal.activo !== false)
-                        .map(canal => (
+                      {filterCanalesByProductLine(
+                        canales.filter(canal => canal.activo !== false),
+                        productLine
+                      ).map(canal => (
                           <SelectItem key={canal.id} value={canal.nombre.toLowerCase()}>
                             {canal.nombre}
                           </SelectItem>

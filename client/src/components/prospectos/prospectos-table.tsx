@@ -11,6 +11,7 @@ import { format, startOfDay, addDays } from "date-fns";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { DateRangePicker } from "@/components/shared/date-range-picker";
+import { filterCanalesByProductLine, type ProductLine } from "@/lib/canalFilters";
 import ProspectoDialog from "./prospecto-dialog";
 import ConvertProspectoDialog from "./convert-prospecto-dialog";
 import SeguimientoDialog from "./seguimiento-dialog";
@@ -36,6 +37,7 @@ interface ProspectosTableProps {
   onPageChange?: (newOffset: number) => void;
   onClearFilters?: () => void;
   onConvertProspecto?: (tipo: "inmediata" | "reserva", prospecto: Prospecto) => void;
+  productLine?: ProductLine;
 }
 
 // Helper function to determine seguimiento status
@@ -193,6 +195,7 @@ export default function ProspectosTable({
   onPageChange,
   onClearFilters,
   onConvertProspecto,
+  productLine = 'boxi',
 }: ProspectosTableProps) {
   const { toast } = useToast();
   const [prospectoDialogOpen, setProspectoDialogOpen] = useState(false);
@@ -210,6 +213,10 @@ export default function ProspectosTable({
 
   const { data: asesores = [] } = useQuery<Array<{ id: string; nombre: string; activo: boolean }>>({
     queryKey: ["/api/admin/asesores"],
+  });
+
+  const { data: canales = [] } = useQuery<Array<{ id: string; nombre: string; activo: boolean | string }>>({
+    queryKey: ["/api/admin/canales"],
   });
 
   const { data: seguimientoConfig } = useQuery<SeguimientoConfig>({
@@ -453,11 +460,14 @@ export default function ProspectosTable({
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all" data-testid="option-canal-all">Todos los canales</SelectItem>
-                    <SelectItem value="Cashea" data-testid="option-canal-cashea">Cashea</SelectItem>
-                    <SelectItem value="Shopify" data-testid="option-canal-shopify">Shopify</SelectItem>
-                    <SelectItem value="Treble" data-testid="option-canal-treble">Treble</SelectItem>
-                    <SelectItem value="Tienda" data-testid="option-canal-tienda">Tienda</SelectItem>
-                    <SelectItem value="Manual" data-testid="option-canal-manual">Manual</SelectItem>
+                    {filterCanalesByProductLine(
+                      canales.filter(canal => canal.activo !== false),
+                      productLine
+                    ).map(canal => (
+                      <SelectItem key={canal.id} value={canal.nombre} data-testid={`option-canal-${canal.nombre.toLowerCase()}`}>
+                        {canal.nombre}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
