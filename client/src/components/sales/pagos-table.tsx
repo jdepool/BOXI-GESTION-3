@@ -470,7 +470,7 @@ export default function PagosTable({
         </div>
       )}
       <div className="overflow-auto max-h-[calc(100vh-280px)] relative">
-        <table className="w-full text-sm border-collapse">
+        <table className="w-full text-sm border-collapse table-fixed">
           <thead className="sticky top-0 z-10 bg-muted">
               <tr className="border-b border-border">
                 <th className="p-2 text-left text-xs font-medium text-muted-foreground min-w-[120px] sticky left-0 z-20 bg-muted">

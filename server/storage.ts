@@ -1066,11 +1066,32 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateSaleNotes(id: string, notas: string | null): Promise<Sale | undefined> {
+    // First, get the sale to find its order number
+    const existingSale = await this.getSaleById(id);
+    if (!existingSale) {
+      return undefined;
+    }
+
+    // If sale has an order number, update ALL sales with the same order number to keep notes in sync
+    // This ensures that when Pagos uses MAX(notas), it gets the correct value
+    if (existingSale.orden) {
+      const updatedSales = await db
+        .update(sales)
+        .set({ notas, updatedAt: new Date() })
+        .where(eq(sales.orden, existingSale.orden))
+        .returning();
+      
+      // Return the originally requested sale
+      return updatedSales.find(s => s.id === id) || updatedSales[0];
+    }
+    
+    // Fallback: If no order number exists, just update this single sale
     const [updatedSale] = await db
       .update(sales)
       .set({ notas, updatedAt: new Date() })
       .where(eq(sales.id, id))
       .returning();
+    
     return updatedSale || undefined;
   }
 
