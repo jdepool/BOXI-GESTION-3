@@ -221,7 +221,10 @@ export default function SalesTable({
       return apiRequest("PUT", `/api/sales/${saleId}/notes`, { notas });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/sales"] });
+      // Invalidate all sales queries to refresh data across all pages
+      queryClient.invalidateQueries({ 
+        predicate: (query) => Array.isArray(query.queryKey) && typeof query.queryKey[0] === 'string' && query.queryKey[0].startsWith('/api/sales')
+      });
       setEditingNotesId(null);
       toast({
         title: "Notas actualizadas",
