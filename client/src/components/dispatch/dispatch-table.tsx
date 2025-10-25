@@ -932,13 +932,19 @@ export default function DispatchTable({
                             <Button
                               variant="outline"
                               size="sm"
-                              disabled={sale.estadoEntrega === "Entregado" || markDeliveredMutation.isPending}
+                              disabled={sale.estadoEntrega === "Entregado" || markDeliveredMutation.isPending || !sale.fechaCliente}
                               data-testid={`delivered-sale-${sale.id}`}
                               className={cn(
                                 "h-7 text-xs bg-green-600 text-white border-green-600 hover:bg-green-700 hover:border-green-700 dark:bg-green-600 dark:text-white dark:border-green-600 dark:hover:bg-green-700",
-                                sale.estadoEntrega === "Entregado" && "bg-green-800 text-white hover:bg-green-800 opacity-70 cursor-not-allowed border-green-700"
+                                (sale.estadoEntrega === "Entregado" || !sale.fechaCliente) && "bg-green-800 text-white hover:bg-green-800 opacity-70 cursor-not-allowed border-green-700"
                               )}
-                              title={sale.estadoEntrega === "Entregado" ? "Venta ya entregada" : "Marcar como entregado"}
+                              title={
+                                sale.estadoEntrega === "Entregado" 
+                                  ? "Venta ya entregada" 
+                                  : !sale.fechaCliente 
+                                  ? "Debe llenar la fecha de Recepción del Cliente primero" 
+                                  : "Marcar como entregado"
+                              }
                             >
                               <Truck className={cn("h-3 w-3 mr-1", sale.estadoEntrega === "Entregado" && "text-green-400")} />
                               Entregado
