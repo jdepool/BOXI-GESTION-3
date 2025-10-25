@@ -2945,6 +2945,17 @@ export class DatabaseStorage implements IStorage {
     const processedPagoInicial = new Set<string>();
     const processedFlete = new Set<string>();
 
+    // DEBUG: Log salesData for order 20005
+    if (filters?.orden === '20005') {
+      console.log(`DEBUG Order 20005 - Raw sales data:`, salesData.map(s => ({
+        orden: s.orden,
+        pagoFleteUsd: s.pagoFleteUsd,
+        bancoReceptorFlete: s.bancoReceptorFlete,
+        referenciaFlete: s.referenciaFlete,
+        estadoVerificacionFlete: s.estadoVerificacionFlete
+      })));
+    }
+
     // Process Pago Inicial payments
     for (const sale of salesData) {
       // COMPLETE PAYMENT CRITERIA: Must have agreed amount (pagoInicialUsd) + Banco + Referencia
