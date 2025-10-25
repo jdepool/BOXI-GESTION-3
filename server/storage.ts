@@ -2900,6 +2900,8 @@ export class DatabaseStorage implements IStorage {
       .select({
         orden: sales.orden,
         saleId: sales.id,
+        nombre: sales.nombre,
+        canal: sales.canal,
         pagoInicialUsd: sales.pagoInicialUsd,
         fechaPagoInicial: sales.fechaPagoInicial,
         bancoReceptorInicial: sales.bancoReceptorInicial,
@@ -2961,6 +2963,8 @@ export class DatabaseStorage implements IStorage {
             paymentId: sale.saleId,
             paymentType: 'Inicial/Total',
             orden: sale.orden,
+            nombre: sale.nombre,
+            canal: sale.canal,
             tipoPago: 'Inicial/Total',
             montoBs: sale.montoInicialBs ? parseFloat(sale.montoInicialBs) : null,
             montoUsd: sale.pagoInicialUsd ? parseFloat(sale.pagoInicialUsd) : null, // Use agreed amount (Pago USD) for calculations
@@ -3020,6 +3024,8 @@ export class DatabaseStorage implements IStorage {
           paymentId: sale.saleId,
           paymentType: 'Flete',
           orden: sale.orden,
+          nombre: sale.nombre,
+          canal: sale.canal,
           tipoPago: 'Flete',
           montoBs: sale.montoFleteBs ? parseFloat(sale.montoFleteBs) : null,
           montoUsd: sale.pagoFleteUsd ? parseFloat(sale.pagoFleteUsd) : null, // Use agreed amount (Pago USD) for calculations
@@ -3036,11 +3042,14 @@ export class DatabaseStorage implements IStorage {
     }
 
     // Process Cuota payments
+    // Need to join with sales to get nombre and canal for display
     let cuotasQuery = db
       .select({
         installmentId: paymentInstallments.id,
         saleId: paymentInstallments.saleId,
         orden: paymentInstallments.orden,
+        nombre: sales.nombre,
+        canal: sales.canal,
         installmentNumber: paymentInstallments.installmentNumber,
         fecha: paymentInstallments.fecha,
         cuotaAmount: paymentInstallments.cuotaAmount, // Legacy USD field (fallback)
@@ -3054,6 +3063,7 @@ export class DatabaseStorage implements IStorage {
         notasVerificacion: paymentInstallments.notasVerificacion,
       })
       .from(paymentInstallments)
+      .leftJoin(sales, eq(paymentInstallments.saleId, sales.id))
       .where(
         filters?.orden ? eq(paymentInstallments.orden, filters.orden) : undefined
       );
@@ -3084,6 +3094,8 @@ export class DatabaseStorage implements IStorage {
         paymentId: cuota.installmentId,
         paymentType: 'Cuota',
         orden: cuota.orden,
+        nombre: cuota.nombre,
+        canal: cuota.canal,
         tipoPago: `Cuota ${cuota.installmentNumber}`,
         montoBs: cuota.montoCuotaBs ? parseFloat(cuota.montoCuotaBs) : (cuota.cuotaAmountBs ? parseFloat(cuota.cuotaAmountBs) : null),
         montoUsd: cuota.pagoCuotaUsd ? parseFloat(cuota.pagoCuotaUsd) : null, // Use agreed amount (Pago USD) for calculations

@@ -56,6 +56,8 @@ interface VerificationPayment {
   paymentId: string;
   paymentType: string;
   orden: string;
+  nombre: string | null;
+  canal: string | null;
   tipoPago: string;
   montoBs: number | null;
   montoUsd: number | null;
@@ -456,6 +458,12 @@ export default function VerificacionPage() {
                   <th className="p-2 text-left text-xs font-light text-muted-foreground min-w-[120px] sticky left-0 bg-muted z-20 border-r border-border shadow-[2px_0_5px_rgba(0,0,0,0.1)]">
                     Orden
                   </th>
+                  <th className="p-2 text-left text-xs font-light text-muted-foreground min-w-[180px] sticky left-[120px] bg-muted z-20 border-r border-border shadow-[2px_0_5px_rgba(0,0,0,0.1)]">
+                    Nombre
+                  </th>
+                  <th className="p-2 text-left text-xs font-light text-muted-foreground min-w-[120px]">
+                    Canal
+                  </th>
                   <th className="p-2 text-left text-xs font-light text-muted-foreground min-w-[140px]">
                     Pago
                   </th>
@@ -488,13 +496,13 @@ export default function VerificacionPage() {
               <tbody>
                 {isLoading ? (
                   <tr>
-                    <td colSpan={10} className="p-4 text-center text-muted-foreground">
+                    <td colSpan={12} className="p-4 text-center text-muted-foreground">
                       Cargando...
                     </td>
                   </tr>
                 ) : payments.length === 0 ? (
                   <tr>
-                    <td colSpan={10} className="p-4 text-center text-muted-foreground">
+                    <td colSpan={12} className="p-4 text-center text-muted-foreground">
                       No hay pagos para verificar
                     </td>
                   </tr>
@@ -506,6 +514,12 @@ export default function VerificacionPage() {
                     >
                       <td className="p-2 text-xs font-mono text-muted-foreground sticky left-0 bg-background z-10 border-r border-border shadow-[2px_0_5px_rgba(0,0,0,0.1)]" data-testid={`text-orden-${index}`}>
                         {payment.orden}
+                      </td>
+                      <td className="p-2 text-xs text-muted-foreground sticky left-[120px] bg-background z-10 border-r border-border shadow-[2px_0_5px_rgba(0,0,0,0.1)]" data-testid={`text-nombre-${index}`}>
+                        {payment.nombre || "-"}
+                      </td>
+                      <td className="p-2 text-xs text-muted-foreground" data-testid={`text-canal-${index}`}>
+                        {payment.canal || "-"}
                       </td>
                       <td className="p-2 text-xs font-mono text-muted-foreground" data-testid={`text-tipo-pago-${index}`}>
                         {payment.tipoPago}
