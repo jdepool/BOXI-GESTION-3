@@ -208,8 +208,6 @@ export const sales = pgTable("sales", {
   fechaEntrega: timestamp("fecha_entrega"),
   // Notas adicionales
   notas: text("notas"),
-  // Seguimiento de pago (payment tracking notes for Pagos tab)
-  seguimientoPago: text("seguimiento_pago"),
   // Medida especial (custom measurement for manual sales)
   medidaEspecial: varchar("medida_especial", { length: 10 }),
   // Obsequio (gift item)
