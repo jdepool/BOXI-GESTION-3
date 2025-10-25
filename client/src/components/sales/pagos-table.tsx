@@ -57,7 +57,6 @@ interface Order {
   totalPagado: number;
   totalVerificado: number;
   saldoPendiente: number;
-  seguimientoPago: string | null;
 }
 
 interface PagosTableProps {
@@ -111,8 +110,6 @@ export default function PagosTable({
   const [cuotasModalOpen, setCuotasModalOpen] = useState(false);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [selectedSale, setSelectedSale] = useState<any | null>(null);
-  const [editingSeguimientoOrder, setEditingSeguimientoOrder] = useState<string | null>(null);
-  const [seguimientoValue, setSeguimientoValue] = useState<string>("");
   const [fletePopoverOpen, setFletePopoverOpen] = useState<string | null>(null);
   const [fleteAPagarValue, setFleteAPagarValue] = useState<string>("");
   const [fleteGratisValue, setFleteGratisValue] = useState<boolean>(false);
@@ -205,50 +202,6 @@ export default function PagosTable({
       });
     },
   });
-
-  // Mutation to update seguimiento pago for all sales in an order
-  const updateSeguimientoMutation = useMutation({
-    mutationFn: async ({ orderNumber, seguimientoPago }: { orderNumber: string; seguimientoPago: string }) => {
-      return apiRequest("PATCH", `/api/sales/orders/${encodeURIComponent(orderNumber)}/seguimiento-pago`, { seguimientoPago });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ 
-        predicate: (query) => Array.isArray(query.queryKey) && typeof query.queryKey[0] === 'string' && query.queryKey[0].startsWith('/api/sales')
-      });
-    },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "No se pudo actualizar el seguimiento de pago",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const handleSeguimientoClick = (order: Order) => {
-    setEditingSeguimientoOrder(order.orden);
-    setSeguimientoValue(order.seguimientoPago || "");
-  };
-
-  const handleSeguimientoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSeguimientoValue(e.target.value);
-  };
-
-  const handleSeguimientoBlur = () => {
-    if (editingSeguimientoOrder) {
-      updateSeguimientoMutation.mutate({ orderNumber: editingSeguimientoOrder, seguimientoPago: seguimientoValue });
-      setEditingSeguimientoOrder(null);
-    }
-  };
-
-  const handleSeguimientoKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      handleSeguimientoBlur();
-    } else if (e.key === 'Escape') {
-      setEditingSeguimientoOrder(null);
-      setSeguimientoValue("");
-    }
-  };
 
   // Mutation to update flete data (fleteAPagar and fleteGratis)
   const updateFleteMutation = useMutation({
@@ -501,9 +454,6 @@ export default function PagosTable({
                 <th className="p-2 text-center text-xs font-medium text-muted-foreground min-w-[120px] bg-gray-100 dark:bg-gray-800">Total Pagado</th>
                 <th className="p-2 text-center text-xs font-medium text-muted-foreground min-w-[120px] bg-teal-50 dark:bg-teal-950">Total Verificado</th>
                 <th className="p-2 text-center text-xs font-medium text-muted-foreground min-w-[120px] bg-orange-50 dark:bg-orange-950">Saldo Pendiente</th>
-                <th className="p-2 text-left text-xs font-medium text-muted-foreground min-w-[250px]">
-                  Seguimiento Pago
-                </th>
               </tr>
             </thead>
             <tbody>
@@ -798,27 +748,6 @@ export default function PagosTable({
                           {formatCurrency(order.saldoPendiente)}
                         </div>
                       </div>
-                    </td>
-                    <td className="p-2 min-w-[250px]">
-                      {editingSeguimientoOrder === order.orden ? (
-                        <Input
-                          value={seguimientoValue}
-                          onChange={handleSeguimientoChange}
-                          onBlur={handleSeguimientoBlur}
-                          onKeyDown={handleSeguimientoKeyDown}
-                          autoFocus
-                          className="h-7 text-xs"
-                          data-testid={`input-seguimiento-${order.orden}`}
-                        />
-                      ) : (
-                        <div
-                          onClick={() => handleSeguimientoClick(order)}
-                          className="text-xs cursor-pointer hover:bg-muted/50 p-1 rounded min-h-[28px]"
-                          data-testid={`seguimiento-${order.orden}`}
-                        >
-                          {order.seguimientoPago || <span className="text-muted-foreground italic">Click para agregar...</span>}
-                        </div>
-                      )}
                     </td>
                   </tr>
                 ))

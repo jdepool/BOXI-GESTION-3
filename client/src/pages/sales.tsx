@@ -137,7 +137,6 @@ export default function Sales() {
       totalPagado: number;
       totalVerificado: number;
       saldoPendiente: number;
-      seguimientoPago: string | null;
     }>;
     total: number;
   }>({

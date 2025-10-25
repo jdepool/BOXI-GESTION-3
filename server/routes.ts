@@ -1326,7 +1326,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
           fechaPagoInicial: existingSales[0].fechaPagoInicial,
           pagoFleteUsd: existingSales[0].pagoFleteUsd,
           fleteGratis: existingSales[0].fleteGratis,
-          seguimientoPago: existingSales[0].seguimientoPago,
           notas: existingSales[0].notas,
         }));
 
@@ -1474,9 +1473,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
           'Total Pagado': orderSummary.totalPagado || 0,
           'Total Verificado': orderSummary.totalVerificado || 0,
           'Pendiente': orderSummary.saldoPendiente || 0,
-          
-          // Seguimiento Pago notes
-          'Seguimiento Pago': sale.seguimientoPago || '',
           
           // Initial Payment details
           'Pago Inicial USD': sale.pagoInicialUsd || '',
@@ -2883,37 +2879,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Return sale error:", error);
       res.status(500).json({ error: "Failed to mark sale as returned" });
-    }
-  });
-
-  // Update seguimientoPago for all sales in an order
-  app.patch("/api/sales/orders/:orderNumber/seguimiento-pago", async (req, res) => {
-    try {
-      const { orderNumber } = req.params;
-      const { seguimientoPago } = req.body;
-
-      // Validate that order exists
-      const existingSales = await storage.getSalesByOrderNumber(orderNumber);
-      if (!existingSales || existingSales.length === 0) {
-        return res.status(404).json({ error: "Order not found" });
-      }
-
-      const updatedSales = await storage.updateSalesByOrderNumber(orderNumber, { 
-        seguimientoPago: seguimientoPago || null 
-      });
-      
-      if (!updatedSales || updatedSales.length === 0) {
-        return res.status(500).json({ error: "Failed to update seguimiento pago" });
-      }
-
-      res.json({ 
-        success: true, 
-        message: `Updated seguimiento pago for ${updatedSales.length} sale(s)`,
-        salesUpdated: updatedSales.length 
-      });
-    } catch (error) {
-      console.error("Update order seguimiento pago error:", error);
-      res.status(500).json({ error: "Failed to update seguimiento pago" });
     }
   });
 
