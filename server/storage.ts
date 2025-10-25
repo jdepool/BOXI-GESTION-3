@@ -855,6 +855,16 @@ export class DatabaseStorage implements IStorage {
           limit: 9999
         });
         
+        // DEBUG: Log payments for order 20005
+        if (order.orden === '20005') {
+          console.log(`DEBUG Order 20005 - Por Verificar payments:`, porVerificarPayments.data.map(p => ({
+            type: p.paymentType,
+            amount: p.montoUsd,
+            banco: p.bancoId,
+            ref: p.referencia
+          })));
+        }
+        
         // Sum all "Por verificar" payments (already filtered for complete payments)
         totalPagado = porVerificarPayments.data.reduce((sum, payment) => {
           return sum + (payment.montoUsd || 0);
