@@ -7,7 +7,7 @@ export function getChannelBadgeClass(canal: string | null | undefined): string {
   
   // Map Mompox channels to their Boxi equivalents for uniform colors
   if (lowerCanal === 'shopmom') return 'channel-badge-shopify';
-  if (lowerCanal === 'manual mp') return 'bg-orange-100 text-orange-800';
+  if (lowerCanal === 'manual mp') return 'bg-gray-500 text-white';
   if (lowerCanal === 'cashea mp') return 'channel-badge-cashea';
   if (lowerCanal === 'tienda mp') return 'channel-badge-tienda';
   
@@ -16,7 +16,7 @@ export function getChannelBadgeClass(canal: string | null | undefined): string {
     case 'shopify': return 'channel-badge-shopify';
     case 'treble': return 'channel-badge-treble';
     case 'tienda': return 'channel-badge-tienda';
-    case 'manual': return 'bg-orange-100 text-orange-800';
+    case 'manual': return 'bg-gray-500 text-white';
     default: return 'bg-gray-500 text-white';
   }
 }
