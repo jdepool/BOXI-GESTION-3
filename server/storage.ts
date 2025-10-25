@@ -3006,26 +3006,54 @@ export class DatabaseStorage implements IStorage {
       // Note: Customers can pay in Bs or USD, so we check agreed amount, not actual Monto USD
       const hasAgreedFleteAmount = sale.pagoFleteUsd && parseFloat(sale.pagoFleteUsd) > 0;
       
+      // DEBUG for order 20005
+      if (filters?.orden === '20005') {
+        console.log(`DEBUG Flete Check - hasAgreedFleteAmount: ${hasAgreedFleteAmount}, bancoReceptorFlete: ${sale.bancoReceptorFlete}, referenciaFlete: ${sale.referenciaFlete}`);
+      }
+      
       if (hasAgreedFleteAmount) {
         // Only show payments with both Banco Receptor AND Referencia filled
-        if (!sale.bancoReceptorFlete || !sale.referenciaFlete) continue;
+        if (!sale.bancoReceptorFlete || !sale.referenciaFlete) {
+          if (filters?.orden === '20005') console.log('DEBUG: Filtered out - missing banco or referencia');
+          continue;
+        }
         
         // Skip if we've already processed Flete for this order (prevents duplicates)
-        if (sale.orden && processedFlete.has(sale.orden)) continue;
+        if (sale.orden && processedFlete.has(sale.orden)) {
+          if (filters?.orden === '20005') console.log('DEBUG: Filtered out - already processed this order');
+          continue;
+        }
         
         // Apply filters
-        if (filters?.tipoPago && filters.tipoPago !== 'Flete') continue;
-        if (filters?.startDate && sale.fechaFlete && sale.fechaFlete < new Date(filters.startDate)) continue;
+        if (filters?.tipoPago && filters.tipoPago !== 'Flete') {
+          if (filters?.orden === '20005') console.log('DEBUG: Filtered out - tipoPago filter');
+          continue;
+        }
+        if (filters?.startDate && sale.fechaFlete && sale.fechaFlete < new Date(filters.startDate)) {
+          if (filters?.orden === '20005') console.log('DEBUG: Filtered out - startDate filter');
+          continue;
+        }
         if (filters?.endDate && sale.fechaFlete) {
           const endDateTime = new Date(filters.endDate);
           endDateTime.setHours(23, 59, 59, 999);
-          if (sale.fechaFlete > endDateTime) continue;
+          if (sale.fechaFlete > endDateTime) {
+            if (filters?.orden === '20005') console.log('DEBUG: Filtered out - endDate filter');
+            continue;
+          }
         }
-        if (filters?.bancoId && sale.bancoReceptorFlete !== filters.bancoId) continue;
+        if (filters?.bancoId && sale.bancoReceptorFlete !== filters.bancoId) {
+          if (filters?.orden === '20005') console.log('DEBUG: Filtered out - bancoId filter');
+          continue;
+        }
         
         // Filter by estadoVerificacion
         const estadoVerificacionFlete = sale.estadoVerificacionFlete || 'Por verificar';
-        if (filters?.estadoVerificacion && estadoVerificacionFlete !== filters.estadoVerificacion) continue;
+        if (filters?.estadoVerificacion && estadoVerificacionFlete !== filters.estadoVerificacion) {
+          if (filters?.orden === '20005') console.log(`DEBUG: Filtered out - estadoVerificacion filter (expected: ${filters.estadoVerificacion}, actual: ${estadoVerificacionFlete})`);
+          continue;
+        }
+        
+        if (filters?.orden === '20005') console.log('DEBUG: Adding flete payment to array!');
 
         payments.push({
           paymentId: sale.saleId,
