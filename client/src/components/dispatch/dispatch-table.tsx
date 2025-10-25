@@ -24,7 +24,7 @@ import { NotesDisplay } from "@/components/shared/notes-display";
 const QUICK_NOTES_MESSAGES: QuickMessage[] = [
   {
     text: "ENTREGADO EN TIENDA",
-    icon: <Package className="h-4 w-4 text-amber-600" />,
+    icon: <Package className="h-4 w-4 text-green-600" />,
     tooltipText: "ENTREGADO EN TIENDA"
   },
   {

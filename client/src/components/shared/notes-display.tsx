@@ -10,7 +10,7 @@ const BADGE_MESSAGES = [
   {
     text: "ENTREGADO EN TIENDA",
     icon: Package,
-    badgeClass: "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-100 border-amber-300 dark:border-amber-700"
+    badgeClass: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100 border-green-300 dark:border-green-700"
   },
   {
     text: "EFECTIVO CONTRA ENTREGA",
