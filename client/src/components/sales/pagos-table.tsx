@@ -47,7 +47,7 @@ const QUICK_NOTES_MESSAGES: QuickMessage[] = [
   },
   {
     text: "EFECTIVO CONTRA ENTREGA",
-    icon: <Banknote className="h-4 w-4 text-green-600" />,
+    icon: <Banknote className="h-4 w-4 text-red-600" />,
     tooltipText: "EFECTIVO CONTRA ENTREGA"
   }
 ];

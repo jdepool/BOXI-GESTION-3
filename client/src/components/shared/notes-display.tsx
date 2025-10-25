@@ -15,7 +15,7 @@ const BADGE_MESSAGES = [
   {
     text: "EFECTIVO CONTRA ENTREGA",
     icon: Banknote,
-    badgeClass: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100 border-green-300 dark:border-green-700"
+    badgeClass: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100 border-red-300 dark:border-red-700"
   }
 ];
 
