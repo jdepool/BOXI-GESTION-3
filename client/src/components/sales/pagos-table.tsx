@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -135,6 +135,9 @@ export default function PagosTable({
   const [editingNotesId, setEditingNotesId] = useState<string | null>(null);
   const [notesValue, setNotesValue] = useState<string>("");
   
+  // Ref to track the textarea element for reading current value on blur
+  const notesTextareaRef = useRef<HTMLTextAreaElement>(null);
+  
   // Debounced search for orden and nombre
   const { inputValue: searchInput, debouncedValue: debouncedSearch, setInputValue: setSearchInput } = useDebouncedSearch(filters?.orden || "", 500);
   
@@ -204,10 +207,12 @@ export default function PagosTable({
   };
 
   const handleNotesBlur = () => {
-    if (editingNotesId) {
+    if (editingNotesId && notesTextareaRef.current) {
+      // Read value directly from DOM to avoid race condition with state updates
+      const currentValue = notesTextareaRef.current.value.trim();
       updateNotesMutation.mutate({ 
         orden: editingNotesId, 
-        notas: notesValue.trim() 
+        notas: currentValue 
       });
     }
   };
@@ -826,6 +831,7 @@ export default function PagosTable({
                       <div style={{ width: '250px', maxWidth: '250px' }}>
                         {editingNotesId === order.orden ? (
                           <AutoExpandingTextarea
+                            ref={notesTextareaRef}
                             value={notesValue}
                             onChange={handleNotesChange}
                             onBlur={handleNotesBlur}
