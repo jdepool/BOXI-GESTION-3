@@ -13,6 +13,7 @@ import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { DateRangePicker } from "@/components/shared/date-range-picker";
 import { getChannelBadgeClass } from "@/lib/channelBadges";
+import { useDebouncedSearch } from "@/hooks/use-debounced-search";
 import {
   Select,
   SelectContent,
@@ -117,24 +118,15 @@ export default function PagosTable({
   const [fleteGratisValue, setFleteGratisValue] = useState<boolean>(false);
   const [currentFleteOrder, setCurrentFleteOrder] = useState<string | null>(null);
   
-  // Debounced order filter - local state for immediate UI updates
-  const [orderInputValue, setOrderInputValue] = useState(filters?.orden || "");
-
-  // Debounce order filter - trigger API call 500ms after user stops typing
+  // Debounced search for orden and nombre
+  const { inputValue: searchInput, debouncedValue: debouncedSearch, setInputValue: setSearchInput } = useDebouncedSearch(filters?.orden || "", 500);
+  
+  // Update filter when debounced value changes
   useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      if (orderInputValue !== filters?.orden) {
-        handleFilterChange('orden', orderInputValue);
-      }
-    }, 500);
-
-    return () => clearTimeout(timeoutId);
-  }, [orderInputValue]);
-
-  // Sync input value when parent filter changes (e.g., on clear filters)
-  useEffect(() => {
-    setOrderInputValue(filters?.orden || "");
-  }, [filters?.orden]);
+    if (onFilterChange && debouncedSearch !== (filters?.orden || "")) {
+      handleFilterChange("orden", debouncedSearch);
+    }
+  }, [debouncedSearch]);
 
   // Fetch asesores for displaying asesor names
   const { data: asesores = [] } = useQuery<Array<{ id: string; nombre: string; activo?: boolean }>>({
@@ -448,14 +440,14 @@ export default function PagosTable({
             </div>
 
             <div>
-              <label className="text-sm font-medium mb-1 block">Orden:</label>
+              <label className="text-sm font-medium mb-1 block">Buscar:</label>
               <Input 
                 type="text"
-                placeholder="Buscar por # orden"
-                value={orderInputValue}
-                onChange={(e) => setOrderInputValue(e.target.value)}
-                className="w-40"
-                data-testid="filter-order-number"
+                placeholder="Buscar por orden o nombre"
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                className="w-60"
+                data-testid="input-filter-buscar"
               />
             </div>
 

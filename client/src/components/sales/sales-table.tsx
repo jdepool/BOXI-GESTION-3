@@ -22,6 +22,7 @@ import { cn } from "@/lib/utils";
 import { getSeguimientoStatusOrden } from "@/lib/seguimiento-utils";
 import { getChannelBadgeClass } from "@/lib/channelBadges";
 import { filterCanalesByProductLine, type ProductLine } from "@/lib/canalFilters";
+import { useDebouncedSearch } from "@/hooks/use-debounced-search";
 import type { Sale, SeguimientoConfig } from "@shared/schema";
 
 interface SalesTableProps {
@@ -150,8 +151,15 @@ export default function SalesTable({
   const [seguimientoDialogOpen, setSeguimientoDialogOpen] = useState(false);
   const [selectedSaleForSeguimiento, setSelectedSaleForSeguimiento] = useState<Sale | null>(null);
   
-  // Debounced order filter - local state for immediate UI updates
-  const [orderInputValue, setOrderInputValue] = useState(parentFilters?.orden || "");
+  // Debounced search for orden and nombre
+  const { inputValue: searchInput, debouncedValue: debouncedSearch, setInputValue: setSearchInput } = useDebouncedSearch(parentFilters?.orden || "", 500);
+  
+  // Update filter when debounced value changes
+  useEffect(() => {
+    if (debouncedSearch !== (parentFilters?.orden || "")) {
+      handleFilterChange('orden', debouncedSearch);
+    }
+  }, [debouncedSearch]);
   
   const filters = {
     canal: parentFilters?.canal || "",
@@ -161,22 +169,6 @@ export default function SalesTable({
     startDate: parentFilters?.startDate || "",
     endDate: parentFilters?.endDate || ""
   };
-
-  // Debounce order filter - trigger API call 500ms after user stops typing
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      if (orderInputValue !== parentFilters?.orden) {
-        handleFilterChange('orden', orderInputValue);
-      }
-    }, 500);
-
-    return () => clearTimeout(timeoutId);
-  }, [orderInputValue]);
-
-  // Sync input value when parent filter changes (e.g., on clear filters)
-  useEffect(() => {
-    setOrderInputValue(parentFilters?.orden || "");
-  }, [parentFilters?.orden]);
 
   // Fetch banks data to display bank names
   const { data: banks = [] } = useQuery({
@@ -605,14 +597,14 @@ export default function SalesTable({
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium mb-1 block">Orden:</label>
+                  <label className="text-sm font-medium mb-1 block">Buscar:</label>
                   <Input 
                     type="text"
-                    placeholder="Buscar por # orden"
-                    value={orderInputValue}
-                    onChange={(e) => setOrderInputValue(e.target.value)}
-                    className="w-40"
-                    data-testid="filter-order-number"
+                    placeholder="Buscar por orden o nombre"
+                    value={searchInput}
+                    onChange={(e) => setSearchInput(e.target.value)}
+                    className="w-60"
+                    data-testid="input-filter-buscar"
                   />
                 </div>
 

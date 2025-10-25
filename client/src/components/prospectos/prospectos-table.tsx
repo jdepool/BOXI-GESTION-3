@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -12,6 +12,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { DateRangePicker } from "@/components/shared/date-range-picker";
 import { filterCanalesByProductLine, type ProductLine } from "@/lib/canalFilters";
+import { useDebouncedSearch } from "@/hooks/use-debounced-search";
 import ProspectoDialog from "./prospecto-dialog";
 import ConvertProspectoDialog from "./convert-prospecto-dialog";
 import SeguimientoDialog from "./seguimiento-dialog";
@@ -205,6 +206,16 @@ export default function ProspectosTable({
   const [prospectoToConvert, setProspectoToConvert] = useState<Prospecto | null>(null);
   const [seguimientoDialogOpen, setSeguimientoDialogOpen] = useState(false);
   const [prospectoForSeguimiento, setProspectoForSeguimiento] = useState<Prospecto | null>(null);
+  
+  // Debounced search for prospecto number and nombre
+  const { inputValue: searchInput, debouncedValue: debouncedSearch, setInputValue: setSearchInput } = useDebouncedSearch(filters?.prospecto || "", 500);
+  
+  // Update filter when debounced value changes
+  useEffect(() => {
+    if (onFilterChange && debouncedSearch !== (filters?.prospecto || "")) {
+      handleFilterChange("prospecto", debouncedSearch);
+    }
+  }, [debouncedSearch]);
 
   const currentPage = Math.floor(offset / limit) + 1;
   const totalPages = Math.ceil(total / limit);
@@ -492,14 +503,14 @@ export default function ProspectosTable({
                 </Select>
               </div>
               <div>
-                <label className="text-sm font-medium mb-1 block">Prospecto:</label>
+                <label className="text-sm font-medium mb-1 block">Buscar:</label>
                 <Input
                   type="text"
-                  placeholder="Buscar número"
-                  value={filters?.prospecto || ""}
-                  onChange={(e) => handleFilterChange("prospecto", e.target.value)}
-                  data-testid="input-filter-prospecto"
-                  className="w-40"
+                  placeholder="Buscar por prospecto o nombre"
+                  value={searchInput}
+                  onChange={(e) => setSearchInput(e.target.value)}
+                  data-testid="input-filter-buscar"
+                  className="w-60"
                 />
               </div>
               <DateRangePicker
