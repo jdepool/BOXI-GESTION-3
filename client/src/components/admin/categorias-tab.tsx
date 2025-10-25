@@ -6,15 +6,20 @@ import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, Edit, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import type { Categoria } from "@shared/schema";
 
+type ClasificacionTipo = "Marca" | "Categoría" | "Subcategoría" | "Característica";
+
 export function CategoriasTab() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingCategoria, setEditingCategoria] = useState<Categoria | null>(null);
-  const [formData, setFormData] = useState({ nombre: "" });
+  const [formData, setFormData] = useState({ nombre: "", tipo: "Categoría" as ClasificacionTipo });
+  const [tipoFilter, setTipoFilter] = useState<ClasificacionTipo | "all">("all");
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -22,32 +27,36 @@ export function CategoriasTab() {
     queryKey: ["/api/admin/categorias"],
   });
 
+  const filteredCategorias = tipoFilter === "all"
+    ? (categorias as Categoria[])
+    : (categorias as Categoria[]).filter(c => c.tipo === tipoFilter);
+
   const createMutation = useMutation({
-    mutationFn: (data: { nombre: string }) =>
+    mutationFn: (data: { nombre: string; tipo: string }) =>
       apiRequest("POST", "/api/admin/categorias", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/categorias"] });
       setIsDialogOpen(false);
-      setFormData({ nombre: "" });
-      toast({ title: "Categoría creada exitosamente" });
+      setFormData({ nombre: "", tipo: "Categoría" });
+      toast({ title: "Clasificación creada exitosamente" });
     },
     onError: () => {
-      toast({ title: "Error al crear categoría", variant: "destructive" });
+      toast({ title: "Error al crear clasificación", variant: "destructive" });
     },
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: { nombre: string } }) =>
+    mutationFn: ({ id, data }: { id: string; data: { nombre: string; tipo: string } }) =>
       apiRequest("PUT", `/api/admin/categorias/${id}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/categorias"] });
       setIsDialogOpen(false);
       setEditingCategoria(null);
-      setFormData({ nombre: "" });
-      toast({ title: "Categoría actualizada exitosamente" });
+      setFormData({ nombre: "", tipo: "Categoría" });
+      toast({ title: "Clasificación actualizada exitosamente" });
     },
     onError: () => {
-      toast({ title: "Error al actualizar categoría", variant: "destructive" });
+      toast({ title: "Error al actualizar clasificación", variant: "destructive" });
     },
   });
 
@@ -56,10 +65,10 @@ export function CategoriasTab() {
       apiRequest("DELETE", `/api/admin/categorias/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/categorias"] });
-      toast({ title: "Categoría eliminada exitosamente" });
+      toast({ title: "Clasificación eliminada exitosamente" });
     },
     onError: () => {
-      toast({ title: "Error al eliminar categoría", variant: "destructive" });
+      toast({ title: "Error al eliminar clasificación", variant: "destructive" });
     },
   });
 
@@ -74,14 +83,24 @@ export function CategoriasTab() {
 
   const openEditDialog = (categoria: Categoria) => {
     setEditingCategoria(categoria);
-    setFormData({ nombre: categoria.nombre });
+    setFormData({ nombre: categoria.nombre, tipo: (categoria.tipo || "Categoría") as ClasificacionTipo });
     setIsDialogOpen(true);
   };
 
   const openCreateDialog = () => {
     setEditingCategoria(null);
-    setFormData({ nombre: "" });
+    setFormData({ nombre: "", tipo: "Categoría" });
     setIsDialogOpen(true);
+  };
+
+  const getTipoColor = (tipo: string) => {
+    switch (tipo) {
+      case "Marca": return "bg-purple-100 text-purple-800";
+      case "Categoría": return "bg-blue-100 text-blue-800";
+      case "Subcategoría": return "bg-green-100 text-green-800";
+      case "Característica": return "bg-orange-100 text-orange-800";
+      default: return "bg-gray-100 text-gray-800";
+    }
   };
 
   const getCategoriaColor = (nombre: string) => {
@@ -95,13 +114,16 @@ export function CategoriasTab() {
     }
   };
 
+  const countByTipo = (tipo: ClasificacionTipo) => 
+    (categorias as Categoria[]).filter(c => c.tipo === tipo).length;
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-lg font-semibold">Categorías</h2>
+          <h2 className="text-lg font-semibold">Clasificaciones de Productos</h2>
           <p className="text-sm text-muted-foreground">
-            Gestión de categorías de productos
+            Gestión de marcas, categorías, subcategorías y características
           </p>
         </div>
         <div className="flex space-x-2">
@@ -109,23 +131,40 @@ export function CategoriasTab() {
             <DialogTrigger asChild>
               <Button onClick={openCreateDialog} data-testid="add-categoria-button">
                 <Plus className="h-4 w-4 mr-2" />
-                Agregar Categoría
+                Agregar Clasificación
               </Button>
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>
-                  {editingCategoria ? "Editar Categoría" : "Agregar Categoría"}
+                  {editingCategoria ? "Editar Clasificación" : "Agregar Clasificación"}
                 </DialogTitle>
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <Label htmlFor="nombre">Nombre de la Categoría</Label>
+                  <Label htmlFor="tipo">Tipo</Label>
+                  <Select
+                    value={formData.tipo}
+                    onValueChange={(value) => setFormData({ ...formData, tipo: value as ClasificacionTipo })}
+                  >
+                    <SelectTrigger id="tipo" data-testid="select-tipo">
+                      <SelectValue placeholder="Selecciona un tipo" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Marca">Marca</SelectItem>
+                      <SelectItem value="Categoría">Categoría</SelectItem>
+                      <SelectItem value="Subcategoría">Subcategoría</SelectItem>
+                      <SelectItem value="Característica">Característica</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="nombre">Nombre</Label>
                   <Input
                     id="nombre"
                     value={formData.nombre}
                     onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
-                    placeholder="Ej: Colchón"
+                    placeholder="Ej: Boxi, Colchones, Híbrido, King"
                     required
                     data-testid="input-categoria-nombre"
                   />
@@ -152,62 +191,90 @@ export function CategoriasTab() {
         </div>
       </div>
 
-      <div className="border rounded-lg">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Categoría</TableHead>
-              <TableHead className="w-24">Acciones</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {isLoading ? (
-              <TableRow>
-                <TableCell colSpan={2} className="text-center py-8">
-                  Cargando...
-                </TableCell>
-              </TableRow>
-            ) : (categorias as Categoria[]).length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={2} className="text-center py-8 text-muted-foreground">
-                  No hay categorías registradas. Usa "Agregar Categoría" para comenzar.
-                </TableCell>
-              </TableRow>
-            ) : (
-              (categorias as Categoria[]).map((categoria: Categoria) => (
-                <TableRow key={categoria.id} data-testid={`categoria-row-${categoria.id}`}>
-                  <TableCell>
-                    <Badge variant="outline" className={getCategoriaColor(categoria.nombre)}>
-                      {categoria.nombre}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex space-x-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => openEditDialog(categoria)}
-                        data-testid={`edit-categoria-${categoria.id}`}
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => deleteMutation.mutate(categoria.id)}
-                        disabled={deleteMutation.isPending}
-                        data-testid={`delete-categoria-${categoria.id}`}
-                      >
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    </div>
-                  </TableCell>
+      <Tabs value={tipoFilter} onValueChange={(value) => setTipoFilter(value as ClasificacionTipo | "all")}>
+        <TabsList>
+          <TabsTrigger value="all" data-testid="tab-all">
+            Todos ({(categorias as Categoria[]).length})
+          </TabsTrigger>
+          <TabsTrigger value="Marca" data-testid="tab-marca">
+            Marcas ({countByTipo("Marca")})
+          </TabsTrigger>
+          <TabsTrigger value="Categoría" data-testid="tab-categoria">
+            Categorías ({countByTipo("Categoría")})
+          </TabsTrigger>
+          <TabsTrigger value="Subcategoría" data-testid="tab-subcategoria">
+            Subcategorías ({countByTipo("Subcategoría")})
+          </TabsTrigger>
+          <TabsTrigger value="Característica" data-testid="tab-caracteristica">
+            Características ({countByTipo("Característica")})
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value={tipoFilter} className="mt-4">
+          <div className="border rounded-lg">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Nombre</TableHead>
+                  <TableHead>Tipo</TableHead>
+                  <TableHead className="w-24">Acciones</TableHead>
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
+              </TableHeader>
+              <TableBody>
+                {isLoading ? (
+                  <TableRow>
+                    <TableCell colSpan={3} className="text-center py-8">
+                      Cargando...
+                    </TableCell>
+                  </TableRow>
+                ) : filteredCategorias.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={3} className="text-center py-8 text-muted-foreground">
+                      No hay clasificaciones registradas. Usa "Agregar Clasificación" para comenzar.
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  filteredCategorias.map((categoria: Categoria) => (
+                    <TableRow key={categoria.id} data-testid={`categoria-row-${categoria.id}`}>
+                      <TableCell>
+                        <Badge variant="outline" className={getCategoriaColor(categoria.nombre)}>
+                          {categoria.nombre}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className={getTipoColor(categoria.tipo || "Categoría")}>
+                          {categoria.tipo || "Categoría"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex space-x-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => openEditDialog(categoria)}
+                            data-testid={`edit-categoria-${categoria.id}`}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => deleteMutation.mutate(categoria.id)}
+                            disabled={deleteMutation.isPending}
+                            data-testid={`delete-categoria-${categoria.id}`}
+                          >
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

@@ -49,7 +49,11 @@ export const productos = pgTable("productos", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   nombre: text("nombre").notNull().unique(),
   sku: text("sku").unique(),
-  categoria: text("categoria").notNull(),
+  categoria: text("categoria"), // Legacy field - kept for backward compatibility
+  marcaId: varchar("marca_id"),
+  categoriaId: varchar("categoria_id"),
+  subcategoriaId: varchar("subcategoria_id"),
+  caracteristicaId: varchar("caracteristica_id"),
   position: integer("position"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
@@ -83,9 +87,12 @@ export const monedas = pgTable("monedas", {
 export const categorias = pgTable("categorias", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   nombre: text("nombre").notNull().unique(),
+  tipo: text("tipo").notNull().default("Categoría"), // Marca, Categoría, Subcategoría, Característica
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
-});
+}, (table) => ({
+  tipoCheck: check("tipo_check", sql`${table.tipo} IN ('Marca', 'Categoría', 'Subcategoría', 'Característica')`),
+}));
 
 export const canales = pgTable("canales", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
