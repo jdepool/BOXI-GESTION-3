@@ -157,6 +157,7 @@ export default function VerificacionPage() {
       queryClient.invalidateQueries({ queryKey: ["/api/sales/verification-payments"] });
       queryClient.invalidateQueries({ queryKey: ["/api/sales/orders"] });
       queryClient.invalidateQueries({ queryKey: ["/api/sales/payments"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/sales"] }); // Also invalidate Lista de Ventas
       toast({
         title: "Verificación actualizada",
         description: "El estado de verificación ha sido actualizado exitosamente.",
