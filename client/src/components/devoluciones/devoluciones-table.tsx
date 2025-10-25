@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
+import { AutoExpandingTextarea } from "@/components/ui/auto-expanding-textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   AlertDialog,
@@ -223,7 +224,7 @@ export default function DevolucionesTable({
     setOriginalNotesValue(currentNotes);
   };
 
-  const handleNotesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleNotesChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setNotesValue(e.target.value);
   };
 
@@ -238,18 +239,8 @@ export default function DevolucionesTable({
     }
   };
 
-  const handleNotesKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      if (editingNotesId && notesValue.trim() !== originalNotesValue) {
-        updateNotesMutation.mutate({ 
-          saleId: editingNotesId, 
-          notas: notesValue.trim() 
-        });
-      } else {
-        setEditingNotesId(null);
-      }
-    } else if (e.key === 'Escape') {
+  const handleNotesKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Escape') {
       setEditingNotesId(null);
       setNotesValue(originalNotesValue);
     }
@@ -436,27 +427,28 @@ export default function DevolucionesTable({
                       
                       <td className="p-2 min-w-[200px] text-xs">{sale.email}</td>
                       
-                      <td className="p-2 min-w-[200px] text-xs">
+                      <td className="p-2 min-w-[250px]">
                         {editingNotesId === sale.id ? (
-                          <Input
+                          <AutoExpandingTextarea
                             value={notesValue}
                             onChange={handleNotesChange}
                             onBlur={handleNotesBlur}
                             onKeyDown={handleNotesKeyDown}
-                            maxLength={300}
                             placeholder="Agregar nota..."
-                            className="h-7 text-xs"
+                            className="text-xs"
+                            minRows={5}
+                            maxRows={10}
                             autoFocus
                             data-testid={`notes-input-${sale.id}`}
                           />
                         ) : (
                           <div 
-                            className="text-xs text-muted-foreground truncate cursor-pointer hover:bg-muted/50 rounded px-2 py-1 min-h-[28px] flex items-center"
+                            className="text-xs cursor-pointer hover:bg-muted/50 rounded px-2 py-1 min-h-[28px]"
                             title={sale.notas || "Click para agregar nota"}
                             onClick={() => handleNotesClick(sale)}
                             data-testid={`notes-display-${sale.id}`}
                           >
-                            {sale.notas || 'Click para agregar nota'}
+                            {sale.notas || <span className="text-muted-foreground italic">Click para agregar nota</span>}
                           </div>
                         )}
                       </td>

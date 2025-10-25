@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { AutoExpandingTextarea } from "@/components/ui/auto-expanding-textarea";
 import { format } from "date-fns";
 import { CreditCard, Truck, Banknote, Filter, ChevronUp, ChevronDown, Download, ChevronLeft, ChevronRight, XCircle, RotateCcw, Package } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -115,6 +116,8 @@ export default function PagosTable({
   const [fleteAPagarValue, setFleteAPagarValue] = useState<string>("");
   const [fleteGratisValue, setFleteGratisValue] = useState<boolean>(false);
   const [currentFleteOrder, setCurrentFleteOrder] = useState<string | null>(null);
+  const [editingNotesId, setEditingNotesId] = useState<string | null>(null);
+  const [notesValue, setNotesValue] = useState<string>("");
   
   // Debounced search for orden and nombre
   const { inputValue: searchInput, debouncedValue: debouncedSearch, setInputValue: setSearchInput } = useDebouncedSearch(filters?.orden || "", 500);
@@ -174,6 +177,31 @@ export default function PagosTable({
     }).format(value);
   };
 
+  // Notes editing handlers
+  const handleNotesClick = (order: Order) => {
+    setEditingNotesId(order.orden);
+    setNotesValue(order.notas || "");
+  };
+
+  const handleNotesChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setNotesValue(e.target.value);
+  };
+
+  const handleNotesBlur = () => {
+    if (editingNotesId) {
+      updateNotesMutation.mutate({ 
+        orden: editingNotesId, 
+        notas: notesValue.trim() 
+      });
+    }
+  };
+
+  const handleNotesKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Escape') {
+      setEditingNotesId(null);
+    }
+  };
+
   // Mutation to update estado de entrega for an order
   const updateEstadoEntregaMutation = useMutation({
     mutationFn: async ({ orden, estadoEntrega }: { orden: string; estadoEntrega: string }) => {
@@ -199,6 +227,33 @@ export default function PagosTable({
       toast({
         title: "Error",
         description: "No se pudo actualizar el estado de entrega",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Mutation to update notes
+  const updateNotesMutation = useMutation({
+    mutationFn: async ({ orden, notas }: { orden: string; notas: string }) => {
+      return apiRequest("PUT", `/api/sales/orders/${encodeURIComponent(orden)}/notes`, { notas });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ 
+        predicate: (query) => {
+          return Array.isArray(query.queryKey) && 
+                 typeof query.queryKey[0] === 'string' && 
+                 query.queryKey[0].startsWith('/api/sales');
+        }
+      });
+      setEditingNotesId(null);
+      toast({
+        title: "Notas actualizadas",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "No se pudieron actualizar las notas",
         variant: "destructive",
       });
     },
@@ -752,9 +807,29 @@ export default function PagosTable({
                       </div>
                     </td>
                     <td className="p-2 min-w-[250px]">
-                      <div className="text-xs text-foreground" data-testid={`notas-${order.orden}`}>
-                        {order.notas || <span className="text-muted-foreground italic">Sin notas</span>}
-                      </div>
+                      {editingNotesId === order.orden ? (
+                        <AutoExpandingTextarea
+                          value={notesValue}
+                          onChange={handleNotesChange}
+                          onBlur={handleNotesBlur}
+                          onKeyDown={handleNotesKeyDown}
+                          placeholder="Agregar nota..."
+                          className="text-xs"
+                          minRows={5}
+                          maxRows={10}
+                          autoFocus
+                          data-testid={`notes-input-${order.orden}`}
+                        />
+                      ) : (
+                        <div 
+                          className="text-xs cursor-pointer hover:bg-muted/50 rounded px-2 py-1 min-h-[28px]"
+                          title={order.notas || "Click para agregar nota"}
+                          onClick={() => handleNotesClick(order)}
+                          data-testid={`notes-display-${order.orden}`}
+                        >
+                          {order.notas || <span className="text-muted-foreground italic">Click para agregar nota</span>}
+                        </div>
+                      )}
                     </td>
                   </tr>
                 ))

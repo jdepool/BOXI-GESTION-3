@@ -3,6 +3,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
+import { AutoExpandingTextarea } from "@/components/ui/auto-expanding-textarea";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Calendar } from "@/components/ui/calendar";
@@ -352,11 +353,8 @@ export default function SalesTable({
     setNotesValue(sale.notas || "");
   };
 
-  const handleNotesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    if (value.length <= 200) {
-      setNotesValue(value);
-    }
+  const handleNotesChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setNotesValue(e.target.value);
   };
 
   const handleNotesBlur = () => {
@@ -368,10 +366,8 @@ export default function SalesTable({
     }
   };
 
-  const handleNotesKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      e.currentTarget.blur();
-    } else if (e.key === 'Escape') {
+  const handleNotesKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Escape') {
       setEditingNotesId(null);
     }
   };
@@ -881,27 +877,28 @@ export default function SalesTable({
                         </SelectContent>
                       </Select>
                     </td>
-                    <td className="p-2 min-w-[150px]">
+                    <td className="p-2 min-w-[250px]">
                       {editingNotesId === sale.id ? (
-                        <Input
+                        <AutoExpandingTextarea
                           value={notesValue}
                           onChange={handleNotesChange}
                           onBlur={handleNotesBlur}
                           onKeyDown={handleNotesKeyDown}
-                          maxLength={200}
                           placeholder="Agregar nota..."
-                          className="h-7 text-xs"
+                          className="text-xs"
+                          minRows={5}
+                          maxRows={10}
                           autoFocus
                           data-testid={`notes-input-${sale.id}`}
                         />
                       ) : (
                         <div 
-                          className="text-xs text-muted-foreground truncate cursor-pointer hover:bg-muted/50 rounded px-2 py-1 min-h-[28px] flex items-center"
+                          className="text-xs cursor-pointer hover:bg-muted/50 rounded px-2 py-1 min-h-[28px]"
                           title={sale.notas || "Click para agregar nota"}
                           onClick={() => handleNotesClick(sale)}
                           data-testid={`notes-display-${sale.id}`}
                         >
-                          {sale.notas || 'Click para agregar nota'}
+                          {sale.notas || <span className="text-muted-foreground italic">Click para agregar nota</span>}
                         </div>
                       )}
                     </td>
