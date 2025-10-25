@@ -835,9 +835,9 @@ export class DatabaseStorage implements IStorage {
         const fleteAPagar = Number(order.fleteAPagar) || 0;
         const totalOrderUsd = Number(order.totalOrderUsd) || 0;
         
-        // For Cashea orders, use pagoInicialUsd; for others, use totalOrderUsd
+        // For Cashea orders, use 0 (only collect freight); for others, use totalOrderUsd
         // Use the aggregated boolean flag from the query (BOOL_OR) which is true if ANY sale in the order is from Cashea
-        const baseAmount = order.isCasheaOrder ? pagoInicial : totalOrderUsd;
+        const baseAmount = order.isCasheaOrder ? 0 : totalOrderUsd;
         const ordenPlusFlete = baseAmount + (pagoFlete === 0 || order.fleteGratis ? 0 : pagoFlete);
         const totalCuotas = totalCuotasMap.get(order.orden!) || 0;
         
