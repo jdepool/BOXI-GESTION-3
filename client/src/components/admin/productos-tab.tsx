@@ -19,10 +19,10 @@ export function ProductosTab() {
   const [formData, setFormData] = useState({ 
     nombre: "", 
     sku: "", 
-    marcaId: "",
-    categoriaId: "",
-    subcategoriaId: "",
-    caracteristicaId: ""
+    marcaId: "NONE",
+    categoriaId: "NONE",
+    subcategoriaId: "NONE",
+    caracteristicaId: "NONE"
   });
   
   // Excel upload state
@@ -54,7 +54,7 @@ export function ProductosTab() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/productos"] });
       setIsDialogOpen(false);
-      setFormData({ nombre: "", sku: "", marcaId: "", categoriaId: "", subcategoriaId: "", caracteristicaId: "" });
+      setFormData({ nombre: "", sku: "", marcaId: "NONE", categoriaId: "NONE", subcategoriaId: "NONE", caracteristicaId: "NONE" });
       toast({ title: "Producto creado exitosamente" });
     },
     onError: () => {
@@ -69,7 +69,7 @@ export function ProductosTab() {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/productos"] });
       setIsDialogOpen(false);
       setEditingProducto(null);
-      setFormData({ nombre: "", sku: "", marcaId: "", categoriaId: "", subcategoriaId: "", caracteristicaId: "" });
+      setFormData({ nombre: "", sku: "", marcaId: "NONE", categoriaId: "NONE", subcategoriaId: "NONE", caracteristicaId: "NONE" });
       toast({ title: "Producto actualizado exitosamente" });
     },
     onError: () => {
@@ -208,10 +208,10 @@ export function ProductosTab() {
     const normalizedData = {
       nombre: formData.nombre,
       sku: formData.sku.trim() || undefined,
-      marcaId: formData.marcaId || undefined,
-      categoriaId: formData.categoriaId || undefined,
-      subcategoriaId: formData.subcategoriaId || undefined,
-      caracteristicaId: formData.caracteristicaId || undefined
+      marcaId: formData.marcaId === "NONE" ? undefined : formData.marcaId,
+      categoriaId: formData.categoriaId === "NONE" ? undefined : formData.categoriaId,
+      subcategoriaId: formData.subcategoriaId === "NONE" ? undefined : formData.subcategoriaId,
+      caracteristicaId: formData.caracteristicaId === "NONE" ? undefined : formData.caracteristicaId
     };
     
     if (editingProducto) {
@@ -226,17 +226,17 @@ export function ProductosTab() {
     setFormData({ 
       nombre: producto.nombre, 
       sku: producto.sku || "", 
-      marcaId: producto.marcaId || "",
-      categoriaId: producto.categoriaId || "",
-      subcategoriaId: producto.subcategoriaId || "",
-      caracteristicaId: producto.caracteristicaId || ""
+      marcaId: producto.marcaId || "NONE",
+      categoriaId: producto.categoriaId || "NONE",
+      subcategoriaId: producto.subcategoriaId || "NONE",
+      caracteristicaId: producto.caracteristicaId || "NONE"
     });
     setIsDialogOpen(true);
   };
 
   const openCreateDialog = () => {
     setEditingProducto(null);
-    setFormData({ nombre: "", sku: "", marcaId: "", categoriaId: "", subcategoriaId: "", caracteristicaId: "" });
+    setFormData({ nombre: "", sku: "", marcaId: "NONE", categoriaId: "NONE", subcategoriaId: "NONE", caracteristicaId: "NONE" });
     setIsDialogOpen(true);
   };
 
@@ -424,7 +424,7 @@ export function ProductosTab() {
                         <SelectValue placeholder="Selecciona una marca" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">Sin marca</SelectItem>
+                        <SelectItem value="NONE">Sin marca</SelectItem>
                         {marcas.map((marca) => (
                           <SelectItem key={marca.id} value={marca.id}>
                             {marca.nombre}
@@ -443,7 +443,7 @@ export function ProductosTab() {
                         <SelectValue placeholder="Selecciona una categoría" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">Sin categoría</SelectItem>
+                        <SelectItem value="NONE">Sin categoría</SelectItem>
                         {categorias.map((cat) => (
                           <SelectItem key={cat.id} value={cat.id}>
                             {cat.nombre}
@@ -465,7 +465,7 @@ export function ProductosTab() {
                         <SelectValue placeholder="Selecciona una subcategoría" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">Sin subcategoría</SelectItem>
+                        <SelectItem value="NONE">Sin subcategoría</SelectItem>
                         {subcategorias.map((subcat) => (
                           <SelectItem key={subcat.id} value={subcat.id}>
                             {subcat.nombre}
@@ -484,7 +484,7 @@ export function ProductosTab() {
                         <SelectValue placeholder="Selecciona una característica" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">Sin característica</SelectItem>
+                        <SelectItem value="NONE">Sin característica</SelectItem>
                         {caracteristicas.map((carac) => (
                           <SelectItem key={carac.id} value={carac.id}>
                             {carac.nombre}
