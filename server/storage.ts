@@ -3095,11 +3095,20 @@ export class DatabaseStorage implements IStorage {
       });
     }
 
-    // Sort by date (most recent first)
+    // Sort by date (most recent first), then by orden (to group same-order payments)
     const sortedPayments = payments.sort((a, b) => {
+      // Payments without dates go to the end
       if (!a.fecha) return 1;
       if (!b.fecha) return -1;
-      return new Date(b.fecha).getTime() - new Date(a.fecha).getTime();
+      
+      // Primary sort: by date (most recent first)
+      const dateComparison = new Date(b.fecha).getTime() - new Date(a.fecha).getTime();
+      if (dateComparison !== 0) return dateComparison;
+      
+      // Secondary sort: by orden (to group payments from same order)
+      if (!a.orden) return 1;
+      if (!b.orden) return -1;
+      return a.orden.localeCompare(b.orden);
     });
 
     // Apply pagination
