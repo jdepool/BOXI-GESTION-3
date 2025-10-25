@@ -447,6 +447,7 @@ export default function Sales() {
               setConvertingProspecto(null);
             }}
             openFormImmediately={true}
+            productLine="boxi"
           />
         </DialogContent>
       </Dialog>
@@ -467,6 +468,7 @@ export default function Sales() {
           // The modal will handle cache invalidation internally
         }}
         convertingProspecto={convertingProspecto?.tipo === "reserva" ? convertingProspecto.prospecto : null}
+        productLine="boxi"
       />
 
       <Dialog open={isSettingsDialogOpen} onOpenChange={setIsSettingsDialogOpen}>

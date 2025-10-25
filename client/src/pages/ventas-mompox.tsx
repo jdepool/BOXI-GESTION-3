@@ -448,6 +448,7 @@ export default function VentasMompox() {
               setConvertingProspecto(null);
             }}
             openFormImmediately={true}
+            productLine="mompox"
           />
         </DialogContent>
       </Dialog>
@@ -468,6 +469,7 @@ export default function VentasMompox() {
           // The modal will handle cache invalidation internally
         }}
         convertingProspecto={convertingProspecto?.tipo === "reserva" ? convertingProspecto.prospecto : null}
+        productLine="mompox"
       />
 
       <Dialog open={isSettingsDialogOpen} onOpenChange={setIsSettingsDialogOpen}>
