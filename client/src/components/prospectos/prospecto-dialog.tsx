@@ -5,7 +5,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { AutoExpandingTextarea } from "@/components/ui/auto-expanding-textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -544,9 +544,10 @@ export default function ProspectoDialog({ open, onOpenChange, prospecto, product
                     render={({ field }) => (
                       <FormItem>
                         <FormControl>
-                          <Textarea
+                          <AutoExpandingTextarea
                             placeholder="Escribe aquí cualquier comentario, pregunta o necesidad específica del prospecto..."
-                            className="min-h-[100px] resize-y"
+                            minRows={5}
+                            maxRows={10}
                             {...field}
                             value={field.value || ""}
                             data-testid="textarea-prospecto-notas"
