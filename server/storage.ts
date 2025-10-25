@@ -106,6 +106,8 @@ export interface IStorage {
     limit?: number;
     offset?: number;
     canal?: string;
+    canalMompox?: string;
+    canalBoxi?: string;
     orden?: string;
     startDate?: string;
     endDate?: string;
