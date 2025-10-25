@@ -3157,6 +3157,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { orderNumber } = req.params;
       const { notas } = req.body;
 
+      console.log("📝 Order notes update request:");
+      console.log("   - Order number:", orderNumber);
+      console.log("   - Notes type:", typeof notas);
+      console.log("   - Notes value:", JSON.stringify(notas));
+      console.log("   - Notes length:", notas ? notas.length : 0);
+
       // Validate notes length (max 500 characters)
       if (notas && notas.length > 500) {
         return res.status(400).json({ error: "Notes cannot exceed 500 characters" });
