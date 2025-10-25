@@ -159,7 +159,34 @@ export default function FleteModal({ open, onOpenChange, sale }: FleteModalProps
   };
 
   const validateFleteFields = () => {
-    // No validation needed anymore - all fields are optional
+    // Require Pago Flete USD, Banco Receptor, and Referencia
+    if (!fleteData.pagoFleteUsd || parseFloat(fleteData.pagoFleteUsd) <= 0) {
+      toast({
+        title: "Campo requerido",
+        description: "Debe ingresar el Pago Flete USD",
+        variant: "destructive"
+      });
+      return false;
+    }
+    
+    if (!fleteData.bancoReceptorFlete) {
+      toast({
+        title: "Campo requerido",
+        description: "Debe seleccionar el Banco Receptor",
+        variant: "destructive"
+      });
+      return false;
+    }
+    
+    if (!fleteData.referenciaFlete || fleteData.referenciaFlete.trim() === '') {
+      toast({
+        title: "Campo requerido",
+        description: "Debe ingresar la Referencia",
+        variant: "destructive"
+      });
+      return false;
+    }
+    
     return true;
   };
 
@@ -185,7 +212,7 @@ export default function FleteModal({ open, onOpenChange, sale }: FleteModalProps
             Pago Flete
           </DialogTitle>
           <DialogDescription>
-            Puedes guardar solo con el monto en US$ y completar los demás datos después. El ícono del camión se pondrá naranja una vez guardado.
+            Complete la información de pago del flete. Pago Flete USD, Banco Receptor y Referencia son obligatorios.
           </DialogDescription>
         </DialogHeader>
 

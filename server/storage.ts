@@ -767,7 +767,7 @@ export class DatabaseStorage implements IStorage {
         totalOrderUsd: sql<number | null>`MAX(${sales.totalOrderUsd})`.as('totalOrderUsd'),
         productCount: sql<number>`COUNT(*)`.as('productCount'),
         hasPagoInicial: sql<boolean>`BOOL_OR(${sales.pagoInicialUsd} IS NOT NULL OR ${sales.fechaPagoInicial} IS NOT NULL)`.as('hasPagoInicial'),
-        hasFlete: sql<boolean>`BOOL_OR(${sales.pagoFleteUsd} IS NOT NULL OR ${sales.fleteGratis} = true)`.as('hasFlete'),
+        hasFlete: sql<boolean>`BOOL_OR(${sales.pagoFleteUsd} IS NOT NULL)`.as('hasFlete'),
         pagoInicialUsd: sql<number | null>`MAX(${sales.pagoInicialUsd})`.as('pagoInicialUsd'),
         pagoFleteUsd: sql<number | null>`MAX(${sales.pagoFleteUsd})`.as('pagoFleteUsd'),
         fleteAPagar: sql<number | null>`MAX(${sales.fleteAPagar})`.as('fleteAPagar'),
@@ -854,16 +854,6 @@ export class DatabaseStorage implements IStorage {
           estadoVerificacion: 'Por verificar',
           limit: 9999
         });
-        
-        // DEBUG: Log payments for order 20005
-        if (order.orden === '20005') {
-          console.log(`DEBUG Order 20005 - Por Verificar payments:`, porVerificarPayments.data.map(p => ({
-            type: p.paymentType,
-            amount: p.montoUsd,
-            banco: p.bancoId,
-            ref: p.referencia
-          })));
-        }
         
         // Sum all "Por verificar" payments (already filtered for complete payments)
         totalPagado = porVerificarPayments.data.reduce((sum, payment) => {
@@ -1311,9 +1301,6 @@ export class DatabaseStorage implements IStorage {
     fleteGratis?: boolean;
     fleteAPagar?: string;
   }): Promise<Sale[]> {
-    console.log('🔍 DEBUG updateOrderFlete - Order:', orderNumber);
-    console.log('🔍 DEBUG updateOrderFlete - Received data:', JSON.stringify(flete, null, 2));
-    
     const updateData: any = {};
     
     // Add all flete fields to update data
@@ -1348,16 +1335,12 @@ export class DatabaseStorage implements IStorage {
     // Add updated timestamp
     updateData.updatedAt = new Date();
 
-    console.log('🔍 DEBUG updateOrderFlete - Update data to DB:', JSON.stringify(updateData, null, 2));
-
     // Update all sales rows with this order number
     const updatedSales = await db
       .update(sales)
       .set(updateData)
       .where(eq(sales.orden, orderNumber))
       .returning();
-
-    console.log('🔍 DEBUG updateOrderFlete - Updated', updatedSales.length, 'sales');
 
     return updatedSales;
   }
@@ -2945,17 +2928,6 @@ export class DatabaseStorage implements IStorage {
     const processedPagoInicial = new Set<string>();
     const processedFlete = new Set<string>();
 
-    // DEBUG: Log salesData for order 20005
-    if (filters?.orden === '20005') {
-      console.log(`DEBUG Order 20005 - Raw sales data:`, salesData.map(s => ({
-        orden: s.orden,
-        pagoFleteUsd: s.pagoFleteUsd,
-        bancoReceptorFlete: s.bancoReceptorFlete,
-        referenciaFlete: s.referenciaFlete,
-        estadoVerificacionFlete: s.estadoVerificacionFlete
-      })));
-    }
-
     // Process Pago Inicial payments
     for (const sale of salesData) {
       // COMPLETE PAYMENT CRITERIA: Must have agreed amount (pagoInicialUsd) + Banco + Referencia
@@ -3005,63 +2977,44 @@ export class DatabaseStorage implements IStorage {
       }
 
       // Process Flete payments
-      // DEBUG: Log if we even reach this section
-      if (filters?.orden === '20005') {
-        console.log(`DEBUG: Reached flete section for sale`);
-      }
-      
       // COMPLETE PAYMENT CRITERIA: Must have agreed amount (pagoFleteUsd) + Banco + Referencia
       // Note: Customers can pay in Bs or USD, so we check agreed amount, not actual Monto USD
       const hasAgreedFleteAmount = sale.pagoFleteUsd && parseFloat(sale.pagoFleteUsd) > 0;
       
-      // DEBUG for order 20005
-      if (filters?.orden === '20005') {
-        console.log(`DEBUG Flete Check - hasAgreedFleteAmount: ${hasAgreedFleteAmount}, bancoReceptorFlete: ${sale.bancoReceptorFlete}, referenciaFlete: ${sale.referenciaFlete}, filters.estadoVerificacion: ${filters?.estadoVerificacion}`);
-      }
-      
       if (hasAgreedFleteAmount) {
         // Only show payments with both Banco Receptor AND Referencia filled
         if (!sale.bancoReceptorFlete || !sale.referenciaFlete) {
-          if (filters?.orden === '20005') console.log('DEBUG: Filtered out - missing banco or referencia');
           continue;
         }
         
         // Skip if we've already processed Flete for this order (prevents duplicates)
         if (sale.orden && processedFlete.has(sale.orden)) {
-          if (filters?.orden === '20005') console.log('DEBUG: Filtered out - already processed this order');
           continue;
         }
         
         // Apply filters
         if (filters?.tipoPago && filters.tipoPago !== 'Flete') {
-          if (filters?.orden === '20005') console.log('DEBUG: Filtered out - tipoPago filter');
           continue;
         }
         if (filters?.startDate && sale.fechaFlete && sale.fechaFlete < new Date(filters.startDate)) {
-          if (filters?.orden === '20005') console.log('DEBUG: Filtered out - startDate filter');
           continue;
         }
         if (filters?.endDate && sale.fechaFlete) {
           const endDateTime = new Date(filters.endDate);
           endDateTime.setHours(23, 59, 59, 999);
           if (sale.fechaFlete > endDateTime) {
-            if (filters?.orden === '20005') console.log('DEBUG: Filtered out - endDate filter');
             continue;
           }
         }
         if (filters?.bancoId && sale.bancoReceptorFlete !== filters.bancoId) {
-          if (filters?.orden === '20005') console.log('DEBUG: Filtered out - bancoId filter');
           continue;
         }
         
         // Filter by estadoVerificacion
         const estadoVerificacionFlete = sale.estadoVerificacionFlete || 'Por verificar';
         if (filters?.estadoVerificacion && estadoVerificacionFlete !== filters.estadoVerificacion) {
-          if (filters?.orden === '20005') console.log(`DEBUG: Filtered out - estadoVerificacion filter (expected: ${filters.estadoVerificacion}, actual: ${estadoVerificacionFlete})`);
           continue;
         }
-        
-        if (filters?.orden === '20005') console.log('DEBUG: Adding flete payment to array!');
 
         payments.push({
           paymentId: sale.saleId,
