@@ -13,7 +13,7 @@ import SaleDetailModal from "./sale-detail-modal";
 import AddressModal from "@/components/addresses/address-modal";
 import EditSaleModal from "./edit-sale-modal";
 import SeguimientoDialogOrden from "@/components/sales/seguimiento-dialog-orden";
-import { MapPin, Edit, CalendarIcon, Filter, ChevronDown, ChevronUp, Download, ChevronLeft, ChevronRight, RotateCcw, XCircle, Gift, Eye, Plus, Truck } from "lucide-react";
+import { MapPin, Edit, CalendarIcon, Filter, ChevronDown, ChevronUp, Download, ChevronLeft, ChevronRight, RotateCcw, XCircle, Gift, Eye, Plus } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -126,30 +126,6 @@ export default function SalesTable({
       toast({
         title: "Error",
         description: "No se pudo marcar la venta como a devolver",
-        variant: "destructive",
-      });
-    },
-  });
-
-  // Mark as delivered mutation
-  const markDeliveredMutation = useMutation({
-    mutationFn: async (saleId: string) => {
-      return apiRequest("PUT", `/api/sales/${saleId}/delivery-status`, { status: "Entregado" });
-    },
-    onSuccess: () => {
-      // Invalidate all sales queries to refresh data across all pages
-      queryClient.invalidateQueries({ 
-        predicate: (query) => Array.isArray(query.queryKey) && typeof query.queryKey[0] === 'string' && query.queryKey[0].startsWith('/api/sales')
-      });
-      toast({
-        title: "Venta entregada",
-        description: "El estado de la venta ha sido actualizado a Entregado",
-      });
-    },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "No se pudo actualizar el estado de la venta",
         variant: "destructive",
       });
     },
@@ -1037,40 +1013,6 @@ export default function SalesTable({
                     {activeTab === "lista" && (
                       <td className="pl-16 pr-2 py-2 min-w-[240px]">
                         <div className="flex gap-1">
-                          <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                disabled={sale.estadoEntrega === "Entregado" || markDeliveredMutation.isPending}
-                                data-testid={`delivered-sale-${sale.id}`}
-                                className={cn(
-                                  "h-7 text-xs bg-green-600 text-white border-green-600 hover:bg-green-700 hover:border-green-700 dark:bg-green-600 dark:text-white dark:border-green-600 dark:hover:bg-green-700",
-                                  sale.estadoEntrega === "Entregado" && "bg-green-800 text-white hover:bg-green-800 opacity-70 cursor-not-allowed border-green-700"
-                                )}
-                                title={sale.estadoEntrega === "Entregado" ? "Venta ya entregada" : "Marcar como entregado"}
-                              >
-                                <Truck className={cn("h-3 w-3 mr-1", sale.estadoEntrega === "Entregado" && "text-green-400")} />
-                                Entregado
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent>
-                              <AlertDialogHeader>
-                                <AlertDialogTitle>Confirmar entrega</AlertDialogTitle>
-                                <AlertDialogDescription>¿Está seguro que desea marcar esta orden como entregada? Esta acción cambiará el Estado de Entrega, la eliminará de la vista de Despacho pero permanecerá en Lista de Ventas.</AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel data-testid={`cancel-delivered-${sale.id}`}>Cancelar</AlertDialogCancel>
-                                <AlertDialogAction
-                                  onClick={() => markDeliveredMutation.mutate(sale.id)}
-                                  data-testid={`confirm-delivered-${sale.id}`}
-                                  className="bg-green-600 hover:bg-green-700"
-                                >
-                                  Confirmar
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
                           <Button
                             variant="outline"
                             size="sm"
