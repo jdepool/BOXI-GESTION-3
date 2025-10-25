@@ -322,6 +322,7 @@ export default function VentasMompox() {
                   onPageChange={handleProspectosPageChange}
                   onClearFilters={handleClearProspectosFilters}
                   onConvertProspecto={handleProspectoConvert}
+                  productLine="mompox"
                 />
               </div>
             </TabsContent>
@@ -345,6 +346,7 @@ export default function VentasMompox() {
                   onClearFilters={handleClearFilters}
                   showDeliveryDateColumn={true}
                   activeTab={activeTab}
+                  productLine="mompox"
                 />
               </div>
             </TabsContent>
@@ -374,6 +376,7 @@ export default function VentasMompox() {
                   onPageChange={handleInmediatasPageChange}
                   onClearFilters={handleClearInmediatasFilters}
                   onNewManualSale={() => setIsManualInmediataModalOpen(true)}
+                  productLine="mompox"
                 />
               </div>
             </TabsContent>
@@ -403,6 +406,7 @@ export default function VentasMompox() {
                   onPageChange={handleReservasPageChange}
                   onClearFilters={handleClearReservasFilters}
                   onNewReserva={() => setIsManualReservaModalOpen(true)}
+                  productLine="mompox"
                 />
               </div>
             </TabsContent>

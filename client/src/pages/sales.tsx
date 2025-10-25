@@ -323,6 +323,7 @@ export default function Sales() {
                   onPageChange={handleProspectosPageChange}
                   onClearFilters={handleClearProspectosFilters}
                   onConvertProspecto={handleProspectoConvert}
+                  productLine="boxi"
                 />
               </div>
             </TabsContent>
@@ -345,6 +346,7 @@ export default function Sales() {
                   onClearFilters={handleClearFilters}
                   showDeliveryDateColumn={true}
                   activeTab={activeTab}
+                  productLine="boxi"
                 />
               </div>
             </TabsContent>
@@ -374,6 +376,7 @@ export default function Sales() {
                   onPageChange={handleInmediatasPageChange}
                   onClearFilters={handleClearInmediatasFilters}
                   onNewManualSale={() => setIsManualInmediataModalOpen(true)}
+                  productLine="boxi"
                 />
               </div>
             </TabsContent>
@@ -402,6 +405,7 @@ export default function Sales() {
                   onPageChange={handleReservasPageChange}
                   onClearFilters={handleClearReservasFilters}
                   onNewReserva={() => setIsManualReservaModalOpen(true)}
+                  productLine="boxi"
                 />
               </div>
             </TabsContent>
