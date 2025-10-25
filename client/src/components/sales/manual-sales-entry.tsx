@@ -103,7 +103,6 @@ export default function ManualSalesEntry({ convertingProspecto, onConversionComp
         try {
           await apiRequest("DELETE", `/api/prospectos/${convertingProspecto.id}`);
           queryClient.invalidateQueries({ queryKey: ["/api/prospectos"] });
-          onConversionComplete?.();
         } catch (error) {
           console.error("Failed to delete prospecto:", error);
           // Still show success for sale creation
@@ -119,6 +118,9 @@ export default function ManualSalesEntry({ convertingProspecto, onConversionComp
         description: convertingProspecto ? "El prospecto ha sido convertido en venta exitosamente." : "La venta ha sido registrada exitosamente.",
       });
       setShowForm(false);
+      
+      // Always call onConversionComplete to close the parent dialog (whether converting prospecto or creating new sale)
+      onConversionComplete?.();
     },
     onError: (error: any) => {
       console.error('Failed to create manual sale:', error);
