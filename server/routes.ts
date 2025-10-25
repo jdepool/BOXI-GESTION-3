@@ -1567,6 +1567,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         offset: offset ? parseInt(offset as string) : 0
       });
 
+      // Prevent browser HTTP caching to ensure fresh data with new fields
+      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
+      
       res.json(result);
     } catch (error) {
       console.error("Get verification payments error:", error);

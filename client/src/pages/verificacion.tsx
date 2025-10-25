@@ -107,11 +107,6 @@ export default function VerificacionPage() {
     return () => clearTimeout(timeoutId);
   }, [ordenInputValue]);
 
-  // Force cache invalidation on mount to ensure fresh data with new fields
-  useEffect(() => {
-    queryClient.invalidateQueries({ queryKey: ["/api/sales/verification-payments"] });
-  }, []);
-
   const { data, isLoading } = useQuery<{ data: VerificationPayment[]; total: number }>({
     queryKey: [
       "/api/sales/verification-payments",
