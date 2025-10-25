@@ -2964,41 +2964,44 @@ export class DatabaseStorage implements IStorage {
       
       if (hasAgreedAmount) {
         // Only show payments with both Banco Receptor AND Referencia filled
-        if (!sale.bancoReceptorInicial || !sale.referenciaInicial) continue;
+        const hasCompletePaymentInfo = sale.bancoReceptorInicial && sale.referenciaInicial;
         
         // Skip if we've already processed Pago Inicial for this order (prevents duplicates)
-        if (sale.orden && processedPagoInicial.has(sale.orden)) continue;
+        const alreadyProcessed = sale.orden && processedPagoInicial.has(sale.orden);
         
         // Apply filters
-        if (filters?.tipoPago && filters.tipoPago !== 'Inicial/Total') continue;
-        if (filters?.startDate && sale.fechaPagoInicial && sale.fechaPagoInicial < new Date(filters.startDate)) continue;
-        if (filters?.endDate && sale.fechaPagoInicial) {
+        const matchesTipoPago = !filters?.tipoPago || filters.tipoPago === 'Inicial/Total';
+        const matchesStartDate = !filters?.startDate || !sale.fechaPagoInicial || sale.fechaPagoInicial >= new Date(filters.startDate);
+        const matchesEndDate = !filters?.endDate || !sale.fechaPagoInicial || (() => {
           const endDateTime = new Date(filters.endDate);
           endDateTime.setHours(23, 59, 59, 999);
-          if (sale.fechaPagoInicial > endDateTime) continue;
-        }
-        if (filters?.bancoId && sale.bancoReceptorInicial !== filters.bancoId) continue;
+          return sale.fechaPagoInicial <= endDateTime;
+        })();
+        const matchesBanco = !filters?.bancoId || sale.bancoReceptorInicial === filters.bancoId;
         
         // Filter by estadoVerificacion
         const estadoVerificacionInicial = sale.estadoVerificacionInicial || 'Por verificar';
-        if (filters?.estadoVerificacion && estadoVerificacionInicial !== filters.estadoVerificacion) continue;
+        const matchesEstadoVerificacion = !filters?.estadoVerificacion || estadoVerificacionInicial === filters.estadoVerificacion;
 
-        payments.push({
-          paymentId: sale.saleId,
-          paymentType: 'Inicial/Total',
-          orden: sale.orden,
-          tipoPago: 'Inicial/Total',
-          montoBs: sale.montoInicialBs ? parseFloat(sale.montoInicialBs) : null,
-          montoUsd: sale.pagoInicialUsd ? parseFloat(sale.pagoInicialUsd) : null, // Use agreed amount (Pago USD) for calculations
-          referencia: sale.referenciaInicial,
-          bancoId: sale.bancoReceptorInicial,
-          estadoVerificacion: sale.estadoVerificacionInicial || 'Por verificar',
-          notasVerificacion: sale.notasVerificacionInicial,
-          fecha: sale.fechaPagoInicial,
-        });
-        
-        // Mark this order as processed for Pago Inicial
-        if (sale.orden) processedPagoInicial.add(sale.orden);
+        // Only add if all conditions pass
+        if (hasCompletePaymentInfo && !alreadyProcessed && matchesTipoPago && matchesStartDate && matchesEndDate && matchesBanco && matchesEstadoVerificacion) {
+          payments.push({
+            paymentId: sale.saleId,
+            paymentType: 'Inicial/Total',
+            orden: sale.orden,
+            tipoPago: 'Inicial/Total',
+            montoBs: sale.montoInicialBs ? parseFloat(sale.montoInicialBs) : null,
+            montoUsd: sale.pagoInicialUsd ? parseFloat(sale.pagoInicialUsd) : null, // Use agreed amount (Pago USD) for calculations
+            referencia: sale.referenciaInicial,
+            bancoId: sale.bancoReceptorInicial,
+            estadoVerificacion: sale.estadoVerificacionInicial || 'Por verificar',
+            notasVerificacion: sale.notasVerificacionInicial,
+            fecha: sale.fechaPagoInicial,
+          });
+          
+          // Mark this order as processed for Pago Inicial
+          if (sale.orden) processedPagoInicial.add(sale.orden);
+        }
       }
 
       // Process Flete payments
