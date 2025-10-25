@@ -86,7 +86,15 @@ export default function SimpleSalesList({
   };
 
   const getChannelColor = (channel: string) => {
-    switch (channel?.toLowerCase()) {
+    const lowerCanal = channel?.toLowerCase();
+    
+    // Map Mompox channels to their Boxi equivalents for uniform colors
+    if (lowerCanal === 'shopmom') return 'channel-badge-shopify';
+    if (lowerCanal === 'manual mp') return 'bg-orange-100 text-orange-800';
+    if (lowerCanal === 'cashea mp') return 'channel-badge-cashea';
+    if (lowerCanal === 'tienda mp') return 'channel-badge-tienda';
+    
+    switch (lowerCanal) {
       case "cashea": return "channel-badge-cashea";
       case "shopify": return "channel-badge-shopify";
       case "treble": return "channel-badge-treble";

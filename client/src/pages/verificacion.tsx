@@ -205,6 +205,25 @@ export default function VerificacionPage() {
     return banco?.banco || bancoId;
   };
 
+  const getChannelBadgeClass = (canal: string | null) => {
+    const lowerCanal = canal?.toLowerCase();
+    
+    // Map Mompox channels to their Boxi equivalents for uniform colors
+    if (lowerCanal === 'shopmom') return 'channel-badge-shopify';
+    if (lowerCanal === 'manual mp') return 'bg-orange-100 text-orange-800';
+    if (lowerCanal === 'cashea mp') return 'channel-badge-cashea';
+    if (lowerCanal === 'tienda mp') return 'channel-badge-tienda';
+    
+    switch (lowerCanal) {
+      case 'cashea': return 'channel-badge-cashea';
+      case 'shopify': return 'channel-badge-shopify';
+      case 'treble': return 'channel-badge-treble';
+      case 'tienda': return 'channel-badge-tienda';
+      case 'manual': return 'bg-orange-100 text-orange-800';
+      default: return 'bg-gray-500 text-white';
+    }
+  };
+
   const handleResetFilters = () => {
     setStartDate("");
     setEndDate("");
@@ -518,8 +537,14 @@ export default function VerificacionPage() {
                       <td className="p-2 text-xs text-muted-foreground sticky left-[120px] bg-background z-10 border-r border-border shadow-[2px_0_5px_rgba(0,0,0,0.1)]" data-testid={`text-nombre-${index}`}>
                         {payment.nombre || "-"}
                       </td>
-                      <td className="p-2 text-xs text-muted-foreground" data-testid={`text-canal-${index}`}>
-                        {payment.canal || "-"}
+                      <td className="p-2 text-xs" data-testid={`badge-canal-${index}`}>
+                        {payment.canal ? (
+                          <Badge className={`${getChannelBadgeClass(payment.canal)} text-white text-xs`}>
+                            {payment.canal.charAt(0).toUpperCase() + payment.canal.slice(1)}
+                          </Badge>
+                        ) : (
+                          <span className="text-muted-foreground">-</span>
+                        )}
                       </td>
                       <td className="p-2 text-xs font-mono text-muted-foreground" data-testid={`text-tipo-pago-${index}`}>
                         {payment.tipoPago}
