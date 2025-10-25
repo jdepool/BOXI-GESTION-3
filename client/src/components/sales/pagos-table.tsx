@@ -12,6 +12,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { DateRangePicker } from "@/components/shared/date-range-picker";
+import { getChannelBadgeClass } from "@/lib/channelBadges";
 import {
   Select,
   SelectContent,
@@ -181,25 +182,6 @@ export default function PagosTable({
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(value);
-  };
-
-  const getChannelBadgeClass = (canal: string | null) => {
-    const lowerCanal = canal?.toLowerCase();
-    
-    // Map Mompox channels to their Boxi equivalents for uniform colors
-    if (lowerCanal === 'shopmom') return 'channel-badge-shopify';
-    if (lowerCanal === 'manual mp') return 'bg-orange-100 text-orange-800';
-    if (lowerCanal === 'cashea mp') return 'channel-badge-cashea';
-    if (lowerCanal === 'tienda mp') return 'channel-badge-tienda';
-    
-    switch (lowerCanal) {
-      case 'cashea': return 'channel-badge-cashea';
-      case 'shopify': return 'channel-badge-shopify';
-      case 'treble': return 'channel-badge-treble';
-      case 'tienda': return 'channel-badge-tienda';
-      case 'manual': return 'bg-orange-100 text-orange-800';
-      default: return 'bg-gray-500 text-white';
-    }
   };
 
   // Mutation to update estado de entrega for an order

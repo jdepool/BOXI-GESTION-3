@@ -14,6 +14,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { getChannelBadgeClass } from "@/lib/channelBadges";
 import type { Sale } from "@shared/schema";
 
 interface DispatchTableProps {
@@ -133,25 +134,6 @@ export default function DispatchTable({
 
   const handleFilterChange = (key: string, value: string) => {
     onFilterChange?.(key, value === "all" ? "" : value);
-  };
-
-  const getChannelBadgeClass = (canal: string) => {
-    const lowerCanal = canal?.toLowerCase();
-    
-    // Map Mompox channels to their Boxi equivalents for uniform colors
-    if (lowerCanal === 'shopmom') return 'channel-badge-shopify';
-    if (lowerCanal === 'manual mp') return 'bg-orange-100 text-orange-800';
-    if (lowerCanal === 'cashea mp') return 'channel-badge-cashea';
-    if (lowerCanal === 'tienda mp') return 'channel-badge-tienda';
-    
-    switch (lowerCanal) {
-      case 'cashea': return 'channel-badge-cashea';
-      case 'shopify': return 'channel-badge-shopify';
-      case 'treble': return 'channel-badge-treble';
-      case 'tienda': return 'channel-badge-tienda';
-      case 'manual': return 'bg-orange-100 text-orange-800';
-      default: return 'bg-gray-500 text-white';
-    }
   };
 
   const handleExportExcel = async () => {

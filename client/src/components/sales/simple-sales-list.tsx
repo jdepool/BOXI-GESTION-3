@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Eye, MapPin, Edit, Trash2, Filter } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { getChannelBadgeClass as getChannelColor } from "@/lib/channelBadges";
 import type { Sale } from "@shared/schema";
 
 interface SimpleSalesListProps {
@@ -81,25 +82,6 @@ export default function SimpleSalesList({
       case "cancelada": return "bg-gray-100 text-gray-800";
       case "a devolver": return "bg-orange-100 text-orange-800";
       case "devuelto": return "bg-amber-100 text-amber-800";
-      default: return "bg-gray-100 text-gray-800";
-    }
-  };
-
-  const getChannelColor = (channel: string) => {
-    const lowerCanal = channel?.toLowerCase();
-    
-    // Map Mompox channels to their Boxi equivalents for uniform colors
-    if (lowerCanal === 'shopmom') return 'channel-badge-shopify';
-    if (lowerCanal === 'manual mp') return 'bg-orange-100 text-orange-800';
-    if (lowerCanal === 'cashea mp') return 'channel-badge-cashea';
-    if (lowerCanal === 'tienda mp') return 'channel-badge-tienda';
-    
-    switch (lowerCanal) {
-      case "cashea": return "channel-badge-cashea";
-      case "shopify": return "channel-badge-shopify";
-      case "treble": return "channel-badge-treble";
-      case "tienda": return "channel-badge-tienda";
-      case "manual": return "bg-orange-100 text-orange-800";
       default: return "bg-gray-100 text-gray-800";
     }
   };
