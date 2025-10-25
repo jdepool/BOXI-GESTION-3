@@ -470,7 +470,7 @@ export default function PagosTable({
         </div>
       )}
       <div className="overflow-auto max-h-[calc(100vh-280px)] relative">
-        <table className="w-full text-sm border-collapse table-fixed">
+        <table className="w-full text-sm border-collapse">
           <thead className="sticky top-0 z-10 bg-muted">
               <tr className="border-b border-border">
                 <th className="p-2 text-left text-xs font-medium text-muted-foreground min-w-[120px] sticky left-0 z-20 bg-muted">
@@ -806,30 +806,32 @@ export default function PagosTable({
                         </div>
                       </div>
                     </td>
-                    <td className="p-2 w-[250px] max-w-[250px]">
-                      {editingNotesId === order.orden ? (
-                        <AutoExpandingTextarea
-                          value={notesValue}
-                          onChange={handleNotesChange}
-                          onBlur={handleNotesBlur}
-                          onKeyDown={handleNotesKeyDown}
-                          placeholder="Agregar nota..."
-                          className="text-xs w-full"
-                          minRows={5}
-                          maxRows={10}
-                          autoFocus
-                          data-testid={`notes-input-${order.orden}`}
-                        />
-                      ) : (
-                        <div 
-                          className="text-xs cursor-pointer hover:bg-muted/50 rounded px-2 py-1 min-h-[28px] overflow-hidden whitespace-nowrap text-ellipsis"
-                          title={order.notas || "Click para agregar nota"}
-                          onClick={() => handleNotesClick(order)}
-                          data-testid={`notes-display-${order.orden}`}
-                        >
-                          {order.notas || <span className="text-muted-foreground italic">Click para agregar nota</span>}
-                        </div>
-                      )}
+                    <td className="p-2">
+                      <div className="max-w-[250px]">
+                        {editingNotesId === order.orden ? (
+                          <AutoExpandingTextarea
+                            value={notesValue}
+                            onChange={handleNotesChange}
+                            onBlur={handleNotesBlur}
+                            onKeyDown={handleNotesKeyDown}
+                            placeholder="Agregar nota..."
+                            className="text-xs w-full"
+                            minRows={5}
+                            maxRows={10}
+                            autoFocus
+                            data-testid={`notes-input-${order.orden}`}
+                          />
+                        ) : (
+                          <div 
+                            className="text-xs cursor-pointer hover:bg-muted/50 rounded px-2 py-1 min-h-[28px] overflow-hidden whitespace-nowrap text-ellipsis"
+                            title={order.notas || "Click para agregar nota"}
+                            onClick={() => handleNotesClick(order)}
+                            data-testid={`notes-display-${order.orden}`}
+                          >
+                            {order.notas || <span className="text-muted-foreground italic">Click para agregar nota</span>}
+                          </div>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))
