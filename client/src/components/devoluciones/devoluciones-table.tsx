@@ -494,14 +494,20 @@ export default function DevolucionesTable({
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
                             <Button
-                              disabled={updateDeliveryStatusMutation.isPending || sale.estadoEntrega === "Devuelto"}
+                              disabled={updateDeliveryStatusMutation.isPending || sale.estadoEntrega === "Devuelto" || !sale.fechaDevolucion}
                               size="sm"
                               variant="outline"
                               className={cn(
                                 "w-full h-8 text-xs",
-                                sale.estadoEntrega === "Devuelto" && "bg-green-800 text-white hover:bg-green-800 opacity-70 cursor-not-allowed border-green-700"
+                                (sale.estadoEntrega === "Devuelto" || !sale.fechaDevolucion) && "bg-green-800 text-white hover:bg-green-800 opacity-70 cursor-not-allowed border-green-700"
                               )}
-                              title={sale.estadoEntrega === "Devuelto" ? "Ya marcada como devuelta" : "Marcar como devuelta"}
+                              title={
+                                sale.estadoEntrega === "Devuelto" 
+                                  ? "Ya marcada como devuelta" 
+                                  : !sale.fechaDevolucion 
+                                  ? "Debe llenar la Fecha de Devolución primero" 
+                                  : "Marcar como devuelta"
+                              }
                               data-testid={`button-devuelto-${sale.id}`}
                             >
                               <CheckCircle className={cn("h-3 w-3 mr-1", sale.estadoEntrega === "Devuelto" && "text-green-400")} />
