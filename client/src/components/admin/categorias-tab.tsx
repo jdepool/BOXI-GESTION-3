@@ -330,67 +330,6 @@ export function CategoriasTab() {
               </form>
             </DialogContent>
           </Dialog>
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button onClick={openCreateDialog} data-testid="add-categoria-button">
-                <Plus className="h-4 w-4 mr-2" />
-                Agregar Clasificación
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>
-                  {editingCategoria ? "Editar Clasificación" : "Agregar Clasificación"}
-                </DialogTitle>
-              </DialogHeader>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
-                  <Label htmlFor="tipo">Tipo</Label>
-                  <Select
-                    value={formData.tipo}
-                    onValueChange={(value) => setFormData({ ...formData, tipo: value as ClasificacionTipo })}
-                  >
-                    <SelectTrigger id="tipo" data-testid="select-tipo">
-                      <SelectValue placeholder="Selecciona un tipo" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Marca">Marca</SelectItem>
-                      <SelectItem value="Categoría">Categoría</SelectItem>
-                      <SelectItem value="Subcategoría">Subcategoría</SelectItem>
-                      <SelectItem value="Característica">Característica</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label htmlFor="nombre">Nombre</Label>
-                  <Input
-                    id="nombre"
-                    value={formData.nombre}
-                    onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
-                    placeholder="Ej: Boxi, Colchones, Híbrido, King"
-                    required
-                    data-testid="input-categoria-nombre"
-                  />
-                </div>
-                <div className="flex justify-end space-x-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setIsDialogOpen(false)}
-                  >
-                    Cancelar
-                  </Button>
-                  <Button
-                    type="submit"
-                    disabled={createMutation.isPending || updateMutation.isPending}
-                    data-testid="submit-categoria"
-                  >
-                    {editingCategoria ? "Actualizar" : "Crear"}
-                  </Button>
-                </div>
-              </form>
-            </DialogContent>
-          </Dialog>
         </div>
       </div>
 
