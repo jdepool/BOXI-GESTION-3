@@ -84,6 +84,7 @@ const AutoExpandingTextarea = React.forwardRef<
                       <button
                         type="button"
                         onClick={() => handleQuickMessageClick(msg.text)}
+                        onMouseDown={(e) => e.preventDefault()}
                         className="inline-flex items-center justify-center w-5 h-5 rounded hover:bg-accent transition-colors"
                         data-testid={`button-quick-message-${idx}`}
                       >
