@@ -928,6 +928,7 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess, convert
           onSave={handleSaveProduct}
           product={editingProduct?.product}
           index={editingProduct?.index}
+          productLine={productLine}
         />
       </DialogContent>
     </Dialog>

@@ -168,7 +168,7 @@ export interface IStorage {
   deleteTipoEgreso(id: string): Promise<boolean>;
 
   // Productos
-  getProductos(): Promise<Producto[]>;
+  getProductos(): Promise<any[]>;
   getProductoByNombre(nombre: string): Promise<Producto | undefined>;
   createProducto(producto: InsertProducto): Promise<Producto>;
   updateProducto(id: string, producto: Partial<InsertProducto>): Promise<Producto | undefined>;
@@ -1746,8 +1746,27 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Productos methods
-  async getProductos(): Promise<Producto[]> {
-    return await db.select().from(productos).orderBy(productos.position, productos.categoria, productos.nombre);
+  async getProductos(): Promise<any[]> {
+    const results = await db
+      .select({
+        id: productos.id,
+        nombre: productos.nombre,
+        sku: productos.sku,
+        categoria: productos.categoria,
+        marcaId: productos.marcaId,
+        categoriaId: productos.categoriaId,
+        subcategoriaId: productos.subcategoriaId,
+        caracteristicaId: productos.caracteristicaId,
+        position: productos.position,
+        createdAt: productos.createdAt,
+        updatedAt: productos.updatedAt,
+        marcaNombre: categorias.nombre,
+      })
+      .from(productos)
+      .leftJoin(categorias, and(eq(productos.marcaId, categorias.id), eq(categorias.tipo, 'Marca')))
+      .orderBy(productos.position, productos.categoria, productos.nombre);
+    
+    return results;
   }
 
   async getProductoByNombre(nombre: string): Promise<Producto | undefined> {

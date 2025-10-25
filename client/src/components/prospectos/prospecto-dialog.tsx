@@ -954,6 +954,7 @@ export default function ProspectoDialog({ open, onOpenChange, prospecto, product
         onSave={handleSaveProduct}
         product={editingProduct?.product}
         index={editingProduct?.index}
+        productLine={productLine}
       />
     </>
   );

@@ -40,6 +40,9 @@ export default function EditSaleModal({ open, onOpenChange, sale }: EditSaleModa
   const [products, setProducts] = useState<ProductFormData[]>([]);
   const [isProductDialogOpen, setIsProductDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<{product: ProductFormData; index: number} | null>(null);
+  
+  // Detect product line from sale's canal
+  const productLine = sale?.canal ? detectProductLine(sale.canal) : 'boxi';
 
   const form = useForm<EditSaleFormData>({
     resolver: zodResolver(editSaleSchema),
@@ -453,6 +456,7 @@ export default function EditSaleModal({ open, onOpenChange, sale }: EditSaleModa
         onSave={handleSaveProduct}
         product={editingProduct?.product}
         index={editingProduct?.index}
+        productLine={productLine}
       />
     </>
   );

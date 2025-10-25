@@ -836,6 +836,7 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
         onSave={handleSaveProduct}
         product={editingProduct?.product}
         index={editingProduct?.index}
+        productLine={productLine}
       />
     </Form>
   );

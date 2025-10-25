@@ -2,7 +2,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useQuery } from "@tanstack/react-query";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Package } from "lucide-react";
+import { type ProductLine } from "@/lib/canalFilters";
 
 const productFormSchema = z.object({
   producto: z.string().min(1, "Producto es requerido"),
@@ -37,9 +38,10 @@ interface ProductDialogProps {
   onSave: (product: ProductFormData, index?: number) => void;
   product?: ProductFormData;
   index?: number;
+  productLine?: ProductLine;
 }
 
-export default function ProductDialog({ isOpen, onClose, onSave, product, index }: ProductDialogProps) {
+export default function ProductDialog({ isOpen, onClose, onSave, product, index, productLine = 'boxi' }: ProductDialogProps) {
   const isEditMode = product !== undefined;
   const form = useForm<ProductFormData>({
     resolver: zodResolver(productFormSchema),
@@ -55,9 +57,20 @@ export default function ProductDialog({ isOpen, onClose, onSave, product, index 
   });
 
   // Fetch products for dropdown
-  const { data: products = [] } = useQuery<any[]>({
+  const { data: allProducts = [] } = useQuery<any[]>({
     queryKey: ["/api/admin/productos"],
   });
+
+  // Filter products based on productLine and marca
+  const products = useMemo(() => {
+    if (productLine === 'mompox') {
+      // For Mompox: only show products where marcaNombre is "Mompox"
+      return allProducts.filter((p) => p.marcaNombre === 'Mompox');
+    } else {
+      // For Boxi: show products where marcaNombre is "Boxi" or null/undefined (backward compatibility)
+      return allProducts.filter((p) => p.marcaNombre === 'Boxi' || !p.marcaNombre);
+    }
+  }, [allProducts, productLine]);
 
   const watchHasMedidaEspecial = form.watch("hasMedidaEspecial");
 
