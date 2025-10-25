@@ -822,7 +822,7 @@ export default function PagosTable({
                         />
                       ) : (
                         <div 
-                          className="text-xs cursor-pointer hover:bg-muted/50 rounded px-2 py-1 min-h-[28px] overflow-hidden text-ellipsis"
+                          className="text-xs cursor-pointer hover:bg-muted/50 rounded px-2 py-1 min-h-[28px] overflow-hidden whitespace-nowrap text-ellipsis"
                           title={order.notas || "Click para agregar nota"}
                           onClick={() => handleNotesClick(order)}
                           data-testid={`notes-display-${order.orden}`}
