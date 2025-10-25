@@ -13,6 +13,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Save, User, Package, Plus, Trash2, Pencil } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { filterCanalesByProductLine, detectProductLine } from "@/lib/canalFilters";
 import type { Sale } from "@shared/schema";
 import ProductDialog, { ProductFormData } from "./product-dialog";
 
@@ -293,9 +294,10 @@ export default function EditSaleModal({ open, onOpenChange, sale }: EditSaleModa
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {canales
-                              .filter(canal => canal.activo === "true")
-                              .map((canal) => (
+                            {filterCanalesByProductLine(
+                              canales.filter(canal => canal.activo === "true"),
+                              detectProductLine(sale?.canal || null)
+                            ).map((canal) => (
                                 <SelectItem key={canal.id} value={canal.nombre}>
                                   {canal.nombre}
                                 </SelectItem>

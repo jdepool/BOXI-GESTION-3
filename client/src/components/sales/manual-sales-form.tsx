@@ -5,6 +5,7 @@ import { z } from "zod";
 import { useQuery } from "@tanstack/react-query";
 import { format, parse } from "date-fns";
 import { cn } from "@/lib/utils";
+import { filterCanalesByProductLine, type ProductLine } from "@/lib/canalFilters";
 
 // Helper function to safely parse YYYY-MM-DD as local date
 const parseLocalDate = (dateString: string) => {
@@ -65,9 +66,10 @@ interface ManualSalesFormProps {
   isSubmitting?: boolean;
   convertingProspecto?: Prospecto | null;
   defaultCanal?: string; // Default canal to pre-fill (e.g., "ShopMom", "shopify")
+  productLine?: ProductLine; // Product line to filter canales (boxi or mompox)
 }
 
-export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = false, convertingProspecto, defaultCanal = "" }: ManualSalesFormProps) {
+export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = false, convertingProspecto, defaultCanal = "", productLine = 'boxi' }: ManualSalesFormProps) {
   const [products, setProducts] = useState<ProductFormData[]>([]);
   const [isProductDialogOpen, setIsProductDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<{product: ProductFormData; index: number} | null>(null);
@@ -371,7 +373,7 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {canales
+                      {filterCanalesByProductLine(canales, productLine)
                         .filter(canal => canal.activo === true || canal.activo === "true")
                         .map((canal) => (
                           <SelectItem key={canal.id} value={canal.nombre}>
