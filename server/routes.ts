@@ -5217,7 +5217,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         // Tipo and fecha de entrega
         tipo: body.tipo || 'Inmediato',
-        fechaEntrega: body.fechaEntrega ? new Date(body.fechaEntrega) : undefined,
+        fechaEntrega: body.fechaEntrega ? new Date(body.fechaEntrega) : null,
       };
 
       if (products) {
