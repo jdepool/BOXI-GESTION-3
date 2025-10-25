@@ -64,14 +64,6 @@ const AutoExpandingTextarea = React.forwardRef<
     } as React.ChangeEvent<HTMLTextAreaElement>;
     
     onChange?.(syntheticEvent);
-    
-    // Trigger blur to save the value
-    setTimeout(() => {
-      if (textareaRef.current) {
-        textareaRef.current.blur();
-        textareaRef.current.focus();
-      }
-    }, 0);
   };
 
   const currentLength = typeof value === 'string' ? value.length : 0;

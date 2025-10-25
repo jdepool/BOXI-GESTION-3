@@ -18,6 +18,7 @@ import { cn } from "@/lib/utils";
 import { getChannelBadgeClass } from "@/lib/channelBadges";
 import type { Sale } from "@shared/schema";
 import type { QuickMessage } from "@/components/ui/auto-expanding-textarea";
+import { NotesDisplay } from "@/components/shared/notes-display";
 
 // Quick select messages for notes
 const QUICK_NOTES_MESSAGES: QuickMessage[] = [
@@ -811,7 +812,7 @@ export default function DispatchTable({
                             onClick={() => handleNotesClick(sale)}
                             data-testid={`notes-display-${sale.id}`}
                           >
-                            {sale.notas || <span className="text-muted-foreground italic">Click para agregar nota</span>}
+                            <NotesDisplay notes={sale.notas} />
                           </div>
                         )}
                       </td>

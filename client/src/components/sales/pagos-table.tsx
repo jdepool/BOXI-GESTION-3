@@ -36,6 +36,7 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import type { QuickMessage } from "@/components/ui/auto-expanding-textarea";
+import { NotesDisplay } from "@/components/shared/notes-display";
 
 // Quick select messages for notes
 const QUICK_NOTES_MESSAGES: QuickMessage[] = [
@@ -841,12 +842,12 @@ export default function PagosTable({
                           />
                         ) : (
                           <div 
-                            className="text-xs cursor-pointer hover:bg-muted/50 rounded px-2 py-1 min-h-[28px] break-words overflow-hidden"
+                            className="text-xs cursor-pointer hover:bg-muted/50 rounded px-2 py-1 min-h-[28px] overflow-hidden"
                             title={order.notas || "Click para agregar nota"}
                             onClick={() => handleNotesClick(order)}
                             data-testid={`notes-display-${order.orden}`}
                           >
-                            {order.notas || <span className="text-muted-foreground italic">Click para agregar nota</span>}
+                            <NotesDisplay notes={order.notas} />
                           </div>
                         )}
                       </div>
