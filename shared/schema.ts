@@ -90,12 +90,13 @@ export const monedas = pgTable("monedas", {
 
 export const categorias = pgTable("categorias", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  nombre: text("nombre").notNull().unique(),
+  nombre: text("nombre").notNull(),
   tipo: text("tipo").notNull().default("Categoría"), // Marca, Categoría, Subcategoría, Característica
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => ({
   tipoCheck: check("tipo_check", sql`${table.tipo} IN ('Marca', 'Categoría', 'Subcategoría', 'Característica')`),
+  nombreTipoUnique: unique("nombre_tipo_unique").on(table.nombre, table.tipo),
 }));
 
 export const canales = pgTable("canales", {
