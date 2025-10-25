@@ -838,7 +838,9 @@ export class DatabaseStorage implements IStorage {
         // For Cashea orders, use 0 (only collect freight); for others, use totalOrderUsd
         // Use the aggregated boolean flag from the query (BOOL_OR) which is true if ANY sale in the order is from Cashea
         const baseAmount = order.isCasheaOrder ? 0 : totalOrderUsd;
-        const ordenPlusFlete = baseAmount + (pagoFlete === 0 || order.fleteGratis ? 0 : pagoFlete);
+        // Use fleteAPagar (the amount that SHOULD be paid) instead of pagoFleteUsd (the amount actually paid)
+        // Safety check: ensure fleteGratis overrides any residual fleteAPagar value
+        const ordenPlusFlete = baseAmount + (order.fleteGratis ? 0 : fleteAPagar);
         const totalCuotas = totalCuotasMap.get(order.orden!) || 0;
         
         // Calculate Total Pagado (Por verificar payments) and Total Verificado (Verificado payments)
