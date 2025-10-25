@@ -3990,6 +3990,107 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/admin/categorias/upload-excel", upload.single('file'), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: "No file uploaded" });
+      }
+
+      // Parse the Excel file
+      const workbook = XLSX.read(req.file.buffer, { type: 'buffer' });
+      const sheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[sheetName];
+      const data = XLSX.utils.sheet_to_json(worksheet);
+
+      if (data.length === 0) {
+        return res.status(400).json({ error: "No data found in file" });
+      }
+
+      let inserted = 0;
+      const errors: string[] = [];
+
+      for (let i = 0; i < data.length; i++) {
+        const row: any = data[i];
+        try {
+          const nombre = row.Nombre || row.nombre;
+          const tipo = row.Tipo || row.tipo || "Categoría";
+
+          if (!nombre) {
+            errors.push(`Fila ${i + 2}: Falta el nombre`);
+            continue;
+          }
+
+          // Validate tipo
+          const validTipos = ["Marca", "Categoría", "Subcategoría", "Característica"];
+          if (!validTipos.includes(tipo)) {
+            errors.push(`Fila ${i + 2}: Tipo inválido "${tipo}". Debe ser uno de: ${validTipos.join(", ")}`);
+            continue;
+          }
+
+          // Insert or update based on composite unique constraint (nombre, tipo)
+          const categoriaData = { nombre, tipo };
+          const validatedData = insertCategoriaSchema.parse(categoriaData);
+          
+          // Try to find existing categoria with same nombre and tipo
+          const existing = await storage.getCategoriaByNombreAndTipo(nombre, tipo);
+          
+          if (existing) {
+            // Update existing
+            await storage.updateCategoria(existing.id, validatedData);
+          } else {
+            // Create new
+            await storage.createCategoria(validatedData);
+          }
+          
+          inserted++;
+        } catch (error) {
+          errors.push(`Fila ${i + 2}: ${error instanceof Error ? error.message : 'Error desconocido'}`);
+        }
+      }
+
+      res.json({
+        success: true,
+        inserted,
+        total: data.length,
+        errors: errors.length > 0 ? errors.slice(0, 10) : undefined
+      });
+    } catch (error) {
+      console.error("Upload categorias error:", error);
+      res.status(500).json({ 
+        error: "Failed to process upload",
+        message: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
+  app.get("/api/admin/categorias/download-excel", async (req, res) => {
+    try {
+      const categorias = await storage.getCategorias();
+      
+      // Prepare data for Excel
+      const excelData = categorias.map(cat => ({
+        Nombre: cat.nombre,
+        Tipo: cat.tipo || "Categoría"
+      }));
+
+      // Create workbook and worksheet
+      const worksheet = XLSX.utils.json_to_sheet(excelData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Clasificaciones");
+
+      // Generate buffer
+      const buffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' });
+
+      // Set headers for download
+      res.setHeader('Content-Disposition', 'attachment; filename=clasificaciones.xlsx');
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+      res.send(buffer);
+    } catch (error) {
+      console.error("Download categorias error:", error);
+      res.status(500).json({ error: "Failed to download categorias" });
+    }
+  });
+
   // ASESORES endpoints
   app.get("/api/admin/asesores", async (req, res) => {
     try {

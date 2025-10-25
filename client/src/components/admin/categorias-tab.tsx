@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Edit, Trash2 } from "lucide-react";
+import { Plus, Edit, Trash2, Download, Upload } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import type { Categoria } from "@shared/schema";
@@ -20,6 +20,9 @@ export function CategoriasTab() {
   const [editingCategoria, setEditingCategoria] = useState<Categoria | null>(null);
   const [formData, setFormData] = useState({ nombre: "", tipo: "Categoría" as ClasificacionTipo });
   const [tipoFilter, setTipoFilter] = useState<ClasificacionTipo | "all">("all");
+  const [isUploadDialogOpen, setIsUploadDialogOpen] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -72,6 +75,39 @@ export function CategoriasTab() {
     },
   });
 
+  const uploadMutation = useMutation({
+    mutationFn: async (file: File) => {
+      const formData = new FormData();
+      formData.append('file', file);
+      const response = await fetch('/api/admin/categorias/upload-excel', {
+        method: 'POST',
+        body: formData,
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Error al cargar archivo');
+      }
+      return response.json();
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/categorias"] });
+      setIsUploadDialogOpen(false);
+      setSelectedFile(null);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      toast({ 
+        title: "Archivo cargado exitosamente",
+        description: `${data.inserted || 0} clasificaciones procesadas`
+      });
+    },
+    onError: (error: Error) => {
+      toast({ 
+        title: "Error al cargar archivo", 
+        description: error.message,
+        variant: "destructive" 
+      });
+    },
+  });
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (editingCategoria) {
@@ -91,6 +127,31 @@ export function CategoriasTab() {
     setEditingCategoria(null);
     setFormData({ nombre: "", tipo: "Categoría" });
     setIsDialogOpen(true);
+  };
+
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      if (!file.name.endsWith('.xlsx') && !file.name.endsWith('.xls') && !file.name.endsWith('.csv')) {
+        toast({
+          title: "Archivo inválido",
+          description: "Solo se aceptan archivos Excel (.xlsx, .xls) y CSV (.csv)",
+          variant: "destructive",
+        });
+        return;
+      }
+      setSelectedFile(file);
+    }
+  };
+
+  const handleUpload = () => {
+    if (selectedFile) {
+      uploadMutation.mutate(selectedFile);
+    }
+  };
+
+  const handleExport = () => {
+    window.location.href = '/api/admin/categorias/download-excel';
   };
 
   const getTipoColor = (tipo: string) => {
@@ -127,6 +188,68 @@ export function CategoriasTab() {
           </p>
         </div>
         <div className="flex space-x-2">
+          <Button
+            variant="outline"
+            onClick={handleExport}
+            disabled={isLoading || (categorias as Categoria[]).length === 0}
+            data-testid="export-categorias-button"
+          >
+            <Download className="h-4 w-4 mr-2" />
+            Exportar Excel
+          </Button>
+          <Dialog open={isUploadDialogOpen} onOpenChange={setIsUploadDialogOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline" data-testid="upload-categorias-button">
+                <Upload className="h-4 w-4 mr-2" />
+                Cargar Excel
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Cargar Clasificaciones desde Excel</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div>
+                  <Label>Archivo Excel</Label>
+                  <Input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".xlsx,.xls,.csv"
+                    onChange={handleFileSelect}
+                    data-testid="file-input-categorias"
+                  />
+                  <p className="text-sm text-muted-foreground mt-2">
+                    El archivo debe contener columnas: Nombre, Tipo
+                  </p>
+                </div>
+                {selectedFile && (
+                  <p className="text-sm">
+                    Archivo seleccionado: <strong>{selectedFile.name}</strong>
+                  </p>
+                )}
+                <div className="flex justify-end space-x-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      setIsUploadDialogOpen(false);
+                      setSelectedFile(null);
+                      if (fileInputRef.current) fileInputRef.current.value = '';
+                    }}
+                  >
+                    Cancelar
+                  </Button>
+                  <Button
+                    onClick={handleUpload}
+                    disabled={!selectedFile || uploadMutation.isPending}
+                    data-testid="submit-upload-categorias"
+                  >
+                    {uploadMutation.isPending ? "Cargando..." : "Cargar"}
+                  </Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
               <Button onClick={openCreateDialog} data-testid="add-categoria-button">
