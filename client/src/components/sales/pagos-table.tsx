@@ -510,7 +510,7 @@ export default function PagosTable({
                 <th className="p-2 text-center text-xs font-medium text-muted-foreground min-w-[120px] bg-gray-100 dark:bg-gray-800">Total Pagado</th>
                 <th className="p-2 text-center text-xs font-medium text-muted-foreground min-w-[120px] bg-teal-50 dark:bg-teal-950">Total Verificado</th>
                 <th className="p-2 text-center text-xs font-medium text-muted-foreground min-w-[120px] bg-orange-50 dark:bg-orange-950">Saldo Pendiente</th>
-                <th className="p-2 text-left text-xs font-medium text-muted-foreground w-[250px] max-w-[250px]">Notas</th>
+                <th className="p-2 text-left text-xs font-medium text-muted-foreground" style={{ width: '250px', maxWidth: '250px', minWidth: '250px' }}>Notas</th>
               </tr>
             </thead>
             <tbody>
@@ -806,8 +806,8 @@ export default function PagosTable({
                         </div>
                       </div>
                     </td>
-                    <td className="p-2">
-                      <div className="max-w-[250px]">
+                    <td className="p-2" style={{ width: '250px', maxWidth: '250px', minWidth: '250px' }}>
+                      <div className="w-full">
                         {editingNotesId === order.orden ? (
                           <AutoExpandingTextarea
                             value={notesValue}
@@ -823,7 +823,7 @@ export default function PagosTable({
                           />
                         ) : (
                           <div 
-                            className="text-xs cursor-pointer hover:bg-muted/50 rounded px-2 py-1 min-h-[28px] overflow-hidden whitespace-nowrap text-ellipsis"
+                            className="text-xs cursor-pointer hover:bg-muted/50 rounded px-2 py-1 min-h-[28px] break-words"
                             title={order.notas || "Click para agregar nota"}
                             onClick={() => handleNotesClick(order)}
                             data-testid={`notes-display-${order.orden}`}
