@@ -18,6 +18,7 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { filterCanalesByProductLine, type ProductLine } from "@/lib/canalFilters";
 import { insertProspectoSchema, type Prospecto } from "@shared/schema";
 import { z } from "zod";
 import ProductDialog, { ProductFormData } from "../sales/product-dialog";
@@ -55,9 +56,10 @@ interface ProspectoDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   prospecto?: Prospecto | null;
+  productLine?: ProductLine;
 }
 
-export default function ProspectoDialog({ open, onOpenChange, prospecto }: ProspectoDialogProps) {
+export default function ProspectoDialog({ open, onOpenChange, prospecto, productLine = 'boxi' }: ProspectoDialogProps) {
   const { toast } = useToast();
   const isEditMode = !!prospecto;
   const [products, setProducts] = useState<ProductFormData[]>([]);
@@ -480,9 +482,10 @@ export default function ProspectoDialog({ open, onOpenChange, prospecto }: Prosp
                             </SelectTrigger>
                           </FormControl>
                           <SelectContent>
-                            {canales
-                              .filter(canal => canal.activo === "true")
-                              .map((canal) => (
+                            {filterCanalesByProductLine(
+                              canales.filter(canal => canal.activo === "true"),
+                              productLine
+                            ).map((canal) => (
                                 <SelectItem key={canal.id} value={canal.nombre}>
                                   {canal.nombre}
                                 </SelectItem>
