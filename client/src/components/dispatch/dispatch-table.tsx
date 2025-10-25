@@ -138,18 +138,19 @@ export default function DispatchTable({
   const getChannelBadgeClass = (canal: string) => {
     const lowerCanal = canal?.toLowerCase();
     
-    // Check for ShopMom and MP-related channels (Mompox product line)
-    const mompoxChannels = ['shopmom', 'manual mp', 'cashea mp', 'tienda mp'];
-    if (mompoxChannels.includes(lowerCanal)) {
-      return 'bg-[#51675d]'; // Green color for ShopMom/MP channels
-    }
+    // Map Mompox channels to their Boxi equivalents for uniform colors
+    if (lowerCanal === 'shopmom') return 'channel-badge-shopify';
+    if (lowerCanal === 'manual mp') return 'bg-orange-100 text-orange-800';
+    if (lowerCanal === 'cashea mp') return 'channel-badge-cashea';
+    if (lowerCanal === 'tienda mp') return 'channel-badge-tienda';
     
     switch (lowerCanal) {
       case 'cashea': return 'channel-badge-cashea';
       case 'shopify': return 'channel-badge-shopify';
       case 'treble': return 'channel-badge-treble';
       case 'tienda': return 'channel-badge-tienda';
-      default: return 'bg-gray-500';
+      case 'manual': return 'bg-orange-100 text-orange-800';
+      default: return 'bg-gray-500 text-white';
     }
   };
 
