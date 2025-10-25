@@ -8,6 +8,7 @@ import SalesTable from "./sales-table";
 import EditSaleModal from "./edit-sale-modal";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import type { ProductLine } from "@/lib/canalFilters";
 import type { Sale, Prospecto } from "@shared/schema";
 
 interface SalesResponse {
@@ -22,9 +23,10 @@ interface ManualSalesEntryProps {
   onConversionComplete?: () => void;
   canal?: string; // Optional canal filter (e.g., "ShopMom", "shopify")
   openFormImmediately?: boolean; // Whether to show the form immediately instead of the table
+  productLine?: ProductLine; // Product line to filter canales
 }
 
-export default function ManualSalesEntry({ convertingProspecto, onConversionComplete, canal = "", openFormImmediately = false }: ManualSalesEntryProps) {
+export default function ManualSalesEntry({ convertingProspecto, onConversionComplete, canal = "", openFormImmediately = false, productLine = 'boxi' }: ManualSalesEntryProps) {
   const [showForm, setShowForm] = useState(openFormImmediately);
   const [editSale, setEditSale] = useState<Sale | null>(null);
   const [filters, setFilters] = useState({
@@ -197,6 +199,7 @@ export default function ManualSalesEntry({ convertingProspecto, onConversionComp
           isSubmitting={createManualSaleMutation.isPending}
           convertingProspecto={convertingProspecto}
           defaultCanal={canal}
+          productLine={productLine}
         />
       </div>
     );
