@@ -3113,23 +3113,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { saleId } = req.params;
       const { notas } = req.body;
 
+      // Detailed logging for debugging
+      console.log("📝 Notes update request:");
+      console.log("   - Sale ID:", saleId);
+      console.log("   - Notes type:", typeof notas);
+      console.log("   - Notes length:", notas ? notas.length : 0);
+      console.log("   - Notes preview:", notas ? notas.substring(0, 100) + (notas.length > 100 ? '...' : '') : '(empty)');
+      console.log("   - Contains accents:", notas ? /[áéíóúñÁÉÍÓÚÑ]/.test(notas) : false);
+
       // Validate notes length (max 500 characters)
       if (notas && notas.length > 500) {
+        console.log("❌ Validation FAILED: Notes exceed 500 characters");
         return res.status(400).json({ error: "Notes cannot exceed 500 characters" });
       }
+
+      console.log("✅ Validation PASSED: Notes length OK");
 
       // Validate that sale exists
       const existingSale = await storage.getSaleById(saleId);
       if (!existingSale) {
+        console.log("❌ Sale not found:", saleId);
         return res.status(404).json({ error: "Sale not found" });
       }
 
       const updatedSale = await storage.updateSaleNotes(saleId, notas);
       
       if (!updatedSale) {
+        console.log("❌ Failed to update sale notes in database");
         return res.status(500).json({ error: "Failed to update sale notes" });
       }
 
+      console.log("✅ Notes updated successfully");
       res.json({ success: true, sale: updatedSale });
     } catch (error) {
       console.error("Update sale notes error:", error);
