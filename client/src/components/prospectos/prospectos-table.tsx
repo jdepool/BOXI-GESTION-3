@@ -681,6 +681,7 @@ export default function ProspectosTable({
         open={prospectoDialogOpen}
         onOpenChange={setProspectoDialogOpen}
         prospecto={selectedProspecto}
+        productLine={productLine}
       />
 
       <ConvertProspectoDialog
