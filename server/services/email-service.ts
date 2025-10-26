@@ -161,7 +161,7 @@ export function generateOrderConfirmationHTML(data: OrderEmailData): string {
     <div style="text-align: center; padding: 20px 0; background-color: ${brandColor};">
         <img src="cid:boxisleeplogo" 
              alt="BoxiSleep Logo" 
-             style="display: block; width: 200px; max-width: 100%; height: auto; margin: 0 auto;" />
+             style="display: block; width: 280px; max-width: 100%; height: auto; margin: 0 auto;" />
     </div>
     
     <div class="content">
