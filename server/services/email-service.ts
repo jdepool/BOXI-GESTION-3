@@ -154,31 +154,8 @@ export function generateOrderConfirmationHTML(data: OrderEmailData): string {
     </style>
 </head>
 <body>
-    ${isMompox ? `
-    <!-- Mompox: Logo inside header ribbon using table layout for email compatibility -->
-    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: ${brandColor}; border-radius: 8px 8px 0 0;">
-        <tr>
-            <td align="center" style="padding: 30px 20px;">
-                <table cellpadding="0" cellspacing="0" border="0">
-                    <tr>
-                        <td valign="middle" style="padding-right: 20px;">
-                            <img src="cid:boxisleeplogo" 
-                                 alt="Mompox Logo" 
-                                 width="120" 
-                                 style="display: block; height: auto;" />
-                        </td>
-                        <td valign="middle">
-                            <h1 style="color: ${textColor}; margin: 0; padding: 0; font-size: 24px; font-family: Arial, sans-serif; line-height: 1.3;">Mompox Recepción de<br>Información de Pago</h1>
-                        </td>
-                    </tr>
-                </table>
-            </td>
-        </tr>
-    </table>
-    ` : `
-    <!-- BoxiSleep: Traditional layout with header and separate logo section -->
     <div class="header">
-        <h1 style="color: ${textColor}; margin: 10px 0;">BoxiSleep Recepción de Información de Pago</h1>
+        <h1 style="color: ${textColor}; margin: 10px 0;">${isMompox ? 'Mompox' : 'BoxiSleep'} Recepción de Información de Pago</h1>
     </div>
     
     <div style="text-align: center; padding: 20px 0; background-color: white;">
@@ -186,7 +163,6 @@ export function generateOrderConfirmationHTML(data: OrderEmailData): string {
              alt="BoxiSleep Logo" 
              style="display: block; width: 200px; max-width: 100%; height: auto; margin: 0 auto;" />
     </div>
-    `}
     
     <div class="content">
         <p>Estimado/a <strong>${data.customerName}</strong>,</p>
