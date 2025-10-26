@@ -30,7 +30,9 @@ const manualSaleSchema = z.object({
   nombre: z.string().min(1, "Nombre es requerido"),
   cedula: z.string().min(1, "Cédula es requerida").regex(/^[A-Za-z0-9]{6,10}$/, "La cédula debe tener entre 6 y 10 caracteres alfanuméricos"),
   telefono: z.string().min(1, "Teléfono es requerido").regex(/^\d+$/, "El teléfono debe contener solo números"),
-  email: z.string().email("Email inválido").optional(),
+  email: z.string().optional().refine((val) => !val || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val), {
+    message: "Email inválido"
+  }),
   totalUsd: z.string().min(1, "Total USD es requerido"),
   fecha: z.string().min(1, "Fecha es requerida"),
   fechaEntrega: z.date({ required_error: "Fecha de entrega es requerida" }),
@@ -392,7 +394,7 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
               name="asesorId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Asesor</FormLabel>
+                  <FormLabel>Asesor *</FormLabel>
                   <Select
                     value={field.value || "none"}
                     onValueChange={(value) => field.onChange(value === "none" ? undefined : value)}
