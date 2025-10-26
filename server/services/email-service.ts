@@ -155,13 +155,26 @@ export function generateOrderConfirmationHTML(data: OrderEmailData): string {
 </head>
 <body>
     ${isMompox ? `
-    <!-- Mompox: Logo inside header ribbon -->
-    <div class="header" style="display: flex; align-items: center; justify-content: center; gap: 20px; padding: 30px 20px;">
-        <img src="cid:boxisleeplogo" 
-             alt="Mompox Logo" 
-             style="width: 120px; height: auto;" />
-        <h1 style="color: ${textColor}; margin: 0; font-size: 24px;">Mompox Recepción de Información de Pago</h1>
-    </div>
+    <!-- Mompox: Logo inside header ribbon using table layout for email compatibility -->
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: ${brandColor}; border-radius: 8px 8px 0 0;">
+        <tr>
+            <td align="center" style="padding: 30px 20px;">
+                <table cellpadding="0" cellspacing="0" border="0">
+                    <tr>
+                        <td valign="middle" style="padding-right: 20px;">
+                            <img src="cid:boxisleeplogo" 
+                                 alt="Mompox Logo" 
+                                 width="120" 
+                                 style="display: block; height: auto;" />
+                        </td>
+                        <td valign="middle">
+                            <h1 style="color: ${textColor}; margin: 0; padding: 0; font-size: 24px; font-family: Arial, sans-serif; line-height: 1.3;">Mompox Recepción de<br>Información de Pago</h1>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
     ` : `
     <!-- BoxiSleep: Traditional layout with header and separate logo section -->
     <div class="header">
