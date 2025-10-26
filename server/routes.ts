@@ -3064,62 +3064,70 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           // Refetch to get the updated estadoEntrega in response
           finalSales = await storage.getSalesByOrderNumber(orderNumber);
+        }
+      }
 
-          // Auto-send email confirmation if not already sent and customer has email
-          if (finalSales.length > 0 && finalSales[0].email && !finalSales[0].emailSentAt) {
-            try {
-              const firstSale = finalSales[0];
-              
-              // Build products array
-              const products = finalSales.map(s => ({
-                name: s.product || 'Producto BoxiSleep',
-                quantity: s.cantidad || 1
-              }));
+      // Send payment confirmation email (independent of estadoEntrega status)
+      // Check: email + pagoInicialUsd + bancoReceptorInicial + referenciaInicial + emailSentAt is null
+      if (finalSales.length > 0) {
+        const firstSale = finalSales[0];
+        const hasEmail = firstSale.email && firstSale.email.trim() !== '';
+        const hasPaymentAmount = firstSale.pagoInicialUsd != null && Number(firstSale.pagoInicialUsd) > 0;
+        const hasBanco = firstSale.bancoReceptorInicial != null && firstSale.bancoReceptorInicial.trim() !== '';
+        const hasReferencia = firstSale.referenciaInicial != null && firstSale.referenciaInicial.trim() !== '';
+        const notSentYet = !firstSale.emailSentAt;
 
-              // Build shipping address
-              let shippingAddress = undefined;
-              if (firstSale.direccionDespachoDireccion) {
-                const addressParts = [
-                  firstSale.direccionDespachoDireccion,
-                  firstSale.direccionDespachoUrbanizacion,
-                  firstSale.direccionDespachoCiudad,
-                  firstSale.direccionDespachoEstado,
-                  firstSale.direccionDespachoPais
-                ].filter(Boolean);
-                shippingAddress = addressParts.join(', ');
-              }
+        if (hasEmail && hasPaymentAmount && hasBanco && hasReferencia && notSentYet) {
+          try {
+            // Build products array
+            const products = finalSales.map(s => ({
+              name: s.product || 'Producto BoxiSleep',
+              quantity: s.cantidad || 1
+            }));
 
-              // Prepare email data
-              const emailData: OrderEmailData = {
-                customerName: firstSale.nombre,
-                customerEmail: firstSale.email!,
-                orderNumber: orderNumber,
-                products,
-                totalOrderUsd: parseFloat(firstSale.totalOrderUsd?.toString() || '0'),
-                fecha: firstSale.fecha.toISOString(),
-                shippingAddress,
-                montoInicialBs: firstSale.montoInicialBs?.toString(),
-                montoInicialUsd: firstSale.montoInicialUsd?.toString(),
-                referenciaInicial: firstSale.referenciaInicial || undefined
-              };
-
-              // Send email
-              await sendOrderConfirmationEmail(emailData);
-              
-              // Update all sales with emailSentAt timestamp
-              const emailSentTimestamp = new Date();
-              await storage.updateSalesByOrderNumber(orderNumber, {
-                emailSentAt: emailSentTimestamp
-              });
-
-              console.log(`📧 Auto-sent confirmation email to ${firstSale.email} for order ${orderNumber}`);
-              
-              // Refetch again to include emailSentAt in response
-              finalSales = await storage.getSalesByOrderNumber(orderNumber);
-            } catch (emailError) {
-              console.error(`⚠️  Failed to auto-send email for order ${orderNumber}:`, emailError);
-              // Don't fail the request if email fails - just log it
+            // Build shipping address
+            let shippingAddress = undefined;
+            if (firstSale.direccionDespachoDireccion) {
+              const addressParts = [
+                firstSale.direccionDespachoDireccion,
+                firstSale.direccionDespachoUrbanizacion,
+                firstSale.direccionDespachoCiudad,
+                firstSale.direccionDespachoEstado,
+                firstSale.direccionDespachoPais
+              ].filter(Boolean);
+              shippingAddress = addressParts.join(', ');
             }
+
+            // Prepare email data
+            const emailData: OrderEmailData = {
+              customerName: firstSale.nombre,
+              customerEmail: firstSale.email!,
+              orderNumber: orderNumber,
+              products,
+              totalOrderUsd: parseFloat(firstSale.totalOrderUsd?.toString() || '0'),
+              fecha: firstSale.fecha.toISOString(),
+              shippingAddress,
+              montoInicialBs: firstSale.montoInicialBs?.toString(),
+              montoInicialUsd: firstSale.montoInicialUsd?.toString(),
+              referenciaInicial: firstSale.referenciaInicial || undefined
+            };
+
+            // Send email
+            await sendOrderConfirmationEmail(emailData);
+            
+            // Update all sales with emailSentAt timestamp
+            const emailSentTimestamp = new Date();
+            await storage.updateSalesByOrderNumber(orderNumber, {
+              emailSentAt: emailSentTimestamp
+            });
+
+            console.log(`📧 Sent initial payment confirmation email to ${firstSale.email} for order ${orderNumber}`);
+            
+            // Refetch again to include emailSentAt in response
+            finalSales = await storage.getSalesByOrderNumber(orderNumber);
+          } catch (emailError) {
+            console.error(`⚠️  Failed to send initial payment email for order ${orderNumber}:`, emailError);
+            // Don't fail the request if email fails - just log it
           }
         }
       }
