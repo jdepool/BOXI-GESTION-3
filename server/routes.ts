@@ -3710,6 +3710,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "No file uploaded" });
       }
 
+      console.log('[Upload Productos] Starting upload, file size:', req.file.size, 'bytes, filename:', req.file.originalname);
+
       // Create backup before processing
       await storage.backupProductos();
 
@@ -3720,19 +3722,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (existingCategorias && existingCategorias.length > 0) {
           validCategorias = existingCategorias.map(cat => cat.nombre);
         }
+        console.log('[Upload Productos] Loaded', existingCategorias.length, 'categorias from database');
       } catch (error) {
         // Fallback to hardcoded list if categorias table doesn't exist or isn't accessible
-        console.log("Using fallback categorias list");
+        console.log("[Upload Productos] Using fallback categorias list");
       }
 
       // Parse file with row-level error handling
       const parsedRows = parseProductosFile(req.file.buffer, req.file.originalname, validCategorias);
       
+      console.log('[Upload Productos] Parsed file, found', parsedRows.length, 'rows');
+      
       // Separate valid rows from invalid rows
       const validRows = parsedRows.filter(row => !row.error && row.data);
       const invalidRows = parsedRows.filter(row => row.error);
       
+      console.log('[Upload Productos] Valid rows:', validRows.length, 'Invalid rows:', invalidRows.length);
+      
       if (validRows.length === 0) {
+        console.log('[Upload Productos] No valid rows found. Errors:', invalidRows.slice(0, 5).map(r => ({ row: r.row, error: r.error })));
         return res.status(400).json({
           error: "No valid rows found",
           details: invalidRows.slice(0, 10).map(row => ({ row: row.row, error: row.error })),
@@ -3779,13 +3787,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
             const validatedProducto = insertProductoSchema.parse(data);
             validProductos.push(validatedProducto);
           } catch (error) {
+            const errorMsg = error instanceof z.ZodError ? error.errors.map(e => e.message).join(', ') : String(error);
             additionalErrors.push({
               row: row.row,
-              error: error instanceof z.ZodError ? error.errors.map(e => e.message).join(', ') : String(error)
+              error: errorMsg
             });
+            console.error('[Upload Productos] Validation error on row', row.row, ':', errorMsg);
           }
         }
       }
+
+      console.log('[Upload Productos] After duplicate check - Valid productos:', validProductos.length, 'Additional errors:', additionalErrors.length);
 
       // Combine all errors (standardize to 'row' property)
       const allErrors = [
@@ -3796,22 +3808,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Replace all productos with new data (delete all, then insert)
       const { created } = await storage.replaceProductos(validProductos);
 
+      console.log('[Upload Productos] Completed. Created:', created, 'Total rows:', parsedRows.length, 'Total errors:', allErrors.length);
+
       // Return results with detailed statistics
       res.json({
         success: true,
         created,
         total: parsedRows.length,
         errors: allErrors.length,
+        errorMessages: allErrors.length > 0 ? allErrors.map(e => `Fila ${e.row}: ${e.error}`).slice(0, 20) : undefined,
+        inserted: created,
         details: {
           validRows: validRows.length,
           invalidRows: invalidRows.length,
           duplicates: additionalErrors.length,
-          errorList: allErrors.slice(0, 20) // Show first 20 errors
+          errorList: allErrors.slice(0, 20)
         }
       });
 
     } catch (error) {
-      console.error("Upload productos error:", error);
+      console.error("[Upload Productos] Critical error:", error);
       res.status(500).json({ 
         error: "Failed to process upload",
         message: error instanceof Error ? error.message : 'Unknown error'

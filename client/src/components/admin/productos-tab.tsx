@@ -138,33 +138,44 @@ export function ProductosTab() {
       setIsUploading(false);
       setHasBackup(true);
       
-      const { created, total, errors, details } = result;
-      let message = `${created} productos cargados de ${total} filas`;
+      const { created, inserted, total, errors, errorMessages, details } = result;
+      const productosCreated = created || inserted || 0;
       
-      if (errors > 0) {
-        message += `, ${errors} errores encontrados`;
-        if (details?.duplicates > 0) {
-          message += ` (incluye ${details.duplicates} duplicados)`;
-        }
-      }
+      // Get error messages from either new or legacy format
+      const errorList = errorMessages || (details?.errorList?.map((e: any) => `Fila ${e.row}: ${e.error}`));
+      const hasErrors = errors > 0;
       
-      toast({ 
-        title: created > 0 ? "Excel procesado" : "Excel procesado con errores",
-        description: message,
-        variant: created > 0 ? "default" : "destructive"
-      });
-      
-      if (errors > 0 && details?.errorList && details.errorList.length > 0) {
-        console.log("Upload errors:", details.errorList);
-        const errorSummary = details.errorList.slice(0, 5).map(
-          (err: any) => `Fila ${err.row}: ${err.error}`
-        ).join('\n');
-        
-        toast({
-          title: "Errores detallados (primeros 5)",
-          description: errorSummary,
-          variant: "destructive",
-          duration: 10000
+      if (hasErrors && errorList && errorList.length > 0) {
+        toast({ 
+          title: productosCreated > 0 ? "Archivo procesado con errores" : "Error al procesar archivo",
+          description: (
+            <div className="space-y-1">
+              <div>{productosCreated} de {total} productos procesados exitosamente</div>
+              <div className="font-semibold mt-2">Errores ({errors} total):</div>
+              <ul className="list-disc pl-4 space-y-1 max-h-40 overflow-y-auto">
+                {errorList.map((error: string, index: number) => (
+                  <li key={index} className="text-xs">{error}</li>
+                ))}
+              </ul>
+              {errorList.length < errors && (
+                <div className="text-xs italic mt-1">Mostrando primeros {errorList.length} errores de {errors} total...</div>
+              )}
+            </div>
+          ),
+          variant: productosCreated > 0 ? "default" : "destructive",
+          duration: 10000,
+        });
+      } else if (hasErrors) {
+        // Fallback when we have errors count but no detailed messages
+        toast({ 
+          title: "Archivo procesado con errores",
+          description: `${productosCreated} de ${total} productos procesados. ${errors} errores encontrados.`,
+          variant: productosCreated > 0 ? "default" : "destructive"
+        });
+      } else {
+        toast({ 
+          title: "Archivo cargado exitosamente",
+          description: `${productosCreated} productos procesados`
         });
       }
     },
