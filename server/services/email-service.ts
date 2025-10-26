@@ -65,6 +65,11 @@ export interface OrderEmailData {
 
 export function generateOrderConfirmationHTML(data: OrderEmailData): string {
   const mompoxChannels = ['Cashea MP', 'ShopMom', 'Manual MP', 'Tienda MP'];
+  const isMompox = mompoxChannels.includes(data.canal);
+  
+  // Brand colors: Mompox uses beige, BoxiSleep uses turquoise
+  const brandColor = isMompox ? '#ece6d0' : '#1DB5A6';
+  const textColor = isMompox ? '#333' : 'white';
   
   return `
 <!DOCTYPE html>
@@ -83,8 +88,8 @@ export function generateOrderConfirmationHTML(data: OrderEmailData): string {
             padding: 20px;
         }
         .header {
-            background-color: #1DB5A6;
-            color: white;
+            background-color: ${brandColor};
+            color: ${textColor};
             padding: 20px;
             text-align: center;
             border-radius: 8px 8px 0 0;
@@ -99,14 +104,14 @@ export function generateOrderConfirmationHTML(data: OrderEmailData): string {
             padding: 20px;
             border-radius: 8px;
             margin: 20px 0;
-            border-left: 4px solid #1DB5A6;
+            border-left: 4px solid ${brandColor};
         }
         .payment-details {
             background-color: white;
             padding: 20px;
             border-radius: 8px;
             margin: 20px 0;
-            border-left: 4px solid #1DB5A6;
+            border-left: 4px solid ${brandColor};
         }
         .detail-row {
             display: flex;
@@ -129,8 +134,8 @@ export function generateOrderConfirmationHTML(data: OrderEmailData): string {
             border-bottom: 1px solid #eee;
         }
         .total {
-            background-color: #1DB5A6;
-            color: white;
+            background-color: ${brandColor};
+            color: ${textColor};
             padding: 15px;
             border-radius: 8px;
             text-align: center;
@@ -150,7 +155,7 @@ export function generateOrderConfirmationHTML(data: OrderEmailData): string {
 </head>
 <body>
     <div class="header">
-        <h1 style="color: white; margin: 10px 0;">${mompoxChannels.includes(data.canal) ? 'Mompox' : 'BoxiSleep'} Recepción de Información de Pago</h1>
+        <h1 style="color: ${textColor}; margin: 10px 0;">${isMompox ? 'Mompox' : 'BoxiSleep'} Recepción de Información de Pago</h1>
     </div>
     
     <div style="text-align: center; padding: 20px 0; background-color: white;">
@@ -259,8 +264,10 @@ export async function sendOrderConfirmationEmail(orderData: OrderEmailData): Pro
     const logoBuffer = fs.readFileSync(logoPath);
     const logoBase64 = logoBuffer.toString('base64');
     
+    const brandSuffix = isMompoxChannel ? 'Mompox' : 'BoxiSleep';
+    
     const message = {
-      subject: `Recepción de Información de Pago Orden #${orderData.orderNumber} - BoxiSleep`,
+      subject: `Recepción de Información de Pago Orden #${orderData.orderNumber} - ${brandSuffix}`,
       body: {
         contentType: 'HTML',
         content: emailContent
