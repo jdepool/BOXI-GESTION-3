@@ -95,10 +95,37 @@ export function CategoriasTab() {
       setIsUploadDialogOpen(false);
       setSelectedFile(null);
       if (fileInputRef.current) fileInputRef.current.value = '';
-      toast({ 
-        title: "Archivo cargado exitosamente",
-        description: `${data.inserted || 0} clasificaciones procesadas`
-      });
+      
+      const hasErrors = data.errors && data.errors.length > 0;
+      const inserted = data.inserted || 0;
+      const total = data.total || 0;
+      
+      if (hasErrors) {
+        toast({ 
+          title: inserted > 0 ? "Archivo procesado con errores" : "Error al procesar archivo",
+          description: (
+            <div className="space-y-1">
+              <div>{inserted} de {total} clasificaciones procesadas exitosamente</div>
+              <div className="font-semibold mt-2">Errores:</div>
+              <ul className="list-disc pl-4 space-y-1 max-h-40 overflow-y-auto">
+                {data.errors.map((error: string, index: number) => (
+                  <li key={index} className="text-xs">{error}</li>
+                ))}
+              </ul>
+              {data.errors.length >= 10 && (
+                <div className="text-xs italic mt-1">Mostrando primeros 10 errores...</div>
+              )}
+            </div>
+          ),
+          variant: inserted > 0 ? "default" : "destructive",
+          duration: 10000,
+        });
+      } else {
+        toast({ 
+          title: "Archivo cargado exitosamente",
+          description: `${inserted} clasificaciones procesadas`
+        });
+      }
     },
     onError: (error: Error) => {
       toast({ 

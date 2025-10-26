@@ -4036,14 +4036,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "No file uploaded" });
       }
 
+      console.log('[Upload Categorias] Starting upload, file size:', req.file.size, 'bytes');
+
       // Parse the Excel file
       const workbook = XLSX.read(req.file.buffer, { type: 'buffer' });
       const sheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[sheetName];
       const data = XLSX.utils.sheet_to_json(worksheet);
 
+      console.log('[Upload Categorias] Parsed Excel file, found', data.length, 'rows');
+      
       if (data.length === 0) {
         return res.status(400).json({ error: "No data found in file" });
+      }
+
+      // Log first row to see column names
+      if (data.length > 0) {
+        console.log('[Upload Categorias] First row keys:', Object.keys(data[0]));
+        console.log('[Upload Categorias] First row sample:', data[0]);
       }
 
       let inserted = 0;
@@ -4056,7 +4066,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const tipo = row.Tipo || row.tipo || "Categoría";
 
           if (!nombre) {
-            errors.push(`Fila ${i + 2}: Falta el nombre`);
+            errors.push(`Fila ${i + 2}: Falta el nombre (columnas encontradas: ${Object.keys(row).join(', ')})`);
+            console.log('[Upload Categorias] Row', i + 2, 'missing nombre. Row data:', row);
             continue;
           }
 
@@ -4064,6 +4075,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const validTipos = ["Marca", "Categoría", "Subcategoría", "Característica"];
           if (!validTipos.includes(tipo)) {
             errors.push(`Fila ${i + 2}: Tipo inválido "${tipo}". Debe ser uno de: ${validTipos.join(", ")}`);
+            console.log('[Upload Categorias] Row', i + 2, 'invalid tipo:', tipo);
             continue;
           }
 
@@ -4077,16 +4089,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
           if (existing) {
             // Update existing
             await storage.updateCategoria(existing.id, validatedData);
+            console.log('[Upload Categorias] Updated existing:', nombre, tipo);
           } else {
             // Create new
             await storage.createCategoria(validatedData);
+            console.log('[Upload Categorias] Created new:', nombre, tipo);
           }
           
           inserted++;
         } catch (error) {
-          errors.push(`Fila ${i + 2}: ${error instanceof Error ? error.message : 'Error desconocido'}`);
+          const errorMsg = error instanceof Error ? error.message : 'Error desconocido';
+          errors.push(`Fila ${i + 2}: ${errorMsg}`);
+          console.error('[Upload Categorias] Error processing row', i + 2, ':', error);
         }
       }
+
+      console.log('[Upload Categorias] Completed. Inserted:', inserted, 'Total:', data.length, 'Errors:', errors.length);
 
       res.json({
         success: true,
