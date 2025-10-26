@@ -160,7 +160,7 @@ export function generateOrderConfirmationHTML(data: OrderEmailData): string {
     <div class="content">
         <p>Estimado/a <strong>${data.customerName}</strong>,</p>
         
-        <p>¡Gracias por tu compra! Hemos recibido correctamente tus datos de pago. Te mantendremos informado sobre el estado de tu compra.</p>
+        <p>¡Gracias por tu pago! Hemos recibido la información enviada. Te mantendremos informado sobre el estado de tu compra.</p>
         
         <div class="order-details">
             <h3>📋 Detalles del Pedido</h3>

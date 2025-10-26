@@ -235,6 +235,7 @@ export const sales = pgTable("sales", {
   fechaDevolucion: varchar("fecha_devolucion", { length: 10 }),
   // Email tracking
   emailSentAt: timestamp("email_sent_at"),
+  emailFleteSentAt: timestamp("email_flete_sent_at"),
   // Verification fields for Pago Inicial
   estadoVerificacionInicial: text("estado_verificacion_inicial").default("Por verificar"), // Por verificar, Verificado, Rechazado
   notasVerificacionInicial: text("notas_verificacion_inicial"),
@@ -277,6 +278,8 @@ export const paymentInstallments = pgTable("payment_installments", {
   // Verification fields for Cuotas
   estadoVerificacion: text("estado_verificacion").default("Por verificar"), // Por verificar, Verificado, Rechazado
   notasVerificacion: text("notas_verificacion"),
+  // Email tracking for installment payments
+  emailSentAt: timestamp("email_sent_at"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => ({
