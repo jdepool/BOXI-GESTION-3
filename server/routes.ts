@@ -3153,10 +3153,75 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Update flete data for all products in this order
-      const updatedSales = await storage.updateOrderFlete(orderNumber, fleteData);
+      let updatedSales = await storage.updateOrderFlete(orderNumber, fleteData);
       
       if (!updatedSales) {
         return res.status(500).json({ error: "Failed to update flete" });
+      }
+
+      // Send flete payment confirmation email
+      // Check: email + pagoFleteUsd + bancoReceptorFlete + referenciaFlete + emailFleteSentAt is null
+      if (updatedSales.length > 0) {
+        const firstSale = updatedSales[0];
+        const hasEmail = firstSale.email && firstSale.email.trim() !== '';
+        const hasPaymentAmount = firstSale.pagoFleteUsd != null && Number(firstSale.pagoFleteUsd) > 0;
+        const hasBanco = firstSale.bancoReceptorFlete != null && firstSale.bancoReceptorFlete.trim() !== '';
+        const hasReferencia = firstSale.referenciaFlete != null && firstSale.referenciaFlete.trim() !== '';
+        const notSentYet = !firstSale.emailFleteSentAt;
+
+        if (hasEmail && hasPaymentAmount && hasBanco && hasReferencia && notSentYet) {
+          try {
+            // Build products array
+            const products = updatedSales.map(s => ({
+              name: s.product || 'Producto BoxiSleep',
+              quantity: s.cantidad || 1
+            }));
+
+            // Build shipping address
+            let shippingAddress = undefined;
+            if (firstSale.direccionDespachoDireccion) {
+              const addressParts = [
+                firstSale.direccionDespachoDireccion,
+                firstSale.direccionDespachoUrbanizacion,
+                firstSale.direccionDespachoCiudad,
+                firstSale.direccionDespachoEstado,
+                firstSale.direccionDespachoPais
+              ].filter(Boolean);
+              shippingAddress = addressParts.join(', ');
+            }
+
+            // Prepare email data for flete payment
+            const emailData: OrderEmailData = {
+              customerName: firstSale.nombre,
+              customerEmail: firstSale.email!,
+              orderNumber: orderNumber,
+              products,
+              totalOrderUsd: parseFloat(firstSale.totalOrderUsd?.toString() || '0'),
+              fecha: firstSale.fecha.toISOString(),
+              shippingAddress,
+              montoInicialBs: firstSale.montoFleteBs?.toString(),
+              montoInicialUsd: firstSale.montoFleteUsd?.toString(),
+              referenciaInicial: firstSale.referenciaFlete || undefined
+            };
+
+            // Send email
+            await sendOrderConfirmationEmail(emailData);
+            
+            // Update all sales with emailFleteSentAt timestamp
+            const emailSentTimestamp = new Date();
+            await storage.updateSalesByOrderNumber(orderNumber, {
+              emailFleteSentAt: emailSentTimestamp
+            });
+
+            console.log(`📧 Sent flete payment confirmation email to ${firstSale.email} for order ${orderNumber}`);
+            
+            // Refetch to include emailFleteSentAt in response
+            updatedSales = await storage.getSalesByOrderNumber(orderNumber);
+          } catch (emailError) {
+            console.error(`⚠️  Failed to send flete payment email for order ${orderNumber}:`, emailError);
+            // Don't fail the request if email fails - just log it
+          }
+        }
       }
 
       res.json({ success: true, sales: updatedSales });
