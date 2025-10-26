@@ -119,7 +119,12 @@ export default function ManualSalesEntry({ convertingProspecto, onConversionComp
         title: convertingProspecto ? "Prospecto convertido" : "Venta creada",
         description: convertingProspecto ? "El prospecto ha sido convertido en venta exitosamente." : "La venta ha sido registrada exitosamente.",
       });
-      setShowForm(false);
+      
+      // If opened in a dialog (openFormImmediately), just close via callback
+      // Otherwise, go back to showing the table
+      if (!openFormImmediately) {
+        setShowForm(false);
+      }
       
       // Always call onConversionComplete to close the parent dialog (whether converting prospecto or creating new sale)
       onConversionComplete?.();
