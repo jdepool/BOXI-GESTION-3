@@ -155,7 +155,7 @@ export function generateOrderConfirmationHTML(data: OrderEmailData): string {
 </head>
 <body>
     <div class="header">
-        <h1 style="color: ${textColor}; margin: 10px 0;">${isMompox ? 'Mompox' : 'BoxiSleep'} Recepción de Información de Pago</h1>
+        <h1 style="color: ${textColor}; margin: 10px 0;">Recepción de Información de Pago</h1>
     </div>
     
     <div style="text-align: center; padding: 20px 0; background-color: ${brandColor};">
