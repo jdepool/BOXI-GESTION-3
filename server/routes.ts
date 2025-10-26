@@ -6252,23 +6252,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Email address is required" });
       }
 
-      // Sample email data with multiple products (using ShopMom to showcase Mompox branding)
+      // Sample email data with multiple products (using Shopify to showcase Boxi branding)
       const emailData: OrderEmailData = {
         customerName: "María Eugenia Labrador",
         customerEmail: email,
-        orderNumber: "TEST-30001",
+        orderNumber: "TEST-10001",
         products: [
-          { name: "Mompox Premium Sleep Set", quantity: 1 },
-          { name: "Mompox Comfort Pillow", quantity: 2 },
-          { name: "Mompox Sleep Essentials", quantity: 1 }
+          { name: "Colchón Matrimonial Premium", quantity: 1 },
+          { name: "Almohada Viscoelástica", quantity: 2 },
+          { name: "Base para Colchón", quantity: 1 }
         ],
-        totalOrderUsd: 650.00,
+        totalOrderUsd: 850.00,
         fecha: new Date().toISOString(),
-        canal: "ShopMom",
+        canal: "Shopify",
         shippingAddress: "Av. Principal #123, Urbanización Los Pinos, Caracas, Miranda, Venezuela",
-        montoInicialBs: "1500.00",
-        montoInicialUsd: "40.00",
-        referenciaInicial: "MP0123456789"
+        montoInicialBs: "1800.00",
+        montoInicialUsd: "50.00",
+        referenciaInicial: "0123456789"
       };
 
       // Send the test email
