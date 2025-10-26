@@ -56,6 +56,7 @@ export interface OrderEmailData {
   products: Array<{ name: string; quantity: number }>;
   totalOrderUsd: number;
   fecha: string;
+  canal: string;
   shippingAddress?: string;
   montoInicialBs?: string;
   montoInicialUsd?: string;
@@ -244,8 +245,16 @@ export async function sendOrderConfirmationEmail(orderData: OrderEmailData): Pro
     
     const emailContent = generateOrderConfirmationHTML(orderData);
     
-    // Read logo file and convert to base64
-    const logoPath = path.join(process.cwd(), 'attached_assets', 'BOXILOGO_1759265713831.jpg');
+    // Determine which logo to use based on canal
+    const mompoxChannels = ['Cashea MP', 'ShopMom', 'Manual MP', 'Tienda MP'];
+    const isMompoxChannel = mompoxChannels.includes(orderData.canal);
+    
+    // Read appropriate logo file and convert to base64
+    const logoFileName = isMompoxChannel 
+      ? 'mompox logo_1761503001999.webp' 
+      : 'BOXILOGO_1759265713831.jpg';
+    const logoContentType = isMompoxChannel ? 'image/webp' : 'image/jpeg';
+    const logoPath = path.join(process.cwd(), 'attached_assets', logoFileName);
     const logoBuffer = fs.readFileSync(logoPath);
     const logoBase64 = logoBuffer.toString('base64');
     
@@ -267,7 +276,7 @@ export async function sendOrderConfirmationEmail(orderData: OrderEmailData): Pro
         {
           '@odata.type': '#microsoft.graph.fileAttachment',
           name: 'boxisleeplogo.jpg',
-          contentType: 'image/jpeg',
+          contentType: logoContentType,
           contentBytes: logoBase64,
           contentId: 'boxisleeplogo',
           isInline: true
