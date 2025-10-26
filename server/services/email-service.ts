@@ -64,6 +64,8 @@ export interface OrderEmailData {
 }
 
 export function generateOrderConfirmationHTML(data: OrderEmailData): string {
+  const mompoxChannels = ['Cashea MP', 'ShopMom', 'Manual MP', 'Tienda MP'];
+  
   return `
 <!DOCTYPE html>
 <html lang="es">
@@ -148,8 +150,7 @@ export function generateOrderConfirmationHTML(data: OrderEmailData): string {
 </head>
 <body>
     <div class="header">
-        <h1 style="color: white; margin: 10px 0 5px 0;">BoxiSleep</h1>
-        <h2 style="color: white; margin: 5px 0;">Recepción de Información de Pago</h2>
+        <h1 style="color: white; margin: 10px 0;">${mompoxChannels.includes(data.canal) ? 'Mompox' : 'BoxiSleep'} Recepción de Información de Pago</h1>
     </div>
     
     <div style="text-align: center; padding: 20px 0; background-color: white;">
@@ -251,9 +252,9 @@ export async function sendOrderConfirmationEmail(orderData: OrderEmailData): Pro
     
     // Read appropriate logo file and convert to base64
     const logoFileName = isMompoxChannel 
-      ? 'mompox logo_1761503001999.webp' 
+      ? 'images_1761506222071.jpeg' 
       : 'BOXILOGO_1759265713831.jpg';
-    const logoContentType = isMompoxChannel ? 'image/webp' : 'image/jpeg';
+    const logoContentType = 'image/jpeg';
     const logoPath = path.join(process.cwd(), 'attached_assets', logoFileName);
     const logoBuffer = fs.readFileSync(logoPath);
     const logoBase64 = logoBuffer.toString('base64');
