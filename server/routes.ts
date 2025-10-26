@@ -5804,7 +5804,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      const installment = await storage.createInstallment(saleId, validatedData);
+      let installment = await storage.createInstallment(saleId, validatedData);
       
       // Manual sales stay "Pendiente" until balance = 0 (auto-update to "A despachar")
       // Only Cashea orders use "En Proceso" status
@@ -5813,6 +5813,71 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (sale.tipo === "Reserva" && await storage.isPaymentFullyVerified(saleId)) {
         // Use proper delivery status update to handle freight initialization and business logic
         await storage.updateSaleDeliveryStatus(saleId, "A despachar");
+      }
+
+      // Send installment payment confirmation email
+      // Check: email + pagoCuotaUsd + bancoReceptorCuota + referencia + emailSentAt is null
+      const hasEmail = sale.email && sale.email.trim() !== '';
+      const hasPaymentAmount = installment.pagoCuotaUsd != null && Number(installment.pagoCuotaUsd) > 0;
+      const hasBanco = installment.bancoReceptorCuota != null && installment.bancoReceptorCuota.trim() !== '';
+      const hasReferencia = installment.referencia != null && installment.referencia.trim() !== '';
+      const notSentYet = !installment.emailSentAt;
+
+      if (hasEmail && hasPaymentAmount && hasBanco && hasReferencia && notSentYet && sale.orden) {
+        try {
+          // Get all sales in the same order for product list
+          const salesInOrder = await storage.getSalesByOrderNumber(sale.orden);
+          
+          // Build products array
+          const products = salesInOrder.map(s => ({
+            name: s.product || 'Producto BoxiSleep',
+            quantity: s.cantidad || 1
+          }));
+
+          // Build shipping address
+          let shippingAddress = undefined;
+          if (sale.direccionDespachoDireccion) {
+            const addressParts = [
+              sale.direccionDespachoDireccion,
+              sale.direccionDespachoUrbanizacion,
+              sale.direccionDespachoCiudad,
+              sale.direccionDespachoEstado,
+              sale.direccionDespachoPais
+            ].filter(Boolean);
+            shippingAddress = addressParts.join(', ');
+          }
+
+          // Prepare email data for installment payment
+          const emailData: OrderEmailData = {
+            customerName: sale.nombre,
+            customerEmail: sale.email!,
+            orderNumber: sale.orden,
+            products,
+            totalOrderUsd: parseFloat(sale.totalOrderUsd?.toString() || '0'),
+            fecha: sale.fecha.toISOString(),
+            shippingAddress,
+            montoInicialBs: installment.montoCuotaBs?.toString(),
+            montoInicialUsd: installment.montoCuotaUsd?.toString(),
+            referenciaInicial: installment.referencia || undefined
+          };
+
+          // Send email
+          await sendOrderConfirmationEmail(emailData);
+          
+          // Update installment with emailSentAt timestamp
+          const emailSentTimestamp = new Date();
+          await storage.updateInstallment(installment.id, {
+            emailSentAt: emailSentTimestamp
+          });
+
+          console.log(`📧 Sent installment payment confirmation email to ${sale.email} for order ${sale.orden}, installment #${installment.installmentNumber}`);
+          
+          // Refetch to include emailSentAt in response
+          installment = await storage.getInstallmentById(installment.id) || installment;
+        } catch (emailError) {
+          console.error(`⚠️  Failed to send installment payment email for order ${sale.orden}:`, emailError);
+          // Don't fail the request if email fails - just log it
+        }
       }
       
       res.status(201).json(installment);
@@ -5876,7 +5941,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      const installment = await storage.updateInstallment(id, validatedData);
+      let installment = await storage.updateInstallment(id, validatedData);
       if (!installment) {
         return res.status(404).json({ error: "Installment not found" });
       }
@@ -5889,6 +5954,73 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (sale && sale.tipo === "Reserva" && await storage.isPaymentFullyVerified(currentInstallment.saleId)) {
         // Use proper delivery status update to handle freight initialization and business logic
         await storage.updateSaleDeliveryStatus(currentInstallment.saleId, "A Despachar");
+      }
+
+      // Send installment payment confirmation email
+      // Check: email + pagoCuotaUsd + bancoReceptorCuota + referencia + emailSentAt is null
+      if (sale) {
+        const hasEmail = sale.email && sale.email.trim() !== '';
+        const hasPaymentAmount = installment.pagoCuotaUsd != null && Number(installment.pagoCuotaUsd) > 0;
+        const hasBanco = installment.bancoReceptorCuota != null && installment.bancoReceptorCuota.trim() !== '';
+        const hasReferencia = installment.referencia != null && installment.referencia.trim() !== '';
+        const notSentYet = !installment.emailSentAt;
+
+        if (hasEmail && hasPaymentAmount && hasBanco && hasReferencia && notSentYet && sale.orden) {
+          try {
+            // Get all sales in the same order for product list
+            const salesInOrder = await storage.getSalesByOrderNumber(sale.orden);
+            
+            // Build products array
+            const products = salesInOrder.map(s => ({
+              name: s.product || 'Producto BoxiSleep',
+              quantity: s.cantidad || 1
+            }));
+
+            // Build shipping address
+            let shippingAddress = undefined;
+            if (sale.direccionDespachoDireccion) {
+              const addressParts = [
+                sale.direccionDespachoDireccion,
+                sale.direccionDespachoUrbanizacion,
+                sale.direccionDespachoCiudad,
+                sale.direccionDespachoEstado,
+                sale.direccionDespachoPais
+              ].filter(Boolean);
+              shippingAddress = addressParts.join(', ');
+            }
+
+            // Prepare email data for installment payment
+            const emailData: OrderEmailData = {
+              customerName: sale.nombre,
+              customerEmail: sale.email!,
+              orderNumber: sale.orden,
+              products,
+              totalOrderUsd: parseFloat(sale.totalOrderUsd?.toString() || '0'),
+              fecha: sale.fecha.toISOString(),
+              shippingAddress,
+              montoInicialBs: installment.montoCuotaBs?.toString(),
+              montoInicialUsd: installment.montoCuotaUsd?.toString(),
+              referenciaInicial: installment.referencia || undefined
+            };
+
+            // Send email
+            await sendOrderConfirmationEmail(emailData);
+            
+            // Update installment with emailSentAt timestamp
+            const emailSentTimestamp = new Date();
+            await storage.updateInstallment(installment.id, {
+              emailSentAt: emailSentTimestamp
+            });
+
+            console.log(`📧 Sent installment payment confirmation email to ${sale.email} for order ${sale.orden}, installment #${installment.installmentNumber}`);
+            
+            // Refetch to include emailSentAt in response
+            installment = await storage.getInstallmentById(installment.id) || installment;
+          } catch (emailError) {
+            console.error(`⚠️  Failed to send installment payment email for order ${sale.orden}:`, emailError);
+            // Don't fail the request if email fails - just log it
+          }
+        }
       }
       
       res.json(installment);
