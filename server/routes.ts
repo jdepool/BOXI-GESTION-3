@@ -324,7 +324,7 @@ function parseFile(buffer: Buffer, canal: string, filename: string) {
   }
 }
 
-function parseProductosFile(buffer: Buffer, filename: string, validCategorias: string[]) {
+function parseProductosFile(buffer: Buffer, filename: string, clasificaciones: any[]) {
   try {
     let data: any[];
     
@@ -345,7 +345,19 @@ function parseProductosFile(buffer: Buffer, filename: string, validCategorias: s
       data = XLSX.utils.sheet_to_json(worksheet);
     }
 
-    // Note: validCategorias should be passed as parameter instead of fetched here
+    // Create lookup maps for each classification type
+    const marcasMap = new Map(
+      clasificaciones.filter(c => c.tipo === 'Marca').map(c => [c.nombre.toLowerCase(), c.id])
+    );
+    const categoriasMap = new Map(
+      clasificaciones.filter(c => c.tipo === 'Categoría').map(c => [c.nombre.toLowerCase(), c.id])
+    );
+    const subcategoriasMap = new Map(
+      clasificaciones.filter(c => c.tipo === 'Subcategoría').map(c => [c.nombre.toLowerCase(), c.id])
+    );
+    const caracteristicasMap = new Map(
+      clasificaciones.filter(c => c.tipo === 'Característica').map(c => [c.nombre.toLowerCase(), c.id])
+    );
 
     // Map the Excel/CSV data to producto format with row-level error handling
     const productosData = data.map((row: any, index: number) => {
@@ -355,7 +367,10 @@ function parseProductosFile(buffer: Buffer, filename: string, validCategorias: s
         // Handle different possible column names (case insensitive)
         const nombre = row['Producto'] || row['producto'] || row['Nombre'] || row['nombre'];
         const sku = row['SKU'] || row['sku'] || row['Sku'];
+        const marca = row['Marca'] || row['marca'];
         const categoria = row['Categoría'] || row['Categoria'] || row['categoria'] || row['Category'] || row['category'];
+        const subcategoria = row['Subcategoría'] || row['Subcategoria'] || row['subcategoria'];
+        const caracteristica = row['Característica'] || row['Caracteristica'] || row['caracteristica'];
 
         // Collect validation errors for this row
         const rowErrors = [];
@@ -363,32 +378,68 @@ function parseProductosFile(buffer: Buffer, filename: string, validCategorias: s
         if (!nombre || String(nombre).trim() === '') {
           rowErrors.push('Missing required field: Producto/Nombre');
         }
-        if (!categoria || String(categoria).trim() === '') {
-          rowErrors.push('Missing required field: Categoria');
-        } else if (!validCategorias.includes(String(categoria).trim())) {
-          rowErrors.push(`Invalid categoria: "${categoria}". Must be one of: ${validCategorias.join(', ')}`);
+
+        // Map classification names to IDs (all optional)
+        let marcaId: string | undefined;
+        let categoriaId: string | undefined;
+        let subcategoriaId: string | undefined;
+        let caracteristicaId: string | undefined;
+
+        if (marca && String(marca).trim()) {
+          const marcaKey = String(marca).trim().toLowerCase();
+          marcaId = marcasMap.get(marcaKey);
+          if (!marcaId) {
+            rowErrors.push(`Invalid Marca: "${marca}". Not found in system`);
+          }
+        }
+
+        if (categoria && String(categoria).trim()) {
+          const categoriaKey = String(categoria).trim().toLowerCase();
+          categoriaId = categoriasMap.get(categoriaKey);
+          if (!categoriaId) {
+            rowErrors.push(`Invalid Categoría: "${categoria}". Not found in system`);
+          }
+        }
+
+        if (subcategoria && String(subcategoria).trim()) {
+          const subcategoriaKey = String(subcategoria).trim().toLowerCase();
+          subcategoriaId = subcategoriasMap.get(subcategoriaKey);
+          if (!subcategoriaId) {
+            rowErrors.push(`Invalid Subcategoría: "${subcategoria}". Not found in system`);
+          }
+        }
+
+        if (caracteristica && String(caracteristica).trim()) {
+          const caracteristicaKey = String(caracteristica).trim().toLowerCase();
+          caracteristicaId = caracteristicasMap.get(caracteristicaKey);
+          if (!caracteristicaId) {
+            rowErrors.push(`Invalid Característica: "${caracteristica}". Not found in system`);
+          }
         }
 
         if (rowErrors.length > 0) {
           return {
-            row: rowNumber, // Use 'row' to match frontend expectations
+            row: rowNumber,
             error: rowErrors.join('; '),
             data: null
           };
         }
 
         return {
-          row: rowNumber, // Use 'row' to match frontend expectations
+          row: rowNumber,
           error: null,
           data: {
             nombre: String(nombre).trim(),
-            sku: sku ? String(sku).trim() || undefined : undefined, // Convert empty strings to undefined
-            categoria: String(categoria).trim()
+            sku: sku ? String(sku).trim() || undefined : undefined,
+            marcaId,
+            categoriaId,
+            subcategoriaId,
+            caracteristicaId
           }
         };
       } catch (error) {
         return {
-          row: rowNumber, // Use 'row' to match frontend expectations
+          row: rowNumber,
           error: `Error processing row: ${error instanceof Error ? error.message : 'Unknown error'}`,
           data: null
         };
@@ -3715,21 +3766,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Create backup before processing
       await storage.backupProductos();
 
-      // Get valid categorias from database (or fallback to hardcoded if no table exists)
-      let validCategorias = ["Colchón", "Seat", "Pillow", "Topper", "Bed"];
+      // Get all clasificaciones from database (Marca, Categoría, Subcategoría, Característica)
+      let clasificaciones: any[] = [];
       try {
-        const existingCategorias = await storage.getCategorias();
-        if (existingCategorias && existingCategorias.length > 0) {
-          validCategorias = existingCategorias.map(cat => cat.nombre);
-        }
-        console.log('[Upload Productos] Loaded', existingCategorias.length, 'categorias from database');
+        clasificaciones = await storage.getCategorias();
+        console.log('[Upload Productos] Loaded', clasificaciones.length, 'clasificaciones from database');
       } catch (error) {
-        // Fallback to hardcoded list if categorias table doesn't exist or isn't accessible
-        console.log("[Upload Productos] Using fallback categorias list");
+        console.log("[Upload Productos] Warning: Could not load clasificaciones from database:", error);
+        // If no clasificaciones exist, continue with empty array - all classifications will be optional
       }
 
       // Parse file with row-level error handling
-      const parsedRows = parseProductosFile(req.file.buffer, req.file.originalname, validCategorias);
+      const parsedRows = parseProductosFile(req.file.buffer, req.file.originalname, clasificaciones);
       
       console.log('[Upload Productos] Parsed file, found', parsedRows.length, 'rows');
       
