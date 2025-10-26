@@ -158,7 +158,7 @@ export function generateOrderConfirmationHTML(data: OrderEmailData): string {
         <h1 style="color: ${textColor}; margin: 10px 0;">${isMompox ? 'Mompox' : 'BoxiSleep'} Recepción de Información de Pago</h1>
     </div>
     
-    <div style="text-align: center; padding: 20px 0; background-color: white;">
+    <div style="text-align: center; padding: 20px 0; background-color: ${brandColor};">
         <img src="cid:boxisleeplogo" 
              alt="BoxiSleep Logo" 
              style="display: block; width: 200px; max-width: 100%; height: auto; margin: 0 auto;" />
