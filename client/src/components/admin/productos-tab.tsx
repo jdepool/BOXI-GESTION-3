@@ -365,11 +365,11 @@ export function ProductosTab() {
                 <Upload className="h-4 w-4" />
               </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="max-w-3xl">
               <DialogHeader>
                 <DialogTitle>Subir Productos desde Excel</DialogTitle>
                 <DialogDescription>
-                  Sube un archivo Excel o CSV con las columnas: Producto, SKU (opcional), y Categoria
+                  Sube un archivo Excel o CSV con las columnas: Producto (requerido), SKU, Marca, Categoría, Subcategoría, Característica (todas opcionales)
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4">
@@ -391,16 +391,26 @@ export function ProductosTab() {
                   <p className="font-semibold mb-2">Formato esperado del Excel:</p>
                   <div className="bg-muted p-3 rounded-md">
                     <div className="font-mono text-xs">
-                      <div className="grid grid-cols-3 gap-4 mb-1">
+                      <div className="grid grid-cols-6 gap-2 mb-1 font-semibold">
                         <div>Producto</div>
                         <div>SKU</div>
-                        <div>Categoria</div>
+                        <div>Marca</div>
+                        <div>Categoría</div>
+                        <div>Subcategoría</div>
+                        <div>Característica</div>
                       </div>
-                      <div className="grid grid-cols-3 gap-4 text-muted-foreground">
+                      <div className="grid grid-cols-6 gap-2 text-muted-foreground">
                         <div>Evolve 140x190</div>
                         <div>EVO-140-190</div>
+                        <div>Boxi</div>
                         <div>Colchón</div>
+                        <div>Espuma</div>
+                        <div>Queen</div>
                       </div>
+                    </div>
+                    <div className="mt-3 text-xs">
+                      <p><span className="font-semibold">Nota:</span> Solo el campo "Producto" es requerido. Los demás campos son opcionales.</p>
+                      <p className="mt-1">Las clasificaciones (Marca, Categoría, etc.) deben existir primero en la tabla de Categorías.</p>
                     </div>
                   </div>
                 </div>
