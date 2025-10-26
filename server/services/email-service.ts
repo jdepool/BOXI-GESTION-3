@@ -148,7 +148,7 @@ export function generateOrderConfirmationHTML(data: OrderEmailData): string {
 <body>
     <div class="header">
         <h1 style="color: white; margin: 10px 0 5px 0;">BoxiSleep</h1>
-        <h2 style="color: white; margin: 5px 0;">Confirmación de Pedido</h2>
+        <h2 style="color: white; margin: 5px 0;">Recepción de Información de Pago</h2>
     </div>
     
     <div style="text-align: center; padding: 20px 0; background-color: white;">
@@ -250,7 +250,7 @@ export async function sendOrderConfirmationEmail(orderData: OrderEmailData): Pro
     const logoBase64 = logoBuffer.toString('base64');
     
     const message = {
-      subject: `Confirmación de Pedido #${orderData.orderNumber} - BoxiSleep`,
+      subject: `Recepción de Información de Pago Orden #${orderData.orderNumber} - BoxiSleep`,
       body: {
         contentType: 'HTML',
         content: emailContent
