@@ -154,8 +154,18 @@ export function generateOrderConfirmationHTML(data: OrderEmailData): string {
     </style>
 </head>
 <body>
+    ${isMompox ? `
+    <!-- Mompox: Logo inside header ribbon -->
+    <div class="header" style="display: flex; align-items: center; justify-content: center; gap: 20px; padding: 30px 20px;">
+        <img src="cid:boxisleeplogo" 
+             alt="Mompox Logo" 
+             style="width: 120px; height: auto;" />
+        <h1 style="color: ${textColor}; margin: 0; font-size: 24px;">Mompox Recepción de Información de Pago</h1>
+    </div>
+    ` : `
+    <!-- BoxiSleep: Traditional layout with header and separate logo section -->
     <div class="header">
-        <h1 style="color: ${textColor}; margin: 10px 0;">${isMompox ? 'Mompox' : 'BoxiSleep'} Recepción de Información de Pago</h1>
+        <h1 style="color: ${textColor}; margin: 10px 0;">BoxiSleep Recepción de Información de Pago</h1>
     </div>
     
     <div style="text-align: center; padding: 20px 0; background-color: white;">
@@ -163,6 +173,7 @@ export function generateOrderConfirmationHTML(data: OrderEmailData): string {
              alt="BoxiSleep Logo" 
              style="display: block; width: 200px; max-width: 100%; height: auto; margin: 0 auto;" />
     </div>
+    `}
     
     <div class="content">
         <p>Estimado/a <strong>${data.customerName}</strong>,</p>
