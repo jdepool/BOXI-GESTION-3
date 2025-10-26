@@ -645,7 +645,7 @@ export default function DispatchTable({
         ) : (
           <div className="overflow-x-auto overflow-y-auto max-h-[calc(100vh-280px)] bg-background">
             <div className={cn("min-w-max transition-opacity duration-200", isLoading && "opacity-50")}>
-              <table className="w-full min-w-[2860px] relative">
+              <table className="w-full min-w-[3100px] relative">
                 <thead className="bg-muted sticky top-0 z-10">
                   <tr>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[100px] sticky left-0 bg-muted z-20 border-r border-border shadow-[2px_0_5px_rgba(0,0,0,0.1)]">Orden</th>
@@ -655,6 +655,8 @@ export default function DispatchTable({
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[200px]">Nombre</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[150px]">Teléfono</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[120px]">Cédula</th>
+                    <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[120px]">Estado</th>
+                    <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[120px]">Ciudad</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[300px]">Dirección de Despacho</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[200px]">Producto</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[120px]">SKU</th>
@@ -730,14 +732,29 @@ export default function DispatchTable({
                       
                       <td className="p-2 min-w-[120px] text-xs">{sale.cedula}</td>
                       
+                      <td className="p-2 min-w-[120px] text-xs">
+                        {sale.direccionFacturacionPais ? (
+                          sale.direccionDespachoIgualFacturacion === "true" ? 
+                            sale.direccionFacturacionEstado : sale.direccionDespachoEstado
+                        ) : (
+                          <span className="text-muted-foreground">—</span>
+                        )}
+                      </td>
+                      
+                      <td className="p-2 min-w-[120px] text-xs">
+                        {sale.direccionFacturacionPais ? (
+                          sale.direccionDespachoIgualFacturacion === "true" ? 
+                            sale.direccionFacturacionCiudad : sale.direccionDespachoCiudad
+                        ) : (
+                          <span className="text-muted-foreground">—</span>
+                        )}
+                      </td>
+                      
                       <td className="p-2 min-w-[300px] text-xs">
                         {sale.direccionFacturacionPais ? (
                           sale.direccionDespachoIgualFacturacion === "true" ? (
                             <div className="text-xs space-y-1 max-w-72">
                               <div className="font-medium">{sale.direccionFacturacionDireccion}</div>
-                              <div>
-                                {sale.direccionFacturacionCiudad}, {sale.direccionFacturacionEstado}
-                              </div>
                               <div>{sale.direccionFacturacionPais}</div>
                               {sale.direccionFacturacionUrbanizacion && (
                                 <div className="text-muted-foreground">Urb. {sale.direccionFacturacionUrbanizacion}</div>
@@ -749,9 +766,6 @@ export default function DispatchTable({
                           ) : (
                             <div className="text-xs space-y-1 max-w-72">
                               <div className="font-medium">{sale.direccionDespachoDireccion}</div>
-                              <div>
-                                {sale.direccionDespachoCiudad}, {sale.direccionDespachoEstado}
-                              </div>
                               <div>{sale.direccionDespachoPais}</div>
                               {sale.direccionDespachoUrbanizacion && (
                                 <div className="text-muted-foreground">Urb. {sale.direccionDespachoUrbanizacion}</div>
