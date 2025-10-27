@@ -1220,11 +1220,8 @@ export default function SalesTable({
                     Esta acción cambiará el estado de entrega a "A devolver" en todos los registros del sistema.
                   </div>
                   <div className="text-foreground font-semibold">
-                    Por favor, antes de marcar la devolución asegúrate de explicar en la sección de <span className="underline">Notas</span> las razones por las cuales el producto será devuelto.
+                    Por favor, antes de confirmar la devolución asegúrate de explicar en <span className="underline">Notas</span> cualquier observación que facilite los procesos posteriores.
                   </div>
-                </div>
-                <div className="text-sm text-muted-foreground">
-                  <strong>Si no has documentado las razones:</strong> Rechaza esta acción, llena las Notas con la explicación correspondiente y luego vuelve a esta pantalla. <strong>Si ya lo hiciste:</strong> Continúa y confirma la devolución.
                 </div>
                 
                 <div className="pt-4 border-t border-border">
