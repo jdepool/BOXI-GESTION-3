@@ -598,7 +598,7 @@ export function VerificacionPagosCasheaTab() {
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
             <AlertCircle className="h-4 w-4" />
-            Pagos Pendientes por Verificación
+            Pagos en Bs. Por Verificar
           </CardTitle>
         </CardHeader>
         <CardContent>
