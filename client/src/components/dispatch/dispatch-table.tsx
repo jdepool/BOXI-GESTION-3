@@ -665,7 +665,7 @@ export default function DispatchTable({
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[100px]">Especial</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[120px]">Fecha</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[150px]">Asesor</th>
-                    <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[200px]">Notas</th>
+                    <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[180px]">Notas</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[180px]">Transportista</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[150px]">Nro Guía</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[150px]">Fecha Despacho</th>
@@ -811,7 +811,7 @@ export default function DispatchTable({
                         {sale.asesorId ? (asesorMap[sale.asesorId] || '...') : <span className="text-muted-foreground">Sin asesor</span>}
                       </td>
                       
-                      <td className="p-2 min-w-[250px]">
+                      <td className="p-2 min-w-[180px]">
                         {editingNotesId === sale.id ? (
                           <AutoExpandingTextarea
                             value={notesValue}
