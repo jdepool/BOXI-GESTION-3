@@ -662,6 +662,7 @@ export default function DispatchTable({
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[120px]">SKU</th>
                     <th className="text-center p-2 text-xs font-medium text-muted-foreground min-w-[80px]">Cant.</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[200px]">Email</th>
+                    <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[100px]">Especial</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[120px]">Fecha</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[150px]">Asesor</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[200px]">Notas</th>
@@ -793,6 +794,14 @@ export default function DispatchTable({
                       <td className="p-2 min-w-[80px] text-center text-xs">{sale.cantidad}</td>
                       
                       <td className="p-2 min-w-[200px] text-xs">{sale.email}</td>
+                      
+                      <td className="p-2 min-w-[100px]">
+                        {sale.medidaEspecial && (
+                          <Badge className="bg-blue-500 hover:bg-blue-600 text-white text-xs">
+                            {sale.medidaEspecial}
+                          </Badge>
+                        )}
+                      </td>
                       
                       <td className="p-2 min-w-[120px] text-xs">
                         {new Date(sale.fecha).toLocaleDateString('es-ES')}

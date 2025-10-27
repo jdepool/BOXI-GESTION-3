@@ -661,6 +661,7 @@ export default function SalesTable({
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[100px]">Cedula</th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[120px]">Telefono</th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[160px]">Email</th>
+                <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[100px]">Especial</th>
                 {showDeliveryDateColumn && (
                   <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[130px]">Fecha Compromiso Entrega</th>
                 )}
@@ -682,7 +683,7 @@ export default function SalesTable({
                   <td colSpan={
                     (showDeliveryDateColumn ? 1 : 0) + 
                     (showSeguimientoColumns ? 1 : 0) + 
-                    (activeTab === "lista" ? 24 : 23) -
+                    (activeTab === "lista" ? 25 : 24) -
                     ((activeTab === "manual" || activeTab === "reservas") ? 4 : 0)
                   } className="text-center p-8 text-muted-foreground">
                     No hay datos disponibles
@@ -804,6 +805,13 @@ export default function SalesTable({
                     </td>
                     <td className="p-2 min-w-[160px] text-xs text-muted-foreground truncate" title={sale.email || undefined}>
                       {sale.email || 'N/A'}
+                    </td>
+                    <td className="p-2 min-w-[100px]">
+                      {sale.medidaEspecial && (
+                        <Badge className="bg-blue-500 hover:bg-blue-600 text-white text-xs">
+                          {sale.medidaEspecial}
+                        </Badge>
+                      )}
                     </td>
                     {showDeliveryDateColumn && (
                       <td className="p-2 min-w-[130px]">
