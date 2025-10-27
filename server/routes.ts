@@ -6246,29 +6246,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // POST /api/test-email - Send test email (TEMPORARY - for testing email structure)
   app.post("/api/test-email", async (req, res) => {
     try {
-      const { email } = req.body;
+      const { email, canal } = req.body;
       
       if (!email) {
         return res.status(400).json({ error: "Email address is required" });
       }
 
-      // Sample email data with multiple products (using ShopMom to showcase Mompox branding)
+      // Determine if testing Mompox or Boxi based on canal parameter (default to ShopMom for Mompox)
+      const testCanal = canal || "ShopMom";
+      const isMompox = ['Cashea MP', 'ShopMom', 'Manual MP', 'Tienda MP'].includes(testCanal);
+      
+      // Sample email data with multiple products
       const emailData: OrderEmailData = {
         customerName: "María Eugenia Labrador",
         customerEmail: email,
-        orderNumber: "TEST-30001",
-        products: [
+        orderNumber: isMompox ? "TEST-30001" : "TEST-10001",
+        products: isMompox ? [
           { name: "Mompox Premium Sleep Set", quantity: 1 },
           { name: "Mompox Comfort Pillow", quantity: 2 },
           { name: "Mompox Sleep Essentials", quantity: 1 }
+        ] : [
+          { name: "Colchón Matrimonial Premium", quantity: 1 },
+          { name: "Almohada Viscoelástica", quantity: 2 },
+          { name: "Base para Colchón", quantity: 1 }
         ],
-        totalOrderUsd: 650.00,
+        totalOrderUsd: isMompox ? 650.00 : 850.00,
         fecha: new Date().toISOString(),
-        canal: "ShopMom",
+        canal: testCanal,
         shippingAddress: "Av. Principal #123, Urbanización Los Pinos, Caracas, Miranda, Venezuela",
-        montoInicialBs: "1500.00",
-        montoInicialUsd: "40.00",
-        referenciaInicial: "MP0123456789"
+        montoInicialBs: isMompox ? "1500.00" : "1800.00",
+        montoInicialUsd: isMompox ? "40.00" : "50.00",
+        referenciaInicial: isMompox ? "MP0123456789" : "0123456789"
       };
 
       // Send the test email

@@ -1,4 +1,5 @@
 import { Client } from '@microsoft/microsoft-graph-client';
+import nodemailer from 'nodemailer';
 
 let connectionSettings: any;
 
@@ -251,9 +252,94 @@ export function generateOrderConfirmationHTML(data: OrderEmailData): string {
   `.trim();
 }
 
+// Create Gmail transporter for Mompox emails
+function createGmailTransporter() {
+  return nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: process.env.GMAIL_MOMPOX_USER,
+      pass: process.env.GMAIL_MOMPOX_PASSWORD
+    }
+  });
+}
+
+// Send email via Gmail (for Mompox channels)
+async function sendViaGmail(orderData: OrderEmailData, emailContent: string, logoPath: string): Promise<boolean> {
+  const transporter = createGmailTransporter();
+  const fs = await import('fs');
+  
+  const mompoxChannels = ['Cashea MP', 'ShopMom', 'Manual MP', 'Tienda MP'];
+  const isMompoxChannel = mompoxChannels.includes(orderData.canal);
+  const brandSuffix = isMompoxChannel ? 'Mompox' : 'BoxiSleep';
+  
+  const mailOptions = {
+    from: `"${brandSuffix}" <${process.env.GMAIL_MOMPOX_USER}>`,
+    to: `"${orderData.customerName}" <${orderData.customerEmail}>`,
+    subject: `Recepción de Información de Pago Orden #${orderData.orderNumber} - ${brandSuffix}`,
+    html: emailContent,
+    attachments: [
+      {
+        filename: 'boxisleeplogo.jpg',
+        path: logoPath,
+        cid: 'boxisleeplogo'
+      }
+    ]
+  };
+  
+  await transporter.sendMail(mailOptions);
+  console.log(`Order confirmation email sent via Gmail to ${orderData.customerEmail} for order ${orderData.orderNumber}`);
+  return true;
+}
+
+// Send email via Outlook (for Boxi channels)
+async function sendViaOutlook(orderData: OrderEmailData, emailContent: string, logoPath: string): Promise<boolean> {
+  const client = await getUncachableOutlookClient();
+  const fs = await import('fs');
+  
+  const mompoxChannels = ['Cashea MP', 'ShopMom', 'Manual MP', 'Tienda MP'];
+  const isMompoxChannel = mompoxChannels.includes(orderData.canal);
+  
+  const logoBuffer = fs.readFileSync(logoPath);
+  const logoBase64 = logoBuffer.toString('base64');
+  
+  const brandSuffix = isMompoxChannel ? 'Mompox' : 'BoxiSleep';
+  
+  const message = {
+    subject: `Recepción de Información de Pago Orden #${orderData.orderNumber} - ${brandSuffix}`,
+    body: {
+      contentType: 'HTML',
+      content: emailContent
+    },
+    toRecipients: [
+      {
+        emailAddress: {
+          address: orderData.customerEmail,
+          name: orderData.customerName
+        }
+      }
+    ],
+    attachments: [
+      {
+        '@odata.type': '#microsoft.graph.fileAttachment',
+        name: 'boxisleeplogo.jpg',
+        contentType: 'image/jpeg',
+        contentBytes: logoBase64,
+        contentId: 'boxisleeplogo',
+        isInline: true
+      }
+    ]
+  };
+
+  await client.api('/me/sendMail').post({
+    message: message
+  });
+
+  console.log(`Order confirmation email sent via Outlook to ${orderData.customerEmail} for order ${orderData.orderNumber}`);
+  return true;
+}
+
 export async function sendOrderConfirmationEmail(orderData: OrderEmailData): Promise<boolean> {
   try {
-    const client = await getUncachableOutlookClient();
     const fs = await import('fs');
     const path = await import('path');
     
@@ -263,49 +349,20 @@ export async function sendOrderConfirmationEmail(orderData: OrderEmailData): Pro
     const mompoxChannels = ['Cashea MP', 'ShopMom', 'Manual MP', 'Tienda MP'];
     const isMompoxChannel = mompoxChannels.includes(orderData.canal);
     
-    // Read appropriate logo file and convert to base64
+    // Read appropriate logo file
     const logoFileName = isMompoxChannel 
       ? 'images_1761506222071.jpeg' 
       : 'BOXILOGO_1759265713831.jpg';
-    const logoContentType = 'image/jpeg';
     const logoPath = path.join(process.cwd(), 'attached_assets', logoFileName);
-    const logoBuffer = fs.readFileSync(logoPath);
-    const logoBase64 = logoBuffer.toString('base64');
     
-    const brandSuffix = isMompoxChannel ? 'Mompox' : 'BoxiSleep';
-    
-    const message = {
-      subject: `Recepción de Información de Pago Orden #${orderData.orderNumber} - ${brandSuffix}`,
-      body: {
-        contentType: 'HTML',
-        content: emailContent
-      },
-      toRecipients: [
-        {
-          emailAddress: {
-            address: orderData.customerEmail,
-            name: orderData.customerName
-          }
-        }
-      ],
-      attachments: [
-        {
-          '@odata.type': '#microsoft.graph.fileAttachment',
-          name: 'boxisleeplogo.jpg',
-          contentType: logoContentType,
-          contentBytes: logoBase64,
-          contentId: 'boxisleeplogo',
-          isInline: true
-        }
-      ]
-    };
-
-    await client.api('/me/sendMail').post({
-      message: message
-    });
-
-    console.log(`Order confirmation email sent successfully to ${orderData.customerEmail} for order ${orderData.orderNumber}`);
-    return true;
+    // Route email based on channel
+    if (isMompoxChannel) {
+      // Mompox channels use Gmail
+      return await sendViaGmail(orderData, emailContent, logoPath);
+    } else {
+      // Boxi channels use Outlook
+      return await sendViaOutlook(orderData, emailContent, logoPath);
+    }
   } catch (error) {
     console.error('Error sending order confirmation email:', error);
     throw error;
