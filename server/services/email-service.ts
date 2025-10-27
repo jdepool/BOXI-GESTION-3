@@ -90,7 +90,7 @@ export function generateOrderConfirmationHTML(data: OrderEmailData): string {
         .header {
             background-color: ${brandColor};
             color: ${textColor};
-            padding: ${isMompox ? '12px 20px' : '20px'};
+            padding: ${isMompox ? '18px 20px 12px 20px' : '20px'};
             text-align: center;
             border-radius: 8px 8px 0 0;
         }
