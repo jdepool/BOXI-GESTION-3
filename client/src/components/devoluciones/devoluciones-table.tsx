@@ -377,7 +377,7 @@ export default function DevolucionesTable({
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[200px]">Email</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[200px]">Notas</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[200px]">Datos Devolución</th>
-                    <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[150px]">Fecha Devolución</th>
+                    <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[150px]">Finalización de Devolución</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[120px]">Acciones</th>
                   </tr>
                 </thead>
