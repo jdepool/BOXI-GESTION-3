@@ -90,7 +90,7 @@ export function generateOrderConfirmationHTML(data: OrderEmailData): string {
         .header {
             background-color: ${brandColor};
             color: ${textColor};
-            padding: 20px;
+            padding: ${isMompox ? '12px 20px' : '20px'};
             text-align: center;
             border-radius: 8px 8px 0 0;
         }
@@ -155,11 +155,11 @@ export function generateOrderConfirmationHTML(data: OrderEmailData): string {
 </head>
 <body>
     <div class="header">
-        <h1 style="color: ${textColor}; margin: 10px 0;">Recepción de Información de Pago</h1>
+        <h1 style="color: ${textColor}; margin: ${isMompox ? '0' : '10px 0'};">Recepción de Información de Pago</h1>
     </div>
     
     ${isMompox ? `
-    <div style="text-align: center; padding: 20px 0; background-color: ${brandColor};">
+    <div style="text-align: center; padding: 8px 0 12px 0; background-color: ${brandColor};">
         <img src="cid:boxisleeplogo" 
              alt="Mompox Logo" 
              style="display: block; width: 280px; max-width: 100%; height: auto; margin: 0 auto;" />
