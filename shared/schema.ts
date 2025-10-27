@@ -233,6 +233,7 @@ export const sales = pgTable("sales", {
   fechaDespacho: varchar("fecha_despacho", { length: 10 }),
   fechaCliente: varchar("fecha_cliente", { length: 10 }),
   fechaDevolucion: varchar("fecha_devolucion", { length: 10 }),
+  datosDevolucion: text("datos_devolucion"),
   // Email tracking
   emailSentAt: timestamp("email_sent_at"),
   emailFleteSentAt: timestamp("email_flete_sent_at"),
