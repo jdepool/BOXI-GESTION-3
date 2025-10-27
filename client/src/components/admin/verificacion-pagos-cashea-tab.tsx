@@ -49,11 +49,11 @@ export function VerificacionPagosCasheaTab() {
   const queryClient = useQueryClient();
 
   // Get payments for automatic verification (Conciliación tab)
-  // Filter: Por verificar status, Pendiente/En proceso orders, with Bs amounts (for bank statement matching)
+  // Filter: Por verificar status, with Bs amounts (for bank statement matching)
   const { data: pendingPaymentsData, isLoading } = useQuery<{ data: any[]; total: number }>({
-    queryKey: ["/api/sales/verification-payments", { estadoVerificacion: "Por verificar", estadoEntrega: "Pendiente,En proceso" }],
+    queryKey: ["/api/sales/verification-payments", { estadoVerificacion: "Por verificar" }],
     queryFn: () => 
-      fetch("/api/sales/verification-payments?estadoVerificacion=Por%20verificar&estadoEntrega=Pendiente,En%20proceso&limit=9999")
+      fetch("/api/sales/verification-payments?estadoVerificacion=Por%20verificar&limit=9999")
         .then(res => res.json()),
     staleTime: 0, // Always fetch fresh data
     gcTime: 0, // Don't cache data
@@ -80,7 +80,7 @@ export function VerificacionPagosCasheaTab() {
       apiRequest("POST", "/api/admin/verify-cashea-payments", { matches }),
     onSuccess: (data: any, variables: PaymentMatch[]) => {
       queryClient.invalidateQueries({ queryKey: ["/api/sales"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/sales/verification-payments"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/sales/verification-payments", { estadoVerificacion: "Por verificar" }] });
       queryClient.invalidateQueries({ queryKey: ["/api/sales/orders"] });
       queryClient.invalidateQueries({ queryKey: ["/api/sales/payments"] });
       
