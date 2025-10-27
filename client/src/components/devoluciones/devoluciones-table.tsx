@@ -120,6 +120,33 @@ export default function DevolucionesTable({
     updateDeliveryStatusMutation.mutate({ saleId, status: newStatus });
   };
 
+  const updateTipoDevolucionMutation = useMutation({
+    mutationFn: async ({ saleId, tipoDevolucion }: { saleId: string; tipoDevolucion: string }) => {
+      return apiRequest("PATCH", `/api/sales/${saleId}`, { tipoDevolucion });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ 
+        predicate: (query) => Array.isArray(query.queryKey) && typeof query.queryKey[0] === 'string' && query.queryKey[0].startsWith('/api/sales')
+      });
+      toast({
+        title: "Tipo de Devolución actualizado",
+        description: "El tipo de devolución ha sido actualizado correctamente.",
+      });
+    },
+    onError: (error) => {
+      console.error('Failed to update tipo devolucion:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo actualizar el tipo de devolución.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleTipoDevolucionChange = (saleId: string, tipoDevolucion: string) => {
+    updateTipoDevolucionMutation.mutate({ saleId, tipoDevolucion });
+  };
+
   const updateFechaDevolucionMutation = useMutation({
     mutationFn: async ({ saleId, fechaDevolucion }: { saleId: string; fechaDevolucion: string | null }) => {
       return apiRequest("PUT", `/api/sales/${saleId}/fecha-devolucion`, { fechaDevolucion });
@@ -361,11 +388,12 @@ export default function DevolucionesTable({
         ) : (
           <div className="overflow-x-auto overflow-y-auto max-h-[calc(100vh-280px)] bg-background">
             <div className="min-w-max">
-              <table className="w-full min-w-[2550px] relative">
+              <table className="w-full min-w-[2680px] relative">
                 <thead className="bg-muted sticky top-0 z-10">
                   <tr>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[100px] sticky left-0 bg-muted z-20 border-r border-border shadow-[2px_0_5px_rgba(0,0,0,0.1)]">Orden</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[120px] sticky left-[100px] bg-muted z-20 border-r border-border shadow-[2px_0_5px_rgba(0,0,0,0.1)]">Estado Entrega</th>
+                    <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[130px]">Tipo Devolución</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[200px]">Nombre</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[150px]">Teléfono</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[120px]">Cédula</th>
@@ -411,6 +439,22 @@ export default function DevolucionesTable({
                             <SelectItem value="A devolver">A devolver</SelectItem>
                             <SelectItem value="Devuelto">Devuelto</SelectItem>
                             <SelectItem value="Cancelada">Cancelada</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </td>
+
+                      <td className="p-2 min-w-[130px] text-xs">
+                        <Select
+                          value={sale.tipoDevolucion || ""}
+                          onValueChange={(newTipo) => handleTipoDevolucionChange(sale.id, newTipo)}
+                          disabled={updateTipoDevolucionMutation.isPending}
+                        >
+                          <SelectTrigger className="w-32 h-8 text-xs" data-testid={`tipo-devolucion-select-${sale.id}`}>
+                            <SelectValue placeholder="Seleccionar" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="101 noches">101 noches</SelectItem>
+                            <SelectItem value="Garantía">Garantía</SelectItem>
                           </SelectContent>
                         </Select>
                       </td>
