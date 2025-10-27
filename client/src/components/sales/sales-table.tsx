@@ -1170,9 +1170,6 @@ export default function SalesTable({
                     Por favor, antes de cancelar la orden asegúrate de explicar en la sección de <span className="underline">Notas</span> las razones por las cuales la orden ha sido cancelada.
                   </div>
                 </div>
-                <div className="text-sm text-muted-foreground">
-                  <strong>Si no has documentado las razones:</strong> Rechaza esta acción, llena las Notas con la explicación correspondiente y luego vuelve a esta pantalla. <strong>Si ya lo hiciste:</strong> Continúa y confirma la cancelación.
-                </div>
               </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
