@@ -67,6 +67,9 @@ export default function DevolucionesTable({
   const [editingNotesId, setEditingNotesId] = useState<string | null>(null);
   const [notesValue, setNotesValue] = useState("");
   const [originalNotesValue, setOriginalNotesValue] = useState("");
+  const [editingDatosDevolucionId, setEditingDatosDevolucionId] = useState<string | null>(null);
+  const [datosDevolucionValue, setDatosDevolucionValue] = useState("");
+  const [originalDatosDevolucionValue, setOriginalDatosDevolucionValue] = useState("");
   const [openFechaDevolucionId, setOpenFechaDevolucionId] = useState<string | null>(null);
   const [openFechaClienteId, setOpenFechaClienteId] = useState<string | null>(null);
 
@@ -262,6 +265,59 @@ export default function DevolucionesTable({
     }
   };
 
+  const updateDatosDevolucionMutation = useMutation({
+    mutationFn: async ({ saleId, datosDevolucion }: { saleId: string; datosDevolucion: string }) => {
+      return apiRequest("PATCH", `/api/sales/${saleId}`, { datosDevolucion });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ 
+        predicate: (query) => Array.isArray(query.queryKey) && typeof query.queryKey[0] === 'string' && query.queryKey[0].startsWith('/api/sales')
+      });
+      setEditingDatosDevolucionId(null);
+      toast({
+        title: "Datos Devolución actualizados",
+        description: "Los datos de devolución han sido guardados correctamente.",
+      });
+    },
+    onError: (error) => {
+      console.error('Failed to update datos devolucion:', error);
+      toast({
+        title: "Error",
+        description: "No se pudieron guardar los datos de devolución.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleDatosDevolucionClick = (sale: Sale) => {
+    setEditingDatosDevolucionId(sale.id);
+    const currentDatosDevolucion = sale.datosDevolucion || "";
+    setDatosDevolucionValue(currentDatosDevolucion);
+    setOriginalDatosDevolucionValue(currentDatosDevolucion);
+  };
+
+  const handleDatosDevolucionChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setDatosDevolucionValue(e.target.value);
+  };
+
+  const handleDatosDevolucionBlur = () => {
+    if (editingDatosDevolucionId && datosDevolucionValue.trim() !== originalDatosDevolucionValue) {
+      updateDatosDevolucionMutation.mutate({ 
+        saleId: editingDatosDevolucionId, 
+        datosDevolucion: datosDevolucionValue.trim() 
+      });
+    } else {
+      setEditingDatosDevolucionId(null);
+    }
+  };
+
+  const handleDatosDevolucionKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Escape') {
+      setEditingDatosDevolucionId(null);
+      setDatosDevolucionValue(originalDatosDevolucionValue);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="p-6">
@@ -305,7 +361,7 @@ export default function DevolucionesTable({
         ) : (
           <div className="overflow-x-auto overflow-y-auto max-h-[calc(100vh-280px)] bg-background">
             <div className="min-w-max">
-              <table className="w-full min-w-[2350px] relative">
+              <table className="w-full min-w-[2550px] relative">
                 <thead className="bg-muted sticky top-0 z-10">
                   <tr>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[100px] sticky left-0 bg-muted z-20 border-r border-border shadow-[2px_0_5px_rgba(0,0,0,0.1)]">Orden</th>
@@ -320,6 +376,7 @@ export default function DevolucionesTable({
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[150px]">Recepción de Cliente</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[200px]">Email</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[200px]">Notas</th>
+                    <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[200px]">Datos Devolución</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[150px]">Fecha Devolución</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[120px]">Acciones</th>
                   </tr>
@@ -443,7 +500,7 @@ export default function DevolucionesTable({
                       
                       <td className="p-2 min-w-[200px] text-xs">{sale.email}</td>
                       
-                      <td className="p-2 min-w-[250px]">
+                      <td className="p-2 min-w-[200px]">
                         {editingNotesId === sale.id ? (
                           <AutoExpandingTextarea
                             value={notesValue}
@@ -468,6 +525,34 @@ export default function DevolucionesTable({
                             data-testid={`notes-display-${sale.id}`}
                           >
                             <NotesDisplay notes={sale.notas} />
+                          </div>
+                        )}
+                      </td>
+                      
+                      <td className="p-2 min-w-[200px]">
+                        {editingDatosDevolucionId === sale.id ? (
+                          <AutoExpandingTextarea
+                            value={datosDevolucionValue}
+                            onChange={handleDatosDevolucionChange}
+                            onBlur={handleDatosDevolucionBlur}
+                            onKeyDown={handleDatosDevolucionKeyDown}
+                            placeholder="Agregar datos de devolución..."
+                            className="text-xs"
+                            minRows={5}
+                            maxRows={10}
+                            maxLength={500}
+                            autoFocus
+                            label="Datos Devolución"
+                            data-testid={`datos-devolucion-input-${sale.id}`}
+                          />
+                        ) : (
+                          <div 
+                            className="text-xs cursor-pointer hover:bg-muted/50 rounded px-2 py-1 min-h-[28px]"
+                            title={sale.datosDevolucion || "Click para agregar datos de devolución"}
+                            onClick={() => handleDatosDevolucionClick(sale)}
+                            data-testid={`datos-devolucion-display-${sale.id}`}
+                          >
+                            <NotesDisplay notes={sale.datosDevolucion} />
                           </div>
                         )}
                       </td>
