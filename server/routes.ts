@@ -2907,6 +2907,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/sales/:saleId/return", async (req, res) => {
     try {
       const { saleId } = req.params;
+      const { tipoDevolucion } = req.body;
 
       // Validate that sale exists
       const existingSale = await storage.getSaleById(saleId);
@@ -2915,7 +2916,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const updatedSale = await storage.updateSale(saleId, { 
-        estadoEntrega: "A devolver" 
+        estadoEntrega: "A devolver",
+        tipoDevolucion: tipoDevolucion || null
       });
       
       if (!updatedSale) {

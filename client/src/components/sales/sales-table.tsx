@@ -16,6 +16,8 @@ import EditSaleModal from "./edit-sale-modal";
 import SeguimientoDialogOrden from "@/components/sales/seguimiento-dialog-orden";
 import { MapPin, Edit, CalendarIcon, Filter, ChevronDown, ChevronUp, Download, ChevronLeft, ChevronRight, RotateCcw, XCircle, Gift, Eye, Plus, Package, Banknote } from "lucide-react";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { format, parse } from "date-fns";
@@ -129,8 +131,8 @@ export default function SalesTable({
 
   // Return sale mutation
   const returnSaleMutation = useMutation({
-    mutationFn: async (saleId: string) => {
-      return apiRequest("PUT", `/api/sales/${saleId}/return`, {});
+    mutationFn: async ({ saleId, tipoDevolucion }: { saleId: string; tipoDevolucion: string }) => {
+      return apiRequest("PUT", `/api/sales/${saleId}/return`, { tipoDevolucion });
     },
     onSuccess: () => {
       // Invalidate all sales queries to refresh data across all pages
@@ -143,6 +145,7 @@ export default function SalesTable({
       });
       setReturnConfirmOpen(false);
       setSelectedSaleForReturn(null);
+      setSelectedTipoDevolucion("");
     },
     onError: () => {
       toast({
@@ -164,6 +167,7 @@ export default function SalesTable({
   const [returnConfirmOpen, setReturnConfirmOpen] = useState(false);
   const [selectedSaleForCancel, setSelectedSaleForCancel] = useState<Sale | null>(null);
   const [selectedSaleForReturn, setSelectedSaleForReturn] = useState<Sale | null>(null);
+  const [selectedTipoDevolucion, setSelectedTipoDevolucion] = useState<string>("");
   const [filtersVisible, setFiltersVisible] = useState(false);
   const [seguimientoDialogOpen, setSeguimientoDialogOpen] = useState(false);
   const [selectedSaleForSeguimiento, setSelectedSaleForSeguimiento] = useState<Sale | null>(null);
@@ -1190,7 +1194,15 @@ export default function SalesTable({
         </AlertDialogContent>
       </AlertDialog>
       {/* Return Confirmation Dialog */}
-      <AlertDialog open={returnConfirmOpen} onOpenChange={setReturnConfirmOpen}>
+      <AlertDialog 
+        open={returnConfirmOpen} 
+        onOpenChange={(open) => {
+          setReturnConfirmOpen(open);
+          if (!open) {
+            setSelectedTipoDevolucion("");
+          }
+        }}
+      >
         <AlertDialogContent data-testid="return-confirm-dialog" className="max-w-2xl">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-orange-600 dark:text-orange-500 text-xl">⚠️ ADVERTENCIA: Devolución de Producto</AlertDialogTitle>
@@ -1214,20 +1226,53 @@ export default function SalesTable({
                 <div className="text-sm text-muted-foreground">
                   <strong>Si no has documentado las razones:</strong> Rechaza esta acción, llena las Notas con la explicación correspondiente y luego vuelve a esta pantalla. <strong>Si ya lo hiciste:</strong> Continúa y confirma la devolución.
                 </div>
+                
+                <div className="pt-4 border-t border-border">
+                  <p className="text-sm font-medium text-foreground mb-3">
+                    Selecciona el tipo de devolución:
+                  </p>
+                  <RadioGroup 
+                    value={selectedTipoDevolucion} 
+                    onValueChange={setSelectedTipoDevolucion}
+                    className="space-y-3"
+                  >
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="101 noches" id="tipo-101" />
+                      <Label htmlFor="tipo-101" className="cursor-pointer text-base font-normal">
+                        101 noches
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="Garantía" id="tipo-garantia" />
+                      <Label htmlFor="tipo-garantia" className="cursor-pointer text-base font-normal">
+                        Garantía
+                      </Label>
+                    </div>
+                  </RadioGroup>
+                </div>
               </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel data-testid="return-cancel">Rechazar</AlertDialogCancel>
+            <AlertDialogCancel 
+              data-testid="return-cancel"
+              onClick={() => setSelectedTipoDevolucion("")}
+            >
+              Rechazar
+            </AlertDialogCancel>
             <AlertDialogAction
               data-testid="return-confirm"
+              disabled={!selectedTipoDevolucion}
               onClick={() => {
-                if (selectedSaleForReturn) {
-                  returnSaleMutation.mutate(selectedSaleForReturn.id);
+                if (selectedSaleForReturn && selectedTipoDevolucion) {
+                  returnSaleMutation.mutate({ 
+                    saleId: selectedSaleForReturn.id,
+                    tipoDevolucion: selectedTipoDevolucion
+                  });
                 }
                 setReturnConfirmOpen(false);
               }}
-              className="bg-orange-600 hover:bg-orange-700 dark:bg-orange-600 dark:hover:bg-orange-700"
+              className="bg-orange-600 hover:bg-orange-700 dark:bg-orange-600 dark:hover:bg-orange-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Confirmar Devolución
             </AlertDialogAction>
