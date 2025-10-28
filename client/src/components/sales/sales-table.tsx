@@ -173,12 +173,12 @@ export default function SalesTable({
   const [selectedSaleForSeguimiento, setSelectedSaleForSeguimiento] = useState<Sale | null>(null);
   
   // Debounced search for orden and nombre
-  const { inputValue: searchInput, debouncedValue: debouncedSearch, setInputValue: setSearchInput } = useDebouncedSearch(parentFilters?.orden || "", 500);
+  const { inputValue: searchInput, debouncedValue: debouncedSearch, setInputValue: setSearchInput } = useDebouncedSearch(parentFilters?.search || "", 500);
   
   // Update filter when debounced value changes
   useEffect(() => {
-    if (debouncedSearch !== (parentFilters?.orden || "")) {
-      handleFilterChange('orden', debouncedSearch);
+    if (debouncedSearch !== (parentFilters?.search || "")) {
+      handleFilterChange('search', debouncedSearch);
     }
   }, [debouncedSearch]);
   
