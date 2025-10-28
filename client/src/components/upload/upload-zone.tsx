@@ -519,16 +519,29 @@ export default function UploadZone({ recentUploads, showOnlyCashea = false }: Up
         body: JSON.stringify({ records: selectedData }),
       });
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Error al importar datos');
-      }
-
       const result = await response.json();
+
+      if (!response.ok) {
+        // Handle validation errors
+        if (result.error === "Validation errors found" && result.details) {
+          const errorMessages = result.details.slice(0, 5).map((err: any) => 
+            `Fila ${err.row} (Orden: ${err.orden || 'N/A'}): ${JSON.stringify(err.error)}`
+          ).join('\n');
+          
+          toast({
+            title: `Error de validación (${result.totalErrors} errores)`,
+            description: errorMessages,
+            variant: "destructive",
+          });
+          return;
+        }
+        
+        throw new Error(result.message || result.error || 'Error al importar datos');
+      }
 
       toast({
         title: "Importación exitosa",
-        description: `${result.imported} registros importados correctamente`,
+        description: `${result.recordsImported} registros importados correctamente`,
       });
 
       // Reset form
