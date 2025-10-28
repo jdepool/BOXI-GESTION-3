@@ -2493,7 +2493,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         success: true,
         filename: req.file.originalname,
         totalRows: previewData.length,
-        previewData: previewData,
+        preview: previewData,
       });
 
     } catch (error) {
