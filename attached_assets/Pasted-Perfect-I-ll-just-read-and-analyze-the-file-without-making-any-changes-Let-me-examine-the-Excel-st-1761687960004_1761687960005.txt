@@ -1,0 +1,62 @@
+Perfect! I'll just read and analyze the file without making any changes. Let me examine the Excel structure.
+
+Show 5 more
+
+Decided on field mapping logic (5 seconds)
+Perfect! Let me get a bit more detail to understand the mapping better:
+
+Executed node -e " const XLSX = require('xlsx'); const wb = XLSX.readFile('attached_assets/Ventas Venezuela 2025 para importar en App_1761676232531.xlsx'); const sheet = wb.Sheets['CONSOLIDADO BOXI']; const data = XLSX.utils.sheet_to_json(sheet, {header: 1}); console.log('=== FIELD MAPPING ANALYSIS ===\n'); console.log('Row 1 (App Field Names - should be blue in Excel):'); const headers = data[0]; headers.forEach((h, i) => { if (h !== null && h !== undefined) { console.log(\ Column \${i}: \${h}\); } }); console.log('\n\nRow 2 (Excel Column Names from source):'); const sourceHeaders = data[1]; sourceHeaders.forEach((h, i) => { if (headers[i]) { console.log(\ \${headers[i]} ← \${h}\); } }); console.log('\n\nSample Data (Row 3):'); if (data[2]) { headers.forEach((h, i) => { if (h !== null && h !== undefined && data[2][i]) { console.log(\ \${h}: \${data[2][i]}\); } }); } console.log('\n\nTotal data rows:', data.length - 2); "
+
+Decided on import field mapping (7 seconds)
+Excellent! I've analyzed the Excel file. Here's what I understand:
+
+File Structure:
+Sheet: CONSOLIDADO BOXI
+Total orders to review: 4,941 rows
+Structure: Row 1 has App field names (blue headers), Row 2 has original Excel column names
+Field Mapping (Excel → App):
+Order Information:
+Orden ← NRO DE ORDEN
+Fecha ← FECHA RESERVA
+Canal ← CONTACTO
+Tipo ← TIPO DE ENTREGA (Inmediata/Reserva)
+Estado Entrega/Venta ← ESTADO DE ENTREGA
+Fecha Compromiso Entrega ← FECHA DE ENTREGA AL CLIENTE
+Notas ← OBSERVACIONES
+Customer Information:
+Nombre ← NOMBRE
+Teléfono ← TELÉFONO
+Cédula ← CÉDULA
+Email ← CORREO
+Address (Despacho):
+Estado ← ESTADO / DEPARTAMENTO
+Ciudad ← CIUDAD / MUNICIPIO
+Dirección ← DIRECCIÓN
+Product:
+Producto ← PRODUCTO
+Cantidad ← CANTIDAD
+Financial (Read-only for reference):
+Total USD ← PRECIO FINAL
+Pago Inicial/Total ← VALOR RESERVA
+Flete ← PRECIO FLETE
+Pendiente ← SALDO A PAGAR + FLETE
+Assignment:
+Asesor ← ASESOR
+Proposed Implementation Plan:
+Add "Datos Ventas previos a 31-10" section to Cargar Datos dialog
+File upload for Excel
+Parse the CONSOLIDADO BOXI sheet
+Preview Table with:
+Key columns visible: Orden, Nombre, Fecha, Canal, Producto, Tipo, Estado Entrega/Venta
+Checkbox for each row (select/deselect)
+"Select All" / "Deselect All" buttons
+Show total selected count
+Validation:
+Ensure required fields exist (Orden, Nombre, Producto, Cantidad, Canal, Tipo)
+Handle Excel date format conversion (45748 → actual date)
+Map Asesor names to asesor IDs in database
+Import Process:
+Create sales records for selected rows only
+Set appropriate defaults for missing fields
+Skip payment data (as you requested)
+Show success/error summary
