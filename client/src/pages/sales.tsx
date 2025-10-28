@@ -168,7 +168,20 @@ export default function Sales() {
   const handleFilterChange = (newFilters: Partial<typeof filters>) => {
     const normalized = { ...newFilters };
     if (normalized.estadoEntrega === "all") normalized.estadoEntrega = "";
-    setFilters(prev => ({ ...prev, ...normalized, offset: 0, canalBoxi: "true" }));
+    
+    // If a specific canal is selected, remove canalBoxi filter
+    // If canal is cleared or set to "all", restore canalBoxi filter
+    const updates: any = { ...normalized, offset: 0 };
+    if ('canal' in normalized) {
+      if (normalized.canal && normalized.canal !== "" && normalized.canal !== "all") {
+        updates.canalBoxi = undefined;
+      } else {
+        updates.canalBoxi = "true";
+        updates.canal = undefined;
+      }
+    }
+    
+    setFilters(prev => ({ ...prev, ...updates }));
   };
 
   const handlePageChange = (newOffset: number) => {
@@ -191,7 +204,20 @@ export default function Sales() {
     const normalized = { ...newFilters };
     if (normalized.asesorId === "all") normalized.asesorId = "";
     if (normalized.estadoEntrega === "all") normalized.estadoEntrega = "";
-    setPagosFilters(prev => ({ ...prev, ...normalized, offset: 0, canalBoxi: "true" }));
+    
+    // If a specific canal is selected, remove canalBoxi filter
+    // If canal is cleared or set to "all", restore canalBoxi filter
+    const updates: any = { ...normalized, offset: 0 };
+    if ('canal' in normalized) {
+      if (normalized.canal && normalized.canal !== "" && normalized.canal !== "all") {
+        updates.canalBoxi = undefined;
+      } else {
+        updates.canalBoxi = "true";
+        updates.canal = undefined;
+      }
+    }
+    
+    setPagosFilters(prev => ({ ...prev, ...updates }));
   };
 
   const handlePagosPageChange = (newOffset: number) => {
@@ -212,7 +238,19 @@ export default function Sales() {
   };
 
   const handleInmediatasFilterChange = (newFilters: Partial<typeof inmediatasFilters>) => {
-    setInmediatasFilters(prev => ({ ...prev, ...newFilters, offset: 0, canalBoxi: "true" }));
+    // If a specific canal is selected, remove canalBoxi filter
+    // If canal is cleared or set to "all", restore canalBoxi filter
+    const updates: any = { ...newFilters, offset: 0 };
+    if ('canal' in newFilters) {
+      if (newFilters.canal && newFilters.canal !== "" && newFilters.canal !== "all") {
+        updates.canalBoxi = undefined;
+      } else {
+        updates.canalBoxi = "true";
+        updates.canal = undefined;
+      }
+    }
+    
+    setInmediatasFilters(prev => ({ ...prev, ...updates }));
   };
 
   const handleInmediatasPageChange = (newOffset: number) => {
@@ -230,7 +268,19 @@ export default function Sales() {
   };
 
   const handleReservasFilterChange = (newFilters: Partial<typeof reservasFilters>) => {
-    setReservasFilters(prev => ({ ...prev, ...newFilters, offset: 0, canalBoxi: "true" }));
+    // If a specific canal is selected, remove canalBoxi filter
+    // If canal is cleared or set to "all", restore canalBoxi filter
+    const updates: any = { ...newFilters, offset: 0 };
+    if ('canal' in newFilters) {
+      if (newFilters.canal && newFilters.canal !== "" && newFilters.canal !== "all") {
+        updates.canalBoxi = undefined;
+      } else {
+        updates.canalBoxi = "true";
+        updates.canal = undefined;
+      }
+    }
+    
+    setReservasFilters(prev => ({ ...prev, ...updates }));
   };
 
   const handleReservasPageChange = (newOffset: number) => {
@@ -250,7 +300,20 @@ export default function Sales() {
   const handleProspectosFilterChange = (newFilters: Partial<typeof prospectosFilters>) => {
     const normalized = { ...newFilters };
     if (normalized.asesorId === "all") normalized.asesorId = "";
-    setProspectosFilters(prev => ({ ...prev, ...normalized, offset: 0, canalBoxi: "true" }));
+    
+    // If a specific canal is selected, remove canalBoxi filter
+    // If canal is cleared or set to "all", restore canalBoxi filter
+    const updates: any = { ...normalized, offset: 0 };
+    if ('canal' in normalized) {
+      if (normalized.canal && normalized.canal !== "" && normalized.canal !== "all") {
+        updates.canalBoxi = undefined;
+      } else {
+        updates.canalBoxi = "true";
+        updates.canal = undefined;
+      }
+    }
+    
+    setProspectosFilters(prev => ({ ...prev, ...updates }));
   };
 
   const handleProspectosPageChange = (newOffset: number) => {
