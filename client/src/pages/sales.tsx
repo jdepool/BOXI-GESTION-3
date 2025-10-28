@@ -19,6 +19,7 @@ export default function Sales() {
     canalBoxi: "true", // Filter for Boxi channels (exclude ShopMom and MP canals)
     estadoEntrega: "",
     orden: "",
+    search: "", // Search by order number or customer name
     startDate: "",
     endDate: "",
     limit: 20,
@@ -193,6 +194,7 @@ export default function Sales() {
       canalBoxi: "true",
       estadoEntrega: "",
       orden: "",
+      search: "",
       startDate: "",
       endDate: "",
       limit: 20,

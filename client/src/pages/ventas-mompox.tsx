@@ -18,6 +18,7 @@ export default function VentasMompox() {
     canalMompox: "true", // Filter for ShopMom OR canals containing "MP"
     estadoEntrega: "",
     orden: "",
+    search: "", // Search by order number or customer name
     startDate: "",
     endDate: "",
     limit: 20,
@@ -192,6 +193,7 @@ export default function VentasMompox() {
       canalMompox: "true", // Keep Mompox filter
       estadoEntrega: "",
       orden: "",
+      search: "",
       startDate: "",
       endDate: "",
       limit: 20,

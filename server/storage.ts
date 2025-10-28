@@ -26,6 +26,7 @@ export interface IStorage {
     canal?: string;
     estadoEntrega?: string;
     orden?: string;
+    search?: string; // Search by order number or customer name
     startDate?: string;
     endDate?: string;
     tipo?: string;
@@ -75,6 +76,7 @@ export interface IStorage {
     canal?: string;
     estadoEntrega?: string;
     orden?: string;
+    search?: string; // Search by order number or customer name
     startDate?: string;
     endDate?: string;
     tipo?: string;
@@ -491,7 +493,17 @@ export class DatabaseStorage implements IStorage {
     if (filters?.estadoEntrega) {
       conditions.push(eq(sales.estadoEntrega, filters.estadoEntrega));
     }
-    if (filters?.orden) {
+    // Use search if provided, otherwise fall back to orden filter
+    if (filters?.search) {
+      // Search by order number OR customer name
+      conditions.push(
+        or(
+          like(sales.orden, `%${filters.search}%`),
+          like(sales.nombre, `%${filters.search}%`)
+        )
+      );
+    } else if (filters?.orden) {
+      // Only apply orden filter if search is not being used
       conditions.push(like(sales.orden, `%${filters.orden}%`));
     }
     if (filters?.startDate) {
@@ -1451,7 +1463,17 @@ export class DatabaseStorage implements IStorage {
     if (filters?.estadoEntrega) {
       conditions.push(eq(sales.estadoEntrega, filters.estadoEntrega));
     }
-    if (filters?.orden) {
+    // Use search if provided, otherwise fall back to orden filter
+    if (filters?.search) {
+      // Search by order number OR customer name
+      conditions.push(
+        or(
+          like(sales.orden, `%${filters.search}%`),
+          like(sales.nombre, `%${filters.search}%`)
+        )
+      );
+    } else if (filters?.orden) {
+      // Only apply orden filter if search is not being used
       conditions.push(like(sales.orden, `%${filters.orden}%`));
     }
     if (filters?.startDate) {
