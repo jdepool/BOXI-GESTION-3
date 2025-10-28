@@ -392,7 +392,7 @@ export default function DevolucionesTable({
                 <thead className="bg-muted sticky top-0 z-10">
                   <tr>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[100px] sticky left-0 bg-muted z-20 border-r border-border shadow-[2px_0_5px_rgba(0,0,0,0.1)]">Orden</th>
-                    <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[120px] sticky left-[100px] bg-muted z-20 border-r border-border shadow-[2px_0_5px_rgba(0,0,0,0.1)]">Estado Entrega</th>
+                    <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[120px] sticky left-[100px] bg-muted z-20 border-r border-border shadow-[2px_0_5px_rgba(0,0,0,0.1)]">Estado Venta/Entrega</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[130px]">Tipo Devolución</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[200px]">Nombre</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[150px]">Teléfono</th>

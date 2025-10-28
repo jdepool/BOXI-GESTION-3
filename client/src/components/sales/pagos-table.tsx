@@ -453,7 +453,7 @@ export default function PagosTable({
             </div>
 
             <div>
-              <label className="text-sm font-medium mb-1 block">Estado Entrega:</label>
+              <label className="text-sm font-medium mb-1 block">Estado Venta/Entrega:</label>
               <Select 
                 value={filters?.estadoEntrega || "all"} 
                 onValueChange={(value) => handleFilterChange('estadoEntrega', value)}
@@ -510,7 +510,7 @@ export default function PagosTable({
                   Tipo
                 </th>
                 <th className="p-2 text-left text-xs font-medium text-muted-foreground min-w-[140px]">
-                  Estado Entrega
+                  Estado Venta/Entrega
                 </th>
                 <th className="p-2 text-left text-xs font-medium text-muted-foreground min-w-[120px]">
                   Asesor

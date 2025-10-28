@@ -170,7 +170,7 @@ export default function SaleDetailModal({ sale, onClose }: SaleDetailModalProps)
                 </Badge>
               </p>
               <p>
-                <span className="text-muted-foreground">Estado Entrega:</span> 
+                <span className="text-muted-foreground">Estado Venta/Entrega:</span> 
                 <Badge className={`${getEstadoEntregaBadgeClass(sale.estadoEntrega)} ml-2`}>
                   {sale.estadoEntrega}
                 </Badge>

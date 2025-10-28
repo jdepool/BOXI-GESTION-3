@@ -648,7 +648,7 @@ export default function SalesTable({
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[90px]">Fecha</th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[80px]">Canal</th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[90px]">Tipo</th>
-                <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[120px]">Estado Entrega</th>
+                <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[120px]">Estado Venta/Entrega</th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[120px]">Total Orden USD</th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[100px]">Total USD</th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[140px]">Producto</th>
