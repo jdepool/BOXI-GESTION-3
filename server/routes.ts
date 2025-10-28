@@ -2516,42 +2516,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log(`📥 Starting historical import of ${records.length} rows`);
 
+      // Helper function to safely convert values to strings
+      const toStringOrNull = (value: any) => {
+        if (value === null || value === undefined || value === '') return null;
+        return String(value);
+      };
+
+      const toNumberOrDefault = (value: any, defaultValue: number) => {
+        if (value === null || value === undefined || value === '') return defaultValue;
+        const num = Number(value);
+        return isNaN(num) ? defaultValue : num;
+      };
+
       // Convert preview data to sales records
       const salesData = records.map((row: any) => ({
-        nombre: row.nombre ? String(row.nombre) : null,
-        cedula: row.cedula ? String(row.cedula) : null,
-        telefono: row.telefono ? String(row.telefono) : null,
-        email: row.email ? String(row.email) : null,
-        totalUsd: row.totalUsd ? String(row.totalUsd) : null,
+        nombre: toStringOrNull(row.nombre),
+        cedula: toStringOrNull(row.cedula),
+        telefono: toStringOrNull(row.telefono),
+        email: toStringOrNull(row.email),
+        totalUsd: toStringOrNull(row.totalUsd),
         totalOrderUsd: null, // Not in historical data
         fecha: row.fecha ? new Date(row.fecha) : new Date(),
-        canal: row.canal ? String(row.canal) : null,
+        canal: toStringOrNull(row.canal),
         estadoPagoInicial: null,
-        pagoInicialUsd: row.pagoInicialUsd ? String(row.pagoInicialUsd) : null,
+        pagoInicialUsd: toStringOrNull(row.pagoInicialUsd),
         metodoPagoId: null,
         bancoReceptorInicial: null,
-        orden: row.orden ? String(row.orden) : null,
+        orden: toStringOrNull(row.orden),
         factura: null,
         referenciaInicial: null,
         montoInicialBs: null,
         montoInicialUsd: null,
-        estadoEntrega: row.estadoEntrega ? String(row.estadoEntrega) : 'Pendiente',
-        product: row.producto ? String(row.producto) : null,
+        estadoEntrega: toStringOrNull(row.estadoEntrega) || 'Pendiente',
+        product: toStringOrNull(row.producto),
         sku: null,
-        cantidad: row.cantidad ? Number(row.cantidad) : 1,
-        direccionDespacho: row.direccion ? String(row.direccion) : null,
-        estadoDespacho: row.estado ? String(row.estado) : null,
-        ciudadDespacho: row.ciudad ? String(row.ciudad) : null,
+        cantidad: toNumberOrDefault(row.cantidad, 1),
+        direccionDespacho: toStringOrNull(row.direccion),
+        estadoDespacho: toStringOrNull(row.estado),
+        ciudadDespacho: toStringOrNull(row.ciudad),
         direccionFacturacion: null,
         estadoFacturacion: null,
         ciudadFacturacion: null,
-        fleteUsd: row.fleteUsd ? String(row.fleteUsd) : null,
+        fleteUsd: toStringOrNull(row.fleteUsd),
         transportistaId: null,
-        tipo: row.tipo ? String(row.tipo) : 'Inmediato',
+        tipo: toStringOrNull(row.tipo) || 'Inmediato',
         fechaCompromisoEntrega: row.fechaCompromisoEntrega ? new Date(row.fechaCompromisoEntrega) : null,
         fechaEntrega: null,
-        notas: row.notas ? String(row.notas) : null,
-        asesorNombre: row.asesor ? String(row.asesor) : null, // Store as text, not ID
+        notas: toStringOrNull(row.notas),
+        asesorNombre: toStringOrNull(row.asesor), // Store as text, not ID
       }));
 
       // Validate each row
