@@ -2508,16 +2508,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Historical Sales Import - Execute selected rows
   app.post("/api/sales/import/execute", async (req, res) => {
     try {
-      const { selectedRows } = req.body;
+      const { records } = req.body;
 
-      if (!selectedRows || !Array.isArray(selectedRows) || selectedRows.length === 0) {
+      if (!records || !Array.isArray(records) || records.length === 0) {
         return res.status(400).json({ error: "No rows selected for import" });
       }
 
-      console.log(`📥 Starting historical import of ${selectedRows.length} rows`);
+      console.log(`📥 Starting historical import of ${records.length} rows`);
 
       // Convert preview data to sales records
-      const salesData = selectedRows.map((row: any) => ({
+      const salesData = records.map((row: any) => ({
         nombre: row.nombre ? String(row.nombre) : null,
         cedula: row.cedula ? String(row.cedula) : null,
         telefono: row.telefono ? String(row.telefono) : null,
