@@ -2564,8 +2564,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           validatedSales.push(validatedSale);
         } catch (error) {
           errors.push({
-            row: selectedRows[i].rowIndex,
-            orden: selectedRows[i].orden,
+            row: records[i].rowIndex,
+            orden: records[i].orden,
             error: error instanceof z.ZodError ? error.errors : String(error)
           });
         }
