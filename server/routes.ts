@@ -2516,9 +2516,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log(`📥 Starting historical import of ${records.length} rows`);
 
-      // Helper function to safely convert values to strings
+      // Helper functions for safe type conversion
       const toStringOrNull = (value: any) => {
         if (value === null || value === undefined || value === '') return null;
+        return String(value);
+      };
+
+      const toStringOrDefault = (value: any, defaultValue: string) => {
+        if (value === null || value === undefined || value === '') return defaultValue;
         return String(value);
       };
 
@@ -2528,43 +2533,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return isNaN(num) ? defaultValue : num;
       };
 
-      // Convert preview data to sales records
-      const salesData = records.map((row: any) => ({
-        nombre: toStringOrNull(row.nombre),
-        cedula: toStringOrNull(row.cedula),
-        telefono: toStringOrNull(row.telefono),
-        email: toStringOrNull(row.email),
-        totalUsd: toStringOrNull(row.totalUsd) || '0', // Default to '0' if missing
-        totalOrderUsd: null, // Not in historical data
-        fecha: row.fecha ? new Date(row.fecha) : new Date(),
-        canal: toStringOrNull(row.canal),
-        estadoPagoInicial: null,
-        pagoInicialUsd: toStringOrNull(row.pagoInicialUsd),
-        metodoPagoId: null,
-        bancoReceptorInicial: null,
-        orden: toStringOrNull(row.orden),
-        factura: null,
-        referenciaInicial: null,
-        montoInicialBs: null,
-        montoInicialUsd: null,
-        estadoEntrega: toStringOrNull(row.estadoEntrega) || 'Pendiente',
-        product: toStringOrNull(row.producto) || 'Producto sin especificar', // Default product name
-        sku: null,
-        cantidad: toNumberOrDefault(row.cantidad, 1),
-        direccionDespacho: toStringOrNull(row.direccion),
-        estadoDespacho: toStringOrNull(row.estado),
-        ciudadDespacho: toStringOrNull(row.ciudad),
-        direccionFacturacion: null,
-        estadoFacturacion: null,
-        ciudadFacturacion: null,
-        fleteUsd: toStringOrNull(row.fleteUsd),
-        transportistaId: null,
-        tipo: toStringOrNull(row.tipo) || 'Inmediato',
-        fechaCompromisoEntrega: row.fechaCompromisoEntrega ? new Date(row.fechaCompromisoEntrega) : null,
-        fechaEntrega: undefined, // Set to undefined (not null) to make it optional for validation
-        notas: toStringOrNull(row.notas),
-        asesorNombre: toStringOrNull(row.asesor), // Store as text, not ID
-      }));
+      // Convert preview data to sales records with safe defaults
+      const salesData = records.map((row: any) => {
+        // Build the sale record with explicit null/default handling
+        const saleRecord: any = {
+          nombre: toStringOrNull(row.nombre),
+          cedula: toStringOrNull(row.cedula),
+          telefono: toStringOrNull(row.telefono),
+          email: toStringOrNull(row.email),
+          totalUsd: toStringOrDefault(row.totalUsd, '0'), // Required: default to '0'
+          totalOrderUsd: null,
+          fecha: row.fecha ? new Date(row.fecha) : new Date(),
+          canal: toStringOrNull(row.canal),
+          estadoPagoInicial: null,
+          pagoInicialUsd: toStringOrNull(row.pagoInicialUsd),
+          metodoPagoId: null,
+          bancoReceptorInicial: null,
+          orden: toStringOrNull(row.orden),
+          factura: null,
+          referenciaInicial: null,
+          montoInicialBs: null,
+          montoInicialUsd: null,
+          estadoEntrega: toStringOrDefault(row.estadoEntrega, 'Pendiente'),
+          product: toStringOrDefault(row.producto, 'Producto sin especificar'), // Required: default product
+          sku: null,
+          cantidad: toNumberOrDefault(row.cantidad, 1), // Required: default to 1
+          direccionDespacho: toStringOrNull(row.direccion),
+          estadoDespacho: toStringOrNull(row.estado),
+          ciudadDespacho: toStringOrNull(row.ciudad),
+          direccionFacturacion: null,
+          estadoFacturacion: null,
+          ciudadFacturacion: null,
+          fleteUsd: toStringOrNull(row.fleteUsd),
+          transportistaId: null,
+          tipo: toStringOrDefault(row.tipo, 'Inmediato'),
+          fechaCompromisoEntrega: row.fechaCompromisoEntrega ? new Date(row.fechaCompromisoEntrega) : null,
+          notas: toStringOrNull(row.notas),
+          asesorNombre: toStringOrNull(row.asesor),
+        };
+
+        // Don't set fechaEntrega at all - let the schema handle it as optional
+        // This avoids the null vs undefined issue
+        
+        return saleRecord;
+      });
 
       // Preprocess and validate each row
       const validatedSales = [];
