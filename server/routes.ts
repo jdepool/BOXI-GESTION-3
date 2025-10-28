@@ -2534,7 +2534,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         cedula: toStringOrNull(row.cedula),
         telefono: toStringOrNull(row.telefono),
         email: toStringOrNull(row.email),
-        totalUsd: toStringOrNull(row.totalUsd),
+        totalUsd: toStringOrNull(row.totalUsd), // Required - will fail validation if null
         totalOrderUsd: null, // Not in historical data
         fecha: row.fecha ? new Date(row.fecha) : new Date(),
         canal: toStringOrNull(row.canal),
@@ -2548,7 +2548,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         montoInicialBs: null,
         montoInicialUsd: null,
         estadoEntrega: toStringOrNull(row.estadoEntrega) || 'Pendiente',
-        product: toStringOrNull(row.producto),
+        product: toStringOrNull(row.producto) || 'Producto sin especificar', // Default product name
         sku: null,
         cantidad: toNumberOrDefault(row.cantidad, 1),
         direccionDespacho: toStringOrNull(row.direccion),
@@ -2561,7 +2561,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         transportistaId: null,
         tipo: toStringOrNull(row.tipo) || 'Inmediato',
         fechaCompromisoEntrega: row.fechaCompromisoEntrega ? new Date(row.fechaCompromisoEntrega) : null,
-        fechaEntrega: null,
+        fechaEntrega: undefined, // Set to undefined (not null) to make it optional for validation
         notas: toStringOrNull(row.notas),
         asesorNombre: toStringOrNull(row.asesor), // Store as text, not ID
       }));
