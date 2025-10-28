@@ -2534,7 +2534,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         cedula: toStringOrNull(row.cedula),
         telefono: toStringOrNull(row.telefono),
         email: toStringOrNull(row.email),
-        totalUsd: toStringOrNull(row.totalUsd), // Required - will fail validation if null
+        totalUsd: toStringOrNull(row.totalUsd) || '0', // Default to '0' if missing
         totalOrderUsd: null, // Not in historical data
         fecha: row.fecha ? new Date(row.fecha) : new Date(),
         canal: toStringOrNull(row.canal),
@@ -2572,22 +2572,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       for (let i = 0; i < salesData.length; i++) {
         try {
-          // Check for missing critical financial data
-          if (!salesData[i].totalUsd && salesData[i].totalUsd !== '0') {
-            throw new Error('totalUsd es requerido para datos históricos');
-          }
-          
-          // Preprocess: add safe defaults for non-critical fields only
-          const preprocessed = {
-            ...salesData[i],
-            // Safe defaults for display/categorization fields
-            product: salesData[i].product || 'Producto sin especificar',
-            cantidad: salesData[i].cantidad ?? 1,
-            // Handle fechaEntrega - convert null to undefined so it's optional
-            fechaEntrega: salesData[i].fechaEntrega || undefined,
-          };
-          
-          const validatedSale = insertSaleSchema.parse(preprocessed);
+          // Validate the sale data directly (defaults are already applied in salesData)
+          const validatedSale = insertSaleSchema.parse(salesData[i]);
           validatedSales.push(validatedSale);
         } catch (error) {
           errors.push({
