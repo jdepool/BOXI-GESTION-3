@@ -167,7 +167,20 @@ export default function VentasMompox() {
   const handleFilterChange = (newFilters: Partial<typeof filters>) => {
     const normalized = { ...newFilters };
     if (normalized.estadoEntrega === "all") normalized.estadoEntrega = "";
-    setFilters(prev => ({ ...prev, ...normalized, offset: 0, canalMompox: "true" })); // Always maintain Mompox filter
+    
+    // If a specific canal is selected, remove canalMompox filter
+    // If canal is cleared or set to "all", restore canalMompox filter
+    const updates: any = { ...normalized, offset: 0 };
+    if ('canal' in normalized) {
+      if (normalized.canal && normalized.canal !== "" && normalized.canal !== "all") {
+        updates.canalMompox = undefined;
+      } else {
+        updates.canalMompox = "true";
+        updates.canal = undefined;
+      }
+    }
+    
+    setFilters(prev => ({ ...prev, ...updates }));
   };
 
   const handlePageChange = (newOffset: number) => {
@@ -190,7 +203,20 @@ export default function VentasMompox() {
     const normalized = { ...newFilters };
     if (normalized.asesorId === "all") normalized.asesorId = "";
     if (normalized.estadoEntrega === "all") normalized.estadoEntrega = "";
-    setPagosFilters(prev => ({ ...prev, ...normalized, offset: 0, canalMompox: "true" })); // Always maintain Mompox filter
+    
+    // If a specific canal is selected, remove canalMompox filter
+    // If canal is cleared or set to "all", restore canalMompox filter
+    const updates: any = { ...normalized, offset: 0 };
+    if ('canal' in normalized) {
+      if (normalized.canal && normalized.canal !== "" && normalized.canal !== "all") {
+        updates.canalMompox = undefined;
+      } else {
+        updates.canalMompox = "true";
+        updates.canal = undefined;
+      }
+    }
+    
+    setPagosFilters(prev => ({ ...prev, ...updates }));
   };
 
   const handlePagosPageChange = (newOffset: number) => {
@@ -211,7 +237,19 @@ export default function VentasMompox() {
   };
 
   const handleInmediatasFilterChange = (newFilters: Partial<typeof inmediatasFilters>) => {
-    setInmediatasFilters(prev => ({ ...prev, ...newFilters, offset: 0, canalMompox: "true" })); // Always maintain Mompox filter
+    // If a specific canal is selected, remove canalMompox filter
+    // If canal is cleared or set to "all", restore canalMompox filter
+    const updates: any = { ...newFilters, offset: 0 };
+    if ('canal' in newFilters) {
+      if (newFilters.canal && newFilters.canal !== "" && newFilters.canal !== "all") {
+        updates.canalMompox = undefined;
+      } else {
+        updates.canalMompox = "true";
+        updates.canal = undefined;
+      }
+    }
+    
+    setInmediatasFilters(prev => ({ ...prev, ...updates }));
   };
 
   const handleInmediatasPageChange = (newOffset: number) => {
@@ -229,7 +267,19 @@ export default function VentasMompox() {
   };
 
   const handleReservasFilterChange = (newFilters: Partial<typeof reservasFilters>) => {
-    setReservasFilters(prev => ({ ...prev, ...newFilters, offset: 0, canalMompox: "true" })); // Always maintain Mompox filter
+    // If a specific canal is selected, remove canalMompox filter
+    // If canal is cleared or set to "all", restore canalMompox filter
+    const updates: any = { ...newFilters, offset: 0 };
+    if ('canal' in newFilters) {
+      if (newFilters.canal && newFilters.canal !== "" && newFilters.canal !== "all") {
+        updates.canalMompox = undefined;
+      } else {
+        updates.canalMompox = "true";
+        updates.canal = undefined;
+      }
+    }
+    
+    setReservasFilters(prev => ({ ...prev, ...updates }));
   };
 
   const handleReservasPageChange = (newOffset: number) => {
@@ -249,7 +299,20 @@ export default function VentasMompox() {
   const handleProspectosFilterChange = (newFilters: Partial<typeof prospectosFilters>) => {
     const normalized = { ...newFilters };
     if (normalized.asesorId === "all") normalized.asesorId = "";
-    setProspectosFilters(prev => ({ ...prev, ...normalized, offset: 0, canalMompox: "true" })); // Always maintain Mompox filter
+    
+    // If a specific canal is selected, remove canalMompox filter
+    // If canal is cleared or set to "all", restore canalMompox filter
+    const updates: any = { ...normalized, offset: 0 };
+    if ('canal' in normalized) {
+      if (normalized.canal && normalized.canal !== "" && normalized.canal !== "all") {
+        updates.canalMompox = undefined;
+      } else {
+        updates.canalMompox = "true";
+        updates.canal = undefined;
+      }
+    }
+    
+    setProspectosFilters(prev => ({ ...prev, ...updates }));
   };
 
   const handleProspectosPageChange = (newOffset: number) => {
