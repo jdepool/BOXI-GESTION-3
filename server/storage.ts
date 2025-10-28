@@ -486,7 +486,7 @@ export class DatabaseStorage implements IStorage {
       // Filter for Boxi channels (exclude ShopMom and any canal containing "MP")
       conditions.push(sql`${sales.canal} != 'ShopMom' AND ${sales.canal} NOT LIKE '%MP%'`);
     } else if (filters?.canal) {
-      conditions.push(eq(sales.canal, filters.canal));
+      conditions.push(ilike(sales.canal, filters.canal));
     }
     if (filters?.estadoEntrega) {
       conditions.push(eq(sales.estadoEntrega, filters.estadoEntrega));
@@ -988,7 +988,7 @@ export class DatabaseStorage implements IStorage {
     
     // Apply other filters
     if (filters?.canal) {
-      conditions.push(eq(sales.canal, filters.canal));
+      conditions.push(ilike(sales.canal, filters.canal));
     }
     
     if (filters?.transportistaId) {
@@ -1446,7 +1446,7 @@ export class DatabaseStorage implements IStorage {
       // Filter for Boxi channels (exclude ShopMom and any canal containing "MP")
       conditions.push(sql`${sales.canal} != 'ShopMom' AND ${sales.canal} NOT LIKE '%MP%'`);
     } else if (filters?.canal) {
-      conditions.push(eq(sales.canal, filters.canal));
+      conditions.push(ilike(sales.canal, filters.canal));
     }
     if (filters?.estadoEntrega) {
       conditions.push(eq(sales.estadoEntrega, filters.estadoEntrega));
@@ -3268,7 +3268,7 @@ export class DatabaseStorage implements IStorage {
       // Filter for Boxi channels (exclude ShopMom and any canal containing "MP")
       whereConditions.push(sql`${prospectos.canal} != 'ShopMom' AND ${prospectos.canal} NOT LIKE '%MP%'`);
     } else if (filters?.canal) {
-      whereConditions.push(eq(prospectos.canal, filters.canal));
+      whereConditions.push(ilike(prospectos.canal, filters.canal));
     }
 
     if (filters?.prospecto) {
@@ -3365,7 +3365,7 @@ export class DatabaseStorage implements IStorage {
       // Filter for Boxi channels (exclude ShopMom and any canal containing "MP")
       whereConditions.push(sql`${prospectos.canal} != 'ShopMom' AND ${prospectos.canal} NOT LIKE '%MP%'`);
     } else if (filters?.canal) {
-      whereConditions.push(eq(prospectos.canal, filters.canal));
+      whereConditions.push(ilike(prospectos.canal, filters.canal));
     }
 
     if (filters?.prospecto) {
