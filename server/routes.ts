@@ -2566,13 +2566,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
         asesorNombre: toStringOrNull(row.asesor), // Store as text, not ID
       }));
 
-      // Validate each row
+      // Preprocess and validate each row
       const validatedSales = [];
       const errors = [];
 
       for (let i = 0; i < salesData.length; i++) {
         try {
-          const validatedSale = insertSaleSchema.parse(salesData[i]);
+          // Check for missing critical financial data
+          if (!salesData[i].totalUsd && salesData[i].totalUsd !== '0') {
+            throw new Error('totalUsd es requerido para datos históricos');
+          }
+          
+          // Preprocess: add safe defaults for non-critical fields only
+          const preprocessed = {
+            ...salesData[i],
+            // Safe defaults for display/categorization fields
+            product: salesData[i].product || 'Producto sin especificar',
+            cantidad: salesData[i].cantidad ?? 1,
+            // Handle fechaEntrega - convert null to undefined so it's optional
+            fechaEntrega: salesData[i].fechaEntrega || undefined,
+          };
+          
+          const validatedSale = insertSaleSchema.parse(preprocessed);
           validatedSales.push(validatedSale);
         } catch (error) {
           errors.push({
