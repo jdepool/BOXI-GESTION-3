@@ -2519,12 +2519,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Helper functions for safe type conversion
       const toStringOrNull = (value: any) => {
         if (value === null || value === undefined || value === '') return null;
-        return String(value);
+        return String(value).trim(); // Trim whitespace
       };
 
       const toStringOrDefault = (value: any, defaultValue: string) => {
         if (value === null || value === undefined || value === '') return defaultValue;
-        return String(value);
+        return String(value).trim(); // Trim whitespace
       };
 
       const toNumberOrDefault = (value: any, defaultValue: number) => {
