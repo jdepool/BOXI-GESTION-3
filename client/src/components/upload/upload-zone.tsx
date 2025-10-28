@@ -47,6 +47,13 @@ export default function UploadZone({ recentUploads, showOnlyCashea = false }: Up
   const [casheaPreviewData, setCasheaPreviewData] = useState<any[] | null>(null);
   const [isShowingCasheaPreview, setIsShowingCasheaPreview] = useState(false);
   
+  // Historical import state
+  const [historicalFile, setHistoricalFile] = useState<File | null>(null);
+  const [historicalPreview, setHistoricalPreview] = useState<any[] | null>(null);
+  const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set());
+  const [isPreviewingHistorical, setIsPreviewingHistorical] = useState(false);
+  const [isImportingHistorical, setIsImportingHistorical] = useState(false);
+  
   const { toast } = useToast();
 
   // Fetch canales data for the dropdown
@@ -405,6 +412,148 @@ export default function UploadZone({ recentUploads, showOnlyCashea = false }: Up
     updateAutomationMutation.mutate({ enabled, frequency });
   };
 
+  // Historical import handlers
+  const handleHistoricalFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!file.name.endsWith('.xlsx') && !file.name.endsWith('.xls')) {
+      toast({
+        title: "Archivo inválido",
+        description: "Solo se aceptan archivos Excel (.xlsx, .xls)",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setHistoricalFile(file);
+    setHistoricalPreview(null);
+    setSelectedRows(new Set());
+  };
+
+  const handleHistoricalPreview = async () => {
+    if (!historicalFile) {
+      toast({
+        title: "Archivo requerido",
+        description: "Selecciona un archivo Excel para previsualizar",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsPreviewingHistorical(true);
+
+    try {
+      const formData = new FormData();
+      formData.append('file', historicalFile);
+
+      const response = await fetch('/api/sales/import/preview', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Error al generar vista previa');
+      }
+
+      const result = await response.json();
+      setHistoricalPreview(result.preview);
+      setSelectedRows(new Set());
+
+      toast({
+        title: "Vista previa generada",
+        description: `${result.preview.length} registros encontrados`,
+      });
+    } catch (error) {
+      toast({
+        title: "Error al generar vista previa",
+        description: error instanceof Error ? error.message : 'Error desconocido',
+        variant: "destructive",
+      });
+    } finally {
+      setIsPreviewingHistorical(false);
+    }
+  };
+
+  const handleSelectAll = () => {
+    if (!historicalPreview) return;
+    const allIndices = new Set(historicalPreview.map((_, index) => index));
+    setSelectedRows(allIndices);
+  };
+
+  const handleDeselectAll = () => {
+    setSelectedRows(new Set());
+  };
+
+  const handleRowToggle = (index: number) => {
+    const newSelected = new Set(selectedRows);
+    if (newSelected.has(index)) {
+      newSelected.delete(index);
+    } else {
+      newSelected.add(index);
+    }
+    setSelectedRows(newSelected);
+  };
+
+  const handleHistoricalImport = async () => {
+    if (!historicalPreview || selectedRows.size === 0) {
+      toast({
+        title: "Selección requerida",
+        description: "Selecciona al menos un registro para importar",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsImportingHistorical(true);
+
+    try {
+      const selectedData = Array.from(selectedRows).map(index => historicalPreview[index]);
+
+      const response = await fetch('/api/sales/import/execute', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ records: selectedData }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Error al importar datos');
+      }
+
+      const result = await response.json();
+
+      toast({
+        title: "Importación exitosa",
+        description: `${result.imported} registros importados correctamente`,
+      });
+
+      // Reset form
+      setHistoricalFile(null);
+      setHistoricalPreview(null);
+      setSelectedRows(new Set());
+      const fileInput = document.getElementById('historical-upload') as HTMLInputElement;
+      if (fileInput) fileInput.value = '';
+
+      // Invalidate queries to refresh data
+      queryClient.invalidateQueries({ queryKey: ['/api/sales'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/sales/orders'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/uploads/recent'] });
+
+    } catch (error) {
+      toast({
+        title: "Error al importar",
+        description: error instanceof Error ? error.message : 'Error desconocido',
+        variant: "destructive",
+      });
+    } finally {
+      setIsImportingHistorical(false);
+    }
+  };
+
   // Frequency options
   const frequencyOptions = [
     { value: '30 minutes', label: 'Cada 30 minutos' },
@@ -674,9 +823,10 @@ export default function UploadZone({ recentUploads, showOnlyCashea = false }: Up
           casheaContent
         ) : (
           <Tabs defaultValue="cashea" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
+            <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="cashea">Descargar CASHEA</TabsTrigger>
               <TabsTrigger value="file">Cargar Archivo</TabsTrigger>
+              <TabsTrigger value="historical">Importar Histórico</TabsTrigger>
             </TabsList>
           
           <TabsContent value="file" className="space-y-4 mt-6">
@@ -766,6 +916,164 @@ export default function UploadZone({ recentUploads, showOnlyCashea = false }: Up
           
           <TabsContent value="cashea" className="space-y-4 mt-6">
             {casheaContent}
+          </TabsContent>
+
+          <TabsContent value="historical" className="space-y-4 mt-6">
+            <div className="space-y-4">
+              <div className="bg-muted/30 rounded-lg p-4 border border-border">
+                <div className="flex items-center space-x-2 mb-2">
+                  <i className="fas fa-info-circle text-primary"></i>
+                  <span className="text-sm font-medium">Importación Histórica</span>
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  Selecciona un archivo Excel con datos históricos de ventas. 
+                  Podrás previsualizar y seleccionar qué registros importar antes de confirmar.
+                </p>
+              </div>
+
+              <div>
+                <Label>Archivo Excel</Label>
+                <div className="mt-2">
+                  <input 
+                    type="file" 
+                    id="historical-upload" 
+                    accept=".xlsx,.xls" 
+                    className="hidden"
+                    onChange={handleHistoricalFileSelect}
+                    data-testid="historical-file-input"
+                  />
+                  <label htmlFor="historical-upload">
+                    <Button variant="outline" asChild className="w-full">
+                      <span data-testid="historical-file-select-button">
+                        <i className="fas fa-file-excel mr-2"></i>
+                        {historicalFile ? historicalFile.name : "Seleccionar Archivo Excel"}
+                      </span>
+                    </Button>
+                  </label>
+                </div>
+              </div>
+
+              {historicalFile && (
+                <Button 
+                  onClick={handleHistoricalPreview}
+                  disabled={isPreviewingHistorical}
+                  className="w-full"
+                  data-testid="button-preview-historical"
+                >
+                  {isPreviewingHistorical ? "Generando vista previa..." : "Generar Vista Previa"}
+                </Button>
+              )}
+
+              {historicalPreview && historicalPreview.length > 0 && (
+                <div className="space-y-4">
+                  <div className="bg-secondary rounded-lg p-4">
+                    <h4 className="text-md font-medium text-foreground mb-3 flex items-center justify-between">
+                      <span className="flex items-center">
+                        <i className="fas fa-table mr-2 text-primary"></i>
+                        Vista Previa de Registros
+                      </span>
+                      <Badge variant="secondary" data-testid="selected-count">
+                        {selectedRows.size} de {historicalPreview.length} seleccionados
+                      </Badge>
+                    </h4>
+
+                    <div className="flex gap-2 mb-3">
+                      <Button 
+                        onClick={handleSelectAll}
+                        variant="outline"
+                        size="sm"
+                        data-testid="button-select-all"
+                      >
+                        Seleccionar Todos
+                      </Button>
+                      <Button 
+                        onClick={handleDeselectAll}
+                        variant="outline"
+                        size="sm"
+                        data-testid="button-deselect-all"
+                      >
+                        Deseleccionar Todos
+                      </Button>
+                    </div>
+
+                    <div className="bg-background rounded border max-h-96 overflow-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead className="w-12">
+                              <i className="fas fa-check-square"></i>
+                            </TableHead>
+                            <TableHead className="font-medium text-xs">Orden</TableHead>
+                            <TableHead className="font-medium text-xs">Nombre</TableHead>
+                            <TableHead className="font-medium text-xs">Fecha</TableHead>
+                            <TableHead className="font-medium text-xs">Canal</TableHead>
+                            <TableHead className="font-medium text-xs">Producto</TableHead>
+                            <TableHead className="font-medium text-xs">Tipo</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {historicalPreview.map((row: any, index: number) => (
+                            <TableRow key={index} data-testid={`historical-row-${index}`}>
+                              <TableCell>
+                                <input
+                                  type="checkbox"
+                                  checked={selectedRows.has(index)}
+                                  onChange={() => handleRowToggle(index)}
+                                  className="h-4 w-4 cursor-pointer"
+                                  data-testid={`checkbox-row-${index}`}
+                                />
+                              </TableCell>
+                              <TableCell className="text-xs py-2">{row.orden || ''}</TableCell>
+                              <TableCell className="text-xs py-2">{row.nombre || ''}</TableCell>
+                              <TableCell className="text-xs py-2">{row.fecha || ''}</TableCell>
+                              <TableCell className="text-xs py-2">{row.canal || ''}</TableCell>
+                              <TableCell className="text-xs py-2">{row.producto || ''}</TableCell>
+                              <TableCell className="text-xs py-2">{row.tipo || ''}</TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+
+                    <div className="mt-4">
+                      <Button 
+                        onClick={handleHistoricalImport}
+                        disabled={selectedRows.size === 0 || isImportingHistorical}
+                        className="w-full"
+                        data-testid="button-import-selected"
+                      >
+                        {isImportingHistorical 
+                          ? "Importando..." 
+                          : `Importar Seleccionados (${selectedRows.size})`
+                        }
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {isPreviewingHistorical && (
+                <div className="bg-secondary rounded-lg p-4">
+                  <div className="flex items-center space-x-3">
+                    <i className="fas fa-spinner fa-spin text-primary"></i>
+                    <p className="text-sm font-medium text-foreground">
+                      Generando vista previa...
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {isImportingHistorical && (
+                <div className="bg-secondary rounded-lg p-4">
+                  <div className="flex items-center space-x-3">
+                    <i className="fas fa-spinner fa-spin text-primary"></i>
+                    <p className="text-sm font-medium text-foreground">
+                      Importando registros seleccionados...
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
           </TabsContent>
         </Tabs>
         )}

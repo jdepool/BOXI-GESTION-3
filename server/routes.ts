@@ -2374,6 +2374,233 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Helper function to convert Excel date serial numbers to YYYY-MM-DD strings
+  function convertExcelDate(excelDate: any): string | null {
+    if (!excelDate) return null;
+    
+    if (typeof excelDate === 'number') {
+      // Excel date serial number (e.g., 45748)
+      const jsDate = new Date((excelDate - 25569) * 86400 * 1000);
+      return jsDate.toISOString().split('T')[0];
+    }
+    
+    if (typeof excelDate === 'string') {
+      // Try to parse dd/mm/yyyy or d/m/yyyy format (common in Excel exports)
+      if (excelDate.includes('/')) {
+        const parts = excelDate.split('/');
+        if (parts.length === 3) {
+          const day = parseInt(parts[0], 10);
+          const month = parseInt(parts[1], 10);
+          const year = parseInt(parts[2], 10);
+          
+          // Validate the date parts
+          if (!isNaN(day) && !isNaN(month) && !isNaN(year) && 
+              day >= 1 && day <= 31 && month >= 1 && month <= 12) {
+            // Construct date in UTC to avoid timezone issues
+            const jsDate = new Date(Date.UTC(year, month - 1, day));
+            if (!isNaN(jsDate.getTime())) {
+              return jsDate.toISOString().split('T')[0];
+            }
+          }
+        }
+      }
+      
+      // Fall back to standard date parsing for ISO dates or other formats
+      try {
+        const parsed = new Date(excelDate);
+        if (!isNaN(parsed.getTime())) {
+          return parsed.toISOString().split('T')[0];
+        }
+      } catch (e) {
+        // Ignore parsing errors
+      }
+    }
+    
+    if (excelDate instanceof Date) {
+      return excelDate.toISOString().split('T')[0];
+    }
+    
+    return null;
+  }
+
+  // Historical Sales Import - Preview Excel file
+  app.post("/api/sales/import/preview", upload.single('file'), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ error: "No file uploaded" });
+      }
+
+      // Parse Excel file - expect "CONSOLIDADO BOXI" sheet
+      const workbook = XLSX.read(req.file.buffer, { type: 'buffer' });
+      
+      // Check if CONSOLIDADO BOXI sheet exists
+      if (!workbook.SheetNames.includes('CONSOLIDADO BOXI')) {
+        return res.status(400).json({ 
+          error: "Sheet 'CONSOLIDADO BOXI' not found in Excel file",
+          availableSheets: workbook.SheetNames 
+        });
+      }
+
+      const worksheet = workbook.Sheets['CONSOLIDADO BOXI'];
+      
+      // Parse with header row (row 1 has App field names in blue)
+      const rawData = XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as any[][];
+      
+      if (rawData.length < 3) {
+        return res.status(400).json({ error: "Excel file has insufficient data (need at least header + 1 data row)" });
+      }
+
+      // Row 0 is App field names (blue headers), Row 1 is original Excel column names
+      // Data starts at row 2
+      const appHeaders = rawData[0];
+      const dataRows = rawData.slice(2); // Skip both header rows
+
+      // Parse each row into preview format
+      const previewData = dataRows.map((row, index) => {
+        // Map Excel column indices to values based on App field names
+        const getCell = (headerName: string) => {
+          const colIndex = appHeaders.indexOf(headerName);
+          return colIndex >= 0 ? row[colIndex] : null;
+        };
+
+        return {
+          rowIndex: index + 3, // Excel row number (1-indexed, +2 for header rows)
+          orden: getCell('Orden'),
+          nombre: getCell('Nombre'),
+          fecha: convertExcelDate(getCell('Fecha')),
+          canal: getCell('Canal'),
+          producto: getCell('Producto'),
+          cantidad: getCell('Cantidad'),
+          tipo: getCell('Tipo'),
+          estadoEntrega: getCell('Estado Entrega/Venta'),
+          telefono: getCell('Teléfono'),
+          cedula: getCell('Cédula'),
+          email: getCell('Email'),
+          estado: getCell('Estado'),
+          ciudad: getCell('Ciudad'),
+          direccion: getCell('Dirección'),
+          fechaCompromisoEntrega: convertExcelDate(getCell('Fecha Compromiso Entrega')),
+          totalUsd: getCell('Total USD'),
+          pagoInicialUsd: getCell('Pago Inicial/Total'),
+          fleteUsd: getCell('Flete'),
+          pendiente: getCell('Pendiente'),
+          asesor: getCell('Asesor'),
+          notas: getCell('Notas'),
+        };
+      }).filter(row => row.orden || row.nombre); // Filter out completely empty rows
+
+      res.json({
+        success: true,
+        filename: req.file.originalname,
+        totalRows: previewData.length,
+        previewData: previewData,
+      });
+
+    } catch (error) {
+      console.error("Error previewing historical sales import:", error);
+      res.status(500).json({
+        error: "Failed to preview import file",
+        message: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
+  // Historical Sales Import - Execute selected rows
+  app.post("/api/sales/import/execute", async (req, res) => {
+    try {
+      const { selectedRows } = req.body;
+
+      if (!selectedRows || !Array.isArray(selectedRows) || selectedRows.length === 0) {
+        return res.status(400).json({ error: "No rows selected for import" });
+      }
+
+      console.log(`📥 Starting historical import of ${selectedRows.length} rows`);
+
+      // Convert preview data to sales records
+      const salesData = selectedRows.map((row: any) => ({
+        nombre: row.nombre ? String(row.nombre) : null,
+        cedula: row.cedula ? String(row.cedula) : null,
+        telefono: row.telefono ? String(row.telefono) : null,
+        email: row.email ? String(row.email) : null,
+        totalUsd: row.totalUsd ? String(row.totalUsd) : null,
+        totalOrderUsd: null, // Not in historical data
+        fecha: row.fecha ? new Date(row.fecha) : new Date(),
+        canal: row.canal ? String(row.canal) : null,
+        estadoPagoInicial: null,
+        pagoInicialUsd: row.pagoInicialUsd ? String(row.pagoInicialUsd) : null,
+        metodoPagoId: null,
+        bancoReceptorInicial: null,
+        orden: row.orden ? String(row.orden) : null,
+        factura: null,
+        referenciaInicial: null,
+        montoInicialBs: null,
+        montoInicialUsd: null,
+        estadoEntrega: row.estadoEntrega ? String(row.estadoEntrega) : 'Pendiente',
+        product: row.producto ? String(row.producto) : null,
+        sku: null,
+        cantidad: row.cantidad ? Number(row.cantidad) : 1,
+        direccionDespacho: row.direccion ? String(row.direccion) : null,
+        estadoDespacho: row.estado ? String(row.estado) : null,
+        ciudadDespacho: row.ciudad ? String(row.ciudad) : null,
+        direccionFacturacion: null,
+        estadoFacturacion: null,
+        ciudadFacturacion: null,
+        fleteUsd: row.fleteUsd ? String(row.fleteUsd) : null,
+        transportistaId: null,
+        tipo: row.tipo ? String(row.tipo) : 'Inmediato',
+        fechaCompromisoEntrega: row.fechaCompromisoEntrega ? new Date(row.fechaCompromisoEntrega) : null,
+        fechaEntrega: null,
+        notas: row.notas ? String(row.notas) : null,
+        asesorNombre: row.asesor ? String(row.asesor) : null, // Store as text, not ID
+      }));
+
+      // Validate each row
+      const validatedSales = [];
+      const errors = [];
+
+      for (let i = 0; i < salesData.length; i++) {
+        try {
+          const validatedSale = insertSaleSchema.parse(salesData[i]);
+          validatedSales.push(validatedSale);
+        } catch (error) {
+          errors.push({
+            row: selectedRows[i].rowIndex,
+            orden: selectedRows[i].orden,
+            error: error instanceof z.ZodError ? error.errors : String(error)
+          });
+        }
+      }
+
+      if (errors.length > 0) {
+        console.log(`⚠️ Validation errors in ${errors.length} rows`);
+        return res.status(400).json({
+          error: "Validation errors found",
+          details: errors.slice(0, 20), // Return first 20 errors
+          totalErrors: errors.length,
+          successfulRows: validatedSales.length
+        });
+      }
+
+      // Insert all validated sales into database
+      await storage.createSales(validatedSales);
+
+      console.log(`✅ Successfully imported ${validatedSales.length} historical sales records`);
+
+      res.json({
+        success: true,
+        recordsImported: validatedSales.length,
+        message: `Successfully imported ${validatedSales.length} sales records`
+      });
+
+    } catch (error) {
+      console.error("Error executing historical sales import:", error);
+      res.status(500).json({
+        error: "Failed to import sales records",
+        message: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
   // CASHEA API Functions
   async function callCasheaApi(startDate: string, endDate: string): Promise<any[]> {
     const casheaEmail = process.env.CASHEA_EMAIL;
