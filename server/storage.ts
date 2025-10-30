@@ -1792,10 +1792,11 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getProductoByNombre(nombre: string): Promise<Producto | undefined> {
+    const trimmedNombre = nombre.trim();
     const [producto] = await db
       .select()
       .from(productos)
-      .where(eq(productos.nombre, nombre))
+      .where(ilike(productos.nombre, trimmedNombre))
       .limit(1);
     return producto;
   }
