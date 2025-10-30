@@ -189,12 +189,23 @@ async function transformCasheaData(rawData: any[], storage: IStorage): Promise<a
         
         // Then, look up pricing using the SKU
         const precio = await storage.getPrecioBySkuLatest(sku);
-        if (precio && precio.precioCasheaUsd) {
+        console.log(`🔍 Pricing lookup for SKU "${sku}":`, precio ? {
+          hasPrecio: true,
+          precioCasheaUsd: precio.precioCasheaUsd,
+          type: typeof precio.precioCasheaUsd,
+          value: String(precio.precioCasheaUsd)
+        } : { hasPrecio: false });
+        
+        if (precio && precio.precioCasheaUsd !== null && precio.precioCasheaUsd !== undefined) {
           // Calculate totalUsd = precioCasheaUsd × cantidad
-          const precioCashea = parseFloat(precio.precioCasheaUsd);
-          const calculatedTotal = precioCashea * cantidad;
-          totalUsdValue = calculatedTotal.toFixed(2);
-          console.log(`✅ Cashea pricing lookup: SKU "${sku}" x ${cantidad} = $${totalUsdValue} (precioCasheaUsd from precios table)`);
+          const precioCashea = parseFloat(String(precio.precioCasheaUsd));
+          if (!isNaN(precioCashea) && precioCashea > 0) {
+            const calculatedTotal = precioCashea * cantidad;
+            totalUsdValue = calculatedTotal.toFixed(2);
+            console.log(`✅ Cashea pricing lookup: SKU "${sku}" x ${cantidad} = $${totalUsdValue} (precioCasheaUsd from precios table)`);
+          } else {
+            console.warn(`⚠️ Invalid precioCasheaUsd value for SKU "${sku}" (${precio.precioCasheaUsd}), using Cashea API total: $${totalUsdValue}`);
+          }
         } else {
           console.warn(`⚠️ No precioCasheaUsd found for SKU "${sku}", using Cashea API total: $${totalUsdValue}`);
         }
