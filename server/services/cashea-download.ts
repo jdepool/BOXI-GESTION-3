@@ -246,7 +246,8 @@ async function transformCasheaData(rawData: any[], storage: IStorage): Promise<a
       fleteGratis: false,
       notas: null,
       fechaAtencion: null,
-      product: sku,
+      product: productName,
+      sku: sku,
       cantidad: cantidad
     });
   }
