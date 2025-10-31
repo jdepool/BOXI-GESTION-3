@@ -8,7 +8,7 @@ import { eq } from "drizzle-orm";
 import { 
   insertSaleSchema, insertUploadHistorySchema, insertBancoSchema, insertTipoEgresoSchema, 
   insertProductoSchema, insertMetodoPagoSchema, insertMonedaSchema, insertCategoriaSchema,
-  insertEgresoSchema, insertEgresoPorAprobarSchema, insertPaymentInstallmentSchema, insertAsesorSchema, insertTransportistaSchema, insertPrecioSchema, insertProspectoSchema
+  insertEgresoSchema, insertEgresoPorAprobarSchema, insertPaymentInstallmentSchema, insertAsesorSchema, insertTransportistaSchema, insertEstadoSchema, insertCiudadSchema, insertPrecioSchema, insertProspectoSchema
 } from "@shared/schema";
 import { z } from "zod";
 import multer from "multer";
@@ -4655,6 +4655,123 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Delete transportista error:", error);
       res.status(500).json({ error: "Failed to delete transportista" });
+    }
+  });
+
+  // ESTADOS endpoints
+  app.get("/api/admin/estados", async (req, res) => {
+    try {
+      const estados = await storage.getEstados();
+      res.json(estados);
+    } catch (error) {
+      console.error("Fetch estados error:", error);
+      res.status(500).json({ error: "Failed to fetch estados" });
+    }
+  });
+
+  app.post("/api/admin/estados", async (req, res) => {
+    try {
+      const validatedData = insertEstadoSchema.parse(req.body);
+      const estado = await storage.createEstado(validatedData);
+      res.status(201).json(estado);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Invalid data", details: error.errors });
+      }
+      console.error("Create estado error:", error);
+      res.status(500).json({ error: "Failed to create estado" });
+    }
+  });
+
+  app.put("/api/admin/estados/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const validatedData = insertEstadoSchema.partial().parse(req.body);
+      const estado = await storage.updateEstado(id, validatedData);
+      if (!estado) {
+        return res.status(404).json({ error: "Estado not found" });
+      }
+      res.json(estado);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Invalid data", details: error.errors });
+      }
+      console.error("Update estado error:", error);
+      res.status(500).json({ error: "Failed to update estado" });
+    }
+  });
+
+  app.delete("/api/admin/estados/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const deleted = await storage.deleteEstado(id);
+      if (!deleted) {
+        return res.status(404).json({ error: "Estado not found" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Delete estado error:", error);
+      res.status(500).json({ error: "Failed to delete estado" });
+    }
+  });
+
+  // CIUDADES endpoints
+  app.get("/api/admin/ciudades", async (req, res) => {
+    try {
+      const { estadoId } = req.query;
+      const ciudades = estadoId 
+        ? await storage.getCiudadesByEstadoId(estadoId as string)
+        : await storage.getCiudades();
+      res.json(ciudades);
+    } catch (error) {
+      console.error("Fetch ciudades error:", error);
+      res.status(500).json({ error: "Failed to fetch ciudades" });
+    }
+  });
+
+  app.post("/api/admin/ciudades", async (req, res) => {
+    try {
+      const validatedData = insertCiudadSchema.parse(req.body);
+      const ciudad = await storage.createCiudad(validatedData);
+      res.status(201).json(ciudad);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Invalid data", details: error.errors });
+      }
+      console.error("Create ciudad error:", error);
+      res.status(500).json({ error: "Failed to create ciudad" });
+    }
+  });
+
+  app.put("/api/admin/ciudades/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const validatedData = insertCiudadSchema.partial().parse(req.body);
+      const ciudad = await storage.updateCiudad(id, validatedData);
+      if (!ciudad) {
+        return res.status(404).json({ error: "Ciudad not found" });
+      }
+      res.json(ciudad);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Invalid data", details: error.errors });
+      }
+      console.error("Update ciudad error:", error);
+      res.status(500).json({ error: "Failed to update ciudad" });
+    }
+  });
+
+  app.delete("/api/admin/ciudades/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const deleted = await storage.deleteCiudad(id);
+      if (!deleted) {
+        return res.status(404).json({ error: "Ciudad not found" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Delete ciudad error:", error);
+      res.status(500).json({ error: "Failed to delete ciudad" });
     }
   });
 
