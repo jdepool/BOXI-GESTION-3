@@ -752,9 +752,14 @@ export class DatabaseStorage implements IStorage {
       conditions.push(eq(sales.canal, filters.canal));
     }
 
-    // Add orden filter if provided
+    // Add orden filter if provided - search both order number AND customer name
     if (filters?.orden) {
-      conditions.push(sql`${sales.orden} ILIKE ${`%${filters.orden}%`}`);
+      conditions.push(
+        or(
+          sql`${sales.orden} ILIKE ${`%${filters.orden}%`}`,
+          sql`${sales.nombre} ILIKE ${`%${filters.orden}%`}`
+        )
+      );
     }
 
     // Add asesor filter if provided
