@@ -100,7 +100,8 @@ export default function SalesTable({
     parentFilters?.asesorId || 
     parentFilters?.orden || 
     parentFilters?.startDate || 
-    parentFilters?.endDate
+    parentFilters?.endDate ||
+    parentFilters?.search
   );
   
   // Cancel sale mutation

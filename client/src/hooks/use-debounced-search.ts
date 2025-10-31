@@ -13,15 +13,28 @@ export function useDebouncedSearch(initialValue: string = "", delay: number = 50
   const [inputValue, setInputValue] = useState(initialValue);
   const [debouncedValue, setDebouncedValue] = useState(initialValue);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const isTypingRef = useRef(false);
 
   // Sync with external filter changes (e.g., cleared filters)
+  // Always sync when filter is explicitly cleared (empty string)
+  // Otherwise, only sync if user is not actively typing
   useEffect(() => {
-    setInputValue(initialValue);
-    setDebouncedValue(initialValue);
+    const isFilterCleared = initialValue === "";
+    if ((isFilterCleared || !isTypingRef.current) && initialValue !== inputValue) {
+      setInputValue(initialValue);
+      setDebouncedValue(initialValue);
+      // Reset typing flag when filter is cleared
+      if (isFilterCleared) {
+        isTypingRef.current = false;
+      }
+    }
   }, [initialValue]);
 
   // Debounce inputValue changes
   useEffect(() => {
+    // Mark that user is typing
+    isTypingRef.current = true;
+    
     // Clear existing timer
     if (timerRef.current) {
       clearTimeout(timerRef.current);
@@ -30,6 +43,8 @@ export function useDebouncedSearch(initialValue: string = "", delay: number = 50
     // Set new timer
     timerRef.current = setTimeout(() => {
       setDebouncedValue(inputValue);
+      // Mark typing as done after debounce completes
+      isTypingRef.current = false;
     }, delay);
 
     // Cleanup on unmount or when inputValue/delay changes
