@@ -3,7 +3,7 @@ import express from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { db, withRetry } from "./db";
-import { sales } from "@shared/schema";
+import { sales, type Sale } from "@shared/schema";
 import { eq } from "drizzle-orm";
 import { 
   insertSaleSchema, insertUploadHistorySchema, insertBancoSchema, insertTipoEgresoSchema, 
@@ -3286,6 +3286,64 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Return sale error:", error);
       res.status(500).json({ error: "Failed to mark sale as returned" });
+    }
+  });
+
+  // Update sale devoluciones fields (datosDevolucion, tipoDevolucion)
+  app.patch("/api/sales/:saleId", async (req, res) => {
+    try {
+      const { saleId } = req.params;
+      
+      // Define schema for allowed fields
+      const updateDevolucionSchema = z.object({
+        datosDevolucion: z.string().nullable().optional(),
+        tipoDevolucion: z.string().nullable().optional(),
+      }).strict(); // strict() ensures no other fields are allowed
+
+      // Validate request body
+      const validationResult = updateDevolucionSchema.safeParse(req.body);
+      if (!validationResult.success) {
+        return res.status(400).json({ 
+          error: "Invalid fields in request", 
+          details: validationResult.error.errors 
+        });
+      }
+
+      const { datosDevolucion, tipoDevolucion } = validationResult.data;
+
+      // Validate that sale exists
+      const existingSale = await storage.getSaleById(saleId);
+      if (!existingSale) {
+        return res.status(404).json({ error: "Sale not found" });
+      }
+
+      // Build update object with only the allowed fields that are defined
+      const updateData: Partial<Sale> = {};
+      if (datosDevolucion !== undefined) {
+        updateData.datosDevolucion = datosDevolucion;
+      }
+      if (tipoDevolucion !== undefined) {
+        updateData.tipoDevolucion = tipoDevolucion;
+      }
+
+      // Ensure at least one field is being updated
+      if (Object.keys(updateData).length === 0) {
+        return res.status(400).json({ error: "No valid fields to update" });
+      }
+
+      const updatedSale = await storage.updateSale(saleId, updateData);
+      
+      if (!updatedSale) {
+        return res.status(500).json({ error: "Failed to update sale" });
+      }
+
+      res.json({ 
+        success: true, 
+        sale: updatedSale 
+      });
+    } catch (error) {
+      console.error("Update sale error:", error);
+      res.status(500).json({ error: "Failed to update sale" });
     }
   });
 
