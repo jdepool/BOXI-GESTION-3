@@ -15,6 +15,7 @@ import { AsesorTab } from "../components/admin/asesores-tab";
 import { TransportistasTab } from "../components/admin/transportistas-tab";
 import { SeguimientoConfigTab } from "../components/admin/seguimiento-config-tab";
 import { PreciosCostosTab } from "../components/admin/precios-costos-tab";
+import { EstadosCiudadesTab } from "../components/admin/estados-ciudades-tab";
 
 export default function Administracion() {
   const [activeTab, setActiveTab] = useState("bancos");
@@ -36,7 +37,7 @@ export default function Administracion() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-12 lg:w-auto lg:grid-cols-12">
+        <TabsList className="grid w-full grid-cols-13 lg:w-auto lg:grid-cols-13">
           <TabsTrigger value="bancos" className="text-xs">
             BANCOS
           </TabsTrigger>
@@ -72,6 +73,9 @@ export default function Administracion() {
           </TabsTrigger>
           <TabsTrigger value="seguimiento" className="text-xs">
             SEGUIMIENTO
+          </TabsTrigger>
+          <TabsTrigger value="estados-ciudades" className="text-xs">
+            ESTADOS/CIUDADES
           </TabsTrigger>
         </TabsList>
 
@@ -121,6 +125,10 @@ export default function Administracion() {
 
         <TabsContent value="seguimiento" className="space-y-4">
           <SeguimientoConfigTab />
+        </TabsContent>
+
+        <TabsContent value="estados-ciudades" className="space-y-4">
+          <EstadosCiudadesTab />
         </TabsContent>
       </Tabs>
     </div>
