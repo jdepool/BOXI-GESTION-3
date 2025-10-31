@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format, parse } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -21,14 +21,20 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
-import { Edit, Package, Calendar, DollarSign, Trash2, User, MapPin, Package2, CalendarIcon } from "lucide-react";
+import { Edit, Package, Calendar, DollarSign, Trash2, User, MapPin, Package2, CalendarIcon, Search, ChevronLeft, ChevronRight, XCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { useDebouncedSearch } from "@/hooks/use-debounced-search";
 import type { Sale, Banco, MetodoPago, Producto } from "@shared/schema";
 
 export function EdicionOrdenesTab() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingOrder, setEditingOrder] = useState<Sale | null>(null);
+  const [limit] = useState(20);
+  const [offset, setOffset] = useState(0);
+  
+  // Search state with debouncing
+  const { inputValue: searchInput, debouncedValue: debouncedSearch, setInputValue: setSearchInput } = useDebouncedSearch("", 500);
   const [formData, setFormData] = useState({
     // Campos principales
     nombre: "",
@@ -81,21 +87,50 @@ export function EdicionOrdenesTab() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // Fetch ALL orders
-  const { data: orders = [], isLoading } = useQuery({
-    queryKey: ["/api/sales"],
+  // Fetch orders with search and pagination
+  const { data: salesResponse, isLoading } = useQuery({
+    queryKey: ["/api/sales", { search: debouncedSearch, limit, offset }],
     queryFn: async () => {
       try {
-        const res = await fetch("/api/sales?limit=100");
+        const params = new URLSearchParams();
+        params.append('limit', limit.toString());
+        params.append('offset', offset.toString());
+        if (debouncedSearch) {
+          params.append('search', debouncedSearch);
+        }
+        
+        const res = await fetch(`/api/sales?${params.toString()}`);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
-        return Array.isArray(data?.data) ? data.data : [];
+        return {
+          data: Array.isArray(data?.data) ? data.data : [],
+          total: data?.total || 0
+        };
       } catch (error) {
         console.error("Failed to fetch sales:", error);
-        return [];
+        return { data: [], total: 0 };
       }
     },
   });
+  
+  const orders = salesResponse?.data || [];
+  const total = salesResponse?.total || 0;
+  const currentPage = Math.floor(offset / limit) + 1;
+  const totalPages = Math.ceil(total / limit);
+
+  // Reset to first page when search changes
+  useEffect(() => {
+    setOffset(0);
+  }, [debouncedSearch]);
+  
+  // Clamp offset to valid range when total changes (e.g., after delete)
+  useEffect(() => {
+    if (total > 0 && offset >= total) {
+      // If current offset is beyond the data, go back to the last valid page
+      const maxOffset = Math.max(0, Math.floor((total - 1) / limit) * limit);
+      setOffset(maxOffset);
+    }
+  }, [total, offset, limit]);
   
   // Fetch admin data for dropdowns
   const { data: allBancos = [] } = useQuery({
@@ -400,9 +435,41 @@ export function EdicionOrdenesTab() {
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <Badge variant="outline" className="flex items-center gap-1">
             <Package className="h-3 w-3" />
-            {orders.length} órdenes totales
+            {total} órdenes totales
           </Badge>
         </div>
+      </div>
+
+      {/* Search and Filter Controls */}
+      <div className="flex items-center gap-3">
+        <div className="relative flex-1 max-w-md">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Buscar por orden o nombre..."
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            className="pl-10 pr-10"
+            data-testid="search-orders"
+          />
+          {searchInput && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 p-0"
+              onClick={() => setSearchInput("")}
+              data-testid="clear-search"
+            >
+              <XCircle className="h-4 w-4" />
+            </Button>
+          )}
+        </div>
+        
+        {/* Pagination info */}
+        {total > 0 && (
+          <div className="text-sm text-muted-foreground">
+            Mostrando {offset + 1}-{Math.min(offset + limit, total)} de {total}
+          </div>
+        )}
       </div>
 
       <div className="border rounded-lg">
@@ -493,6 +560,37 @@ export function EdicionOrdenesTab() {
           </TableBody>
         </Table>
       </div>
+
+      {/* Pagination Controls */}
+      {!isLoading && totalPages > 1 && (
+        <div className="flex items-center justify-between px-2">
+          <div className="text-sm text-muted-foreground">
+            Página {currentPage} de {totalPages}
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setOffset(Math.max(0, offset - limit))}
+              disabled={currentPage === 1}
+              data-testid="prev-page"
+            >
+              <ChevronLeft className="h-4 w-4" />
+              Anterior
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setOffset(offset + limit)}
+              disabled={currentPage >= totalPages}
+              data-testid="next-page"
+            >
+              Siguiente
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      )}
 
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-4xl max-h-[90vh]">
