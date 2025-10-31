@@ -67,6 +67,21 @@ export interface IStorage {
     direccionDespachoUrbanizacion?: string;
     direccionDespachoReferencia?: string;
   }): Promise<Sale | undefined>;
+  updateOrderAddressesByOrderNumber(orderNumber: string, addresses: {
+    direccionFacturacionPais?: string;
+    direccionFacturacionEstado?: string;
+    direccionFacturacionCiudad?: string;
+    direccionFacturacionDireccion?: string;
+    direccionFacturacionUrbanizacion?: string;
+    direccionFacturacionReferencia?: string;
+    direccionDespachoIgualFacturacion?: string;
+    direccionDespachoPais?: string;
+    direccionDespachoEstado?: string;
+    direccionDespachoCiudad?: string;
+    direccionDespachoDireccion?: string;
+    direccionDespachoUrbanizacion?: string;
+    direccionDespachoReferencia?: string;
+  }): Promise<Sale[]>;
   updateSaleNroGuia(id: string, nroGuia: string | null): Promise<Sale | undefined>;
   updateSaleFechaDespacho(id: string, fechaDespacho: string | null): Promise<Sale | undefined>;
   updateSaleFechaCliente(id: string, fechaCliente: string | null): Promise<Sale | undefined>;
@@ -1296,6 +1311,76 @@ export class DatabaseStorage implements IStorage {
       .returning();
 
     return updatedSale || undefined;
+  }
+
+  async updateOrderAddressesByOrderNumber(orderNumber: string, addresses: {
+    direccionFacturacionPais?: string;
+    direccionFacturacionEstado?: string;
+    direccionFacturacionCiudad?: string;
+    direccionFacturacionDireccion?: string;
+    direccionFacturacionUrbanizacion?: string;
+    direccionFacturacionReferencia?: string;
+    direccionDespachoIgualFacturacion?: string;
+    direccionDespachoPais?: string;
+    direccionDespachoEstado?: string;
+    direccionDespachoCiudad?: string;
+    direccionDespachoDireccion?: string;
+    direccionDespachoUrbanizacion?: string;
+    direccionDespachoReferencia?: string;
+  }): Promise<Sale[]> {
+    const updateData: any = {};
+    
+    // Add all address fields to update data
+    if (addresses.direccionFacturacionPais !== undefined) {
+      updateData.direccionFacturacionPais = addresses.direccionFacturacionPais;
+    }
+    if (addresses.direccionFacturacionEstado !== undefined) {
+      updateData.direccionFacturacionEstado = addresses.direccionFacturacionEstado;
+    }
+    if (addresses.direccionFacturacionCiudad !== undefined) {
+      updateData.direccionFacturacionCiudad = addresses.direccionFacturacionCiudad;
+    }
+    if (addresses.direccionFacturacionDireccion !== undefined) {
+      updateData.direccionFacturacionDireccion = addresses.direccionFacturacionDireccion;
+    }
+    if (addresses.direccionFacturacionUrbanizacion !== undefined) {
+      updateData.direccionFacturacionUrbanizacion = addresses.direccionFacturacionUrbanizacion;
+    }
+    if (addresses.direccionFacturacionReferencia !== undefined) {
+      updateData.direccionFacturacionReferencia = addresses.direccionFacturacionReferencia;
+    }
+    if (addresses.direccionDespachoIgualFacturacion !== undefined) {
+      updateData.direccionDespachoIgualFacturacion = addresses.direccionDespachoIgualFacturacion;
+    }
+    if (addresses.direccionDespachoPais !== undefined) {
+      updateData.direccionDespachoPais = addresses.direccionDespachoPais;
+    }
+    if (addresses.direccionDespachoEstado !== undefined) {
+      updateData.direccionDespachoEstado = addresses.direccionDespachoEstado;
+    }
+    if (addresses.direccionDespachoCiudad !== undefined) {
+      updateData.direccionDespachoCiudad = addresses.direccionDespachoCiudad;
+    }
+    if (addresses.direccionDespachoDireccion !== undefined) {
+      updateData.direccionDespachoDireccion = addresses.direccionDespachoDireccion;
+    }
+    if (addresses.direccionDespachoUrbanizacion !== undefined) {
+      updateData.direccionDespachoUrbanizacion = addresses.direccionDespachoUrbanizacion;
+    }
+    if (addresses.direccionDespachoReferencia !== undefined) {
+      updateData.direccionDespachoReferencia = addresses.direccionDespachoReferencia;
+    }
+
+    // Add updated timestamp
+    updateData.updatedAt = new Date();
+
+    const updatedSales = await db
+      .update(sales)
+      .set(updateData)
+      .where(eq(sales.orden, orderNumber))
+      .returning();
+
+    return updatedSales;
   }
 
   async updateSaleFlete(saleId: string, flete: {

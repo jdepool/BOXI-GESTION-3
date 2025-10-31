@@ -2212,6 +2212,106 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Treble Boxi webhook endpoint for address updates from Cashea
+  app.post("/api/webhooks/treble-boxi", async (req, res) => {
+    try {
+      console.log("📥 Received Treble-Boxi webhook request");
+      console.log("📦 Webhook payload:", JSON.stringify(req.body, null, 2));
+      
+      const payload = req.body;
+      
+      // Basic validation
+      if (!payload || !payload.user_session_keys || !Array.isArray(payload.user_session_keys)) {
+        console.log("❌ Invalid Treble webhook data received");
+        return res.status(400).json({ error: "Invalid webhook data" });
+      }
+
+      // Extract data from user_session_keys array
+      const sessionKeys = payload.user_session_keys;
+      const getData = (key: string) => {
+        const item = sessionKeys.find((k: any) => k.key === key);
+        return item?.value || null;
+      };
+
+      const orderNumber = getData('numero_de_orden');
+      const customerName = getData('name');
+      const ciudad = getData('sheets_ciudad');
+      const estado = getData('sheets_estado');
+      const direccion = getData('sheets_direccion');
+      const municipio = getData('sheets_municipio');
+      const observaciones = getData('sheets_observaciones');
+      const urbanizacion = getData('sheets_urbanizacion');
+      const direccionFacturacion = getData('sheets_dir_facturacion');
+      const mismaDireccion = getData('sheets_misma_direccion');
+
+      console.log(`📦 Processing address update for order: ${orderNumber}`);
+      console.log(`👤 Customer: ${customerName}`);
+      console.log(`📍 Estado: ${estado}, Ciudad: ${ciudad}`);
+      console.log(`🏠 Same address: ${mismaDireccion}`);
+
+      // Validate order number
+      if (!orderNumber) {
+        console.log("❌ No order number provided");
+        return res.status(400).json({ error: "No order number provided" });
+      }
+
+      // Check if order exists
+      const existingOrders = await storage.getSalesByOrderNumber(orderNumber);
+      
+      if (!existingOrders || existingOrders.length === 0) {
+        console.log(`⚠️ Order ${orderNumber} does not exist in database`);
+        return res.status(200).json({ 
+          message: "Se quiere actualizar una direccion de una orden que no existe",
+          orderNumber: orderNumber
+        });
+      }
+
+      // Determine if billing address is same as shipping
+      const addressesAreSame = mismaDireccion && mismaDireccion.includes('0_');
+
+      // Prepare address update data
+      const addressData: any = {
+        // Shipping address (Despacho)
+        direccionDespachoPais: 'Venezuela',
+        direccionDespachoEstado: estado || null,
+        direccionDespachoCiudad: ciudad || null,
+        direccionDespachoDireccion: direccion || null,
+        direccionDespachoUrbanizacion: urbanizacion || null,
+        direccionDespachoReferencia: municipio ? `${observaciones ? observaciones + ' - ' : ''}Municipio: ${municipio}` : observaciones || null,
+        direccionDespachoIgualFacturacion: addressesAreSame ? 'true' : 'false',
+      };
+
+      // If addresses are different, add billing address
+      if (!addressesAreSame && direccionFacturacion) {
+        addressData.direccionFacturacionPais = 'Venezuela';
+        addressData.direccionFacturacionEstado = estado || null;
+        addressData.direccionFacturacionCiudad = ciudad || null;
+        addressData.direccionFacturacionDireccion = direccionFacturacion;
+        addressData.direccionFacturacionUrbanizacion = null;
+        addressData.direccionFacturacionReferencia = null;
+      }
+
+      // Update all products in the order with the same address
+      const updatedSales = await storage.updateOrderAddressesByOrderNumber(orderNumber, addressData);
+
+      console.log(`✅ Successfully updated ${updatedSales.length} product(s) for order ${orderNumber}`);
+      
+      res.status(200).json({ 
+        success: true, 
+        message: "Address updated successfully",
+        orderNumber: orderNumber,
+        productsUpdated: updatedSales.length
+      });
+
+    } catch (error) {
+      console.error("Treble-Boxi webhook error:", error);
+      res.status(500).json({ 
+        error: "Failed to process Treble-Boxi webhook",
+        message: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
   // Upload Excel file
   app.post("/api/upload", upload.single('file'), async (req, res) => {
     try {
