@@ -45,8 +45,21 @@ export function useEstadosCiudades(selectedEstadoNombre?: string) {
     return estado?.nombre || "";
   };
 
+  // Sort estados with Distrito Capital first, then alphabetically
+  const sortedEstados = useMemo(() => {
+    return estados
+      .filter(e => e.activo)
+      .sort((a, b) => {
+        // Distrito Capital always comes first
+        if (a.nombre === "Distrito Capital") return -1;
+        if (b.nombre === "Distrito Capital") return 1;
+        // All others sorted alphabetically
+        return a.nombre.localeCompare(b.nombre);
+      });
+  }, [estados]);
+
   return {
-    estados: estados.filter(e => e.activo),
+    estados: sortedEstados,
     ciudades: filteredCiudades.filter(c => c.activo),
     allCiudades,
     isLoading: isLoadingEstados || isLoadingCiudades,
