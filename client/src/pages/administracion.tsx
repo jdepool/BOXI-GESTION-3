@@ -37,7 +37,7 @@ export default function Administracion() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-13 lg:w-auto lg:grid-cols-13">
+        <TabsList className="flex flex-wrap w-full justify-start">
           <TabsTrigger value="bancos" className="text-xs">
             BANCOS
           </TabsTrigger>
