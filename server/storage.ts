@@ -1,10 +1,10 @@
 import { 
-  sales, uploadHistory, users, bancos, bancosBackup, tiposEgresos, productos, productosBackup, metodosPago, monedas, categorias, canales, asesores, transportistas, seguimientoConfig, precios, preciosBackup, egresos, egresosPorAprobar, paymentInstallments, prospectos,
+  sales, uploadHistory, users, bancos, bancosBackup, tiposEgresos, productos, productosBackup, metodosPago, monedas, categorias, canales, asesores, transportistas, estados, ciudades, seguimientoConfig, precios, preciosBackup, egresos, egresosPorAprobar, paymentInstallments, prospectos,
   type User, type InsertUser, type Sale, type InsertSale, type UploadHistory, type InsertUploadHistory,
   type Banco, type InsertBanco, type TipoEgreso, type InsertTipoEgreso,
   type Producto, type InsertProducto, type MetodoPago, type InsertMetodoPago,
   type Moneda, type InsertMoneda, type Categoria, type InsertCategoria,
-  type Canal, type InsertCanal, type Asesor, type InsertAsesor, type Transportista, type InsertTransportista, type SeguimientoConfig, type InsertSeguimientoConfig, type Precio, type InsertPrecio, type Egreso, type InsertEgreso,
+  type Canal, type InsertCanal, type Asesor, type InsertAsesor, type Transportista, type InsertTransportista, type Estado, type InsertEstado, type Ciudad, type InsertCiudad, type SeguimientoConfig, type InsertSeguimientoConfig, type Precio, type InsertPrecio, type Egreso, type InsertEgreso,
   type EgresoPorAprobar, type InsertEgresoPorAprobar, type PaymentInstallment, type InsertPaymentInstallment,
   type Prospecto, type InsertProspecto
 } from "@shared/schema";
@@ -216,6 +216,19 @@ export interface IStorage {
   createTransportista(transportista: InsertTransportista): Promise<Transportista>;
   updateTransportista(id: string, transportista: Partial<InsertTransportista>): Promise<Transportista | undefined>;
   deleteTransportista(id: string): Promise<boolean>;
+
+  // Estados
+  getEstados(): Promise<Estado[]>;
+  createEstado(estado: InsertEstado): Promise<Estado>;
+  updateEstado(id: string, estado: Partial<InsertEstado>): Promise<Estado | undefined>;
+  deleteEstado(id: string): Promise<boolean>;
+
+  // Ciudades
+  getCiudades(): Promise<Ciudad[]>;
+  getCiudadesByEstadoId(estadoId: string): Promise<Ciudad[]>;
+  createCiudad(ciudad: InsertCiudad): Promise<Ciudad>;
+  updateCiudad(id: string, ciudad: Partial<InsertCiudad>): Promise<Ciudad | undefined>;
+  deleteCiudad(id: string): Promise<boolean>;
 
   // Seguimiento Config
   getSeguimientoConfig(tipo?: string): Promise<SeguimientoConfig | undefined>;
@@ -2070,6 +2083,66 @@ export class DatabaseStorage implements IStorage {
 
   async deleteTransportista(id: string): Promise<boolean> {
     const result = await db.delete(transportistas).where(eq(transportistas.id, id));
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  // Estados methods implementation
+  async getEstados(): Promise<Estado[]> {
+    return await db.select().from(estados).orderBy(estados.nombre);
+  }
+
+  async createEstado(estado: InsertEstado): Promise<Estado> {
+    const [newEstado] = await db.insert(estados).values({
+      ...estado,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }).returning();
+    return newEstado;
+  }
+
+  async updateEstado(id: string, estado: Partial<InsertEstado>): Promise<Estado | undefined> {
+    const [updated] = await db
+      .update(estados)
+      .set({ ...estado, updatedAt: new Date() })
+      .where(eq(estados.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteEstado(id: string): Promise<boolean> {
+    const result = await db.delete(estados).where(eq(estados.id, id));
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  // Ciudades methods implementation
+  async getCiudades(): Promise<Ciudad[]> {
+    return await db.select().from(ciudades).orderBy(ciudades.nombre);
+  }
+
+  async getCiudadesByEstadoId(estadoId: string): Promise<Ciudad[]> {
+    return await db.select().from(ciudades).where(eq(ciudades.estadoId, estadoId)).orderBy(ciudades.nombre);
+  }
+
+  async createCiudad(ciudad: InsertCiudad): Promise<Ciudad> {
+    const [newCiudad] = await db.insert(ciudades).values({
+      ...ciudad,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }).returning();
+    return newCiudad;
+  }
+
+  async updateCiudad(id: string, ciudad: Partial<InsertCiudad>): Promise<Ciudad | undefined> {
+    const [updated] = await db
+      .update(ciudades)
+      .set({ ...ciudad, updatedAt: new Date() })
+      .where(eq(ciudades.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteCiudad(id: string): Promise<boolean> {
+    const result = await db.delete(ciudades).where(eq(ciudades.id, id));
     return (result.rowCount ?? 0) > 0;
   }
 
