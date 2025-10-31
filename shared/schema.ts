@@ -124,6 +124,25 @@ export const transportistas = pgTable("transportistas", {
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
+export const estados = pgTable("estados", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  nombre: text("nombre").notNull().unique(),
+  activo: boolean("activo").notNull().default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const ciudades = pgTable("ciudades", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  nombre: text("nombre").notNull(),
+  estadoId: varchar("estado_id").notNull(),
+  activo: boolean("activo").notNull().default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => ({
+  nombreEstadoUnique: unique("nombre_estado_unique").on(table.nombre, table.estadoId),
+}));
+
 export const seguimientoConfig = pgTable("seguimiento_config", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   tipo: text("tipo").notNull().default("prospectos"), // prospectos, ordenes
@@ -424,6 +443,18 @@ export const insertTransportistaSchema = createInsertSchema(transportistas).omit
   updatedAt: true,
 });
 
+export const insertEstadoSchema = createInsertSchema(estados).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertCiudadSchema = createInsertSchema(ciudades).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 export const insertSeguimientoConfigSchema = createInsertSchema(seguimientoConfig).omit({
   id: true,
   createdAt: true,
@@ -513,6 +544,10 @@ export type Asesor = typeof asesores.$inferSelect;
 export type InsertAsesor = z.infer<typeof insertAsesorSchema>;
 export type Transportista = typeof transportistas.$inferSelect;
 export type InsertTransportista = z.infer<typeof insertTransportistaSchema>;
+export type Estado = typeof estados.$inferSelect;
+export type InsertEstado = z.infer<typeof insertEstadoSchema>;
+export type Ciudad = typeof ciudades.$inferSelect;
+export type InsertCiudad = z.infer<typeof insertCiudadSchema>;
 export type SeguimientoConfig = typeof seguimientoConfig.$inferSelect;
 export type InsertSeguimientoConfig = z.infer<typeof insertSeguimientoConfigSchema>;
 export type Precio = typeof precios.$inferSelect;
