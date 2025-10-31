@@ -181,7 +181,7 @@ export default function SalesTable({
     if (parentFilters?.search === "" && searchInput !== "") {
       setSearchInput("");
     }
-  }, [parentFilters?.search, searchInput, setSearchInput]);
+  }, [parentFilters?.search]);
   
   // Update filter when debounced value changes
   useEffect(() => {

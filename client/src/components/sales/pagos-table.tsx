@@ -146,7 +146,7 @@ export default function PagosTable({
     if (filters?.orden === "" && searchInput !== "") {
       setSearchInput("");
     }
-  }, [filters?.orden, searchInput, setSearchInput]);
+  }, [filters?.orden]);
   
   // Update filter when debounced value changes
   useEffect(() => {

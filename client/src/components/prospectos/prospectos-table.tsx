@@ -215,7 +215,7 @@ export default function ProspectosTable({
     if (filters?.prospecto === "" && searchInput !== "") {
       setSearchInput("");
     }
-  }, [filters?.prospecto, searchInput, setSearchInput]);
+  }, [filters?.prospecto]);
   
   // Update filter when debounced value changes
   useEffect(() => {
