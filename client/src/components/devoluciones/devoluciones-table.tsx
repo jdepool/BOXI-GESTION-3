@@ -241,7 +241,7 @@ export default function DevolucionesTable({
 
   const updateNotesMutation = useMutation({
     mutationFn: async ({ saleId, notas }: { saleId: string; notas: string }) => {
-      return apiRequest("PATCH", `/api/sales/${saleId}`, { notas });
+      return apiRequest("PUT", `/api/sales/${saleId}/notes`, { notas });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ 
