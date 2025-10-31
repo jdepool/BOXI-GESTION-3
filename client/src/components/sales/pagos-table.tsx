@@ -141,6 +141,13 @@ export default function PagosTable({
   // Debounced search for orden and nombre
   const { inputValue: searchInput, debouncedValue: debouncedSearch, setInputValue: setSearchInput } = useDebouncedSearch(filters?.orden || "", 500);
   
+  // Sync search input when filters are cleared externally
+  useEffect(() => {
+    if (filters?.orden === "" && searchInput !== "") {
+      setSearchInput("");
+    }
+  }, [filters?.orden, searchInput, setSearchInput]);
+  
   // Update filter when debounced value changes
   useEffect(() => {
     if (onFilterChange && debouncedSearch !== (filters?.orden || "")) {

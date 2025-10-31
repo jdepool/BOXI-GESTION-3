@@ -176,6 +176,13 @@ export default function SalesTable({
   // Debounced search for orden and nombre
   const { inputValue: searchInput, debouncedValue: debouncedSearch, setInputValue: setSearchInput } = useDebouncedSearch(parentFilters?.search || "", 500);
   
+  // Sync search input when filters are cleared externally
+  useEffect(() => {
+    if (parentFilters?.search === "" && searchInput !== "") {
+      setSearchInput("");
+    }
+  }, [parentFilters?.search, searchInput, setSearchInput]);
+  
   // Update filter when debounced value changes
   useEffect(() => {
     if (debouncedSearch !== (parentFilters?.search || "")) {

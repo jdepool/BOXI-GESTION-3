@@ -210,6 +210,13 @@ export default function ProspectosTable({
   // Debounced search for prospecto number and nombre
   const { inputValue: searchInput, debouncedValue: debouncedSearch, setInputValue: setSearchInput } = useDebouncedSearch(filters?.prospecto || "", 500);
   
+  // Sync search input when filters are cleared externally
+  useEffect(() => {
+    if (filters?.prospecto === "" && searchInput !== "") {
+      setSearchInput("");
+    }
+  }, [filters?.prospecto, searchInput, setSearchInput]);
+  
   // Update filter when debounced value changes
   useEffect(() => {
     if (onFilterChange && debouncedSearch !== (filters?.prospecto || "")) {
