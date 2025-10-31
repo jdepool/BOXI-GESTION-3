@@ -508,16 +508,16 @@ export class DatabaseStorage implements IStorage {
     }
     // Use search if provided, otherwise fall back to orden filter
     if (filters?.search) {
-      // Search by order number OR customer name
+      // Search by order number OR customer name (case-insensitive)
       conditions.push(
         or(
-          like(sales.orden, `%${filters.search}%`),
-          like(sales.nombre, `%${filters.search}%`)
+          ilike(sales.orden, `%${filters.search}%`),
+          ilike(sales.nombre, `%${filters.search}%`)
         )
       );
     } else if (filters?.orden) {
       // Only apply orden filter if search is not being used
-      conditions.push(like(sales.orden, `%${filters.orden}%`));
+      conditions.push(ilike(sales.orden, `%${filters.orden}%`));
     }
     if (filters?.startDate) {
       // Parse yyyy-MM-dd as local date to avoid timezone shifts
@@ -1478,16 +1478,16 @@ export class DatabaseStorage implements IStorage {
     }
     // Use search if provided, otherwise fall back to orden filter
     if (filters?.search) {
-      // Search by order number OR customer name
+      // Search by order number OR customer name (case-insensitive)
       conditions.push(
         or(
-          like(sales.orden, `%${filters.search}%`),
-          like(sales.nombre, `%${filters.search}%`)
+          ilike(sales.orden, `%${filters.search}%`),
+          ilike(sales.nombre, `%${filters.search}%`)
         )
       );
     } else if (filters?.orden) {
       // Only apply orden filter if search is not being used
-      conditions.push(like(sales.orden, `%${filters.orden}%`));
+      conditions.push(ilike(sales.orden, `%${filters.orden}%`));
     }
     if (filters?.startDate) {
       // Parse yyyy-MM-dd as local date to avoid timezone shifts
