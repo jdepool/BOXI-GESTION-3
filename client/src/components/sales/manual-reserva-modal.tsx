@@ -23,6 +23,7 @@ import ProductDialog, { ProductFormData } from "./product-dialog";
 import { type ProductLine, getAllowedCanales } from "@/lib/canalFilters";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useEstadosCiudades } from "@/hooks/use-estados-ciudades";
 
 interface ManualReservaModalProps {
   isOpen: boolean;
@@ -106,6 +107,11 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess, convert
   const watchDespachoDireccion = form.watch("direccionDespachoDireccion");
   const watchDespachoUrbanizacion = form.watch("direccionDespachoUrbanizacion");
   const watchDespachoReferencia = form.watch("direccionDespachoReferencia");
+  const watchFacturacionEstado = form.watch("direccionFacturacionEstado");
+
+  // Use estados/ciudades hook for both despacho and facturacion addresses
+  const { estados, ciudades: ciudadesDespacho } = useEstadosCiudades(watchDespachoEstado);
+  const { ciudades: ciudadesFacturacion } = useEstadosCiudades(watchFacturacionEstado);
 
   // Get asesores for default asesor
   const { data: asesoresList = [] } = useQuery<Array<{ id: string; nombre: string; activo: boolean | string }>>({
@@ -626,17 +632,26 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess, convert
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Estado</FormLabel>
-                      <FormControl>
-                        <Input 
-                          placeholder="Distrito Capital" 
-                          {...field} 
-                          data-testid="input-despacho-estado" 
-
-                          autoComplete="nope-state-shipping" 
-
-
-                        />
-                      </FormControl>
+                      <Select 
+                        onValueChange={(value) => {
+                          field.onChange(value);
+                          form.setValue("direccionDespachoCiudad", "");
+                        }} 
+                        value={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger data-testid="select-estado-despacho">
+                            <SelectValue placeholder="Seleccione estado" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {estados.map((estado) => (
+                            <SelectItem key={estado.id} value={estado.nombre}>
+                              {estado.nombre}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -648,17 +663,24 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess, convert
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Ciudad</FormLabel>
-                      <FormControl>
-                        <Input 
-                          placeholder="Caracas" 
-                          {...field} 
-                          data-testid="input-despacho-ciudad" 
-
-                          autoComplete="nope-city-shipping" 
-
-
-                        />
-                      </FormControl>
+                      <Select 
+                        onValueChange={field.onChange} 
+                        value={field.value}
+                        disabled={!watchDespachoEstado}
+                      >
+                        <FormControl>
+                          <SelectTrigger data-testid="select-ciudad-despacho">
+                            <SelectValue placeholder={watchDespachoEstado ? "Seleccione ciudad" : "Seleccione estado primero"} />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {ciudadesDespacho.map((ciudad) => (
+                            <SelectItem key={ciudad.id} value={ciudad.nombre}>
+                              {ciudad.nombre}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -796,17 +818,26 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess, convert
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Estado *</FormLabel>
-                        <FormControl>
-                          <Input 
-                            placeholder="Distrito Capital" 
-                            {...field} 
-                            data-testid="input-facturacion-estado" 
-
-                            autoComplete="nope-state-billing" 
-
-
-                          />
-                        </FormControl>
+                        <Select 
+                          onValueChange={(value) => {
+                            field.onChange(value);
+                            form.setValue("direccionFacturacionCiudad", "");
+                          }} 
+                          value={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger data-testid="select-estado-facturacion">
+                              <SelectValue placeholder="Seleccione estado" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {estados.map((estado) => (
+                              <SelectItem key={estado.id} value={estado.nombre}>
+                                {estado.nombre}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -818,17 +849,24 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess, convert
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Ciudad *</FormLabel>
-                        <FormControl>
-                          <Input 
-                            placeholder="Caracas" 
-                            {...field} 
-                            data-testid="input-facturacion-ciudad" 
-
-                            autoComplete="nope-city-billing" 
-
-
-                          />
-                        </FormControl>
+                        <Select 
+                          onValueChange={field.onChange} 
+                          value={field.value}
+                          disabled={!watchFacturacionEstado}
+                        >
+                          <FormControl>
+                            <SelectTrigger data-testid="select-ciudad-facturacion">
+                              <SelectValue placeholder={watchFacturacionEstado ? "Seleccione ciudad" : "Seleccione estado primero"} />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {ciudadesFacturacion.map((ciudad) => (
+                              <SelectItem key={ciudad.id} value={ciudad.nombre}>
+                                {ciudad.nombre}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                         <FormMessage />
                       </FormItem>
                     )}

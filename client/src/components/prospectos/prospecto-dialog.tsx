@@ -22,6 +22,7 @@ import { filterCanalesByProductLine, type ProductLine } from "@/lib/canalFilters
 import { insertProspectoSchema, type Prospecto } from "@shared/schema";
 import { z } from "zod";
 import ProductDialog, { ProductFormData } from "../sales/product-dialog";
+import { useEstadosCiudades } from "@/hooks/use-estados-ciudades";
 
 const prospectoFormSchema = z.object({
   nombre: z.string().min(1, "Nombre es requerido"),
@@ -102,6 +103,11 @@ export default function ProspectoDialog({ open, onOpenChange, prospecto, product
   const watchDespachoDireccion = form.watch("direccionDespachoDireccion");
   const watchDespachoUrbanizacion = form.watch("direccionDespachoUrbanizacion");
   const watchDespachoReferencia = form.watch("direccionDespachoReferencia");
+  const watchFacturacionEstado = form.watch("direccionFacturacionEstado");
+
+  // Use estados/ciudades hook for both despacho and facturacion addresses
+  const { estados, ciudades: ciudadesDespacho } = useEstadosCiudades(watchDespachoEstado);
+  const { ciudades: ciudadesFacturacion } = useEstadosCiudades(watchFacturacionEstado);
 
   // Auto-calculate Total USD from sum of products
   useEffect(() => {
@@ -689,14 +695,26 @@ export default function ProspectoDialog({ open, onOpenChange, prospecto, product
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Estado</FormLabel>
-                        <FormControl>
-                          <Input 
-                            placeholder="Distrito Capital" 
-                            {...field} 
-                            data-testid="input-prospecto-despacho-estado" 
-                            autoComplete="nope-state-shipping" 
-                          />
-                        </FormControl>
+                        <Select 
+                          onValueChange={(value) => {
+                            field.onChange(value);
+                            form.setValue("direccionDespachoCiudad", "");
+                          }} 
+                          value={field.value}
+                        >
+                          <FormControl>
+                            <SelectTrigger data-testid="select-prospecto-estado-despacho">
+                              <SelectValue placeholder="Seleccione estado" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {estados.map((estado) => (
+                              <SelectItem key={estado.id} value={estado.nombre}>
+                                {estado.nombre}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -708,14 +726,24 @@ export default function ProspectoDialog({ open, onOpenChange, prospecto, product
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Ciudad</FormLabel>
-                        <FormControl>
-                          <Input 
-                            placeholder="Caracas" 
-                            {...field} 
-                            data-testid="input-prospecto-despacho-ciudad" 
-                            autoComplete="nope-city-shipping" 
-                          />
-                        </FormControl>
+                        <Select 
+                          onValueChange={field.onChange} 
+                          value={field.value}
+                          disabled={!watchDespachoEstado}
+                        >
+                          <FormControl>
+                            <SelectTrigger data-testid="select-prospecto-ciudad-despacho">
+                              <SelectValue placeholder={watchDespachoEstado ? "Seleccione ciudad" : "Seleccione estado primero"} />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {ciudadesDespacho.map((ciudad) => (
+                              <SelectItem key={ciudad.id} value={ciudad.nombre}>
+                                {ciudad.nombre}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -837,14 +865,26 @@ export default function ProspectoDialog({ open, onOpenChange, prospecto, product
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Estado</FormLabel>
-                          <FormControl>
-                            <Input 
-                              placeholder="Distrito Capital" 
-                              {...field} 
-                              data-testid="input-prospecto-facturacion-estado" 
-                              autoComplete="nope-state-billing" 
-                            />
-                          </FormControl>
+                          <Select 
+                            onValueChange={(value) => {
+                              field.onChange(value);
+                              form.setValue("direccionFacturacionCiudad", "");
+                            }} 
+                            value={field.value}
+                          >
+                            <FormControl>
+                              <SelectTrigger data-testid="select-prospecto-estado-facturacion">
+                                <SelectValue placeholder="Seleccione estado" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {estados.map((estado) => (
+                                <SelectItem key={estado.id} value={estado.nombre}>
+                                  {estado.nombre}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -856,14 +896,24 @@ export default function ProspectoDialog({ open, onOpenChange, prospecto, product
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Ciudad</FormLabel>
-                          <FormControl>
-                            <Input 
-                              placeholder="Caracas" 
-                              {...field} 
-                              data-testid="input-prospecto-facturacion-ciudad" 
-                              autoComplete="nope-city-billing" 
-                            />
-                          </FormControl>
+                          <Select 
+                            onValueChange={field.onChange} 
+                            value={field.value}
+                            disabled={!watchFacturacionEstado}
+                          >
+                            <FormControl>
+                              <SelectTrigger data-testid="select-prospecto-ciudad-facturacion">
+                                <SelectValue placeholder={watchFacturacionEstado ? "Seleccione ciudad" : "Seleccione estado primero"} />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {ciudadesFacturacion.map((ciudad) => (
+                                <SelectItem key={ciudad.id} value={ciudad.nombre}>
+                                  {ciudad.nombre}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                           <FormMessage />
                         </FormItem>
                       )}

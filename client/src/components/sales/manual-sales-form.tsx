@@ -25,6 +25,7 @@ import { Save, User, MapPin, Package, CalendarIcon, Plus, Trash2, Pencil } from 
 import { insertSaleSchema, type Prospecto } from "@shared/schema";
 import ProductDialog, { ProductFormData } from "./product-dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { useEstadosCiudades } from "@/hooks/use-estados-ciudades";
 
 const manualSaleSchema = z.object({
   nombre: z.string().min(1, "Nombre es requerido"),
@@ -117,6 +118,11 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
   const watchDespachoDireccion = form.watch("direccionDespachoDireccion");
   const watchDespachoUrbanizacion = form.watch("direccionDespachoUrbanizacion");
   const watchDespachoReferencia = form.watch("direccionDespachoReferencia");
+  const watchFacturacionEstado = form.watch("direccionFacturacionEstado");
+
+  // Use estados/ciudades hook for both despacho and facturacion addresses
+  const { estados, ciudades: ciudadesDespacho } = useEstadosCiudades(watchDespachoEstado);
+  const { ciudades: ciudadesFacturacion } = useEstadosCiudades(watchFacturacionEstado);
 
   // Get asesores for default asesor
   const { data: asesoresList = [] } = useQuery<Array<{ id: string; nombre: string; activo: boolean | string }>>({
@@ -552,16 +558,27 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Estado *</FormLabel>
-                  <FormControl>
-                    <Input 
-                      placeholder="Distrito Capital" 
-                      {...field} 
-  
-                      autoComplete="nope-state-shipping" 
-  
-  
-                    />
-                  </FormControl>
+                  <Select 
+                    onValueChange={(value) => {
+                      field.onChange(value);
+                      // Clear ciudad when estado changes
+                      form.setValue("direccionDespachoCiudad", "");
+                    }} 
+                    value={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger data-testid="select-estado-despacho">
+                        <SelectValue placeholder="Seleccione estado" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {estados.map((estado) => (
+                        <SelectItem key={estado.id} value={estado.nombre}>
+                          {estado.nombre}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}
@@ -573,16 +590,24 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Ciudad *</FormLabel>
-                  <FormControl>
-                    <Input 
-                      placeholder="Caracas" 
-                      {...field} 
-  
-                      autoComplete="nope-city-shipping" 
-  
-  
-                    />
-                  </FormControl>
+                  <Select 
+                    onValueChange={field.onChange} 
+                    value={field.value}
+                    disabled={!watchDespachoEstado}
+                  >
+                    <FormControl>
+                      <SelectTrigger data-testid="select-ciudad-despacho">
+                        <SelectValue placeholder={watchDespachoEstado ? "Seleccione ciudad" : "Seleccione estado primero"} />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {ciudadesDespacho.map((ciudad) => (
+                        <SelectItem key={ciudad.id} value={ciudad.nombre}>
+                          {ciudad.nombre}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}
@@ -715,16 +740,27 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Estado *</FormLabel>
-                      <FormControl>
-                        <Input 
-                          placeholder="Distrito Capital" 
-                          {...field} 
-    
-                          autoComplete="nope-state-billing" 
-    
-    
-                        />
-                      </FormControl>
+                      <Select 
+                        onValueChange={(value) => {
+                          field.onChange(value);
+                          // Clear ciudad when estado changes
+                          form.setValue("direccionFacturacionCiudad", "");
+                        }} 
+                        value={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger data-testid="select-estado-facturacion">
+                            <SelectValue placeholder="Seleccione estado" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {estados.map((estado) => (
+                            <SelectItem key={estado.id} value={estado.nombre}>
+                              {estado.nombre}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -736,16 +772,24 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Ciudad *</FormLabel>
-                      <FormControl>
-                        <Input 
-                          placeholder="Caracas" 
-                          {...field} 
-    
-                          autoComplete="nope-city-billing" 
-    
-    
-                        />
-                      </FormControl>
+                      <Select 
+                        onValueChange={field.onChange} 
+                        value={field.value}
+                        disabled={!watchFacturacionEstado}
+                      >
+                        <FormControl>
+                          <SelectTrigger data-testid="select-ciudad-facturacion">
+                            <SelectValue placeholder={watchFacturacionEstado ? "Seleccione ciudad" : "Seleccione estado primero"} />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {ciudadesFacturacion.map((ciudad) => (
+                            <SelectItem key={ciudad.id} value={ciudad.nombre}>
+                              {ciudad.nombre}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}
