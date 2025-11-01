@@ -53,6 +53,7 @@ export default function UploadZone({ recentUploads, showOnlyCashea = false }: Up
   const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set());
   const [isPreviewingHistorical, setIsPreviewingHistorical] = useState(false);
   const [isImportingHistorical, setIsImportingHistorical] = useState(false);
+  const [replaceExisting, setReplaceExisting] = useState(false);
   
   const { toast } = useToast();
 
@@ -516,7 +517,10 @@ export default function UploadZone({ recentUploads, showOnlyCashea = false }: Up
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ records: selectedData }),
+        body: JSON.stringify({ 
+          records: selectedData,
+          replaceExisting: replaceExisting 
+        }),
       });
 
       const result = await response.json();
@@ -1048,7 +1052,31 @@ export default function UploadZone({ recentUploads, showOnlyCashea = false }: Up
                       </Table>
                     </div>
 
-                    <div className="mt-4">
+                    <div className="mt-4 space-y-3">
+                      <div className="flex items-center space-x-2 p-3 bg-muted/50 rounded-lg border border-border">
+                        <input
+                          type="checkbox"
+                          id="replace-existing"
+                          checked={replaceExisting}
+                          onChange={(e) => setReplaceExisting(e.target.checked)}
+                          className="h-4 w-4 cursor-pointer"
+                          data-testid="checkbox-replace-existing"
+                        />
+                        <Label 
+                          htmlFor="replace-existing" 
+                          className="text-sm cursor-pointer flex-1"
+                        >
+                          Reemplazar datos existentes con el mismo número de orden
+                        </Label>
+                      </div>
+                      {replaceExisting && (
+                        <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3">
+                          <p className="text-xs text-amber-800 dark:text-amber-200">
+                            <i className="fas fa-exclamation-triangle mr-1"></i>
+                            Al activar esta opción, todos los registros existentes con los mismos números de orden serán eliminados antes de importar los nuevos datos.
+                          </p>
+                        </div>
+                      )}
                       <Button 
                         onClick={handleHistoricalImport}
                         disabled={selectedRows.size === 0 || isImportingHistorical}

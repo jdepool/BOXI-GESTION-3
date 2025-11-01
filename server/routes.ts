@@ -2581,10 +2581,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           estado: getCell('Estado'),
           ciudad: getCell('Ciudad'),
           direccion: getCell('Dirección'),
+          urbanizacion: getCell('Urbanización (En Dirección de Despacho)'),
           fechaCompromisoEntrega: convertExcelDate(getCell('Fecha Compromiso Entrega')),
           totalUsd: getCell('Total USD'),
-          pagoInicialUsd: getCell('Pago Inicial/Total'),
-          fleteUsd: getCell('Flete'),
+          totalOrderUsd: getCell('Total Order USD'),
           pendiente: getCell('Pendiente'),
           asesor: getCell('Asesor'),
           notas: getCell('Notas'),
@@ -2610,13 +2610,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Historical Sales Import - Execute selected rows
   app.post("/api/sales/import/execute", async (req, res) => {
     try {
-      const { records } = req.body;
+      const { records, replaceExisting } = req.body;
 
       if (!records || !Array.isArray(records) || records.length === 0) {
         return res.status(400).json({ error: "No rows selected for import" });
       }
 
-      console.log(`📥 Starting historical import of ${records.length} rows`);
+      console.log(`📥 Starting historical import of ${records.length} rows${replaceExisting ? ' (replace mode)' : ''}`);
 
       // Helper functions for safe type conversion
       const toStringOrNull = (value: any) => {
@@ -2644,11 +2644,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           telefono: toStringOrNull(row.telefono),
           email: toStringOrNull(row.email),
           totalUsd: toStringOrDefault(row.totalUsd, '0'), // Required: default to '0'
-          totalOrderUsd: null,
+          totalOrderUsd: toStringOrNull(row.totalOrderUsd),
           fecha: row.fecha ? new Date(row.fecha) : new Date(),
           canal: toStringOrNull(row.canal),
           estadoPagoInicial: null,
-          pagoInicialUsd: toStringOrNull(row.pagoInicialUsd),
+          pagoInicialUsd: null,
           metodoPagoId: null,
           bancoReceptorInicial: null,
           orden: toStringOrNull(row.orden),
@@ -2661,12 +2661,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           sku: null,
           cantidad: toNumberOrDefault(row.cantidad, 1), // Required: default to 1
           direccionDespacho: toStringOrNull(row.direccion),
+          direccionDespachoUrbanizacion: toStringOrNull(row.urbanizacion),
           estadoDespacho: toStringOrNull(row.estado),
           ciudadDespacho: toStringOrNull(row.ciudad),
           direccionFacturacion: null,
           estadoFacturacion: null,
           ciudadFacturacion: null,
-          fleteUsd: toStringOrNull(row.fleteUsd),
+          fleteUsd: null,
           transportistaId: null,
           tipo: toStringOrDefault(row.tipo, 'Inmediato'),
           fechaCompromisoEntrega: row.fechaCompromisoEntrega ? new Date(row.fechaCompromisoEntrega) : null,
@@ -2706,6 +2707,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
           totalErrors: errors.length,
           successfulRows: validatedSales.length
         });
+      }
+
+      // If replace mode is enabled, delete existing orders with the same order numbers
+      if (replaceExisting) {
+        // Extract unique order numbers from the records
+        const orderNumbers = [...new Set(
+          records
+            .map((row: any) => row.orden)
+            .filter((orden: any) => orden && String(orden).trim() !== '')
+            .map((orden: any) => String(orden).trim())
+        )];
+
+        if (orderNumbers.length > 0) {
+          console.log(`🗑️ Deleting existing records for ${orderNumbers.length} order numbers...`);
+          const deletedCount = await storage.deleteSalesByOrderNumbers(orderNumbers);
+          console.log(`✅ Deleted ${deletedCount} existing records`);
+        }
       }
 
       // Insert all validated sales into database

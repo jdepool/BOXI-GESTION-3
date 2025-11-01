@@ -22,6 +22,7 @@ export interface IStorage {
   updateSale(id: string, sale: Partial<InsertSale>): Promise<Sale | undefined>;
   updateSalesByOrderNumber(orderNumber: string, updates: Partial<InsertSale>): Promise<Sale[]>;
   deleteSale(id: string): Promise<boolean>;
+  deleteSalesByOrderNumbers(orderNumbers: string[]): Promise<number>;
   getSales(filters?: {
     canal?: string;
     estadoEntrega?: string;
@@ -483,6 +484,15 @@ export class DatabaseStorage implements IStorage {
   async deleteSale(id: string): Promise<boolean> {
     const result = await db.delete(sales).where(eq(sales.id, id));
     return (result.rowCount ?? 0) > 0;
+  }
+
+  async deleteSalesByOrderNumbers(orderNumbers: string[]): Promise<number> {
+    if (orderNumbers.length === 0) return 0;
+    
+    // Build OR condition for all order numbers
+    const conditions = orderNumbers.map(orderNum => eq(sales.orden, orderNum));
+    const result = await db.delete(sales).where(or(...conditions));
+    return result.rowCount ?? 0;
   }
 
   async getSales(filters?: {
