@@ -2644,7 +2644,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           telefono: toStringOrNull(row.telefono),
           email: toStringOrNull(row.email),
           totalUsd: toStringOrDefault(row.totalUsd, '0'), // Required: default to '0'
-          totalOrderUsd: toStringOrNull(row.totalOrderUsd),
+          totalOrderUsd: row.totalOrderUsd ? Number(row.totalOrderUsd) : null,
           fecha: row.fecha ? new Date(row.fecha) : new Date(),
           canal: toStringOrNull(row.canal),
           estadoPagoInicial: null,
