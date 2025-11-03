@@ -72,6 +72,9 @@ export function generateOrderConfirmationHTML(data: OrderEmailData): string {
   const brandColor = isMompox ? '#ece6d0' : '#1DB5A6';
   const textColor = isMompox ? '#333' : 'white';
   
+  // Footer contact email based on brand
+  const footerEmail = isMompox ? 'hola@sofamompox.com' : 'hola.vzla@boxisleep.com.co';
+  
   return `
 <!DOCTYPE html>
 <html lang="es">
@@ -245,7 +248,7 @@ export function generateOrderConfirmationHTML(data: OrderEmailData): string {
     </div>
     
     <div class="footer">
-        <p>Si tienes alguna pregunta, responde este correo electrónico o contáctanos a través de hola.vzla@boxisleep.com.co</p>
+        <p>Si tienes alguna pregunta, responde este correo electrónico o contáctanos a través de ${footerEmail}</p>
     </div>
 </body>
 </html>
