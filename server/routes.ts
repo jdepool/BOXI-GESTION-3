@@ -7550,6 +7550,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Download UAT Excel file
+  app.get("/api/download/uat-boxisleep", (req, res) => {
+    try {
+      const filePath = './attached_assets/UAT_BoxiSleep.xlsx';
+      res.download(filePath, 'UAT_BoxiSleep.xlsx', (err) => {
+        if (err) {
+          console.error('Error downloading UAT file:', err);
+          res.status(500).json({ error: 'Error al descargar el archivo UAT' });
+        }
+      });
+    } catch (error) {
+      console.error("Error serving UAT file:", error);
+      res.status(500).json({ error: "Failed to serve UAT file" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
