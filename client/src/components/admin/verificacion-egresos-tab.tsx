@@ -29,10 +29,11 @@ export function VerificacionEgresosTab() {
   });
 
   const { data: egresos = [], isLoading } = useQuery<any[]>({
-    queryKey: ["/api/egresos", "pagado"],
+    queryKey: ["/api/egresos", "por-verificar-rechazado"],
     queryFn: async () => {
       const params = new URLSearchParams();
-      params.append("estado", "Pagado");
+      params.append("estado", "Por verificar");
+      params.append("estado", "Rechazado");
       const response = await fetch(`/api/egresos?${params}`);
       if (!response.ok) throw new Error('Failed to fetch egresos');
       return response.json();
@@ -95,9 +96,9 @@ export function VerificacionEgresosTab() {
     <div>
       <Card>
         <CardHeader>
-          <CardTitle>Egresos Pagados Pendientes de Verificación</CardTitle>
+          <CardTitle>Egresos Por Verificar</CardTitle>
           <CardDescription>
-            Revise y verifique los pagos de egresos registrados en el sistema
+            Revise y verifique los pagos registrados. Los egresos rechazados pueden ser editados y reverificados.
           </CardDescription>
         </CardHeader>
         <CardContent>
