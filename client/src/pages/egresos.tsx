@@ -709,6 +709,7 @@ function PorAutorizarTab() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Fecha Registro</TableHead>
+                  <TableHead>Fecha Autorización</TableHead>
                   <TableHead>Tipo</TableHead>
                   <TableHead>Descripción</TableHead>
                   <TableHead>Monto</TableHead>
@@ -726,6 +727,7 @@ function PorAutorizarTab() {
                       <TableCell>
                         {egreso.fechaRegistro ? format(new Date(egreso.fechaRegistro), "dd/MM/yyyy") : "N/A"}
                       </TableCell>
+                      <TableCell>N/A</TableCell>
                       <TableCell>{tipoNombre || "N/A"}</TableCell>
                       <TableCell className="max-w-xs truncate">{egreso.descripcion}</TableCell>
                       <TableCell>
@@ -959,7 +961,8 @@ function PorPagarTab() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Fecha Aprobación</TableHead>
+                  <TableHead>Fecha Registro</TableHead>
+                  <TableHead>Fecha Autorización</TableHead>
                   <TableHead>Tipo</TableHead>
                   <TableHead>Descripción</TableHead>
                   <TableHead>Monto</TableHead>
@@ -973,6 +976,9 @@ function PorPagarTab() {
                   
                   return (
                     <TableRow key={egreso.id} data-testid={`egreso-por-pagar-${egreso.id}`}>
+                      <TableCell>
+                        {egreso.fechaRegistro ? format(new Date(egreso.fechaRegistro), "dd/MM/yyyy") : "N/A"}
+                      </TableCell>
                       <TableCell>
                         {egreso.fechaAutorizacion ? format(new Date(egreso.fechaAutorizacion), "dd/MM/yyyy") : "N/A"}
                       </TableCell>
@@ -1335,6 +1341,7 @@ function HistorialTab() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Fecha Registro</TableHead>
+                  <TableHead>Fecha Autorización</TableHead>
                   <TableHead>Tipo</TableHead>
                   <TableHead>Descripción</TableHead>
                   <TableHead>Monto</TableHead>
@@ -1350,6 +1357,9 @@ function HistorialTab() {
                     <TableRow key={egreso.id} data-testid={`egreso-historial-${egreso.id}`}>
                       <TableCell>
                         {egreso.fechaRegistro ? format(new Date(egreso.fechaRegistro), "dd/MM/yyyy") : "N/A"}
+                      </TableCell>
+                      <TableCell>
+                        {egreso.fechaAutorizacion ? format(new Date(egreso.fechaAutorizacion), "dd/MM/yyyy") : "N/A"}
                       </TableCell>
                       <TableCell>{tipoNombre || "N/A"}</TableCell>
                       <TableCell className="max-w-xs truncate">{egreso.descripcion}</TableCell>
