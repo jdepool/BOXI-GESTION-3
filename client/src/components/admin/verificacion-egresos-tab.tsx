@@ -217,7 +217,7 @@ export function VerificacionEgresosTab() {
             </Button>
             <Button
               variant="destructive"
-              onClick={() => handleVerificar("Rechazado")}
+              onClick={() => handleVerificar("Rechazar")}
               disabled={verificarMutation.isPending}
               data-testid="button-rechazar-verificacion"
             >
@@ -225,12 +225,12 @@ export function VerificacionEgresosTab() {
               Rechazar
             </Button>
             <Button
-              onClick={() => handleVerificar("Verificado")}
+              onClick={() => handleVerificar("Verificar")}
               disabled={verificarMutation.isPending}
               data-testid="button-confirmar-verificacion"
             >
               <Check className="h-4 w-4 mr-1" />
-              Verificado
+              Verificar
             </Button>
           </DialogFooter>
         </DialogContent>

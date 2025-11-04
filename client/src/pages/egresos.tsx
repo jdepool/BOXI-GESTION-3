@@ -1009,12 +1009,12 @@ function PorAutorizarTab() {
                 <div><strong>Descripción:</strong> {selectedEgreso.descripcion}</div>
                 <div><strong>Pagar A:</strong> {selectedEgreso.beneficiario || "N/A"}</div>
                 <div><strong>Fecha Compromiso:</strong> {selectedEgreso.fechaCompromiso ? new Date(selectedEgreso.fechaCompromiso).toLocaleDateString() : "N/A"}</div>
-                <div>
-                  <strong>Monto:</strong>{" "}
-                  {selectedEgreso.ctaPorPagarUsd && `$${parseFloat(selectedEgreso.ctaPorPagarUsd).toFixed(2)}`}
-                  {selectedEgreso.ctaPorPagarUsd && selectedEgreso.ctaPorPagarBs && " | "}
-                  {selectedEgreso.ctaPorPagarBs && `Bs ${parseFloat(selectedEgreso.ctaPorPagarBs).toFixed(2)}`}
-                </div>
+                {selectedEgreso.ctaPorPagarUsd && (
+                  <div><strong>Cta x Pagar USD:</strong> ${parseFloat(selectedEgreso.ctaPorPagarUsd).toFixed(2)}</div>
+                )}
+                {selectedEgreso.ctaPorPagarBs && (
+                  <div><strong>Cta x Pagar Bs:</strong> Bs {parseFloat(selectedEgreso.ctaPorPagarBs).toFixed(2)}</div>
+                )}
               </div>
             )}
 
