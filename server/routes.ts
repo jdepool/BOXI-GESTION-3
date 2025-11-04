@@ -4162,6 +4162,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         startDate: req.query.startDate as string | undefined,
         endDate: req.query.endDate as string | undefined,
         esBorrador: req.query.esBorrador === 'true' ? true : req.query.esBorrador === 'false' ? false : undefined,
+        requiereAprobacion: req.query.requiere_aprobacion === 'true' ? true : req.query.requiere_aprobacion === 'false' ? false : undefined,
         estadoVerificacion: req.query.estadoVerificacion as string | undefined,
         limit: req.query.limit ? parseInt(req.query.limit as string) : undefined,
         offset: req.query.offset ? parseInt(req.query.offset as string) : undefined,

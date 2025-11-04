@@ -156,6 +156,7 @@ function RegistrarTab() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/egresos"] });
+      resetForm();
       toast({
         title: "Egreso eliminado",
         description: "El egreso ha sido eliminado exitosamente",
@@ -170,21 +171,27 @@ function RegistrarTab() {
     },
   });
 
-  const submitToAutorizacionMutation = useMutation({
-    mutationFn: async (id: string) => {
-      return apiRequest("PUT", `/api/egresos/${id}`, { estado: "Por autorizar" });
+  const enviarMutation = useMutation({
+    mutationFn: async (data: any) => {
+      if (editingEgreso) {
+        return apiRequest("PUT", `/api/egresos/${editingEgreso.id}`, data);
+      } else {
+        return apiRequest("POST", "/api/egresos", data);
+      }
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["/api/egresos"] });
+      const nextState = variables.requiere_aprobacion ? "Por Autorizar" : "Por Pagar";
       toast({
         title: "Egreso enviado",
-        description: "El egreso ha sido enviado a autorización exitosamente",
+        description: `El egreso ha sido enviado a ${nextState} exitosamente`,
       });
+      resetForm();
     },
     onError: (error: any) => {
       toast({
         title: "Error",
-        description: error.message || "No se pudo enviar el egreso a autorización",
+        description: error.message || "No se pudo enviar el egreso",
         variant: "destructive",
       });
     },
@@ -205,6 +212,13 @@ function RegistrarTab() {
     setEditingEgreso(null);
   };
 
+  const isFormComplete = () => {
+    const hasAmount = formData.cta_por_pagar_usd || formData.cta_por_pagar_bs;
+    const hasFechaCompromiso = !!formData.fecha_compromiso;
+    const hasTipoEgreso = !!formData.tipo_egreso_id;
+    return hasAmount && hasFechaCompromiso && hasTipoEgreso;
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -218,6 +232,23 @@ function RegistrarTab() {
     };
 
     createMutation.mutate(submitData);
+  };
+
+  const handleEnviar = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    const nextEstado = formData.requiere_aprobacion ? "Por autorizar" : "Por pagar";
+    
+    const submitData: any = {
+      estado: nextEstado,
+      ...formData,
+      cta_por_pagar_usd: formData.cta_por_pagar_usd ? parseFloat(formData.cta_por_pagar_usd) : null,
+      cta_por_pagar_bs: formData.cta_por_pagar_bs ? parseFloat(formData.cta_por_pagar_bs) : null,
+      tipo_egreso_id: formData.tipo_egreso_id || null,
+      autorizador_id: formData.requiere_aprobacion && formData.autorizador_id ? formData.autorizador_id : null,
+    };
+
+    enviarMutation.mutate(submitData);
   };
 
   const handleEdit = (egreso: any) => {
@@ -397,7 +428,7 @@ function RegistrarTab() {
                 data-testid="checkbox-requiere-aprobacion"
               />
               <Label htmlFor="requiere_aprobacion" className="cursor-pointer">
-                Requiere Aprobación
+                Requiere Autorización
               </Label>
             </div>
 
@@ -425,11 +456,20 @@ function RegistrarTab() {
             <div className="flex gap-2">
               <Button 
                 type="submit" 
-                className="flex-1"
+                variant="outline"
                 disabled={createMutation.isPending}
                 data-testid="button-guardar-borrador"
               >
-                {createMutation.isPending ? "Guardando..." : editingEgreso ? "Actualizar Borrador" : "Guardar como Borrador"}
+                {createMutation.isPending ? "Guardando..." : "Guardar Borrador"}
+              </Button>
+              <Button 
+                type="button"
+                onClick={handleEnviar}
+                disabled={!isFormComplete() || enviarMutation.isPending}
+                className="flex-1"
+                data-testid="button-enviar"
+              >
+                {enviarMutation.isPending ? "Enviando..." : "Enviar"}
               </Button>
               {editingEgreso && (
                 <Button 
@@ -508,40 +548,24 @@ function RegistrarTab() {
                           Registrado: {egreso.fecha_registro ? format(parseLocalDate(egreso.fecha_registro)!, "dd/MM/yyyy") : "N/A"}
                         </p>
                       </div>
-                      <div className="flex gap-2 flex-col">
-                        {missingFields.length === 0 && (
-                          <Button
-                            size="sm"
-                            onClick={() => {
-                              if (confirm("¿Está seguro que desea enviar este egreso a autorización?")) {
-                                submitToAutorizacionMutation.mutate(egreso.id);
-                              }
-                            }}
-                            disabled={submitToAutorizacionMutation.isPending}
-                            data-testid={`submit-borrador-${egreso.id}`}
-                          >
-                            Enviar a Autorización
-                          </Button>
-                        )}
-                        <div className="flex gap-2">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleEdit(egreso)}
-                            data-testid={`edit-borrador-${egreso.id}`}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDelete(egreso.id)}
-                            disabled={deleteMutation.isPending}
-                            data-testid={`delete-borrador-${egreso.id}`}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleEdit(egreso)}
+                          data-testid={`edit-borrador-${egreso.id}`}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDelete(egreso.id)}
+                          disabled={deleteMutation.isPending}
+                          data-testid={`delete-borrador-${egreso.id}`}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
                       </div>
                     </div>
                   </div>
@@ -569,6 +593,7 @@ function PorAutorizarTab() {
     queryFn: async () => {
       const params = new URLSearchParams();
       params.append("estado", "Por autorizar");
+      params.append("requiere_aprobacion", "true");
       const response = await fetch(`/api/egresos?${params}`);
       if (!response.ok) throw new Error('Failed to fetch egresos');
       return response.json();

@@ -1909,6 +1909,7 @@ export class DatabaseStorage implements IStorage {
     startDate?: string;
     endDate?: string;
     esBorrador?: boolean;
+    requiereAprobacion?: boolean;
     estadoVerificacion?: string;
     limit?: number;
     offset?: number;
@@ -1933,6 +1934,10 @@ export class DatabaseStorage implements IStorage {
 
     if (filters?.esBorrador !== undefined) {
       conditions.push(eq(egresos.esBorrador, filters.esBorrador));
+    }
+
+    if (filters?.requiereAprobacion !== undefined) {
+      conditions.push(eq(egresos.requiereAprobacion, filters.requiereAprobacion));
     }
 
     if (filters?.estadoVerificacion) {
