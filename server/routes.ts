@@ -4324,6 +4324,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.put("/api/egresos/:id/editar-datos", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { aplicarATodos, ...data } = req.body;
+      
+      // For now, just update this single egreso
+      // TODO: Handle recurrence logic when aplicarATodos = true
+      const updateData: any = {};
+      
+      if (data.ctaPorPagarUsd !== undefined) updateData.ctaPorPagarUsd = data.ctaPorPagarUsd;
+      if (data.ctaPorPagarBs !== undefined) updateData.ctaPorPagarBs = data.ctaPorPagarBs;
+      if (data.tipoEgresoId !== undefined) updateData.tipoEgresoId = data.tipoEgresoId;
+      if (data.descripcion !== undefined) updateData.descripcion = data.descripcion;
+      if (data.fechaCompromiso !== undefined) updateData.fechaCompromiso = data.fechaCompromiso ? new Date(data.fechaCompromiso) : null;
+      if (data.numeroFacturaProveedor !== undefined) updateData.numeroFacturaProveedor = data.numeroFacturaProveedor;
+      if (data.requiereAprobacion !== undefined) updateData.requiereAprobacion = data.requiereAprobacion;
+      if (data.autorizadorId !== undefined) updateData.autorizadorId = data.autorizadorId;
+      
+      const egreso = await storage.updateEgreso(id, updateData);
+      if (!egreso) {
+        return res.status(404).json({ error: "Egreso not found" });
+      }
+      res.json(egreso);
+    } catch (error) {
+      console.error("Editar datos egreso error:", error);
+      res.status(500).json({ error: "Failed to edit egreso data" });
+    }
+  });
+
+  app.put("/api/egresos/:id/editar-pago", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { montoPagadoUsd, montoPagadoBs, tasaCambio, bancoId, referenciaPago, numeroFacturaPagada, fechaPago } = req.body;
+      
+      const updateData: any = {};
+      
+      if (fechaPago !== undefined) updateData.fechaPago = fechaPago ? new Date(fechaPago) : null;
+      if (montoPagadoUsd !== undefined) updateData.montoPagadoUsd = montoPagadoUsd;
+      if (montoPagadoBs !== undefined) updateData.montoPagadoBs = montoPagadoBs;
+      if (tasaCambio !== undefined) updateData.tasaCambio = tasaCambio;
+      if (bancoId !== undefined) updateData.bancoId = bancoId;
+      if (referenciaPago !== undefined) updateData.referenciaPago = referenciaPago;
+      if (numeroFacturaPagada !== undefined) updateData.numeroFacturaPagada = numeroFacturaPagada;
+      
+      const egreso = await storage.updateEgreso(id, updateData);
+      if (!egreso) {
+        return res.status(404).json({ error: "Egreso not found" });
+      }
+      res.json(egreso);
+    } catch (error) {
+      console.error("Editar pago error:", error);
+      res.status(500).json({ error: "Failed to edit payment data" });
+    }
+  });
+
   // PRODUCTOS endpoints
   app.get("/api/admin/productos", async (req, res) => {
     try {

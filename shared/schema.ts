@@ -388,6 +388,15 @@ export const egresos = pgTable("egresos", {
   // Draft indicator - true when missing required fields
   esBorrador: boolean("es_borrador").default(true),
   
+  // Recurrence fields
+  esRecurrente: boolean("es_recurrente").default(false),
+  frecuenciaRecurrencia: text("frecuencia_recurrencia"), // Semanal, Quincenal, Mensual, Anual
+  egresoPlantillaId: varchar("egreso_plantilla_id"), // References the original recurring egreso
+  finalizaEn: text("finaliza_en"), // nunca, fecha, repeticiones
+  fechaFin: timestamp("fecha_fin"), // When recurrence ends (if finalizaEn = 'fecha')
+  numeroRepeticiones: integer("numero_repeticiones"), // Total repetitions (if finalizaEn = 'repeticiones')
+  repeticionActual: integer("repeticion_actual").default(1), // Current repetition number (1 for original)
+  
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
