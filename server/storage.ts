@@ -1,11 +1,11 @@
 import { 
-  sales, uploadHistory, users, bancos, bancosBackup, tiposEgresos, productos, productosBackup, metodosPago, monedas, categorias, canales, asesores, transportistas, estados, ciudades, seguimientoConfig, precios, preciosBackup, egresos, egresosPorAprobar, paymentInstallments, prospectos,
+  sales, uploadHistory, users, bancos, bancosBackup, tiposEgresos, autorizadores, productos, productosBackup, metodosPago, monedas, categorias, canales, asesores, transportistas, estados, ciudades, seguimientoConfig, precios, preciosBackup, egresos, paymentInstallments, prospectos,
   type User, type InsertUser, type Sale, type InsertSale, type UploadHistory, type InsertUploadHistory,
-  type Banco, type InsertBanco, type TipoEgreso, type InsertTipoEgreso,
+  type Banco, type InsertBanco, type TipoEgreso, type InsertTipoEgreso, type Autorizador, type InsertAutorizador,
   type Producto, type InsertProducto, type MetodoPago, type InsertMetodoPago,
   type Moneda, type InsertMoneda, type Categoria, type InsertCategoria,
   type Canal, type InsertCanal, type Asesor, type InsertAsesor, type Transportista, type InsertTransportista, type Estado, type InsertEstado, type Ciudad, type InsertCiudad, type SeguimientoConfig, type InsertSeguimientoConfig, type Precio, type InsertPrecio, type Egreso, type InsertEgreso,
-  type EgresoPorAprobar, type InsertEgresoPorAprobar, type PaymentInstallment, type InsertPaymentInstallment,
+  type PaymentInstallment, type InsertPaymentInstallment,
   type Prospecto, type InsertProspecto
 } from "@shared/schema";
 import { db } from "./db";
@@ -184,6 +184,12 @@ export interface IStorage {
   createTipoEgreso(tipo: InsertTipoEgreso): Promise<TipoEgreso>;
   updateTipoEgreso(id: string, tipo: Partial<InsertTipoEgreso>): Promise<TipoEgreso | undefined>;
   deleteTipoEgreso(id: string): Promise<boolean>;
+
+  // Autorizadores
+  getAutorizadores(): Promise<Autorizador[]>;
+  createAutorizador(autorizador: InsertAutorizador): Promise<Autorizador>;
+  updateAutorizador(id: string, autorizador: Partial<InsertAutorizador>): Promise<Autorizador | undefined>;
+  deleteAutorizador(id: string): Promise<boolean>;
 
   // Productos
   getProductos(): Promise<any[]>;
@@ -1877,6 +1883,34 @@ export class DatabaseStorage implements IStorage {
 
   async deleteTipoEgreso(id: string): Promise<boolean> {
     const result = await db.delete(tiposEgresos).where(eq(tiposEgresos.id, id));
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  // Autorizadores methods
+  async getAutorizadores(): Promise<Autorizador[]> {
+    return await db.select().from(autorizadores).orderBy(autorizadores.nombre);
+  }
+
+  async createAutorizador(autorizador: InsertAutorizador): Promise<Autorizador> {
+    const [newAutorizador] = await db.insert(autorizadores).values({
+      ...autorizador,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }).returning();
+    return newAutorizador;
+  }
+
+  async updateAutorizador(id: string, autorizador: Partial<InsertAutorizador>): Promise<Autorizador | undefined> {
+    const [updated] = await db
+      .update(autorizadores)
+      .set({ ...autorizador, updatedAt: new Date() })
+      .where(eq(autorizadores.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  async deleteAutorizador(id: string): Promise<boolean> {
+    const result = await db.delete(autorizadores).where(eq(autorizadores.id, id));
     return (result.rowCount ?? 0) > 0;
   }
 

@@ -6,9 +6,9 @@ import { db, withRetry } from "./db";
 import { sales, type Sale } from "@shared/schema";
 import { eq } from "drizzle-orm";
 import { 
-  insertSaleSchema, insertUploadHistorySchema, insertBancoSchema, insertTipoEgresoSchema, 
+  insertSaleSchema, insertUploadHistorySchema, insertBancoSchema, insertTipoEgresoSchema, insertAutorizadorSchema,
   insertProductoSchema, insertMetodoPagoSchema, insertMonedaSchema, insertCategoriaSchema,
-  insertEgresoSchema, insertEgresoPorAprobarSchema, insertPaymentInstallmentSchema, insertAsesorSchema, insertTransportistaSchema, insertEstadoSchema, insertCiudadSchema, insertPrecioSchema, insertProspectoSchema
+  insertEgresoSchema, insertPaymentInstallmentSchema, insertAsesorSchema, insertTransportistaSchema, insertEstadoSchema, insertCiudadSchema, insertPrecioSchema, insertProspectoSchema
 } from "@shared/schema";
 import { z } from "zod";
 import multer from "multer";
@@ -4091,6 +4091,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Delete tipo egreso error:", error);
       res.status(500).json({ error: "Failed to delete tipo egreso" });
+    }
+  });
+
+  // AUTORIZADORES endpoints
+  app.get("/api/admin/autorizadores", async (req, res) => {
+    try {
+      const autorizadores = await storage.getAutorizadores();
+      res.json(autorizadores);
+    } catch (error) {
+      console.error("Get autorizadores error:", error);
+      res.status(500).json({ error: "Failed to get autorizadores" });
+    }
+  });
+
+  app.post("/api/admin/autorizadores", async (req, res) => {
+    try {
+      const validatedData = insertAutorizadorSchema.parse(req.body);
+      const autorizador = await storage.createAutorizador(validatedData);
+      res.status(201).json(autorizador);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Invalid data", details: error.errors });
+      }
+      console.error("Create autorizador error:", error);
+      res.status(500).json({ error: "Failed to create autorizador" });
+    }
+  });
+
+  app.put("/api/admin/autorizadores/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const validatedData = insertAutorizadorSchema.partial().parse(req.body);
+      const autorizador = await storage.updateAutorizador(id, validatedData);
+      if (!autorizador) {
+        return res.status(404).json({ error: "Autorizador not found" });
+      }
+      res.json(autorizador);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Invalid data", details: error.errors });
+      }
+      console.error("Update autorizador error:", error);
+      res.status(500).json({ error: "Failed to update autorizador" });
+    }
+  });
+
+  app.delete("/api/admin/autorizadores/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const deleted = await storage.deleteAutorizador(id);
+      if (!deleted) {
+        return res.status(404).json({ error: "Autorizador not found" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Delete autorizador error:", error);
+      res.status(500).json({ error: "Failed to delete autorizador" });
     }
   });
 

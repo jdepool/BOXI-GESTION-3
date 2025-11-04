@@ -339,30 +339,55 @@ export const casheaAutomaticDownloads = pgTable("cashea_automatic_downloads", {
   downloadedAt: timestamp("downloaded_at").defaultNow(),
 });
 
-export const egresos = pgTable("egresos", {
+// Autorizadores table for egreso approval workflow
+export const autorizadores = pgTable("autorizadores", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  fecha: timestamp("fecha").notNull(),
-  descripcion: text("descripcion").notNull(),
-  monto: decimal("monto", { precision: 15, scale: 2 }).notNull(),
-  monedaId: varchar("moneda_id").notNull(),
-  tipoEgresoId: varchar("tipo_egreso_id").notNull(),
-  metodoPagoId: varchar("metodo_pago_id").notNull(),
-  bancoId: varchar("banco_id").notNull(),
-  referencia: text("referencia"),
-  estado: text("estado").notNull().default("registrado"), // registrado, aprobado, pagado, anulado
-  observaciones: text("observaciones"),
-  pendienteInfo: boolean("pendiente_info").default(false), // true when approved from egresos_por_aprobar
+  nombre: text("nombre").notNull(),
+  criterio: text("criterio"), // Optional criteria description for when this authorizer is needed
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
 
-export const egresosPorAprobar = pgTable("egresos_por_aprobar", {
+// New egresos table with 4-stage workflow
+export const egresos = pgTable("egresos", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  fecha: timestamp("fecha").notNull(),
-  descripcion: text("descripcion").notNull(),
-  monto: decimal("monto", { precision: 15, scale: 2 }).notNull(),
-  tipoEgresoId: varchar("tipo_egreso_id").notNull(),
-  metodoPagoId: varchar("metodo_pago_id").notNull(),
+  
+  // Stage 1: Registration fields
+  fechaRegistro: timestamp("fecha_registro").notNull().defaultNow(),
+  ctaPorPagarUsd: decimal("cta_por_pagar_usd", { precision: 15, scale: 2 }),
+  ctaPorPagarBs: decimal("cta_por_pagar_bs", { precision: 15, scale: 2 }),
+  tipoEgresoId: varchar("tipo_egreso_id"),
+  descripcion: text("descripcion"),
+  fechaCompromiso: timestamp("fecha_compromiso"),
+  numeroFacturaProveedor: text("numero_factura_proveedor"),
+  requiereAprobacion: boolean("requiere_aprobacion").default(false),
+  autorizadorId: varchar("autorizador_id"),
+  
+  // Stage 2: Authorization fields
+  fechaAutorizacion: timestamp("fecha_autorizacion"),
+  accionAutorizacion: text("accion_autorizacion"), // Aprueba, Rechaza
+  notasAutorizacion: text("notas_autorizacion"),
+  
+  // Stage 3: Payment registration fields
+  fechaPago: timestamp("fecha_pago"),
+  montoPagadoUsd: decimal("monto_pagado_usd", { precision: 15, scale: 2 }),
+  montoPagadoBs: decimal("monto_pagado_bs", { precision: 15, scale: 2 }),
+  tasaCambio: decimal("tasa_cambio", { precision: 10, scale: 2 }),
+  bancoId: varchar("banco_id"),
+  referenciaPago: text("referencia_pago"),
+  numeroFacturaPagada: text("numero_factura_pagada"),
+  
+  // Stage 4: Verification fields (handled in Verificación tab)
+  estadoVerificacion: text("estado_verificacion").default("Por verificar"), // Por verificar, Verificado, Rechazado
+  fechaVerificacion: timestamp("fecha_verificacion"),
+  notasVerificacion: text("notas_verificacion"),
+  
+  // Overall status
+  estado: text("estado").notNull().default("Borrador"), // Borrador, Por autorizar, Por pagar, Pagado, Verificado
+  
+  // Draft indicator - true when missing required fields
+  esBorrador: boolean("es_borrador").default(true),
+  
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -475,22 +500,32 @@ export const insertPrecioSchema = createInsertSchema(precios).omit({
   fechaVigenciaDesde: z.union([z.date(), z.string().transform((val) => new Date(val))]),
 });
 
-export const insertEgresoSchema = createInsertSchema(egresos).omit({
+// Autorizadores schemas
+export const insertAutorizadorSchema = createInsertSchema(autorizadores).omit({
   id: true,
-  pendienteInfo: true,
   createdAt: true,
   updatedAt: true,
-}).extend({
-  fecha: z.union([z.date(), z.string().transform((val) => new Date(val))]),
 });
 
-export const insertEgresoPorAprobarSchema = createInsertSchema(egresosPorAprobar).omit({
+export type Autorizador = typeof autorizadores.$inferSelect;
+export type InsertAutorizador = z.infer<typeof insertAutorizadorSchema>;
+
+// Egresos schemas
+export const insertEgresoSchema = createInsertSchema(egresos).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
 }).extend({
-  fecha: z.union([z.date(), z.string().transform((val) => new Date(val))]),
+  fechaRegistro: z.union([z.date(), z.string().transform((val) => new Date(val))]).optional(),
+  fechaCompromiso: z.union([z.date(), z.string().transform((val) => new Date(val))]).optional(),
+  fechaAutorizacion: z.union([z.date(), z.string().transform((val) => new Date(val))]).optional(),
+  fechaPago: z.union([z.date(), z.string().transform((val) => new Date(val))]).optional(),
+  fechaVerificacion: z.union([z.date(), z.string().transform((val) => new Date(val))]).optional(),
 });
+
+export type Egreso = typeof egresos.$inferSelect;
+export type InsertEgreso = z.infer<typeof insertEgresoSchema>;
+
 
 export const insertPaymentInstallmentSchema = createInsertSchema(paymentInstallments).omit({
   id: true,
@@ -552,10 +587,6 @@ export type SeguimientoConfig = typeof seguimientoConfig.$inferSelect;
 export type InsertSeguimientoConfig = z.infer<typeof insertSeguimientoConfigSchema>;
 export type Precio = typeof precios.$inferSelect;
 export type InsertPrecio = z.infer<typeof insertPrecioSchema>;
-export type Egreso = typeof egresos.$inferSelect;
-export type InsertEgreso = z.infer<typeof insertEgresoSchema>;
-export type EgresoPorAprobar = typeof egresosPorAprobar.$inferSelect;
-export type InsertEgresoPorAprobar = z.infer<typeof insertEgresoPorAprobarSchema>;
 export type PaymentInstallment = typeof paymentInstallments.$inferSelect;
 export type InsertPaymentInstallment = z.infer<typeof insertPaymentInstallmentSchema>;
 
