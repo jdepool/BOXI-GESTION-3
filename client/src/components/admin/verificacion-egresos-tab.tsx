@@ -123,30 +123,30 @@ export function VerificacionEgresosTab() {
               </TableHeader>
               <TableBody>
                 {egresos.map((egreso: any) => {
-                  const tipoNombre = tiposEgresos.find((t: any) => t.id === egreso.tipo_egreso_id)?.nombre;
-                  const bancoNombre = bancos.find((b: any) => b.id === egreso.banco_id)?.nombre;
+                  const tipoNombre = tiposEgresos.find((t: any) => t.id === egreso.tipoEgresoId)?.nombre;
+                  const bancoNombre = bancos.find((b: any) => b.id === egreso.bancoId)?.banco;
                   
                   return (
                     <TableRow key={egreso.id} data-testid={`egreso-verificar-${egreso.id}`}>
                       <TableCell>
-                        {egreso.fecha_pago ? format(parseLocalDate(egreso.fecha_pago)!, "dd/MM/yyyy") : "N/A"}
+                        {egreso.fechaPago ? format(new Date(egreso.fechaPago), "dd/MM/yyyy") : "N/A"}
                       </TableCell>
                       <TableCell>{tipoNombre || "N/A"}</TableCell>
                       <TableCell className="max-w-xs truncate">{egreso.descripcion}</TableCell>
                       <TableCell>
-                        {egreso.monto_pagado_usd && (
+                        {egreso.montoPagadoUsd && (
                           <div className="text-green-600 dark:text-green-400">
-                            ${parseFloat(egreso.monto_pagado_usd).toFixed(2)}
+                            ${parseFloat(egreso.montoPagadoUsd).toFixed(2)}
                           </div>
                         )}
-                        {egreso.monto_pagado_bs && (
+                        {egreso.montoPagadoBs && (
                           <div className="text-blue-600 dark:text-blue-400">
-                            Bs {parseFloat(egreso.monto_pagado_bs).toFixed(2)}
+                            Bs {parseFloat(egreso.montoPagadoBs).toFixed(2)}
                           </div>
                         )}
                       </TableCell>
                       <TableCell>{bancoNombre || "N/A"}</TableCell>
-                      <TableCell>{egreso.referencia_pago || "N/A"}</TableCell>
+                      <TableCell>{egreso.referenciaPago || "N/A"}</TableCell>
                       <TableCell>
                         <Button
                           size="sm"
@@ -180,18 +180,18 @@ export function VerificacionEgresosTab() {
           {selectedEgreso && (
             <div className="space-y-4">
               <div className="bg-muted p-4 rounded-lg space-y-2 text-sm">
-                <div><strong>Tipo:</strong> {tiposEgresos.find((t: any) => t.id === selectedEgreso.tipo_egreso_id)?.nombre}</div>
+                <div><strong>Tipo:</strong> {tiposEgresos.find((t: any) => t.id === selectedEgreso.tipoEgresoId)?.nombre}</div>
                 <div><strong>Descripción:</strong> {selectedEgreso.descripcion}</div>
                 <div>
                   <strong>Monto Pagado:</strong>{" "}
-                  {selectedEgreso.monto_pagado_usd && `$${parseFloat(selectedEgreso.monto_pagado_usd).toFixed(2)}`}
-                  {selectedEgreso.monto_pagado_usd && selectedEgreso.monto_pagado_bs && " | "}
-                  {selectedEgreso.monto_pagado_bs && `Bs ${parseFloat(selectedEgreso.monto_pagado_bs).toFixed(2)}`}
+                  {selectedEgreso.montoPagadoUsd && `$${parseFloat(selectedEgreso.montoPagadoUsd).toFixed(2)}`}
+                  {selectedEgreso.montoPagadoUsd && selectedEgreso.montoPagadoBs && " | "}
+                  {selectedEgreso.montoPagadoBs && `Bs ${parseFloat(selectedEgreso.montoPagadoBs).toFixed(2)}`}
                 </div>
-                <div><strong>Banco:</strong> {bancos.find((b: any) => b.id === selectedEgreso.banco_id)?.nombre}</div>
-                <div><strong>Referencia:</strong> {selectedEgreso.referencia_pago || "N/A"}</div>
-                <div><strong>Factura:</strong> {selectedEgreso.numero_factura_pagada || "N/A"}</div>
-                <div><strong>Fecha de Pago:</strong> {selectedEgreso.fecha_pago ? format(parseLocalDate(selectedEgreso.fecha_pago)!, "dd/MM/yyyy") : "N/A"}</div>
+                <div><strong>Banco:</strong> {bancos.find((b: any) => b.id === selectedEgreso.bancoId)?.banco}</div>
+                <div><strong>Referencia:</strong> {selectedEgreso.referenciaPago || "N/A"}</div>
+                <div><strong>Factura:</strong> {selectedEgreso.numeroFacturaPagada || "N/A"}</div>
+                <div><strong>Fecha de Pago:</strong> {selectedEgreso.fechaPago ? format(new Date(selectedEgreso.fechaPago), "dd/MM/yyyy") : "N/A"}</div>
               </div>
 
               <div>
