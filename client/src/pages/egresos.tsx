@@ -1052,6 +1052,171 @@ function PorAutorizarTab() {
           </div>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={isEditEgresoDialogOpen} onOpenChange={(open) => {
+        if (!open) handleCloseEditEgresoDialog();
+        else setIsEditEgresoDialogOpen(true);
+      }}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Editar Datos del Egreso</DialogTitle>
+            <DialogDescription>
+              Modifique los detalles generales del egreso
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleEditEgreso} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="edit-autorizar-cta-por-pagar-usd">Cuenta por Pagar USD</Label>
+                <Input
+                  id="edit-autorizar-cta-por-pagar-usd"
+                  type="number"
+                  step="0.01"
+                  value={egresoData.cta_por_pagar_usd}
+                  onChange={(e) => setEgresoData({ ...egresoData, cta_por_pagar_usd: e.target.value })}
+                  placeholder="0.00"
+                  data-testid="input-edit-autorizar-cta-por-pagar-usd"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="edit-autorizar-cta-por-pagar-bs">Cuenta por Pagar Bs</Label>
+                <Input
+                  id="edit-autorizar-cta-por-pagar-bs"
+                  type="number"
+                  step="0.01"
+                  value={egresoData.cta_por_pagar_bs}
+                  onChange={(e) => setEgresoData({ ...egresoData, cta_por_pagar_bs: e.target.value })}
+                  placeholder="0.00"
+                  data-testid="input-edit-autorizar-cta-por-pagar-bs"
+                />
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="edit-autorizar-tipo-egreso-id">Tipo de Egreso *</Label>
+              <Select
+                value={egresoData.tipo_egreso_id}
+                onValueChange={(value) => setEgresoData({ ...egresoData, tipo_egreso_id: value })}
+                required
+              >
+                <SelectTrigger id="edit-autorizar-tipo-egreso-id" data-testid="select-edit-autorizar-tipo-egreso-id">
+                  <SelectValue placeholder="Seleccione un tipo" />
+                </SelectTrigger>
+                <SelectContent>
+                  {tiposEgresos.map((tipo: any) => (
+                    <SelectItem key={tipo.id} value={tipo.id}>
+                      {tipo.nombre}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label htmlFor="edit-autorizar-descripcion">Descripción *</Label>
+              <Textarea
+                id="edit-autorizar-descripcion"
+                value={egresoData.descripcion}
+                onChange={(e) => setEgresoData({ ...egresoData, descripcion: e.target.value })}
+                placeholder="Descripción del egreso"
+                required
+                rows={3}
+                data-testid="textarea-edit-autorizar-descripcion"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="edit-autorizar-fecha-compromiso">Fecha de Compromiso</Label>
+              <Input
+                id="edit-autorizar-fecha-compromiso"
+                type="date"
+                value={egresoData.fecha_compromiso}
+                onChange={(e) => setEgresoData({ ...egresoData, fecha_compromiso: e.target.value })}
+                data-testid="input-edit-autorizar-fecha-compromiso"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="edit-autorizar-numero-factura-proveedor">Número de Factura del Proveedor</Label>
+              <Input
+                id="edit-autorizar-numero-factura-proveedor"
+                value={egresoData.numero_factura_proveedor}
+                onChange={(e) => setEgresoData({ ...egresoData, numero_factura_proveedor: e.target.value })}
+                placeholder="Número de factura"
+                data-testid="input-edit-autorizar-numero-factura-proveedor"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="edit-autorizar-beneficiario">Pagado a (Beneficiario)</Label>
+              <Input
+                id="edit-autorizar-beneficiario"
+                value={egresoData.beneficiario}
+                onChange={(e) => setEgresoData({ ...egresoData, beneficiario: e.target.value })}
+                placeholder="Nombre del beneficiario"
+                data-testid="input-edit-autorizar-beneficiario"
+              />
+            </div>
+
+            <div className="space-y-4 p-4 bg-muted rounded-lg">
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="edit-autorizar-requiere-aprobacion"
+                  checked={egresoData.requiere_aprobacion}
+                  onCheckedChange={(checked) => setEgresoData({ ...egresoData, requiere_aprobacion: checked as boolean })}
+                  data-testid="checkbox-edit-autorizar-requiere-aprobacion"
+                />
+                <Label htmlFor="edit-autorizar-requiere-aprobacion" className="cursor-pointer">
+                  Requiere Autorización
+                </Label>
+              </div>
+
+              {egresoData.requiere_aprobacion && (
+                <div>
+                  <Label htmlFor="edit-autorizar-autorizador-id">Autorizador *</Label>
+                  <Select
+                    value={egresoData.autorizador_id}
+                    onValueChange={(value) => setEgresoData({ ...egresoData, autorizador_id: value })}
+                    required={egresoData.requiere_aprobacion}
+                  >
+                    <SelectTrigger id="edit-autorizar-autorizador-id" data-testid="select-edit-autorizar-autorizador-id">
+                      <SelectValue placeholder="Seleccione un autorizador" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {autorizadores.map((autorizador: any) => (
+                        <SelectItem key={autorizador.id} value={autorizador.id}>
+                          {autorizador.nombre}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+            </div>
+
+            <div className="flex gap-2">
+              <Button
+                type="submit"
+                className="flex-1"
+                disabled={editEgresoMutation.isPending}
+                data-testid="button-confirmar-edit-autorizar-egreso"
+              >
+                {editEgresoMutation.isPending ? "Guardando..." : "Guardar Cambios"}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleCloseEditEgresoDialog}
+                disabled={editEgresoMutation.isPending}
+                data-testid="button-cancelar-edit-autorizar-egreso"
+              >
+                Cancelar
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -2064,6 +2229,17 @@ function PorVerificarTab() {
                 onChange={(e) => setEgresoData({ ...egresoData, numero_factura_proveedor: e.target.value })}
                 placeholder="Número de factura"
                 data-testid="input-edit-numero-factura-proveedor"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="edit-beneficiario">Pagado a (Beneficiario)</Label>
+              <Input
+                id="edit-beneficiario"
+                value={egresoData.beneficiario}
+                onChange={(e) => setEgresoData({ ...egresoData, beneficiario: e.target.value })}
+                placeholder="Nombre del beneficiario"
+                data-testid="input-edit-beneficiario"
               />
             </div>
 
