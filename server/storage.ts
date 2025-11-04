@@ -1,10 +1,10 @@
 import { 
-  sales, uploadHistory, users, bancos, bancosBackup, tiposEgresos, autorizadores, productos, productosBackup, metodosPago, monedas, categorias, canales, asesores, transportistas, estados, ciudades, seguimientoConfig, precios, preciosBackup, egresos, paymentInstallments, prospectos,
+  sales, uploadHistory, users, bancos, bancosBackup, tiposEgresos, autorizadores, egresos, productos, productosBackup, metodosPago, monedas, categorias, canales, asesores, transportistas, estados, ciudades, seguimientoConfig, precios, preciosBackup, paymentInstallments, prospectos,
   type User, type InsertUser, type Sale, type InsertSale, type UploadHistory, type InsertUploadHistory,
-  type Banco, type InsertBanco, type TipoEgreso, type InsertTipoEgreso, type Autorizador, type InsertAutorizador,
+  type Banco, type InsertBanco, type TipoEgreso, type InsertTipoEgreso, type Autorizador, type InsertAutorizador, type Egreso, type InsertEgreso,
   type Producto, type InsertProducto, type MetodoPago, type InsertMetodoPago,
   type Moneda, type InsertMoneda, type Categoria, type InsertCategoria,
-  type Canal, type InsertCanal, type Asesor, type InsertAsesor, type Transportista, type InsertTransportista, type Estado, type InsertEstado, type Ciudad, type InsertCiudad, type SeguimientoConfig, type InsertSeguimientoConfig, type Precio, type InsertPrecio, type Egreso, type InsertEgreso,
+  type Canal, type InsertCanal, type Asesor, type InsertAsesor, type Transportista, type InsertTransportista, type Estado, type InsertEstado, type Ciudad, type InsertCiudad, type SeguimientoConfig, type InsertSeguimientoConfig, type Precio, type InsertPrecio,
   type PaymentInstallment, type InsertPaymentInstallment,
   type Prospecto, type InsertProspecto
 } from "@shared/schema";
@@ -191,6 +191,45 @@ export interface IStorage {
   updateAutorizador(id: string, autorizador: Partial<InsertAutorizador>): Promise<Autorizador | undefined>;
   deleteAutorizador(id: string): Promise<boolean>;
 
+  // Egresos
+  getEgresos(filters?: {
+    estado?: string;
+    tipoEgresoId?: string;
+    autorizadorId?: string;
+    bancoId?: string;
+    startDate?: string;
+    endDate?: string;
+    esBorrador?: boolean;
+    estadoVerificacion?: string;
+    limit?: number;
+    offset?: number;
+  }): Promise<Egreso[]>;
+  getEgresoById(id: string): Promise<Egreso | undefined>;
+  createEgreso(egreso: InsertEgreso): Promise<Egreso>;
+  updateEgreso(id: string, egreso: Partial<InsertEgreso>): Promise<Egreso | undefined>;
+  deleteEgreso(id: string): Promise<boolean>;
+  autorizarEgreso(id: string, accion: string, notas?: string): Promise<Egreso | undefined>;
+  registrarPagoEgreso(id: string, pago: {
+    fechaPago: Date;
+    montoPagadoUsd?: string;
+    montoPagadoBs?: string;
+    tasaCambio?: string;
+    bancoId: string;
+    referenciaPago?: string;
+    numeroFacturaPagada?: string;
+  }): Promise<Egreso | undefined>;
+  verificarEgreso(id: string, accion: string, notas?: string): Promise<Egreso | undefined>;
+  getTotalEgresosCount(filters?: {
+    estado?: string;
+    tipoEgresoId?: string;
+    autorizadorId?: string;
+    bancoId?: string;
+    startDate?: string;
+    endDate?: string;
+    esBorrador?: boolean;
+    estadoVerificacion?: string;
+  }): Promise<number>;
+
   // Productos
   getProductos(): Promise<any[]>;
   getProductoByNombre(nombre: string): Promise<Producto | undefined>;
@@ -266,59 +305,6 @@ export interface IStorage {
   restorePreciosFromBackup(): Promise<void>;
   hasPreciosBackup(): Promise<boolean>;
 
-  // Egresos
-  getEgresos(filters?: {
-    tipoEgresoId?: string;
-    metodoPagoId?: string;
-    bancoId?: string;
-    startDate?: Date;
-    endDate?: Date;
-    limit?: number;
-    offset?: number;
-  }): Promise<Egreso[]>;
-  createEgreso(egreso: InsertEgreso): Promise<Egreso>;
-  createEgresos(egresosData: InsertEgreso[]): Promise<Egreso[]>;
-  updateEgreso(id: string, egreso: Partial<InsertEgreso>): Promise<Egreso | undefined>;
-  deleteEgreso(id: string): Promise<boolean>;
-  getEgresoById(id: string): Promise<Egreso | undefined>;
-  getTotalEgresosCount(filters?: {
-    tipoEgresoId?: string;
-    metodoPagoId?: string;
-    bancoId?: string;
-    startDate?: Date;
-    endDate?: Date;
-  }): Promise<number>;
-
-  // Egresos Por Aprobar
-  getEgresosPorAprobar(filters?: {
-    tipoEgresoId?: string;
-    metodoPagoId?: string;
-    startDate?: Date;
-    endDate?: Date;
-    limit?: number;
-    offset?: number;
-  }): Promise<EgresoPorAprobar[]>;
-  createEgresoPorAprobar(egreso: InsertEgresoPorAprobar): Promise<EgresoPorAprobar>;
-  updateEgresoPorAprobar(id: string, egreso: Partial<InsertEgresoPorAprobar>): Promise<EgresoPorAprobar | undefined>;
-  deleteEgresoPorAprobar(id: string): Promise<boolean>;
-  getEgresoPorAprobarById(id: string): Promise<EgresoPorAprobar | undefined>;
-  getTotalEgresosPorAprobarCount(filters?: {
-    tipoEgresoId?: string;
-    metodoPagoId?: string;
-    startDate?: Date;
-    endDate?: Date;
-  }): Promise<number>;
-  aprobarEgreso(id: string, egresoData: {
-    monedaId: string;
-    bancoId: string;
-    referencia?: string;
-    observaciones?: string;
-  }): Promise<Egreso>;
-  completarInfoPagoEgreso(id: string, updates: {
-    bancoId?: string;
-    referencia?: string;
-    observaciones?: string;
-  }): Promise<Egreso | undefined>;
 
   // Payment Installments
   getInstallmentsBySale(saleId: string): Promise<PaymentInstallment[]>;
@@ -1914,6 +1900,223 @@ export class DatabaseStorage implements IStorage {
     return (result.rowCount ?? 0) > 0;
   }
 
+  // Egresos methods
+  async getEgresos(filters?: {
+    estado?: string;
+    tipoEgresoId?: string;
+    autorizadorId?: string;
+    bancoId?: string;
+    startDate?: string;
+    endDate?: string;
+    esBorrador?: boolean;
+    estadoVerificacion?: string;
+    limit?: number;
+    offset?: number;
+  }): Promise<Egreso[]> {
+    const conditions = [];
+
+    if (filters?.estado) {
+      conditions.push(eq(egresos.estado, filters.estado));
+    }
+
+    if (filters?.tipoEgresoId) {
+      conditions.push(eq(egresos.tipoEgresoId, filters.tipoEgresoId));
+    }
+
+    if (filters?.autorizadorId) {
+      conditions.push(eq(egresos.autorizadorId, filters.autorizadorId));
+    }
+
+    if (filters?.bancoId) {
+      conditions.push(eq(egresos.bancoId, filters.bancoId));
+    }
+
+    if (filters?.esBorrador !== undefined) {
+      conditions.push(eq(egresos.esBorrador, filters.esBorrador));
+    }
+
+    if (filters?.estadoVerificacion) {
+      conditions.push(eq(egresos.estadoVerificacion, filters.estadoVerificacion));
+    }
+
+    if (filters?.startDate) {
+      conditions.push(gte(egresos.fechaRegistro, new Date(filters.startDate)));
+    }
+
+    if (filters?.endDate) {
+      const endDate = new Date(filters.endDate);
+      endDate.setHours(23, 59, 59, 999);
+      conditions.push(lte(egresos.fechaRegistro, endDate));
+    }
+
+    let query = db.select().from(egresos);
+
+    if (conditions.length > 0) {
+      query = query.where(and(...conditions)) as any;
+    }
+
+    query = query.orderBy(desc(egresos.fechaRegistro)) as any;
+
+    if (filters?.limit) {
+      query = query.limit(filters.limit) as any;
+    }
+
+    if (filters?.offset) {
+      query = query.offset(filters.offset) as any;
+    }
+
+    return await query;
+  }
+
+  async getEgresoById(id: string): Promise<Egreso | undefined> {
+    const [egreso] = await db.select().from(egresos).where(eq(egresos.id, id));
+    return egreso || undefined;
+  }
+
+  async createEgreso(egreso: InsertEgreso): Promise<Egreso> {
+    const [newEgreso] = await db.insert(egresos).values({
+      ...egreso,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }).returning();
+    return newEgreso;
+  }
+
+  async updateEgreso(id: string, egreso: Partial<InsertEgreso>): Promise<Egreso | undefined> {
+    const [updated] = await db
+      .update(egresos)
+      .set({ ...egreso, updatedAt: new Date() })
+      .where(eq(egresos.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  async deleteEgreso(id: string): Promise<boolean> {
+    const result = await db.delete(egresos).where(eq(egresos.id, id));
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  async autorizarEgreso(id: string, accion: string, notas?: string): Promise<Egreso | undefined> {
+    const nuevoEstado = accion === 'Aprobar' ? 'Por pagar' : 'Borrador';
+    
+    const [updated] = await db
+      .update(egresos)
+      .set({
+        fechaAutorizacion: new Date(),
+        accionAutorizacion: accion,
+        notasAutorizacion: notas || null,
+        estado: nuevoEstado,
+        esBorrador: accion !== 'Aprobar',
+        updatedAt: new Date(),
+      })
+      .where(eq(egresos.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  async registrarPagoEgreso(id: string, pago: {
+    fechaPago: Date;
+    montoPagadoUsd?: string;
+    montoPagadoBs?: string;
+    tasaCambio?: string;
+    bancoId: string;
+    referenciaPago?: string;
+    numeroFacturaPagada?: string;
+  }): Promise<Egreso | undefined> {
+    const [updated] = await db
+      .update(egresos)
+      .set({
+        fechaPago: pago.fechaPago,
+        montoPagadoUsd: pago.montoPagadoUsd || null,
+        montoPagadoBs: pago.montoPagadoBs || null,
+        tasaCambio: pago.tasaCambio || null,
+        bancoId: pago.bancoId,
+        referenciaPago: pago.referenciaPago || null,
+        numeroFacturaPagada: pago.numeroFacturaPagada || null,
+        estado: 'Pagado',
+        esBorrador: false,
+        estadoVerificacion: 'Por verificar',
+        updatedAt: new Date(),
+      })
+      .where(eq(egresos.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  async verificarEgreso(id: string, accion: string, notas?: string): Promise<Egreso | undefined> {
+    const nuevoEstadoVerificacion = accion === 'Verificar' ? 'Verificado' : 'Rechazado';
+    const nuevoEstado = accion === 'Verificar' ? 'Verificado' : 'Pagado';
+    
+    const [updated] = await db
+      .update(egresos)
+      .set({
+        fechaVerificacion: new Date(),
+        estadoVerificacion: nuevoEstadoVerificacion,
+        notasVerificacion: notas || null,
+        estado: nuevoEstado,
+        updatedAt: new Date(),
+      })
+      .where(eq(egresos.id, id))
+      .returning();
+    return updated || undefined;
+  }
+
+  async getTotalEgresosCount(filters?: {
+    estado?: string;
+    tipoEgresoId?: string;
+    autorizadorId?: string;
+    bancoId?: string;
+    startDate?: string;
+    endDate?: string;
+    esBorrador?: boolean;
+    estadoVerificacion?: string;
+  }): Promise<number> {
+    const conditions = [];
+
+    if (filters?.estado) {
+      conditions.push(eq(egresos.estado, filters.estado));
+    }
+
+    if (filters?.tipoEgresoId) {
+      conditions.push(eq(egresos.tipoEgresoId, filters.tipoEgresoId));
+    }
+
+    if (filters?.autorizadorId) {
+      conditions.push(eq(egresos.autorizadorId, filters.autorizadorId));
+    }
+
+    if (filters?.bancoId) {
+      conditions.push(eq(egresos.bancoId, filters.bancoId));
+    }
+
+    if (filters?.esBorrador !== undefined) {
+      conditions.push(eq(egresos.esBorrador, filters.esBorrador));
+    }
+
+    if (filters?.estadoVerificacion) {
+      conditions.push(eq(egresos.estadoVerificacion, filters.estadoVerificacion));
+    }
+
+    if (filters?.startDate) {
+      conditions.push(gte(egresos.fechaRegistro, new Date(filters.startDate)));
+    }
+
+    if (filters?.endDate) {
+      const endDate = new Date(filters.endDate);
+      endDate.setHours(23, 59, 59, 999);
+      conditions.push(lte(egresos.fechaRegistro, endDate));
+    }
+
+    let query = db.select({ count: count() }).from(egresos);
+
+    if (conditions.length > 0) {
+      query = query.where(and(...conditions)) as any;
+    }
+
+    const result = await query;
+    return result[0]?.count || 0;
+  }
+
   // Productos methods
   async getProductos(): Promise<any[]> {
     const results = await db
@@ -2413,295 +2616,6 @@ export class DatabaseStorage implements IStorage {
     return backup.length > 0;
   }
 
-  // Egresos methods
-  async getEgresos(filters?: {
-    tipoEgresoId?: string;
-    metodoPagoId?: string;
-    bancoId?: string;
-    startDate?: Date;
-    endDate?: Date;
-    limit?: number;
-    offset?: number;
-  }): Promise<Egreso[]> {
-    const conditions = [];
-    if (filters?.tipoEgresoId) {
-      conditions.push(eq(egresos.tipoEgresoId, filters.tipoEgresoId));
-    }
-    if (filters?.metodoPagoId) {
-      conditions.push(eq(egresos.metodoPagoId, filters.metodoPagoId));
-    }
-    if (filters?.bancoId) {
-      conditions.push(eq(egresos.bancoId, filters.bancoId));
-    }
-    if (filters?.startDate) {
-      conditions.push(gte(egresos.fecha, filters.startDate));
-    }
-    if (filters?.endDate) {
-      // Add 23:59:59 to include the entire end date
-      const endDateTime = new Date(filters.endDate);
-      endDateTime.setHours(23, 59, 59, 999);
-      conditions.push(lte(egresos.fecha, endDateTime));
-    }
-    
-    // Build the complete query in one go
-    const queryBuilder = db.select().from(egresos);
-    const withConditions = conditions.length > 0 
-      ? queryBuilder.where(and(...conditions))
-      : queryBuilder;
-    const withOrder = withConditions.orderBy(desc(egresos.fecha));
-    const withLimit = filters?.limit ? withOrder.limit(filters.limit) : withOrder;
-    const finalQuery = filters?.offset ? withLimit.offset(filters.offset) : withLimit;
-    
-    return await finalQuery;
-  }
-
-  async createEgreso(egreso: InsertEgreso): Promise<Egreso> {
-    const [newEgreso] = await db
-      .insert(egresos)
-      .values(egreso)
-      .returning();
-    return newEgreso;
-  }
-
-  async createEgresos(egresosData: InsertEgreso[]): Promise<Egreso[]> {
-    const newEgresos = await db
-      .insert(egresos)
-      .values(egresosData)
-      .returning();
-    return newEgresos;
-  }
-
-  async updateEgreso(id: string, egreso: Partial<InsertEgreso>): Promise<Egreso | undefined> {
-    const [updatedEgreso] = await db
-      .update(egresos)
-      .set({
-        ...egreso,
-        updatedAt: new Date(),
-      })
-      .where(eq(egresos.id, id))
-      .returning();
-    return updatedEgreso || undefined;
-  }
-
-  async deleteEgreso(id: string): Promise<boolean> {
-    try {
-      await db.delete(egresos).where(eq(egresos.id, id));
-      return true;
-    } catch (error) {
-      console.error("Error deleting egreso:", error);
-      return false;
-    }
-  }
-
-  async getEgresoById(id: string): Promise<Egreso | undefined> {
-    const [egreso] = await db.select().from(egresos).where(eq(egresos.id, id));
-    return egreso || undefined;
-  }
-
-  async getTotalEgresosCount(filters?: {
-    tipoEgresoId?: string;
-    metodoPagoId?: string;
-    bancoId?: string;
-    startDate?: Date;
-    endDate?: Date;
-  }): Promise<number> {
-    const conditions = [];
-    if (filters?.tipoEgresoId) {
-      conditions.push(eq(egresos.tipoEgresoId, filters.tipoEgresoId));
-    }
-    if (filters?.metodoPagoId) {
-      conditions.push(eq(egresos.metodoPagoId, filters.metodoPagoId));
-    }
-    if (filters?.bancoId) {
-      conditions.push(eq(egresos.bancoId, filters.bancoId));
-    }
-    if (filters?.startDate) {
-      conditions.push(gte(egresos.fecha, filters.startDate));
-    }
-    if (filters?.endDate) {
-      conditions.push(lte(egresos.fecha, filters.endDate));
-    }
-    
-    // Build the complete query in one go
-    const queryBuilder = db.select({ count: count() }).from(egresos);
-    const finalQuery = conditions.length > 0 
-      ? queryBuilder.where(and(...conditions))
-      : queryBuilder;
-    
-    const [{ count: totalCount }] = await finalQuery;
-    return totalCount;
-  }
-
-  // Egresos Por Aprobar methods
-  async getEgresosPorAprobar(filters?: {
-    tipoEgresoId?: string;
-    metodoPagoId?: string;
-    startDate?: Date;
-    endDate?: Date;
-    limit?: number;
-    offset?: number;
-  }): Promise<EgresoPorAprobar[]> {
-    const conditions = [];
-    if (filters?.tipoEgresoId) {
-      conditions.push(eq(egresosPorAprobar.tipoEgresoId, filters.tipoEgresoId));
-    }
-    if (filters?.metodoPagoId) {
-      conditions.push(eq(egresosPorAprobar.metodoPagoId, filters.metodoPagoId));
-    }
-    if (filters?.startDate) {
-      conditions.push(gte(egresosPorAprobar.fecha, filters.startDate));
-    }
-    if (filters?.endDate) {
-      // Add 23:59:59 to include the entire end date
-      const endDateTime = new Date(filters.endDate);
-      endDateTime.setHours(23, 59, 59, 999);
-      conditions.push(lte(egresosPorAprobar.fecha, endDateTime));
-    }
-    
-    // Build the complete query in one go
-    const queryBuilder = db.select().from(egresosPorAprobar);
-    const withConditions = conditions.length > 0 
-      ? queryBuilder.where(and(...conditions))
-      : queryBuilder;
-    const withOrder = withConditions.orderBy(desc(egresosPorAprobar.fecha));
-    const withLimit = filters?.limit ? withOrder.limit(filters.limit) : withOrder;
-    const finalQuery = filters?.offset ? withLimit.offset(filters.offset) : withLimit;
-    
-    return await finalQuery;
-  }
-
-  async createEgresoPorAprobar(egreso: InsertEgresoPorAprobar): Promise<EgresoPorAprobar> {
-    const [newEgreso] = await db
-      .insert(egresosPorAprobar)
-      .values(egreso)
-      .returning();
-    return newEgreso;
-  }
-
-  async updateEgresoPorAprobar(id: string, egreso: Partial<InsertEgresoPorAprobar>): Promise<EgresoPorAprobar | undefined> {
-    const [updatedEgreso] = await db
-      .update(egresosPorAprobar)
-      .set({
-        ...egreso,
-        updatedAt: new Date(),
-      })
-      .where(eq(egresosPorAprobar.id, id))
-      .returning();
-    return updatedEgreso || undefined;
-  }
-
-  async deleteEgresoPorAprobar(id: string): Promise<boolean> {
-    try {
-      await db.delete(egresosPorAprobar).where(eq(egresosPorAprobar.id, id));
-      return true;
-    } catch (error) {
-      console.error("Error deleting egreso por aprobar:", error);
-      return false;
-    }
-  }
-
-  async getEgresoPorAprobarById(id: string): Promise<EgresoPorAprobar | undefined> {
-    const [egreso] = await db.select().from(egresosPorAprobar).where(eq(egresosPorAprobar.id, id));
-    return egreso || undefined;
-  }
-
-  async getTotalEgresosPorAprobarCount(filters?: {
-    tipoEgresoId?: string;
-    metodoPagoId?: string;
-    startDate?: Date;
-    endDate?: Date;
-  }): Promise<number> {
-    const conditions = [];
-    if (filters?.tipoEgresoId) {
-      conditions.push(eq(egresosPorAprobar.tipoEgresoId, filters.tipoEgresoId));
-    }
-    if (filters?.metodoPagoId) {
-      conditions.push(eq(egresosPorAprobar.metodoPagoId, filters.metodoPagoId));
-    }
-    if (filters?.startDate) {
-      conditions.push(gte(egresosPorAprobar.fecha, filters.startDate));
-    }
-    if (filters?.endDate) {
-      conditions.push(lte(egresosPorAprobar.fecha, filters.endDate));
-    }
-    
-    // Build the complete query in one go
-    const queryBuilder = db.select({ count: count() }).from(egresosPorAprobar);
-    const finalQuery = conditions.length > 0 
-      ? queryBuilder.where(and(...conditions))
-      : queryBuilder;
-    
-    const [{ count: totalCount }] = await finalQuery;
-    return totalCount;
-  }
-
-  async aprobarEgreso(id: string, egresoData: {
-    monedaId: string;
-    bancoId: string;
-    referencia?: string;
-    observaciones?: string;
-  }): Promise<Egreso> {
-    // Get the egreso por aprobar first
-    const egresoPorAprobar = await this.getEgresoPorAprobarById(id);
-    if (!egresoPorAprobar) {
-      throw new Error('Egreso por aprobar no encontrado');
-    }
-
-    // Create the egreso in the main table with additional data
-    const [newEgreso] = await db
-      .insert(egresos)
-      .values({
-        fecha: egresoPorAprobar.fecha,
-        descripcion: egresoPorAprobar.descripcion,
-        monto: egresoPorAprobar.monto,
-        monedaId: egresoData.monedaId,
-        tipoEgresoId: egresoPorAprobar.tipoEgresoId,
-        metodoPagoId: egresoPorAprobar.metodoPagoId,
-        bancoId: egresoData.bancoId,
-        referencia: egresoData.referencia || '',
-        estado: 'registrado',
-        observaciones: egresoPorAprobar.descripcion || '',
-        pendienteInfo: true, // Mark as pending complete payment info (orange color)
-      })
-      .returning();
-
-    // Delete from egresos por aprobar
-    await this.deleteEgresoPorAprobar(id);
-
-    return newEgreso;
-  }
-
-  async completarInfoPagoEgreso(id: string, updates: {
-    bancoId?: string;
-    referencia?: string;
-    observaciones?: string;
-  }): Promise<Egreso | undefined> {
-    // Get current egreso to preserve existing observaciones
-    const [currentEgreso] = await db
-      .select()
-      .from(egresos)
-      .where(eq(egresos.id, id))
-      .limit(1);
-
-    if (!currentEgreso) {
-      throw new Error('Egreso not found');
-    }
-
-    const [updatedEgreso] = await db
-      .update(egresos)
-      .set({
-        bancoId: updates.bancoId,
-        referencia: updates.referencia,
-        observaciones: updates.observaciones || currentEgreso.observaciones, // Preserve original if no new value
-        estado: 'aprobado', // Now fully approved with complete payment info
-        pendienteInfo: false, // Remove pending flag
-        updatedAt: new Date(),
-      })
-      .where(eq(egresos.id, id))
-      .returning();
-
-    return updatedEgreso || undefined;
-  }
 
   // Update existing Cashea orders from TO DELIVER to PROCESSING
   async updateCasheaOrdersToProcessing(): Promise<number> {

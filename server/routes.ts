@@ -4151,6 +4151,178 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // EGRESOS endpoints
+  app.get("/api/egresos", async (req, res) => {
+    try {
+      const filters = {
+        estado: req.query.estado as string | undefined,
+        tipoEgresoId: req.query.tipoEgresoId as string | undefined,
+        autorizadorId: req.query.autorizadorId as string | undefined,
+        bancoId: req.query.bancoId as string | undefined,
+        startDate: req.query.startDate as string | undefined,
+        endDate: req.query.endDate as string | undefined,
+        esBorrador: req.query.esBorrador === 'true' ? true : req.query.esBorrador === 'false' ? false : undefined,
+        estadoVerificacion: req.query.estadoVerificacion as string | undefined,
+        limit: req.query.limit ? parseInt(req.query.limit as string) : undefined,
+        offset: req.query.offset ? parseInt(req.query.offset as string) : undefined,
+      };
+      const egresos = await storage.getEgresos(filters);
+      res.json(egresos);
+    } catch (error) {
+      console.error("Get egresos error:", error);
+      res.status(500).json({ error: "Failed to get egresos" });
+    }
+  });
+
+  app.get("/api/egresos/count", async (req, res) => {
+    try {
+      const filters = {
+        estado: req.query.estado as string | undefined,
+        tipoEgresoId: req.query.tipoEgresoId as string | undefined,
+        autorizadorId: req.query.autorizadorId as string | undefined,
+        bancoId: req.query.bancoId as string | undefined,
+        startDate: req.query.startDate as string | undefined,
+        endDate: req.query.endDate as string | undefined,
+        esBorrador: req.query.esBorrador === 'true' ? true : req.query.esBorrador === 'false' ? false : undefined,
+        estadoVerificacion: req.query.estadoVerificacion as string | undefined,
+      };
+      const count = await storage.getTotalEgresosCount(filters);
+      res.json({ count });
+    } catch (error) {
+      console.error("Get egresos count error:", error);
+      res.status(500).json({ error: "Failed to get egresos count" });
+    }
+  });
+
+  app.get("/api/egresos/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const egreso = await storage.getEgresoById(id);
+      if (!egreso) {
+        return res.status(404).json({ error: "Egreso not found" });
+      }
+      res.json(egreso);
+    } catch (error) {
+      console.error("Get egreso by id error:", error);
+      res.status(500).json({ error: "Failed to get egreso" });
+    }
+  });
+
+  app.post("/api/egresos", async (req, res) => {
+    try {
+      const validatedData = insertEgresoSchema.parse(req.body);
+      const egreso = await storage.createEgreso(validatedData);
+      res.status(201).json(egreso);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Invalid data", details: error.errors });
+      }
+      console.error("Create egreso error:", error);
+      res.status(500).json({ error: "Failed to create egreso" });
+    }
+  });
+
+  app.put("/api/egresos/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const validatedData = insertEgresoSchema.partial().parse(req.body);
+      const egreso = await storage.updateEgreso(id, validatedData);
+      if (!egreso) {
+        return res.status(404).json({ error: "Egreso not found" });
+      }
+      res.json(egreso);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Invalid data", details: error.errors });
+      }
+      console.error("Update egreso error:", error);
+      res.status(500).json({ error: "Failed to update egreso" });
+    }
+  });
+
+  app.delete("/api/egresos/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const deleted = await storage.deleteEgreso(id);
+      if (!deleted) {
+        return res.status(404).json({ error: "Egreso not found" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Delete egreso error:", error);
+      res.status(500).json({ error: "Failed to delete egreso" });
+    }
+  });
+
+  app.post("/api/egresos/:id/autorizar", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { accion, notas } = req.body;
+      
+      if (!accion || !['Aprobar', 'Rechazar'].includes(accion)) {
+        return res.status(400).json({ error: "Invalid accion. Must be 'Aprobar' or 'Rechazar'" });
+      }
+
+      const egreso = await storage.autorizarEgreso(id, accion, notas);
+      if (!egreso) {
+        return res.status(404).json({ error: "Egreso not found" });
+      }
+      res.json(egreso);
+    } catch (error) {
+      console.error("Autorizar egreso error:", error);
+      res.status(500).json({ error: "Failed to authorize egreso" });
+    }
+  });
+
+  app.post("/api/egresos/:id/registrar-pago", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { fechaPago, montoPagadoUsd, montoPagadoBs, tasaCambio, bancoId, referenciaPago, numeroFacturaPagada } = req.body;
+      
+      if (!fechaPago || !bancoId) {
+        return res.status(400).json({ error: "fechaPago and bancoId are required" });
+      }
+
+      const egreso = await storage.registrarPagoEgreso(id, {
+        fechaPago: new Date(fechaPago),
+        montoPagadoUsd,
+        montoPagadoBs,
+        tasaCambio,
+        bancoId,
+        referenciaPago,
+        numeroFacturaPagada,
+      });
+      
+      if (!egreso) {
+        return res.status(404).json({ error: "Egreso not found" });
+      }
+      res.json(egreso);
+    } catch (error) {
+      console.error("Registrar pago egreso error:", error);
+      res.status(500).json({ error: "Failed to register payment" });
+    }
+  });
+
+  app.post("/api/egresos/:id/verificar", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const { accion, notas } = req.body;
+      
+      if (!accion || !['Verificar', 'Rechazar'].includes(accion)) {
+        return res.status(400).json({ error: "Invalid accion. Must be 'Verificar' or 'Rechazar'" });
+      }
+
+      const egreso = await storage.verificarEgreso(id, accion, notas);
+      if (!egreso) {
+        return res.status(404).json({ error: "Egreso not found" });
+      }
+      res.json(egreso);
+    } catch (error) {
+      console.error("Verificar egreso error:", error);
+      res.status(500).json({ error: "Failed to verify egreso" });
+    }
+  });
+
   // PRODUCTOS endpoints
   app.get("/api/admin/productos", async (req, res) => {
     try {
@@ -5786,159 +5958,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Get egreso error:", error);
       res.status(500).json({ error: "Failed to get egreso" });
-    }
-  });
-
-  // Egresos Por Aprobar endpoints
-  const getEgresosPorAprobarQuerySchema = z.object({
-    tipoEgresoId: z.string().optional(),
-    metodoPagoId: z.string().optional(),
-    startDate: z.string().optional(),
-    endDate: z.string().optional(),
-    limit: z.coerce.number().min(1).max(100).default(20),
-    offset: z.coerce.number().min(0).default(0),
-  });
-
-  app.get("/api/egresos-por-aprobar", async (req, res) => {
-    try {
-      const query = getEgresosPorAprobarQuerySchema.parse(req.query);
-      
-      const filters = {
-        tipoEgresoId: query.tipoEgresoId,
-        metodoPagoId: query.metodoPagoId,
-        startDate: query.startDate ? (() => {
-          const [year, month, day] = query.startDate.split('-');
-          return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
-        })() : undefined,
-        endDate: query.endDate ? (() => {
-          const [year, month, day] = query.endDate.split('-');
-          return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
-        })() : undefined,
-        limit: query.limit,
-        offset: query.offset,
-      };
-
-      const [egresosPorAprobarData, totalCount] = await Promise.all([
-        storage.getEgresosPorAprobar(filters),
-        storage.getTotalEgresosPorAprobarCount(filters),
-      ]);
-
-      res.json({
-        data: egresosPorAprobarData,
-        total: totalCount,
-        limit: query.limit,
-        offset: query.offset,
-      });
-    } catch (error) {
-      console.error("Error fetching egresos por aprobar:", error);
-      res.status(500).json({ error: "Failed to fetch egresos por aprobar" });
-    }
-  });
-
-  app.post("/api/egresos-por-aprobar", async (req, res) => {
-    try {
-      const validatedData = insertEgresoPorAprobarSchema.parse(req.body);
-      const egreso = await storage.createEgresoPorAprobar(validatedData);
-      res.status(201).json(egreso);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ error: "Invalid data", details: error.errors });
-      }
-      console.error("Create egreso por aprobar error:", error);
-      res.status(500).json({ error: "Failed to create egreso por aprobar" });
-    }
-  });
-
-  app.put("/api/egresos-por-aprobar/:id", async (req, res) => {
-    try {
-      const { id } = req.params;
-      const validatedData = insertEgresoPorAprobarSchema.partial().parse(req.body);
-      const updatedEgreso = await storage.updateEgresoPorAprobar(id, validatedData);
-      if (!updatedEgreso) {
-        return res.status(404).json({ error: "Egreso por aprobar not found" });
-      }
-      res.json(updatedEgreso);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ error: "Invalid data", details: error.errors });
-      }
-      console.error("Update egreso por aprobar error:", error);
-      res.status(500).json({ error: "Failed to update egreso por aprobar" });
-    }
-  });
-
-  app.delete("/api/egresos-por-aprobar/:id", async (req, res) => {
-    try {
-      const { id } = req.params;
-      const success = await storage.deleteEgresoPorAprobar(id);
-      if (!success) {
-        return res.status(404).json({ error: "Egreso por aprobar not found" });
-      }
-      res.json({ message: "Egreso por aprobar deleted successfully" });
-    } catch (error) {
-      console.error("Delete egreso por aprobar error:", error);
-      res.status(500).json({ error: "Failed to delete egreso por aprobar" });
-    }
-  });
-
-  app.get("/api/egresos-por-aprobar/:id", async (req, res) => {
-    try {
-      const { id } = req.params;
-      const egreso = await storage.getEgresoPorAprobarById(id);
-      if (!egreso) {
-        return res.status(404).json({ error: "Egreso por aprobar not found" });
-      }
-      res.json(egreso);
-    } catch (error) {
-      console.error("Get egreso por aprobar error:", error);
-      res.status(500).json({ error: "Failed to get egreso por aprobar" });
-    }
-  });
-
-  const aprobarEgresoSchema = z.object({
-    monedaId: z.string(),
-    bancoId: z.string(),
-    referencia: z.string().optional(),
-    observaciones: z.string().optional(),
-  });
-
-  app.post("/api/egresos-por-aprobar/:id/aprobar", async (req, res) => {
-    try {
-      const { id } = req.params;
-      const validatedData = aprobarEgresoSchema.parse(req.body);
-      const newEgreso = await storage.aprobarEgreso(id, validatedData);
-      res.status(201).json(newEgreso);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ error: "Invalid data", details: error.errors });
-      }
-      console.error("Aprobar egreso error:", error);
-      res.status(500).json({ error: "Failed to approve egreso" });
-    }
-  });
-
-  // Complete payment info for egreso
-  const completarInfoPagoSchema = z.object({
-    bancoId: z.string().optional(),
-    referencia: z.string().optional(),
-    observaciones: z.string().optional(),
-  });
-
-  app.put("/api/egresos/:id/completar-pago", async (req, res) => {
-    try {
-      const { id } = req.params;
-      const validatedData = completarInfoPagoSchema.parse(req.body);
-      const updatedEgreso = await storage.completarInfoPagoEgreso(id, validatedData);
-      if (!updatedEgreso) {
-        return res.status(404).json({ error: "Egreso not found" });
-      }
-      res.json(updatedEgreso);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ error: "Invalid data", details: error.errors });
-      }
-      console.error("Complete payment info error:", error);
-      res.status(500).json({ error: "Failed to complete payment info" });
     }
   });
 

@@ -5,6 +5,7 @@ import { ArrowLeft } from "lucide-react";
 import { Link } from "wouter";
 import { BancosTab } from "../components/admin/bancos-tab";
 import { TiposEgresosTab } from "../components/admin/tipos-egresos-tab";
+import { AutorizadoresTab } from "../components/admin/autorizadores-tab";
 import { ProductosTab } from "../components/admin/productos-tab";
 import { MetodosPagoTab } from "../components/admin/metodos-pago-tab";
 import { MonedasTab } from "../components/admin/monedas-tab";
@@ -43,6 +44,9 @@ export default function Administracion() {
           </TabsTrigger>
           <TabsTrigger value="tipos-egresos" className="text-xs">
             TIPOS DE EGRESOS
+          </TabsTrigger>
+          <TabsTrigger value="autorizadores" className="text-xs">
+            AUTORIZADORES
           </TabsTrigger>
           <TabsTrigger value="productos" className="text-xs">
             PRODUCTOS
@@ -85,6 +89,10 @@ export default function Administracion() {
 
         <TabsContent value="tipos-egresos" className="space-y-4">
           <TiposEgresosTab />
+        </TabsContent>
+
+        <TabsContent value="autorizadores" className="space-y-4">
+          <AutorizadoresTab />
         </TabsContent>
 
         <TabsContent value="productos" className="space-y-4">
