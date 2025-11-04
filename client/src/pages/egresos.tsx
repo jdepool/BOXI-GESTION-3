@@ -2065,6 +2065,8 @@ function HistorialTab() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Fecha Registro</TableHead>
+                    <TableHead>Fecha Compromiso</TableHead>
+                    <TableHead>Fecha Pago</TableHead>
                     <TableHead>Tipo</TableHead>
                     <TableHead>Descripción</TableHead>
                     <TableHead>Pagado a</TableHead>
@@ -2074,7 +2076,6 @@ function HistorialTab() {
                     <TableHead>Monto Pagado Bs</TableHead>
                     <TableHead>Tasa Cambio</TableHead>
                     <TableHead>Estado</TableHead>
-                    <TableHead>Fecha Pago</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -2085,6 +2086,12 @@ function HistorialTab() {
                       <TableRow key={egreso.id} data-testid={`egreso-historial-${egreso.id}`}>
                         <TableCell>
                           {egreso.fechaRegistro ? format(new Date(egreso.fechaRegistro), "dd/MM/yyyy") : "N/A"}
+                        </TableCell>
+                        <TableCell>
+                          {egreso.fechaCompromiso ? format(new Date(egreso.fechaCompromiso), "dd/MM/yyyy") : "N/A"}
+                        </TableCell>
+                        <TableCell>
+                          {egreso.fechaPago ? format(new Date(egreso.fechaPago), "dd/MM/yyyy") : "N/A"}
                         </TableCell>
                         <TableCell>{tipoNombre || "N/A"}</TableCell>
                         <TableCell className="max-w-xs truncate">{egreso.descripcion}</TableCell>
@@ -2124,9 +2131,6 @@ function HistorialTab() {
                           <Badge className={getEstadoEgresosBadgeClass(egreso.estado)}>
                             {egreso.estado}
                           </Badge>
-                        </TableCell>
-                        <TableCell>
-                          {egreso.fechaPago ? format(new Date(egreso.fechaPago), "dd/MM/yyyy") : "N/A"}
                         </TableCell>
                       </TableRow>
                     );
