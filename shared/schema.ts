@@ -358,6 +358,7 @@ export const egresos = pgTable("egresos", {
   ctaPorPagarBs: decimal("cta_por_pagar_bs", { precision: 15, scale: 2 }),
   tipoEgresoId: varchar("tipo_egreso_id"),
   descripcion: text("descripcion"),
+  beneficiario: text("beneficiario"),
   fechaCompromiso: timestamp("fecha_compromiso"),
   numeroFacturaProveedor: text("numero_factura_proveedor"),
   requiereAprobacion: boolean("requiere_aprobacion").default(false),
