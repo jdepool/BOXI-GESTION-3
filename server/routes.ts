@@ -4212,6 +4212,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/egresos", async (req, res) => {
     try {
       const validatedData = insertEgresoSchema.parse(req.body);
+      
+      // If this is a recurring egreso, generate series ID and set as first in series
+      if (validatedData.esRecurrente) {
+        const { randomUUID } = await import('crypto');
+        validatedData.serieRecurrenciaId = randomUUID();
+        validatedData.numeroEnSerie = 1;
+        
+        console.log(`📅 Creating first egreso in recurring series ${validatedData.serieRecurrenciaId}`);
+        console.log(`   Frequency: ${validatedData.frecuenciaRecurrencia}, Total: ${validatedData.numeroRepeticiones}`);
+      }
+      
       const egreso = await storage.createEgreso(validatedData);
       res.status(201).json(egreso);
     } catch (error) {
@@ -5954,6 +5965,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/egresos", async (req, res) => {
     try {
       const validatedData = insertEgresoSchema.parse(req.body);
+      
+      // If this is a recurring egreso, generate series ID and set as first in series
+      if (validatedData.esRecurrente) {
+        const { randomUUID } = await import('crypto');
+        validatedData.serieRecurrenciaId = randomUUID();
+        validatedData.numeroEnSerie = 1;
+        
+        console.log(`📅 Creating first egreso in recurring series ${validatedData.serieRecurrenciaId}`);
+        console.log(`   Frequency: ${validatedData.frecuenciaRecurrencia}, Total: ${validatedData.numeroRepeticiones}`);
+      }
+      
       const egreso = await storage.createEgreso(validatedData);
       res.status(201).json(egreso);
     } catch (error) {
