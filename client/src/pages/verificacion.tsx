@@ -548,20 +548,15 @@ export default function VerificacionPage() {
                         {getBancoName(payment.bancoId)}
                       </td>
                       <td className="p-2 text-xs" data-testid={`badge-estado-${index}`}>
-                        {payment.estadoVerificacion === "Rechazado" ? (
-                          <Badge variant="destructive">
-                            {payment.estadoVerificacion}
-                          </Badge>
-                        ) : (
-                          <Badge 
-                            className={cn(
-                              payment.estadoVerificacion === "Por verificar" && "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200 hover:bg-amber-100 dark:hover:bg-amber-900",
-                              payment.estadoVerificacion === "Verificado" && "bg-gray-500 text-white dark:bg-gray-600 dark:text-white hover:bg-gray-500 dark:hover:bg-gray-600"
-                            )}
-                          >
-                            {payment.estadoVerificacion}
-                          </Badge>
-                        )}
+                        <Badge 
+                          className={cn(
+                            payment.estadoVerificacion === "Por verificar" && "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200 hover:bg-amber-100 dark:hover:bg-amber-900",
+                            payment.estadoVerificacion === "Verificado" && "bg-green-500 text-white dark:bg-green-600 dark:text-white hover:bg-green-500 dark:hover:bg-green-600",
+                            payment.estadoVerificacion === "Rechazado" && "bg-purple-500 text-white dark:bg-purple-600 dark:text-white hover:bg-purple-500 dark:hover:bg-purple-600"
+                          )}
+                        >
+                          {payment.estadoVerificacion}
+                        </Badge>
                       </td>
                       <td className="p-2 text-xs max-w-[200px] truncate" data-testid={`text-notas-${index}`}>
                         {payment.notasVerificacion || "-"}
