@@ -814,6 +814,7 @@ function PorAutorizarTab() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Fecha Registro</TableHead>
+                  <TableHead>Fecha Compromiso</TableHead>
                   <TableHead>Tipo</TableHead>
                   <TableHead>Descripción</TableHead>
                   <TableHead>Pagado a</TableHead>
@@ -832,6 +833,9 @@ function PorAutorizarTab() {
                     <TableRow key={egreso.id} data-testid={`egreso-por-autorizar-${egreso.id}`}>
                       <TableCell>
                         {egreso.fechaRegistro ? format(new Date(egreso.fechaRegistro), "dd/MM/yyyy") : "N/A"}
+                      </TableCell>
+                      <TableCell>
+                        {egreso.fechaCompromiso ? format(new Date(egreso.fechaCompromiso), "dd/MM/yyyy") : "N/A"}
                       </TableCell>
                       <TableCell>{tipoNombre || "N/A"}</TableCell>
                       <TableCell className="max-w-xs truncate">{egreso.descripcion}</TableCell>
