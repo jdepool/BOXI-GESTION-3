@@ -9,7 +9,7 @@ import {
   type Prospecto, type InsertProspecto
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, asc, count, sum, avg, and, gte, lte, or, ne, like, ilike, isNotNull, isNull, sql } from "drizzle-orm";
+import { eq, desc, asc, count, sum, avg, and, gte, lte, or, ne, like, ilike, isNotNull, isNull, sql, inArray } from "drizzle-orm";
 
 export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
@@ -1902,7 +1902,7 @@ export class DatabaseStorage implements IStorage {
 
   // Egresos methods
   async getEgresos(filters?: {
-    estado?: string;
+    estado?: string[];
     tipoEgresoId?: string;
     autorizadorId?: string;
     bancoId?: string;
@@ -1916,8 +1916,12 @@ export class DatabaseStorage implements IStorage {
   }): Promise<Egreso[]> {
     const conditions = [];
 
-    if (filters?.estado) {
-      conditions.push(eq(egresos.estado, filters.estado));
+    if (filters?.estado && filters.estado.length > 0) {
+      if (filters.estado.length === 1) {
+        conditions.push(eq(egresos.estado, filters.estado[0]));
+      } else {
+        conditions.push(inArray(egresos.estado, filters.estado));
+      }
     }
 
     if (filters?.tipoEgresoId) {
@@ -2067,7 +2071,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getTotalEgresosCount(filters?: {
-    estado?: string;
+    estado?: string[];
     tipoEgresoId?: string;
     autorizadorId?: string;
     bancoId?: string;
@@ -2078,8 +2082,12 @@ export class DatabaseStorage implements IStorage {
   }): Promise<number> {
     const conditions = [];
 
-    if (filters?.estado) {
-      conditions.push(eq(egresos.estado, filters.estado));
+    if (filters?.estado && filters.estado.length > 0) {
+      if (filters.estado.length === 1) {
+        conditions.push(eq(egresos.estado, filters.estado[0]));
+      } else {
+        conditions.push(inArray(egresos.estado, filters.estado));
+      }
     }
 
     if (filters?.tipoEgresoId) {
