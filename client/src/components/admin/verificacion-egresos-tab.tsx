@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Check, X } from "lucide-react";
 import { format, parse } from "date-fns";
+import { getEstadoEgresosBadgeClass } from "@/lib/badge-utils";
 
 const parseLocalDate = (dateString: string) => {
   if (!dateString) return undefined;
@@ -36,10 +37,6 @@ export function VerificacionEgresosTab() {
       if (!response.ok) throw new Error('Failed to fetch egresos');
       return response.json();
     },
-  });
-
-  const { data: tiposEgresos = [] } = useQuery<any[]>({
-    queryKey: ["/api/admin/tipos-egresos"],
   });
 
   const { data: bancos = [] } = useQuery<any[]>({
@@ -113,18 +110,17 @@ export function VerificacionEgresosTab() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Fecha Pago</TableHead>
-                  <TableHead>Tipo</TableHead>
-                  <TableHead>Descripción</TableHead>
-                  <TableHead>Pagado a</TableHead>
-                  <TableHead>Monto Pagado</TableHead>
-                  <TableHead>Banco</TableHead>
+                  <TableHead>Monto Pagado Bs</TableHead>
+                  <TableHead>Monto Pagado USD</TableHead>
                   <TableHead>Referencia</TableHead>
+                  <TableHead>Banco</TableHead>
+                  <TableHead>Estado</TableHead>
+                  <TableHead>Notas</TableHead>
                   <TableHead>Acciones</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {egresos.map((egreso: any) => {
-                  const tipoNombre = tiposEgresos.find((t: any) => t.id === egreso.tipoEgresoId)?.nombre;
                   const bancoNombre = bancos.find((b: any) => b.id === egreso.bancoId)?.banco;
                   
                   return (
@@ -132,23 +128,22 @@ export function VerificacionEgresosTab() {
                       <TableCell>
                         {egreso.fechaPago ? format(new Date(egreso.fechaPago), "dd/MM/yyyy") : "N/A"}
                       </TableCell>
-                      <TableCell>{tipoNombre || "N/A"}</TableCell>
-                      <TableCell className="max-w-xs truncate">{egreso.descripcion}</TableCell>
-                      <TableCell>{egreso.beneficiario || "N/A"}</TableCell>
                       <TableCell>
-                        {egreso.montoPagadoUsd && (
-                          <div className="text-green-600 dark:text-green-400">
-                            ${parseFloat(egreso.montoPagadoUsd).toFixed(2)}
-                          </div>
-                        )}
-                        {egreso.montoPagadoBs && (
-                          <div className="text-blue-600 dark:text-blue-400">
-                            Bs {parseFloat(egreso.montoPagadoBs).toFixed(2)}
-                          </div>
-                        )}
+                        {egreso.montoPagadoBs ? `Bs ${parseFloat(egreso.montoPagadoBs).toFixed(2)}` : "-"}
                       </TableCell>
-                      <TableCell>{bancoNombre || "N/A"}</TableCell>
+                      <TableCell>
+                        {egreso.montoPagadoUsd ? `$${parseFloat(egreso.montoPagadoUsd).toFixed(2)}` : "-"}
+                      </TableCell>
                       <TableCell>{egreso.referenciaPago || "N/A"}</TableCell>
+                      <TableCell>{bancoNombre || "N/A"}</TableCell>
+                      <TableCell>
+                        <Badge className={getEstadoEgresosBadgeClass(egreso.estado)}>
+                          {egreso.estado}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="max-w-xs truncate">
+                        {egreso.notasVerificacion || "-"}
+                      </TableCell>
                       <TableCell>
                         <Button
                           size="sm"
@@ -182,26 +177,25 @@ export function VerificacionEgresosTab() {
           {selectedEgreso && (
             <div className="space-y-4">
               <div className="bg-muted p-4 rounded-lg space-y-2 text-sm">
-                <div><strong>Tipo:</strong> {tiposEgresos.find((t: any) => t.id === selectedEgreso.tipoEgresoId)?.nombre}</div>
-                <div><strong>Descripción:</strong> {selectedEgreso.descripcion}</div>
-                <div><strong>Pagado a:</strong> {selectedEgreso.beneficiario || "N/A"}</div>
-                <div>
-                  <strong>Monto Pagado:</strong>{" "}
-                  {selectedEgreso.montoPagadoUsd && `$${parseFloat(selectedEgreso.montoPagadoUsd).toFixed(2)}`}
-                  {selectedEgreso.montoPagadoUsd && selectedEgreso.montoPagadoBs && " | "}
-                  {selectedEgreso.montoPagadoBs && `Bs ${parseFloat(selectedEgreso.montoPagadoBs).toFixed(2)}`}
-                </div>
-                <div><strong>Banco:</strong> {bancos.find((b: any) => b.id === selectedEgreso.bancoId)?.banco}</div>
-                <div><strong>Referencia:</strong> {selectedEgreso.referenciaPago || "N/A"}</div>
-                <div><strong>Factura:</strong> {selectedEgreso.numeroFacturaPagada || "N/A"}</div>
                 <div><strong>Fecha de Pago:</strong> {selectedEgreso.fechaPago ? format(new Date(selectedEgreso.fechaPago), "dd/MM/yyyy") : "N/A"}</div>
+                <div>
+                  <strong>Monto Pagado Bs:</strong>{" "}
+                  {selectedEgreso.montoPagadoBs ? `Bs ${parseFloat(selectedEgreso.montoPagadoBs).toFixed(2)}` : "N/A"}
+                </div>
+                <div>
+                  <strong>Monto Pagado USD:</strong>{" "}
+                  {selectedEgreso.montoPagadoUsd ? `$${parseFloat(selectedEgreso.montoPagadoUsd).toFixed(2)}` : "N/A"}
+                </div>
+                <div><strong>Referencia:</strong> {selectedEgreso.referenciaPago || "N/A"}</div>
+                <div><strong>Banco:</strong> {bancos.find((b: any) => b.id === selectedEgreso.bancoId)?.banco || "N/A"}</div>
+                <div><strong>Notas Existentes:</strong> {selectedEgreso.notasVerificacion || "Ninguna"}</div>
               </div>
 
               <div>
-                <Label htmlFor="notas_verificacion">Notas de Verificación (opcional)</Label>
+                <Label htmlFor="notas_verificacion">Notas de Verificación</Label>
                 <Textarea
                   id="notas_verificacion"
-                  placeholder="Comentarios sobre la verificación"
+                  placeholder="Agregue notas sobre la verificación (requerido si rechaza)"
                   value={verificacionData.notas_verificacion}
                   onChange={(e) => setVerificacionData({ ...verificacionData, notas_verificacion: e.target.value })}
                   rows={3}
