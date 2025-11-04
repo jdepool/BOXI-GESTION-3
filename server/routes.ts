@@ -2712,12 +2712,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // If replace mode is enabled, delete existing orders with the same order numbers
       if (replaceExisting) {
         // Extract unique order numbers from the records
-        const orderNumbers = [...new Set(
+        const orderNumbers = Array.from(new Set(
           records
             .map((row: any) => row.orden)
             .filter((orden: any) => orden && String(orden).trim() !== '')
             .map((orden: any) => String(orden).trim())
-        )];
+        ));
 
         if (orderNumbers.length > 0) {
           console.log(`🗑️ Deleting existing records for ${orderNumbers.length} order numbers...`);
@@ -4908,7 +4908,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Log first row to see column names
       if (data.length > 0) {
-        console.log('[Upload Categorias] First row keys:', Object.keys(data[0]));
+        console.log('[Upload Categorias] First row keys:', Object.keys(data[0] as object));
         console.log('[Upload Categorias] First row sample:', data[0]);
       }
 
@@ -5928,14 +5928,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         tipoEgresoId: query.tipoEgresoId,
         metodoPagoId: query.metodoPagoId,
         bancoId: query.bancoId,
-        startDate: query.startDate ? (() => {
-          const [year, month, day] = query.startDate.split('-');
-          return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
-        })() : undefined,
-        endDate: query.endDate ? (() => {
-          const [year, month, day] = query.endDate.split('-');
-          return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
-        })() : undefined,
+        startDate: query.startDate,
+        endDate: query.endDate,
         limit: query.limit,
         offset: query.offset,
       };
