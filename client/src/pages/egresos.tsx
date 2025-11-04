@@ -890,7 +890,7 @@ function PorAutorizarTab() {
                   <TableHead>Fecha Compromiso</TableHead>
                   <TableHead>Tipo</TableHead>
                   <TableHead>Descripción</TableHead>
-                  <TableHead>Pagado a</TableHead>
+                  <TableHead>Pagar a</TableHead>
                   <TableHead>Cta x pagar USD</TableHead>
                   <TableHead>Cta x pagar Bs</TableHead>
                   <TableHead>Autorizador</TableHead>
@@ -1433,7 +1433,7 @@ function PorPagarTab() {
                   <TableHead>Fecha Compromiso</TableHead>
                   <TableHead>Tipo</TableHead>
                   <TableHead>Descripción</TableHead>
-                  <TableHead>Pagado a</TableHead>
+                  <TableHead>Pagar a</TableHead>
                   <TableHead>Cta x pagar USD</TableHead>
                   <TableHead>Cta x pagar Bs</TableHead>
                   <TableHead>Acciones</TableHead>
