@@ -11,11 +11,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Plus, Edit, Trash2, AlertCircle, Repeat } from "lucide-react";
+import { ArrowLeft, Plus, Edit, Trash2, AlertCircle, Repeat, Circle, X } from "lucide-react";
 import { Link } from "wouter";
 import { format, parse } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -716,7 +717,6 @@ function PorAutorizarTab() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isEditEgresoDialogOpen, setIsEditEgresoDialogOpen] = useState(false);
   const [autorizacionData, setAutorizacionData] = useState({
-    accion_autorizacion: "",
     notas_autorizacion: "",
   });
   const [egresoData, setEgresoData] = useState({
@@ -755,11 +755,11 @@ function PorAutorizarTab() {
     mutationFn: async (data: any) => {
       return apiRequest("POST", `/api/egresos/${selectedEgreso.id}/autorizar`, data);
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["/api/egresos"] });
       toast({
         title: "Egreso autorizado",
-        description: `El egreso ha sido ${autorizacionData.accion_autorizacion === "Aprobar" ? "aprobado" : "rechazado"} exitosamente`,
+        description: `El egreso ha sido ${variables.accion === "Aprobar" ? "aprobado" : "rechazado"} exitosamente`,
       });
       handleCloseDialog();
     },
@@ -797,7 +797,6 @@ function PorAutorizarTab() {
     setIsDialogOpen(false);
     setSelectedEgreso(null);
     setAutorizacionData({
-      accion_autorizacion: "",
       notas_autorizacion: "",
     });
   };
@@ -807,19 +806,9 @@ function PorAutorizarTab() {
     setIsDialogOpen(true);
   };
 
-  const handleAutorizar = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!autorizacionData.accion_autorizacion) {
-      toast({
-        title: "Error",
-        description: "Debe seleccionar una acción (Aprobar o Rechazar)",
-        variant: "destructive",
-      });
-      return;
-    }
-
+  const handleAutorizarConAccion = (accion: string) => {
     autorizarMutation.mutate({
-      accion: autorizacionData.accion_autorizacion,
+      accion: accion,
       notas: autorizacionData.notas_autorizacion,
     });
   };
@@ -905,6 +894,7 @@ function PorAutorizarTab() {
                   <TableHead>Cta x pagar USD</TableHead>
                   <TableHead>Cta x pagar Bs</TableHead>
                   <TableHead>Autorizador</TableHead>
+                  <TableHead>Autorización</TableHead>
                   <TableHead>Acciones</TableHead>
                 </TableRow>
               </TableHeader>
@@ -956,6 +946,24 @@ function PorAutorizarTab() {
                       </TableCell>
                       <TableCell>{autorizadorNombre || "N/A"}</TableCell>
                       <TableCell>
+                        <div className="flex items-center justify-center" data-testid={`autorizacion-estado-${egreso.id}`}>
+                          {egreso.accionAutorizacion === "Rechazar" ? (
+                            <TooltipProvider>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <X className="h-5 w-5 text-red-600 dark:text-red-400" />
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p className="max-w-xs">{egreso.notasAutorizacion || "Sin notas"}</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            </TooltipProvider>
+                          ) : (
+                            <Circle className="h-5 w-5 fill-blue-600 text-blue-600 dark:fill-blue-400 dark:text-blue-400" />
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
                         <div className="flex gap-2">
                           <Button
                             size="sm"
@@ -994,11 +1002,13 @@ function PorAutorizarTab() {
               Revise los detalles y tome una decisión sobre este egreso
             </DialogDescription>
           </DialogHeader>
-          <form onSubmit={handleAutorizar} className="space-y-4">
+          <div className="space-y-4">
             {selectedEgreso && (
               <div className="bg-muted p-4 rounded-lg space-y-2 text-sm">
                 <div><strong>Tipo:</strong> {tiposEgresos.find((t: any) => t.id === selectedEgreso.tipoEgresoId)?.nombre}</div>
                 <div><strong>Descripción:</strong> {selectedEgreso.descripcion}</div>
+                <div><strong>Pagar A:</strong> {selectedEgreso.beneficiario || "N/A"}</div>
+                <div><strong>Fecha Compromiso:</strong> {selectedEgreso.fechaCompromiso ? new Date(selectedEgreso.fechaCompromiso).toLocaleDateString() : "N/A"}</div>
                 <div>
                   <strong>Monto:</strong>{" "}
                   {selectedEgreso.ctaPorPagarUsd && `$${parseFloat(selectedEgreso.ctaPorPagarUsd).toFixed(2)}`}
@@ -1007,23 +1017,6 @@ function PorAutorizarTab() {
                 </div>
               </div>
             )}
-
-            <div>
-              <Label htmlFor="accion_autorizacion">Acción *</Label>
-              <Select
-                value={autorizacionData.accion_autorizacion}
-                onValueChange={(value) => setAutorizacionData({ ...autorizacionData, accion_autorizacion: value })}
-                required
-              >
-                <SelectTrigger id="accion_autorizacion" data-testid="select-accion-autorizacion">
-                  <SelectValue placeholder="Seleccionar acción" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Aprobar">Aprobar</SelectItem>
-                  <SelectItem value="Rechazar">Rechazar</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
 
             <div>
               <Label htmlFor="notas_autorizacion">Notas / Comentarios</Label>
@@ -1039,24 +1032,24 @@ function PorAutorizarTab() {
 
             <div className="flex gap-2">
               <Button
-                type="submit"
                 className="flex-1"
                 disabled={autorizarMutation.isPending}
-                data-testid="button-confirmar-autorizacion"
+                onClick={() => handleAutorizarConAccion("Aprobar")}
+                data-testid="button-autorizar"
               >
-                {autorizarMutation.isPending ? "Procesando..." : "Confirmar"}
+                {autorizarMutation.isPending ? "Procesando..." : "Autorizar"}
               </Button>
               <Button
-                type="button"
-                variant="outline"
-                onClick={handleCloseDialog}
+                variant="destructive"
+                className="flex-1"
                 disabled={autorizarMutation.isPending}
-                data-testid="button-cancelar-autorizacion"
+                onClick={() => handleAutorizarConAccion("Rechazar")}
+                data-testid="button-rechazar"
               >
-                Cancelar
+                {autorizarMutation.isPending ? "Procesando..." : "Rechazar"}
               </Button>
             </div>
-          </form>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
