@@ -714,9 +714,21 @@ function PorAutorizarTab() {
   const { toast } = useToast();
   const [selectedEgreso, setSelectedEgreso] = useState<any>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isEditEgresoDialogOpen, setIsEditEgresoDialogOpen] = useState(false);
   const [autorizacionData, setAutorizacionData] = useState({
     accion_autorizacion: "",
     notas_autorizacion: "",
+  });
+  const [egresoData, setEgresoData] = useState({
+    cta_por_pagar_usd: "",
+    cta_por_pagar_bs: "",
+    tipo_egreso_id: "",
+    descripcion: "",
+    fecha_compromiso: "",
+    numero_factura_proveedor: "",
+    beneficiario: "",
+    requiere_aprobacion: false,
+    autorizador_id: "",
   });
 
   const { data: egresos = [], isLoading } = useQuery<any[]>({
@@ -760,6 +772,27 @@ function PorAutorizarTab() {
     },
   });
 
+  const editEgresoMutation = useMutation({
+    mutationFn: async (data: any) => {
+      return apiRequest("PATCH", `/api/egresos/${selectedEgreso.id}`, data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/egresos"] });
+      toast({
+        title: "Egreso actualizado",
+        description: "El egreso ha sido actualizado exitosamente",
+      });
+      handleCloseEditEgresoDialog();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "No se pudo actualizar el egreso",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleCloseDialog = () => {
     setIsDialogOpen(false);
     setSelectedEgreso(null);
@@ -789,6 +822,56 @@ function PorAutorizarTab() {
       accion: autorizacionData.accion_autorizacion,
       notas: autorizacionData.notas_autorizacion,
     });
+  };
+
+  const handleCloseEditEgresoDialog = () => {
+    setIsEditEgresoDialogOpen(false);
+    setSelectedEgreso(null);
+    setEgresoData({
+      cta_por_pagar_usd: "",
+      cta_por_pagar_bs: "",
+      tipo_egreso_id: "",
+      descripcion: "",
+      fecha_compromiso: "",
+      numero_factura_proveedor: "",
+      beneficiario: "",
+      requiere_aprobacion: false,
+      autorizador_id: "",
+    });
+  };
+
+  const handleOpenEditEgresoDialog = (egreso: any) => {
+    setSelectedEgreso(egreso);
+    setEgresoData({
+      cta_por_pagar_usd: egreso.ctaPorPagarUsd?.toString() || "",
+      cta_por_pagar_bs: egreso.ctaPorPagarBs?.toString() || "",
+      tipo_egreso_id: egreso.tipoEgresoId || "",
+      descripcion: egreso.descripcion || "",
+      fecha_compromiso: egreso.fechaCompromiso ? formatDateOnly(new Date(egreso.fechaCompromiso)) : "",
+      numero_factura_proveedor: egreso.numeroFacturaProveedor || "",
+      beneficiario: egreso.beneficiario || "",
+      requiere_aprobacion: egreso.requiereAprobacion || false,
+      autorizador_id: egreso.autorizadorId || "",
+    });
+    setIsEditEgresoDialogOpen(true);
+  };
+
+  const handleEditEgreso = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const submitData: any = {
+      ctaPorPagarUsd: egresoData.cta_por_pagar_usd || null,
+      ctaPorPagarBs: egresoData.cta_por_pagar_bs || null,
+      tipoEgresoId: egresoData.tipo_egreso_id,
+      descripcion: egresoData.descripcion,
+      fechaCompromiso: egresoData.fecha_compromiso,
+      numeroFacturaProveedor: egresoData.numero_factura_proveedor || null,
+      beneficiario: egresoData.beneficiario || null,
+      requiereAprobacion: egresoData.requiere_aprobacion,
+      autorizadorId: egresoData.requiere_aprobacion ? egresoData.autorizador_id : null,
+    };
+
+    editEgresoMutation.mutate(submitData);
   };
 
   if (isLoading) {
@@ -873,13 +956,23 @@ function PorAutorizarTab() {
                       </TableCell>
                       <TableCell>{autorizadorNombre || "N/A"}</TableCell>
                       <TableCell>
-                        <Button
-                          size="sm"
-                          onClick={() => handleOpenDialog(egreso)}
-                          data-testid={`autorizar-egreso-${egreso.id}`}
-                        >
-                          Autorizar
-                        </Button>
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleOpenEditEgresoDialog(egreso)}
+                            data-testid={`editar-egreso-autorizar-${egreso.id}`}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            onClick={() => handleOpenDialog(egreso)}
+                            data-testid={`autorizar-egreso-${egreso.id}`}
+                          >
+                            Autorizar
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   );
@@ -974,6 +1067,7 @@ function PorPagarTab() {
   const { toast } = useToast();
   const [selectedEgreso, setSelectedEgreso] = useState<any>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isEditEgresoDialogOpen, setIsEditEgresoDialogOpen] = useState(false);
   const [pagoData, setPagoData] = useState({
     fecha_pago: formatDateOnly(new Date()),
     monto_pagado_usd: "",
@@ -982,6 +1076,17 @@ function PorPagarTab() {
     banco_id: "",
     referencia_pago: "",
     numero_factura_pagada: "",
+  });
+  const [egresoData, setEgresoData] = useState({
+    cta_por_pagar_usd: "",
+    cta_por_pagar_bs: "",
+    tipo_egreso_id: "",
+    descripcion: "",
+    fecha_compromiso: "",
+    numero_factura_proveedor: "",
+    beneficiario: "",
+    requiere_aprobacion: false,
+    autorizador_id: "",
   });
 
   const { data: egresos = [], isLoading } = useQuery<any[]>({
@@ -1003,6 +1108,10 @@ function PorPagarTab() {
     queryKey: ["/api/admin/bancos"],
   });
 
+  const { data: autorizadores = [] } = useQuery<any[]>({
+    queryKey: ["/api/admin/autorizadores"],
+  });
+
   const pagoMutation = useMutation({
     mutationFn: async (data: any) => {
       return apiRequest("POST", `/api/egresos/${selectedEgreso.id}/registrar-pago`, data);
@@ -1019,6 +1128,27 @@ function PorPagarTab() {
       toast({
         title: "Error",
         description: error.message || "No se pudo registrar el pago",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const editEgresoMutation = useMutation({
+    mutationFn: async (data: any) => {
+      return apiRequest("PATCH", `/api/egresos/${selectedEgreso.id}`, data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/egresos"] });
+      toast({
+        title: "Egreso actualizado",
+        description: "El egreso ha sido actualizado exitosamente",
+      });
+      handleCloseEditEgresoDialog();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "No se pudo actualizar el egreso",
         variant: "destructive",
       });
     },
@@ -1066,6 +1196,56 @@ function PorPagarTab() {
     };
 
     pagoMutation.mutate(submitData);
+  };
+
+  const handleCloseEditEgresoDialog = () => {
+    setIsEditEgresoDialogOpen(false);
+    setSelectedEgreso(null);
+    setEgresoData({
+      cta_por_pagar_usd: "",
+      cta_por_pagar_bs: "",
+      tipo_egreso_id: "",
+      descripcion: "",
+      fecha_compromiso: "",
+      numero_factura_proveedor: "",
+      beneficiario: "",
+      requiere_aprobacion: false,
+      autorizador_id: "",
+    });
+  };
+
+  const handleOpenEditEgresoDialog = (egreso: any) => {
+    setSelectedEgreso(egreso);
+    setEgresoData({
+      cta_por_pagar_usd: egreso.ctaPorPagarUsd?.toString() || "",
+      cta_por_pagar_bs: egreso.ctaPorPagarBs?.toString() || "",
+      tipo_egreso_id: egreso.tipoEgresoId || "",
+      descripcion: egreso.descripcion || "",
+      fecha_compromiso: egreso.fechaCompromiso ? formatDateOnly(new Date(egreso.fechaCompromiso)) : "",
+      numero_factura_proveedor: egreso.numeroFacturaProveedor || "",
+      beneficiario: egreso.beneficiario || "",
+      requiere_aprobacion: egreso.requiereAprobacion || false,
+      autorizador_id: egreso.autorizadorId || "",
+    });
+    setIsEditEgresoDialogOpen(true);
+  };
+
+  const handleEditEgreso = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const submitData: any = {
+      ctaPorPagarUsd: egresoData.cta_por_pagar_usd || null,
+      ctaPorPagarBs: egresoData.cta_por_pagar_bs || null,
+      tipoEgresoId: egresoData.tipo_egreso_id,
+      descripcion: egresoData.descripcion,
+      fechaCompromiso: egresoData.fecha_compromiso,
+      numeroFacturaProveedor: egresoData.numero_factura_proveedor || null,
+      beneficiario: egresoData.beneficiario || null,
+      requiereAprobacion: egresoData.requiere_aprobacion,
+      autorizadorId: egresoData.requiere_aprobacion ? egresoData.autorizador_id : null,
+    };
+
+    editEgresoMutation.mutate(submitData);
   };
 
   if (isLoading) {
@@ -1147,13 +1327,23 @@ function PorPagarTab() {
                         )}
                       </TableCell>
                       <TableCell>
-                        <Button
-                          size="sm"
-                          onClick={() => handleOpenDialog(egreso)}
-                          data-testid={`registrar-pago-${egreso.id}`}
-                        >
-                          Registrar Pago
-                        </Button>
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleOpenEditEgresoDialog(egreso)}
+                            data-testid={`editar-egreso-pagar-${egreso.id}`}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            onClick={() => handleOpenDialog(egreso)}
+                            data-testid={`registrar-pago-${egreso.id}`}
+                          >
+                            Registrar Pago
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   );
