@@ -231,8 +231,8 @@ function RegistrarTab() {
     const submitData: any = {
       estado: "Borrador",
       fechaRegistro: formData.fecha_registro,
-      ctaPorPagarUsd: formData.cta_por_pagar_usd ? parseFloat(formData.cta_por_pagar_usd) : null,
-      ctaPorPagarBs: formData.cta_por_pagar_bs ? parseFloat(formData.cta_por_pagar_bs) : null,
+      ctaPorPagarUsd: formData.cta_por_pagar_usd || null,
+      ctaPorPagarBs: formData.cta_por_pagar_bs || null,
       tipoEgresoId: formData.tipo_egreso_id || null,
       descripcion: formData.descripcion,
       fechaCompromiso: formData.fecha_compromiso || null,
@@ -253,8 +253,8 @@ function RegistrarTab() {
     const submitData: any = {
       estado: nextEstado,
       fechaRegistro: formData.fecha_registro,
-      ctaPorPagarUsd: formData.cta_por_pagar_usd ? parseFloat(formData.cta_por_pagar_usd) : null,
-      ctaPorPagarBs: formData.cta_por_pagar_bs ? parseFloat(formData.cta_por_pagar_bs) : null,
+      ctaPorPagarUsd: formData.cta_por_pagar_usd || null,
+      ctaPorPagarBs: formData.cta_por_pagar_bs || null,
       tipoEgresoId: formData.tipo_egreso_id || null,
       descripcion: formData.descripcion,
       fechaCompromiso: formData.fecha_compromiso || null,
