@@ -187,7 +187,7 @@ function RegistrarTab() {
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ["/api/egresos"] });
-      const nextState = variables.requiere_aprobacion ? "Por Autorizar" : "Por Pagar";
+      const nextState = variables.requiereAprobacion ? "Por Autorizar" : "Por Pagar";
       toast({
         title: "Egreso enviado",
         description: `El egreso ha sido enviado a ${nextState} exitosamente`,
