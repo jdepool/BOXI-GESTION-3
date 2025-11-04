@@ -1965,7 +1965,13 @@ export class DatabaseStorage implements IStorage {
       query = query.where(and(...conditions)) as any;
     }
 
-    query = query.orderBy(desc(egresos.fechaRegistro)) as any;
+    // Order by fechaCompromiso (most urgent first) for Por Autorizar and Por Pagar
+    // Otherwise, order by fechaRegistro (newest first)
+    if (filters?.estado && (filters.estado.includes('Por autorizar') || filters.estado.includes('Por pagar'))) {
+      query = query.orderBy(asc(egresos.fechaCompromiso)) as any;
+    } else {
+      query = query.orderBy(desc(egresos.fechaRegistro)) as any;
+    }
 
     if (filters?.limit) {
       query = query.limit(filters.limit) as any;
