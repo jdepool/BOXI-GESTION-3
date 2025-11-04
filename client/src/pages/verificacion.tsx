@@ -29,6 +29,7 @@ import Sidebar from "@/components/layout/sidebar";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
+import { getEstadoVerificacionBadgeClass } from "@/lib/badge-utils";
 import { VerificacionPagosCasheaTab } from "@/components/admin/verificacion-pagos-cashea-tab";
 import { VerificacionEgresosTab } from "@/components/admin/verificacion-egresos-tab";
 
@@ -548,13 +549,7 @@ export default function VerificacionPage() {
                         {getBancoName(payment.bancoId)}
                       </td>
                       <td className="p-2 text-xs" data-testid={`badge-estado-${index}`}>
-                        <Badge 
-                          className={cn(
-                            payment.estadoVerificacion === "Por verificar" && "bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200 hover:bg-amber-100 dark:hover:bg-amber-900",
-                            payment.estadoVerificacion === "Verificado" && "bg-green-500 text-white dark:bg-green-600 dark:text-white hover:bg-green-500 dark:hover:bg-green-600",
-                            payment.estadoVerificacion === "Rechazado" && "bg-purple-500 text-white dark:bg-purple-600 dark:text-white hover:bg-purple-500 dark:hover:bg-purple-600"
-                          )}
-                        >
+                        <Badge className={getEstadoVerificacionBadgeClass(payment.estadoVerificacion)}>
                           {payment.estadoVerificacion}
                         </Badge>
                       </td>
