@@ -4369,6 +4369,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { id } = req.params;
       const { montoPagadoUsd, montoPagadoBs, tasaCambio, bancoId, referenciaPago, numeroFacturaPagada, fechaPago } = req.body;
       
+      // First get the egreso to check if it's rechazado
+      const currentEgreso = await storage.getEgresoById(id);
+      if (!currentEgreso) {
+        return res.status(404).json({ error: "Egreso not found" });
+      }
+      
       const updateData: any = {};
       
       if (fechaPago !== undefined) updateData.fechaPago = fechaPago ? new Date(fechaPago) : null;
@@ -4378,6 +4384,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (bancoId !== undefined) updateData.bancoId = bancoId;
       if (referenciaPago !== undefined) updateData.referenciaPago = referenciaPago;
       if (numeroFacturaPagada !== undefined) updateData.numeroFacturaPagada = numeroFacturaPagada;
+      
+      // If the egreso is Rechazado, return it to Por verificar when edited
+      if (currentEgreso.estado === 'Rechazado') {
+        updateData.estado = 'Por verificar';
+        updateData.estadoVerificacion = 'Por verificar';
+        updateData.notasVerificacion = null; // Clear rejection notes
+      }
       
       const egreso = await storage.updateEgreso(id, updateData);
       if (!egreso) {

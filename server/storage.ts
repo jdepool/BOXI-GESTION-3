@@ -2038,7 +2038,7 @@ export class DatabaseStorage implements IStorage {
         bancoId: pago.bancoId,
         referenciaPago: pago.referenciaPago || null,
         numeroFacturaPagada: pago.numeroFacturaPagada || null,
-        estado: 'Pagado',
+        estado: 'Por verificar',
         esBorrador: false,
         estadoVerificacion: 'Por verificar',
         updatedAt: new Date(),
@@ -2050,7 +2050,7 @@ export class DatabaseStorage implements IStorage {
 
   async verificarEgreso(id: string, accion: string, notas?: string): Promise<Egreso | undefined> {
     const nuevoEstadoVerificacion = accion === 'Verificar' ? 'Verificado' : 'Rechazado';
-    const nuevoEstado = accion === 'Verificar' ? 'Verificado' : 'Pagado';
+    const nuevoEstado = accion === 'Verificar' ? 'Verificado' : 'Rechazado';
     
     const [updated] = await db
       .update(egresos)

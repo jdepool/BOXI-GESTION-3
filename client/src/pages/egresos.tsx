@@ -1309,7 +1309,8 @@ function PorVerificarTab() {
     queryKey: ["/api/egresos", "por-verificar"],
     queryFn: async () => {
       const params = new URLSearchParams();
-      params.append("estado", "Pagado");
+      params.append("estado", "Por verificar");
+      params.append("estado", "Rechazado");
       const response = await fetch(`/api/egresos?${params}`);
       if (!response.ok) throw new Error('Failed to fetch egresos');
       return response.json();
