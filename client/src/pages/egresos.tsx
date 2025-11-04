@@ -461,7 +461,7 @@ function RegistrarTab() {
             </div>
 
             <div>
-              <Label htmlFor="beneficiario">Beneficiario</Label>
+              <Label htmlFor="beneficiario">Pagado a</Label>
               <Input
                 id="beneficiario"
                 placeholder="Nombre del beneficiario"
@@ -815,7 +815,7 @@ function PorAutorizarTab() {
                   <TableHead>Fecha Registro</TableHead>
                   <TableHead>Tipo</TableHead>
                   <TableHead>Descripción</TableHead>
-                  <TableHead>Beneficiario</TableHead>
+                  <TableHead>Pagado a</TableHead>
                   <TableHead>Monto</TableHead>
                   <TableHead>Autorizador</TableHead>
                   <TableHead>Acciones</TableHead>
@@ -1068,7 +1068,7 @@ function PorPagarTab() {
                   <TableHead>Fecha Registro</TableHead>
                   <TableHead>Tipo</TableHead>
                   <TableHead>Descripción</TableHead>
-                  <TableHead>Beneficiario</TableHead>
+                  <TableHead>Pagado a</TableHead>
                   <TableHead>Monto</TableHead>
                   <TableHead>Compromiso</TableHead>
                   <TableHead>Acciones</TableHead>
@@ -1487,7 +1487,7 @@ function PagadosTab() {
                     <TableHead>Fecha Pago</TableHead>
                     <TableHead>Tipo</TableHead>
                     <TableHead>Descripción</TableHead>
-                    <TableHead>Beneficiario</TableHead>
+                    <TableHead>Pagado a</TableHead>
                     <TableHead>Cta x Pagar</TableHead>
                     <TableHead>Monto Pagado</TableHead>
                     <TableHead>Tasa Cambio</TableHead>
@@ -2040,7 +2040,7 @@ function HistorialTab() {
                     <TableHead>Fecha Registro</TableHead>
                     <TableHead>Tipo</TableHead>
                     <TableHead>Descripción</TableHead>
-                    <TableHead>Beneficiario</TableHead>
+                    <TableHead>Pagado a</TableHead>
                     <TableHead>Cta x Pagar USD</TableHead>
                     <TableHead>Cta x Pagar Bs</TableHead>
                     <TableHead>Monto Pagado USD</TableHead>

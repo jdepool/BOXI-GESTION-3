@@ -115,7 +115,7 @@ export function VerificacionEgresosTab() {
                   <TableHead>Fecha Pago</TableHead>
                   <TableHead>Tipo</TableHead>
                   <TableHead>Descripción</TableHead>
-                  <TableHead>Beneficiario</TableHead>
+                  <TableHead>Pagado a</TableHead>
                   <TableHead>Monto Pagado</TableHead>
                   <TableHead>Banco</TableHead>
                   <TableHead>Referencia</TableHead>
@@ -184,7 +184,7 @@ export function VerificacionEgresosTab() {
               <div className="bg-muted p-4 rounded-lg space-y-2 text-sm">
                 <div><strong>Tipo:</strong> {tiposEgresos.find((t: any) => t.id === selectedEgreso.tipoEgresoId)?.nombre}</div>
                 <div><strong>Descripción:</strong> {selectedEgreso.descripcion}</div>
-                <div><strong>Beneficiario:</strong> {selectedEgreso.beneficiario || "N/A"}</div>
+                <div><strong>Pagado a:</strong> {selectedEgreso.beneficiario || "N/A"}</div>
                 <div>
                   <strong>Monto Pagado:</strong>{" "}
                   {selectedEgreso.montoPagadoUsd && `$${parseFloat(selectedEgreso.montoPagadoUsd).toFixed(2)}`}
