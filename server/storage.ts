@@ -193,13 +193,14 @@ export interface IStorage {
 
   // Egresos
   getEgresos(filters?: {
-    estado?: string;
+    estado?: string[];
     tipoEgresoId?: string;
     autorizadorId?: string;
     bancoId?: string;
     startDate?: string;
     endDate?: string;
     esBorrador?: boolean;
+    requiereAprobacion?: boolean;
     estadoVerificacion?: string;
     limit?: number;
     offset?: number;
@@ -220,7 +221,7 @@ export interface IStorage {
   }): Promise<Egreso | undefined>;
   verificarEgreso(id: string, accion: string, notas?: string): Promise<Egreso | undefined>;
   getTotalEgresosCount(filters?: {
-    estado?: string;
+    estado?: string[];
     tipoEgresoId?: string;
     autorizadorId?: string;
     bancoId?: string;
