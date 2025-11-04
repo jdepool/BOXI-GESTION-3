@@ -1504,6 +1504,7 @@ function PorVerificarTab() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Fecha Registro</TableHead>
+                    <TableHead>Fecha Compromiso</TableHead>
                     <TableHead>Fecha Pago</TableHead>
                     <TableHead>Tipo</TableHead>
                     <TableHead>Descripción</TableHead>
@@ -1527,6 +1528,9 @@ function PorVerificarTab() {
                       <TableRow key={egreso.id} data-testid={`egreso-pagado-${egreso.id}`}>
                         <TableCell>
                           {egreso.fechaRegistro ? format(new Date(egreso.fechaRegistro), "dd/MM/yyyy") : "N/A"}
+                        </TableCell>
+                        <TableCell>
+                          {egreso.fechaCompromiso ? format(new Date(egreso.fechaCompromiso), "dd/MM/yyyy") : "N/A"}
                         </TableCell>
                         <TableCell>
                           {egreso.fechaPago ? format(new Date(egreso.fechaPago), "dd/MM/yyyy") : "N/A"}
