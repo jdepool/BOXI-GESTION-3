@@ -1149,7 +1149,7 @@ function PorAutorizarTab() {
             </div>
 
             <div>
-              <Label htmlFor="edit-autorizar-beneficiario">Pagado a (Beneficiario)</Label>
+              <Label htmlFor="edit-autorizar-beneficiario">Pagar A</Label>
               <Input
                 id="edit-autorizar-beneficiario"
                 value={egresoData.beneficiario}
@@ -2233,7 +2233,7 @@ function PorVerificarTab() {
             </div>
 
             <div>
-              <Label htmlFor="edit-beneficiario">Pagado a (Beneficiario)</Label>
+              <Label htmlFor="edit-beneficiario">Pagar A</Label>
               <Input
                 id="edit-beneficiario"
                 value={egresoData.beneficiario}
