@@ -254,15 +254,15 @@ function RegistrarTab() {
   const handleEdit = (egreso: any) => {
     setEditingEgreso(egreso);
     setFormData({
-      fecha_registro: egreso.fecha_registro || formatDateOnly(new Date()),
-      cta_por_pagar_usd: egreso.cta_por_pagar_usd?.toString() || "",
-      cta_por_pagar_bs: egreso.cta_por_pagar_bs?.toString() || "",
-      tipo_egreso_id: egreso.tipo_egreso_id || "",
+      fecha_registro: egreso.fechaRegistro ? formatDateOnly(new Date(egreso.fechaRegistro)) : formatDateOnly(new Date()),
+      cta_por_pagar_usd: egreso.ctaPorPagarUsd?.toString() || "",
+      cta_por_pagar_bs: egreso.ctaPorPagarBs?.toString() || "",
+      tipo_egreso_id: egreso.tipoEgresoId || "",
       descripcion: egreso.descripcion || "",
-      fecha_compromiso: egreso.fecha_compromiso || "",
-      numero_factura_proveedor: egreso.numero_factura_proveedor || "",
-      requiere_aprobacion: egreso.requiere_aprobacion || false,
-      autorizador_id: egreso.autorizador_id || "",
+      fecha_compromiso: egreso.fechaCompromiso ? formatDateOnly(new Date(egreso.fechaCompromiso)) : "",
+      numero_factura_proveedor: egreso.numeroFacturaProveedor || "",
+      requiere_aprobacion: egreso.requiereAprobacion || false,
+      autorizador_id: egreso.autorizadorId || "",
     });
   };
 
@@ -274,10 +274,10 @@ function RegistrarTab() {
 
   const getMissingFields = (egreso: any) => {
     const missing: string[] = [];
-    if (!egreso.cta_por_pagar_usd && !egreso.cta_por_pagar_bs) missing.push("Monto");
-    if (!egreso.tipo_egreso_id) missing.push("Tipo");
-    if (!egreso.descripcion) missing.push("Descripción");
-    if (egreso.requiere_aprobacion && !egreso.autorizador_id) missing.push("Autorizador");
+    if (!egreso.ctaPorPagarUsd && !egreso.ctaPorPagarBs) missing.push("Monto");
+    if (!egreso.tipoEgresoId) missing.push("Tipo");
+    if (!egreso.fechaCompromiso) missing.push("Fecha de Compromiso");
+    if (egreso.requiereAprobacion && !egreso.autorizadorId) missing.push("Autorizador");
     return missing;
   };
 
@@ -502,7 +502,7 @@ function RegistrarTab() {
             <div className="space-y-3">
               {egresos.map((egreso: any) => {
                 const missingFields = getMissingFields(egreso);
-                const tipoNombre = tiposEgresos.find((t: any) => t.id === egreso.tipo_egreso_id)?.nombre;
+                const tipoNombre = tiposEgresos.find((t: any) => t.id === egreso.tipoEgresoId)?.nombre;
                 
                 return (
                   <div
@@ -527,15 +527,15 @@ function RegistrarTab() {
                           {egreso.descripcion || "Sin descripción"}
                         </p>
                         <div className="text-sm mt-1">
-                          {egreso.cta_por_pagar_usd && (
+                          {egreso.ctaPorPagarUsd && (
                             <span className="text-green-600 dark:text-green-400">
-                              ${parseFloat(egreso.cta_por_pagar_usd).toFixed(2)}
+                              ${parseFloat(egreso.ctaPorPagarUsd).toFixed(2)}
                             </span>
                           )}
-                          {egreso.cta_por_pagar_usd && egreso.cta_por_pagar_bs && " | "}
-                          {egreso.cta_por_pagar_bs && (
+                          {egreso.ctaPorPagarUsd && egreso.ctaPorPagarBs && " | "}
+                          {egreso.ctaPorPagarBs && (
                             <span className="text-blue-600 dark:text-blue-400">
-                              Bs {parseFloat(egreso.cta_por_pagar_bs).toFixed(2)}
+                              Bs {parseFloat(egreso.ctaPorPagarBs).toFixed(2)}
                             </span>
                           )}
                         </div>
@@ -545,7 +545,7 @@ function RegistrarTab() {
                           </p>
                         )}
                         <p className="text-xs text-muted-foreground mt-1">
-                          Registrado: {egreso.fecha_registro ? format(parseLocalDate(egreso.fecha_registro)!, "dd/MM/yyyy") : "N/A"}
+                          Registrado: {egreso.fechaRegistro ? format(new Date(egreso.fechaRegistro), "dd/MM/yyyy") : "N/A"}
                         </p>
                       </div>
                       <div className="flex gap-2">
@@ -692,25 +692,25 @@ function PorAutorizarTab() {
               </TableHeader>
               <TableBody>
                 {egresos.map((egreso: any) => {
-                  const tipoNombre = tiposEgresos.find((t: any) => t.id === egreso.tipo_egreso_id)?.nombre;
-                  const autorizadorNombre = autorizadores.find((a: any) => a.id === egreso.autorizador_id)?.nombre;
+                  const tipoNombre = tiposEgresos.find((t: any) => t.id === egreso.tipoEgresoId)?.nombre;
+                  const autorizadorNombre = autorizadores.find((a: any) => a.id === egreso.autorizadorId)?.nombre;
                   
                   return (
                     <TableRow key={egreso.id} data-testid={`egreso-por-autorizar-${egreso.id}`}>
                       <TableCell>
-                        {egreso.fecha_registro ? format(parseLocalDate(egreso.fecha_registro)!, "dd/MM/yyyy") : "N/A"}
+                        {egreso.fechaRegistro ? format(new Date(egreso.fechaRegistro), "dd/MM/yyyy") : "N/A"}
                       </TableCell>
                       <TableCell>{tipoNombre || "N/A"}</TableCell>
                       <TableCell className="max-w-xs truncate">{egreso.descripcion}</TableCell>
                       <TableCell>
-                        {egreso.cta_por_pagar_usd && (
+                        {egreso.ctaPorPagarUsd && (
                           <div className="text-green-600 dark:text-green-400">
-                            ${parseFloat(egreso.cta_por_pagar_usd).toFixed(2)}
+                            ${parseFloat(egreso.ctaPorPagarUsd).toFixed(2)}
                           </div>
                         )}
-                        {egreso.cta_por_pagar_bs && (
+                        {egreso.ctaPorPagarBs && (
                           <div className="text-blue-600 dark:text-blue-400">
-                            Bs {parseFloat(egreso.cta_por_pagar_bs).toFixed(2)}
+                            Bs {parseFloat(egreso.ctaPorPagarBs).toFixed(2)}
                           </div>
                         )}
                       </TableCell>
@@ -747,13 +747,13 @@ function PorAutorizarTab() {
           <form onSubmit={handleAutorizar} className="space-y-4">
             {selectedEgreso && (
               <div className="bg-muted p-4 rounded-lg space-y-2 text-sm">
-                <div><strong>Tipo:</strong> {tiposEgresos.find((t: any) => t.id === selectedEgreso.tipo_egreso_id)?.nombre}</div>
+                <div><strong>Tipo:</strong> {tiposEgresos.find((t: any) => t.id === selectedEgreso.tipoEgresoId)?.nombre}</div>
                 <div><strong>Descripción:</strong> {selectedEgreso.descripcion}</div>
                 <div>
                   <strong>Monto:</strong>{" "}
-                  {selectedEgreso.cta_por_pagar_usd && `$${parseFloat(selectedEgreso.cta_por_pagar_usd).toFixed(2)}`}
-                  {selectedEgreso.cta_por_pagar_usd && selectedEgreso.cta_por_pagar_bs && " | "}
-                  {selectedEgreso.cta_por_pagar_bs && `Bs ${parseFloat(selectedEgreso.cta_por_pagar_bs).toFixed(2)}`}
+                  {selectedEgreso.ctaPorPagarUsd && `$${parseFloat(selectedEgreso.ctaPorPagarUsd).toFixed(2)}`}
+                  {selectedEgreso.ctaPorPagarUsd && selectedEgreso.ctaPorPagarBs && " | "}
+                  {selectedEgreso.ctaPorPagarBs && `Bs ${parseFloat(selectedEgreso.ctaPorPagarBs).toFixed(2)}`}
                 </div>
               </div>
             )}
@@ -885,12 +885,12 @@ function PorPagarTab() {
     setSelectedEgreso(egreso);
     setPagoData({
       fecha_pago: formatDateOnly(new Date()),
-      monto_pagado_usd: egreso.cta_por_pagar_usd?.toString() || "",
-      monto_pagado_bs: egreso.cta_por_pagar_bs?.toString() || "",
+      monto_pagado_usd: egreso.ctaPorPagarUsd?.toString() || "",
+      monto_pagado_bs: egreso.ctaPorPagarBs?.toString() || "",
       tasa_cambio: "",
       banco_id: "",
       referencia_pago: "",
-      numero_factura_pagada: egreso.numero_factura_proveedor || "",
+      numero_factura_pagada: egreso.numeroFacturaProveedor || "",
     });
     setIsDialogOpen(true);
   };
@@ -943,29 +943,29 @@ function PorPagarTab() {
               </TableHeader>
               <TableBody>
                 {egresos.map((egreso: any) => {
-                  const tipoNombre = tiposEgresos.find((t: any) => t.id === egreso.tipo_egreso_id)?.nombre;
+                  const tipoNombre = tiposEgresos.find((t: any) => t.id === egreso.tipoEgresoId)?.nombre;
                   
                   return (
                     <TableRow key={egreso.id} data-testid={`egreso-por-pagar-${egreso.id}`}>
                       <TableCell>
-                        {egreso.fecha_autorizacion ? format(parseLocalDate(egreso.fecha_autorizacion)!, "dd/MM/yyyy") : "N/A"}
+                        {egreso.fechaAutorizacion ? format(new Date(egreso.fechaAutorizacion), "dd/MM/yyyy") : "N/A"}
                       </TableCell>
                       <TableCell>{tipoNombre || "N/A"}</TableCell>
                       <TableCell className="max-w-xs truncate">{egreso.descripcion}</TableCell>
                       <TableCell>
-                        {egreso.cta_por_pagar_usd && (
+                        {egreso.ctaPorPagarUsd && (
                           <div className="text-green-600 dark:text-green-400">
-                            ${parseFloat(egreso.cta_por_pagar_usd).toFixed(2)}
+                            ${parseFloat(egreso.ctaPorPagarUsd).toFixed(2)}
                           </div>
                         )}
-                        {egreso.cta_por_pagar_bs && (
+                        {egreso.ctaPorPagarBs && (
                           <div className="text-blue-600 dark:text-blue-400">
-                            Bs {parseFloat(egreso.cta_por_pagar_bs).toFixed(2)}
+                            Bs {parseFloat(egreso.ctaPorPagarBs).toFixed(2)}
                           </div>
                         )}
                       </TableCell>
                       <TableCell>
-                        {egreso.fecha_compromiso ? format(parseLocalDate(egreso.fecha_compromiso)!, "dd/MM/yyyy") : "N/A"}
+                        {egreso.fechaCompromiso ? format(new Date(egreso.fechaCompromiso), "dd/MM/yyyy") : "N/A"}
                       </TableCell>
                       <TableCell>
                         <Button
@@ -999,13 +999,13 @@ function PorPagarTab() {
           <form onSubmit={handleRegistrarPago} className="space-y-4">
             {selectedEgreso && (
               <div className="bg-muted p-4 rounded-lg space-y-2 text-sm">
-                <div><strong>Tipo:</strong> {tiposEgresos.find((t: any) => t.id === selectedEgreso.tipo_egreso_id)?.nombre}</div>
+                <div><strong>Tipo:</strong> {tiposEgresos.find((t: any) => t.id === selectedEgreso.tipoEgresoId)?.nombre}</div>
                 <div><strong>Descripción:</strong> {selectedEgreso.descripcion}</div>
                 <div>
                   <strong>Monto a Pagar:</strong>{" "}
-                  {selectedEgreso.cta_por_pagar_usd && `$${parseFloat(selectedEgreso.cta_por_pagar_usd).toFixed(2)}`}
-                  {selectedEgreso.cta_por_pagar_usd && selectedEgreso.cta_por_pagar_bs && " | "}
-                  {selectedEgreso.cta_por_pagar_bs && `Bs ${parseFloat(selectedEgreso.cta_por_pagar_bs).toFixed(2)}`}
+                  {selectedEgreso.ctaPorPagarUsd && `$${parseFloat(selectedEgreso.ctaPorPagarUsd).toFixed(2)}`}
+                  {selectedEgreso.ctaPorPagarUsd && selectedEgreso.ctaPorPagarBs && " | "}
+                  {selectedEgreso.ctaPorPagarBs && `Bs ${parseFloat(selectedEgreso.ctaPorPagarBs).toFixed(2)}`}
                 </div>
               </div>
             )}
@@ -1318,24 +1318,24 @@ function HistorialTab() {
               </TableHeader>
               <TableBody>
                 {egresos.map((egreso: any) => {
-                  const tipoNombre = tiposEgresos.find((t: any) => t.id === egreso.tipo_egreso_id)?.nombre;
+                  const tipoNombre = tiposEgresos.find((t: any) => t.id === egreso.tipoEgresoId)?.nombre;
                   
                   return (
                     <TableRow key={egreso.id} data-testid={`egreso-historial-${egreso.id}`}>
                       <TableCell>
-                        {egreso.fecha_registro ? format(parseLocalDate(egreso.fecha_registro)!, "dd/MM/yyyy") : "N/A"}
+                        {egreso.fechaRegistro ? format(new Date(egreso.fechaRegistro), "dd/MM/yyyy") : "N/A"}
                       </TableCell>
                       <TableCell>{tipoNombre || "N/A"}</TableCell>
                       <TableCell className="max-w-xs truncate">{egreso.descripcion}</TableCell>
                       <TableCell>
-                        {egreso.cta_por_pagar_usd && (
+                        {egreso.ctaPorPagarUsd && (
                           <div className="text-green-600 dark:text-green-400">
-                            ${parseFloat(egreso.cta_por_pagar_usd).toFixed(2)}
+                            ${parseFloat(egreso.ctaPorPagarUsd).toFixed(2)}
                           </div>
                         )}
-                        {egreso.cta_por_pagar_bs && (
+                        {egreso.ctaPorPagarBs && (
                           <div className="text-blue-600 dark:text-blue-400">
-                            Bs {parseFloat(egreso.cta_por_pagar_bs).toFixed(2)}
+                            Bs {parseFloat(egreso.ctaPorPagarBs).toFixed(2)}
                           </div>
                         )}
                       </TableCell>
@@ -1345,7 +1345,7 @@ function HistorialTab() {
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        {egreso.fecha_pago ? format(parseLocalDate(egreso.fecha_pago)!, "dd/MM/yyyy") : "N/A"}
+                        {egreso.fechaPago ? format(new Date(egreso.fechaPago), "dd/MM/yyyy") : "N/A"}
                       </TableCell>
                     </TableRow>
                   );
