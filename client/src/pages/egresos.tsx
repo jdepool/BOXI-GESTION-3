@@ -65,7 +65,7 @@ export default function Egresos() {
               Por Pagar
             </TabsTrigger>
             <TabsTrigger value="pagados" data-testid="tab-pagados">
-              Pagados
+              Por verificar
             </TabsTrigger>
             <TabsTrigger value="historial" data-testid="tab-historial">
               Historial Completo
@@ -85,7 +85,7 @@ export default function Egresos() {
           </TabsContent>
 
           <TabsContent value="pagados" className="space-y-4">
-            <PagadosTab />
+            <PorVerificarTab />
           </TabsContent>
 
           <TabsContent value="historial" className="space-y-4">
@@ -1280,7 +1280,7 @@ function PorPagarTab() {
   );
 }
 
-function PagadosTab() {
+function PorVerificarTab() {
   const { toast } = useToast();
   const [selectedEgreso, setSelectedEgreso] = useState<any>(null);
   const [isEditPagoDialogOpen, setIsEditPagoDialogOpen] = useState(false);
@@ -1306,7 +1306,7 @@ function PagadosTab() {
   });
 
   const { data: egresos = [], isLoading } = useQuery<any[]>({
-    queryKey: ["/api/egresos", "pagados"],
+    queryKey: ["/api/egresos", "por-verificar"],
     queryFn: async () => {
       const params = new URLSearchParams();
       params.append("estado", "Pagado");
@@ -1469,15 +1469,15 @@ function PagadosTab() {
     <div>
       <Card>
         <CardHeader>
-          <CardTitle>Egresos Pagados</CardTitle>
+          <CardTitle>Egresos Por Verificar</CardTitle>
           <CardDescription>
-            Egresos con pago registrado, pendientes de verificación
+            Egresos con pago registrado pendientes de verificación, incluyendo rechazados que pueden ser editados
           </CardDescription>
         </CardHeader>
         <CardContent>
           {egresos.length === 0 ? (
             <p className="text-center py-8 text-muted-foreground">
-              No hay egresos pagados pendientes de verificación
+              No hay egresos por verificar
             </p>
           ) : (
             <div className="overflow-x-auto">
