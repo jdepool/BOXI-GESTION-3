@@ -119,7 +119,13 @@ function RegistrarTab() {
       params.append("estado", "Borrador");
       const response = await fetch(`/api/egresos?${params}`);
       if (!response.ok) throw new Error('Failed to fetch borradores');
-      return response.json();
+      const data = await response.json();
+      console.log("📦 Egresos fetched from API:", data);
+      if (data.length > 0) {
+        console.log("📋 First egreso keys:", Object.keys(data[0]));
+        console.log("📋 First egreso:", data[0]);
+      }
+      return data;
     },
   });
 
@@ -224,13 +230,18 @@ function RegistrarTab() {
     
     const submitData: any = {
       estado: "Borrador",
-      ...formData,
-      cta_por_pagar_usd: formData.cta_por_pagar_usd ? parseFloat(formData.cta_por_pagar_usd) : null,
-      cta_por_pagar_bs: formData.cta_por_pagar_bs ? parseFloat(formData.cta_por_pagar_bs) : null,
-      tipo_egreso_id: formData.tipo_egreso_id || null,
-      autorizador_id: formData.requiere_aprobacion && formData.autorizador_id ? formData.autorizador_id : null,
+      fechaRegistro: formData.fecha_registro,
+      ctaPorPagarUsd: formData.cta_por_pagar_usd ? parseFloat(formData.cta_por_pagar_usd) : null,
+      ctaPorPagarBs: formData.cta_por_pagar_bs ? parseFloat(formData.cta_por_pagar_bs) : null,
+      tipoEgresoId: formData.tipo_egreso_id || null,
+      descripcion: formData.descripcion,
+      fechaCompromiso: formData.fecha_compromiso || null,
+      numeroFacturaProveedor: formData.numero_factura_proveedor || null,
+      requiereAprobacion: formData.requiere_aprobacion,
+      autorizadorId: formData.requiere_aprobacion && formData.autorizador_id ? formData.autorizador_id : null,
     };
 
+    console.log("📤 Submitting data (camelCase):", submitData);
     createMutation.mutate(submitData);
   };
 
@@ -241,19 +252,31 @@ function RegistrarTab() {
     
     const submitData: any = {
       estado: nextEstado,
-      ...formData,
-      cta_por_pagar_usd: formData.cta_por_pagar_usd ? parseFloat(formData.cta_por_pagar_usd) : null,
-      cta_por_pagar_bs: formData.cta_por_pagar_bs ? parseFloat(formData.cta_por_pagar_bs) : null,
-      tipo_egreso_id: formData.tipo_egreso_id || null,
-      autorizador_id: formData.requiere_aprobacion && formData.autorizador_id ? formData.autorizador_id : null,
+      fechaRegistro: formData.fecha_registro,
+      ctaPorPagarUsd: formData.cta_por_pagar_usd ? parseFloat(formData.cta_por_pagar_usd) : null,
+      ctaPorPagarBs: formData.cta_por_pagar_bs ? parseFloat(formData.cta_por_pagar_bs) : null,
+      tipoEgresoId: formData.tipo_egreso_id || null,
+      descripcion: formData.descripcion,
+      fechaCompromiso: formData.fecha_compromiso || null,
+      numeroFacturaProveedor: formData.numero_factura_proveedor || null,
+      requiereAprobacion: formData.requiere_aprobacion,
+      autorizadorId: formData.requiere_aprobacion && formData.autorizador_id ? formData.autorizador_id : null,
     };
 
+    console.log("📤 Enviando data (camelCase):", submitData);
     enviarMutation.mutate(submitData);
   };
 
   const handleEdit = (egreso: any) => {
+    console.log("🔍 handleEdit called with egreso:", egreso);
+    console.log("📋 Egreso keys:", Object.keys(egreso));
+    console.log("💰 ctaPorPagarUsd:", egreso.ctaPorPagarUsd);
+    console.log("💰 ctaPorPagarBs:", egreso.ctaPorPagarBs);
+    console.log("📝 tipoEgresoId:", egreso.tipoEgresoId);
+    
     setEditingEgreso(egreso);
-    setFormData({
+    
+    const newFormData = {
       fecha_registro: egreso.fechaRegistro ? formatDateOnly(new Date(egreso.fechaRegistro)) : formatDateOnly(new Date()),
       cta_por_pagar_usd: egreso.ctaPorPagarUsd?.toString() || "",
       cta_por_pagar_bs: egreso.ctaPorPagarBs?.toString() || "",
@@ -263,7 +286,10 @@ function RegistrarTab() {
       numero_factura_proveedor: egreso.numeroFacturaProveedor || "",
       requiere_aprobacion: egreso.requiereAprobacion || false,
       autorizador_id: egreso.autorizadorId || "",
-    });
+    };
+    
+    console.log("✅ New formData:", newFormData);
+    setFormData(newFormData);
   };
 
   const handleDelete = (id: string) => {
