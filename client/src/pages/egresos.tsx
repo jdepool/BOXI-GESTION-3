@@ -463,7 +463,7 @@ function RegistrarTab() {
             </div>
 
             <div>
-              <Label htmlFor="beneficiario">Pagar A</Label>
+              <Label htmlFor="beneficiario">Pagar a</Label>
               <Input
                 id="beneficiario"
                 placeholder="Nombre del beneficiario"
