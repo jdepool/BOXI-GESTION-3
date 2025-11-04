@@ -1668,6 +1668,171 @@ function PorPagarTab() {
           </form>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={isEditEgresoDialogOpen} onOpenChange={(open) => {
+        if (!open) handleCloseEditEgresoDialog();
+        else setIsEditEgresoDialogOpen(true);
+      }}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Editar Egreso</DialogTitle>
+            <DialogDescription>
+              Modifique los datos del egreso según sea necesario
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleEditEgreso} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="edit-pagar-cta-por-pagar-usd">Cuenta por Pagar (USD)</Label>
+                <Input
+                  id="edit-pagar-cta-por-pagar-usd"
+                  type="number"
+                  step="0.01"
+                  value={egresoData.cta_por_pagar_usd}
+                  onChange={(e) => setEgresoData({ ...egresoData, cta_por_pagar_usd: e.target.value })}
+                  placeholder="0.00"
+                  data-testid="input-edit-pagar-cta-por-pagar-usd"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="edit-pagar-cta-por-pagar-bs">Cuenta por Pagar (Bs)</Label>
+                <Input
+                  id="edit-pagar-cta-por-pagar-bs"
+                  type="number"
+                  step="0.01"
+                  value={egresoData.cta_por_pagar_bs}
+                  onChange={(e) => setEgresoData({ ...egresoData, cta_por_pagar_bs: e.target.value })}
+                  placeholder="0.00"
+                  data-testid="input-edit-pagar-cta-por-pagar-bs"
+                />
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="edit-pagar-tipo-egreso-id">Tipo de Egreso *</Label>
+              <Select
+                value={egresoData.tipo_egreso_id}
+                onValueChange={(value) => setEgresoData({ ...egresoData, tipo_egreso_id: value })}
+                required
+              >
+                <SelectTrigger id="edit-pagar-tipo-egreso-id" data-testid="select-edit-pagar-tipo-egreso-id">
+                  <SelectValue placeholder="Seleccione un tipo" />
+                </SelectTrigger>
+                <SelectContent>
+                  {tiposEgresos.map((tipo: any) => (
+                    <SelectItem key={tipo.id} value={tipo.id}>
+                      {tipo.nombre}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label htmlFor="edit-pagar-descripcion">Descripción *</Label>
+              <Textarea
+                id="edit-pagar-descripcion"
+                value={egresoData.descripcion}
+                onChange={(e) => setEgresoData({ ...egresoData, descripcion: e.target.value })}
+                placeholder="Descripción del egreso"
+                required
+                rows={3}
+                data-testid="textarea-edit-pagar-descripcion"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="edit-pagar-fecha-compromiso">Fecha de Compromiso</Label>
+              <Input
+                id="edit-pagar-fecha-compromiso"
+                type="date"
+                value={egresoData.fecha_compromiso}
+                onChange={(e) => setEgresoData({ ...egresoData, fecha_compromiso: e.target.value })}
+                data-testid="input-edit-pagar-fecha-compromiso"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="edit-pagar-numero-factura-proveedor">Número de Factura del Proveedor</Label>
+              <Input
+                id="edit-pagar-numero-factura-proveedor"
+                value={egresoData.numero_factura_proveedor}
+                onChange={(e) => setEgresoData({ ...egresoData, numero_factura_proveedor: e.target.value })}
+                placeholder="Número de factura"
+                data-testid="input-edit-pagar-numero-factura-proveedor"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="edit-pagar-beneficiario">Pagar a</Label>
+              <Input
+                id="edit-pagar-beneficiario"
+                value={egresoData.beneficiario}
+                onChange={(e) => setEgresoData({ ...egresoData, beneficiario: e.target.value })}
+                placeholder="Nombre del beneficiario"
+                data-testid="input-edit-pagar-beneficiario"
+              />
+            </div>
+
+            <div className="space-y-4 p-4 bg-muted rounded-lg">
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="edit-pagar-requiere-aprobacion"
+                  checked={egresoData.requiere_aprobacion}
+                  onCheckedChange={(checked) => setEgresoData({ ...egresoData, requiere_aprobacion: checked as boolean })}
+                  data-testid="checkbox-edit-pagar-requiere-aprobacion"
+                />
+                <Label htmlFor="edit-pagar-requiere-aprobacion" className="cursor-pointer">
+                  Requiere Autorización
+                </Label>
+              </div>
+
+              {egresoData.requiere_aprobacion && (
+                <div>
+                  <Label htmlFor="edit-pagar-autorizador-id">Autorizador *</Label>
+                  <Select
+                    value={egresoData.autorizador_id}
+                    onValueChange={(value) => setEgresoData({ ...egresoData, autorizador_id: value })}
+                    required={egresoData.requiere_aprobacion}
+                  >
+                    <SelectTrigger id="edit-pagar-autorizador-id" data-testid="select-edit-pagar-autorizador-id">
+                      <SelectValue placeholder="Seleccione un autorizador" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {autorizadores.map((autorizador: any) => (
+                        <SelectItem key={autorizador.id} value={autorizador.id}>
+                          {autorizador.nombre}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+            </div>
+
+            <div className="flex gap-2">
+              <Button
+                type="submit"
+                className="flex-1"
+                disabled={editEgresoMutation.isPending}
+                data-testid="button-confirmar-edit-pagar-egreso"
+              >
+                {editEgresoMutation.isPending ? "Guardando..." : "Guardar Cambios"}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleCloseEditEgresoDialog}
+                disabled={editEgresoMutation.isPending}
+                data-testid="button-cancelar-edit-pagar-egreso"
+              >
+                Cancelar
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -1693,6 +1858,7 @@ function PorVerificarTab() {
     descripcion: "",
     fecha_compromiso: "",
     numero_factura_proveedor: "",
+    beneficiario: "",
     requiere_aprobacion: false,
     autorizador_id: "",
   });
@@ -1817,6 +1983,7 @@ function PorVerificarTab() {
       descripcion: "",
       fecha_compromiso: "",
       numero_factura_proveedor: "",
+      beneficiario: "",
       requiere_aprobacion: false,
       autorizador_id: "",
     });
@@ -1831,6 +1998,7 @@ function PorVerificarTab() {
       descripcion: egreso.descripcion || "",
       fecha_compromiso: egreso.fechaCompromiso ? formatDateOnly(new Date(egreso.fechaCompromiso)) : "",
       numero_factura_proveedor: egreso.numeroFacturaProveedor || "",
+      beneficiario: egreso.beneficiario || "",
       requiere_aprobacion: egreso.requiereAprobacion || false,
       autorizador_id: egreso.autorizadorId || "",
     });
@@ -1847,6 +2015,7 @@ function PorVerificarTab() {
       descripcion: egresoData.descripcion,
       fechaCompromiso: egresoData.fecha_compromiso,
       numeroFacturaProveedor: egresoData.numero_factura_proveedor || null,
+      beneficiario: egresoData.beneficiario || null,
       requiereAprobacion: egresoData.requiere_aprobacion,
       autorizadorId: egresoData.requiere_aprobacion ? egresoData.autorizador_id : null,
     };
