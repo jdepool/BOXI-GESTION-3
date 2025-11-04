@@ -384,7 +384,7 @@ export const egresos = pgTable("egresos", {
   notasVerificacion: text("notas_verificacion"),
   
   // Overall status
-  estado: text("estado").notNull().default("Borrador"), // Borrador, Por autorizar, Por pagar, Pagado, Verificado
+  estado: text("estado").notNull().default("Borrador"), // Borrador, Por autorizar, Por pagar, Por verificar, Verificado, Rechazado
   
   // Draft indicator - true when missing required fields
   esBorrador: boolean("es_borrador").default(true),
