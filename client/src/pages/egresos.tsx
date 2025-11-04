@@ -1078,12 +1078,12 @@ function PorPagarTab() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Fecha Registro</TableHead>
+                  <TableHead>Fecha Compromiso</TableHead>
                   <TableHead>Tipo</TableHead>
                   <TableHead>Descripción</TableHead>
                   <TableHead>Pagado a</TableHead>
                   <TableHead>Cta x pagar USD</TableHead>
                   <TableHead>Cta x pagar Bs</TableHead>
-                  <TableHead>Compromiso</TableHead>
                   <TableHead>Acciones</TableHead>
                 </TableRow>
               </TableHeader>
@@ -1095,6 +1095,9 @@ function PorPagarTab() {
                     <TableRow key={egreso.id} data-testid={`egreso-por-pagar-${egreso.id}`}>
                       <TableCell>
                         {egreso.fechaRegistro ? format(new Date(egreso.fechaRegistro), "dd/MM/yyyy") : "N/A"}
+                      </TableCell>
+                      <TableCell>
+                        {egreso.fechaCompromiso ? format(new Date(egreso.fechaCompromiso), "dd/MM/yyyy") : "N/A"}
                       </TableCell>
                       <TableCell>{tipoNombre || "N/A"}</TableCell>
                       <TableCell className="max-w-xs truncate">{egreso.descripcion}</TableCell>
@@ -1116,9 +1119,6 @@ function PorPagarTab() {
                         ) : (
                           <span className="text-muted-foreground">-</span>
                         )}
-                      </TableCell>
-                      <TableCell>
-                        {egreso.fechaCompromiso ? format(new Date(egreso.fechaCompromiso), "dd/MM/yyyy") : "N/A"}
                       </TableCell>
                       <TableCell>
                         <Button
