@@ -109,6 +109,9 @@ function RegistrarTab() {
     numero_factura_proveedor: "",
     requiere_aprobacion: false,
     autorizador_id: "",
+    es_recurrente: false,
+    frecuencia_recurrencia: "",
+    numero_repeticiones: "",
   });
 
   const { data: tiposEgresos = [] } = useQuery<any[]>({
@@ -221,6 +224,9 @@ function RegistrarTab() {
       numero_factura_proveedor: "",
       requiere_aprobacion: false,
       autorizador_id: "",
+      es_recurrente: false,
+      frecuencia_recurrencia: "",
+      numero_repeticiones: "",
     });
     setEditingEgreso(null);
   };
@@ -246,6 +252,9 @@ function RegistrarTab() {
       numeroFacturaProveedor: formData.numero_factura_proveedor || null,
       requiereAprobacion: formData.requiere_aprobacion,
       autorizadorId: formData.requiere_aprobacion && formData.autorizador_id ? formData.autorizador_id : null,
+      esRecurrente: formData.es_recurrente,
+      frecuenciaRecurrencia: formData.es_recurrente && formData.frecuencia_recurrencia ? formData.frecuencia_recurrencia : null,
+      numeroRepeticiones: formData.es_recurrente && formData.numero_repeticiones ? parseInt(formData.numero_repeticiones) : null,
     };
 
     console.log("📤 Submitting data (camelCase):", submitData);
@@ -268,6 +277,9 @@ function RegistrarTab() {
       numeroFacturaProveedor: formData.numero_factura_proveedor || null,
       requiereAprobacion: formData.requiere_aprobacion,
       autorizadorId: formData.requiere_aprobacion && formData.autorizador_id ? formData.autorizador_id : null,
+      esRecurrente: formData.es_recurrente,
+      frecuenciaRecurrencia: formData.es_recurrente && formData.frecuencia_recurrencia ? formData.frecuencia_recurrencia : null,
+      numeroRepeticiones: formData.es_recurrente && formData.numero_repeticiones ? parseInt(formData.numero_repeticiones) : null,
     };
 
     console.log("📤 Enviando data (camelCase):", submitData);
@@ -293,6 +305,9 @@ function RegistrarTab() {
       numero_factura_proveedor: egreso.numeroFacturaProveedor || "",
       requiere_aprobacion: egreso.requiereAprobacion || false,
       autorizador_id: egreso.autorizadorId || "",
+      es_recurrente: egreso.esRecurrente || false,
+      frecuencia_recurrencia: egreso.frecuenciaRecurrencia || "",
+      numero_repeticiones: egreso.numeroRepeticiones?.toString() || "",
     };
     
     console.log("✅ New formData:", newFormData);
@@ -449,6 +464,72 @@ function RegistrarTab() {
                 onChange={(e) => setFormData({ ...formData, numero_factura_proveedor: e.target.value })}
                 data-testid="input-numero-factura-proveedor"
               />
+            </div>
+
+            {/* Sección de Recurrencia */}
+            <div className="pt-4 border-t">
+              <div className="flex items-center space-x-2 mb-3">
+                <Checkbox
+                  id="es_recurrente"
+                  checked={formData.es_recurrente}
+                  onCheckedChange={(checked) =>
+                    setFormData({ 
+                      ...formData, 
+                      es_recurrente: checked as boolean, 
+                      frecuencia_recurrencia: checked ? formData.frecuencia_recurrencia : "",
+                      numero_repeticiones: checked ? formData.numero_repeticiones : "",
+                    })
+                  }
+                  data-testid="checkbox-es-recurrente"
+                />
+                <Label htmlFor="es_recurrente" className="cursor-pointer font-semibold">
+                  Es Recurrente
+                </Label>
+              </div>
+
+              {formData.es_recurrente && (
+                <div className="space-y-3 ml-6">
+                  <div>
+                    <Label htmlFor="frecuencia_recurrencia">Frecuencia de Recurrencia *</Label>
+                    <Select
+                      value={formData.frecuencia_recurrencia}
+                      onValueChange={(value) => setFormData({ ...formData, frecuencia_recurrencia: value })}
+                      required={formData.es_recurrente}
+                    >
+                      <SelectTrigger id="frecuencia_recurrencia" data-testid="select-frecuencia-recurrencia">
+                        <SelectValue placeholder="Seleccionar frecuencia" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Diario">Diario</SelectItem>
+                        <SelectItem value="Semanal">Semanal</SelectItem>
+                        <SelectItem value="Quincenal">Quincenal</SelectItem>
+                        <SelectItem value="Mensual">Mensual</SelectItem>
+                        <SelectItem value="Trimestral">Trimestral</SelectItem>
+                        <SelectItem value="Semestral">Semestral</SelectItem>
+                        <SelectItem value="Anual">Anual</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="numero_repeticiones">Número de Repeticiones *</Label>
+                    <Input
+                      id="numero_repeticiones"
+                      type="number"
+                      min="2"
+                      max="100"
+                      placeholder="Ej: 12 para un año de pagos mensuales"
+                      value={formData.numero_repeticiones}
+                      onChange={(e) => setFormData({ ...formData, numero_repeticiones: e.target.value })}
+                      required={formData.es_recurrente}
+                      data-testid="input-numero-repeticiones"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Total de egresos que se generarán automáticamente incluyendo el primero
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="flex items-center space-x-2">
@@ -1127,9 +1208,9 @@ function PorPagarTab() {
                   <SelectValue placeholder="Seleccionar banco" />
                 </SelectTrigger>
                 <SelectContent>
-                  {bancos.filter((b: any) => b.tipo === "emisora").map((banco: any) => (
+                  {bancos.filter((b: any) => b.tipo === "Emisor").map((banco: any) => (
                     <SelectItem key={banco.id} value={banco.id}>
-                      {banco.nombre}
+                      {banco.banco}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -1521,7 +1602,7 @@ function PagadosTab() {
                   <SelectContent>
                     {bancos.map((banco: any) => (
                       <SelectItem key={banco.id} value={banco.id}>
-                        {banco.nombre}
+                        {banco.banco}
                       </SelectItem>
                     ))}
                   </SelectContent>
