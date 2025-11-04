@@ -1,7 +1,8 @@
 import { db } from "../db";
-import { egresos } from "../../shared/schema";
+import { egresos, type InsertEgreso } from "../../shared/schema";
 import { eq, and, isNotNull, sql } from "drizzle-orm";
 import type { DatabaseStorage } from "../storage";
+import { nanoid } from "nanoid";
 
 /**
  * Calculate the next occurrence date based on frequency
@@ -64,6 +65,88 @@ export function calculateNextDate(baseDate: Date, frequency: string): Date {
   }
   
   return next;
+}
+
+/**
+ * Generate all future egresos in a recurrence series upfront
+ * This function creates all remaining egresos when a recurring series is created
+ */
+export async function generateAllRecurringEgresos(
+  templateEgreso: InsertEgreso,
+  storage: DatabaseStorage
+): Promise<{ success: boolean; created: number; message: string }> {
+  try {
+    if (!templateEgreso.esRecurrente || !templateEgreso.numeroRepeticiones || !templateEgreso.frecuenciaRecurrencia || !templateEgreso.fechaCompromiso) {
+      return { success: false, created: 0, message: "Not a valid recurring egreso" };
+    }
+
+    const createdEgresos = [];
+    let currentDate = new Date(templateEgreso.fechaCompromiso);
+    
+    // Generate all future egresos (starting from #2 since #1 is the template)
+    for (let i = 2; i <= templateEgreso.numeroRepeticiones; i++) {
+      currentDate = calculateNextDate(currentDate, templateEgreso.frecuenciaRecurrencia);
+      
+      const nextEstado = templateEgreso.requiereAprobacion ? "Por autorizar" : "Por pagar";
+      
+      const newEgreso = await storage.createEgreso({
+        // Updated fields for new occurrence
+        fechaRegistro: new Date(),
+        fechaCompromiso: currentDate,
+        estado: nextEstado,
+        esBorrador: false,
+        numeroEnSerie: i,
+        
+        // Copy all payment fields from template
+        ctaPorPagarUsd: templateEgreso.ctaPorPagarUsd,
+        ctaPorPagarBs: templateEgreso.ctaPorPagarBs,
+        tipoEgresoId: templateEgreso.tipoEgresoId,
+        descripcion: templateEgreso.descripcion,
+        beneficiario: templateEgreso.beneficiario,
+        numeroFacturaProveedor: templateEgreso.numeroFacturaProveedor,
+        requiereAprobacion: templateEgreso.requiereAprobacion,
+        autorizadorId: templateEgreso.autorizadorId,
+        
+        // Recurrence fields - maintain series identity
+        esRecurrente: templateEgreso.esRecurrente,
+        frecuenciaRecurrencia: templateEgreso.frecuenciaRecurrencia,
+        serieRecurrenciaId: templateEgreso.serieRecurrenciaId,
+        numeroRepeticiones: templateEgreso.numeroRepeticiones,
+        
+        // Reset payment/verification fields for new occurrence
+        fechaPago: undefined,
+        montoPagadoUsd: undefined,
+        montoPagadoBs: undefined,
+        tasaCambio: undefined,
+        bancoId: undefined,
+        referenciaPago: undefined,
+        numeroFacturaPagada: undefined,
+        estadoVerificacion: "Por verificar",
+        fechaVerificacion: undefined,
+        notasVerificacion: undefined,
+        fechaAutorizacion: undefined,
+        accionAutorizacion: undefined,
+        notasAutorizacion: undefined,
+      });
+      
+      createdEgresos.push(newEgreso);
+    }
+    
+    console.log(`✅ Generated ${createdEgresos.length} future egresos for serie ${templateEgreso.serieRecurrenciaId}`);
+    
+    return {
+      success: true,
+      created: createdEgresos.length,
+      message: `Generated ${createdEgresos.length} future payments`
+    };
+  } catch (error) {
+    console.error("Error generating all recurring egresos:", error);
+    return {
+      success: false,
+      created: 0,
+      message: error instanceof Error ? error.message : "Unknown error"
+    };
+  }
 }
 
 /**

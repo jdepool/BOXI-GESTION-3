@@ -4230,6 +4230,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const egreso = await storage.createEgreso(validatedData);
+      
+      // If recurring, immediately generate all future payments
+      if (validatedData.esRecurrente && validatedData.numeroRepeticiones && validatedData.numeroRepeticiones > 1) {
+        const { generateAllRecurringEgresos } = await import("./services/recurrence-service");
+        const result = await generateAllRecurringEgresos(validatedData, storage as any);
+        
+        if (result.success) {
+          console.log(`✅ ${result.message} for series ${validatedData.serieRecurrenciaId}`);
+        } else {
+          console.error(`❌ Failed to generate future egresos: ${result.message}`);
+        }
+      }
+      
       res.status(201).json(egreso);
     } catch (error) {
       if (error instanceof z.ZodError) {

@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Plus, Edit, Trash2, AlertCircle } from "lucide-react";
+import { ArrowLeft, Plus, Edit, Trash2, AlertCircle, Repeat } from "lucide-react";
 import { Link } from "wouter";
 import { format, parse } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
@@ -813,6 +813,7 @@ function PorAutorizarTab() {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead>Recurrencia</TableHead>
                   <TableHead>Fecha Registro</TableHead>
                   <TableHead>Fecha Compromiso</TableHead>
                   <TableHead>Tipo</TableHead>
@@ -831,6 +832,18 @@ function PorAutorizarTab() {
                   
                   return (
                     <TableRow key={egreso.id} data-testid={`egreso-por-autorizar-${egreso.id}`}>
+                      <TableCell>
+                        {egreso.esRecurrente && egreso.numeroEnSerie && egreso.numeroRepeticiones ? (
+                          <div className="flex items-center gap-1">
+                            <Repeat className="h-4 w-4 text-muted-foreground" />
+                            <span className="text-sm text-muted-foreground">
+                              {egreso.numeroEnSerie} de {egreso.numeroRepeticiones}
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-muted-foreground">-</span>
+                        )}
+                      </TableCell>
                       <TableCell>
                         {egreso.fechaRegistro ? format(new Date(egreso.fechaRegistro), "dd/MM/yyyy") : "N/A"}
                       </TableCell>
@@ -1077,6 +1090,7 @@ function PorPagarTab() {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead>Recurrencia</TableHead>
                   <TableHead>Fecha Registro</TableHead>
                   <TableHead>Fecha Compromiso</TableHead>
                   <TableHead>Tipo</TableHead>
@@ -1093,6 +1107,18 @@ function PorPagarTab() {
                   
                   return (
                     <TableRow key={egreso.id} data-testid={`egreso-por-pagar-${egreso.id}`}>
+                      <TableCell>
+                        {egreso.esRecurrente && egreso.numeroEnSerie && egreso.numeroRepeticiones ? (
+                          <div className="flex items-center gap-1">
+                            <Repeat className="h-4 w-4 text-muted-foreground" />
+                            <span className="text-sm text-muted-foreground">
+                              {egreso.numeroEnSerie} de {egreso.numeroRepeticiones}
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="text-muted-foreground">-</span>
+                        )}
+                      </TableCell>
                       <TableCell>
                         {egreso.fechaRegistro ? format(new Date(egreso.fechaRegistro), "dd/MM/yyyy") : "N/A"}
                       </TableCell>
@@ -1503,6 +1529,7 @@ function PorVerificarTab() {
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead>Recurrencia</TableHead>
                     <TableHead>Fecha Registro</TableHead>
                     <TableHead>Fecha Compromiso</TableHead>
                     <TableHead>Fecha Pago</TableHead>
@@ -1526,6 +1553,18 @@ function PorVerificarTab() {
                     
                     return (
                       <TableRow key={egreso.id} data-testid={`egreso-pagado-${egreso.id}`}>
+                        <TableCell>
+                          {egreso.esRecurrente && egreso.numeroEnSerie && egreso.numeroRepeticiones ? (
+                            <div className="flex items-center gap-1">
+                              <Repeat className="h-4 w-4 text-muted-foreground" />
+                              <span className="text-sm text-muted-foreground">
+                                {egreso.numeroEnSerie} de {egreso.numeroRepeticiones}
+                              </span>
+                            </div>
+                          ) : (
+                            <span className="text-muted-foreground">-</span>
+                          )}
+                        </TableCell>
                         <TableCell>
                           {egreso.fechaRegistro ? format(new Date(egreso.fechaRegistro), "dd/MM/yyyy") : "N/A"}
                         </TableCell>
@@ -2064,6 +2103,7 @@ function HistorialTab() {
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead>Recurrencia</TableHead>
                     <TableHead>Fecha Registro</TableHead>
                     <TableHead>Fecha Compromiso</TableHead>
                     <TableHead>Fecha Pago</TableHead>
@@ -2084,6 +2124,18 @@ function HistorialTab() {
                     
                     return (
                       <TableRow key={egreso.id} data-testid={`egreso-historial-${egreso.id}`}>
+                        <TableCell>
+                          {egreso.esRecurrente && egreso.numeroEnSerie && egreso.numeroRepeticiones ? (
+                            <div className="flex items-center gap-1">
+                              <Repeat className="h-4 w-4 text-muted-foreground" />
+                              <span className="text-sm text-muted-foreground">
+                                {egreso.numeroEnSerie} de {egreso.numeroRepeticiones}
+                              </span>
+                            </div>
+                          ) : (
+                            <span className="text-muted-foreground">-</span>
+                          )}
+                        </TableCell>
                         <TableCell>
                           {egreso.fechaRegistro ? format(new Date(egreso.fechaRegistro), "dd/MM/yyyy") : "N/A"}
                         </TableCell>
