@@ -53,7 +53,7 @@ export default function Egresos() {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="registrar" data-testid="tab-registrar">
               Registrar Cta x Pagar
             </TabsTrigger>
@@ -62,6 +62,9 @@ export default function Egresos() {
             </TabsTrigger>
             <TabsTrigger value="por-pagar" data-testid="tab-por-pagar">
               Por Pagar
+            </TabsTrigger>
+            <TabsTrigger value="pagados" data-testid="tab-pagados">
+              Pagados
             </TabsTrigger>
             <TabsTrigger value="historial" data-testid="tab-historial">
               Historial Completo
@@ -78,6 +81,10 @@ export default function Egresos() {
 
           <TabsContent value="por-pagar" className="space-y-4">
             <PorPagarTab />
+          </TabsContent>
+
+          <TabsContent value="pagados" className="space-y-4">
+            <PagadosTab />
           </TabsContent>
 
           <TabsContent value="historial" className="space-y-4">
@@ -1177,6 +1184,598 @@ function PorPagarTab() {
   );
 }
 
+function PagadosTab() {
+  const { toast } = useToast();
+  const [selectedEgreso, setSelectedEgreso] = useState<any>(null);
+  const [isEditPagoDialogOpen, setIsEditPagoDialogOpen] = useState(false);
+  const [isEditEgresoDialogOpen, setIsEditEgresoDialogOpen] = useState(false);
+  const [pagoData, setPagoData] = useState({
+    fecha_pago: "",
+    monto_pagado_usd: "",
+    monto_pagado_bs: "",
+    tasa_cambio: "",
+    banco_id: "",
+    referencia_pago: "",
+    numero_factura_pagada: "",
+  });
+  const [egresoData, setEgresoData] = useState({
+    cta_por_pagar_usd: "",
+    cta_por_pagar_bs: "",
+    tipo_egreso_id: "",
+    descripcion: "",
+    fecha_compromiso: "",
+    numero_factura_proveedor: "",
+    requiere_aprobacion: false,
+    autorizador_id: "",
+  });
+
+  const { data: egresos = [], isLoading } = useQuery<any[]>({
+    queryKey: ["/api/egresos", "pagados"],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      params.append("estado", "Pagado");
+      const response = await fetch(`/api/egresos?${params}`);
+      if (!response.ok) throw new Error('Failed to fetch egresos');
+      return response.json();
+    },
+  });
+
+  const { data: tiposEgresos = [] } = useQuery<any[]>({
+    queryKey: ["/api/admin/tipos-egresos"],
+  });
+
+  const { data: bancos = [] } = useQuery<any[]>({
+    queryKey: ["/api/admin/bancos"],
+  });
+
+  const { data: autorizadores = [] } = useQuery<any[]>({
+    queryKey: ["/api/admin/autorizadores"],
+  });
+
+  const editEgresoMutation = useMutation({
+    mutationFn: async (data: any) => {
+      return apiRequest("PUT", `/api/egresos/${selectedEgreso.id}/editar-datos`, data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/egresos"] });
+      toast({
+        title: "Egreso actualizado",
+        description: "Los datos del egreso han sido actualizados exitosamente",
+      });
+      handleCloseEditEgresoDialog();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "No se pudo actualizar el egreso",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const editPagoMutation = useMutation({
+    mutationFn: async (data: any) => {
+      return apiRequest("PUT", `/api/egresos/${selectedEgreso.id}/editar-pago`, data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/egresos"] });
+      toast({
+        title: "Pago actualizado",
+        description: "Los datos del pago han sido actualizados exitosamente",
+      });
+      handleCloseEditPagoDialog();
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "No se pudo actualizar el pago",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleCloseEditPagoDialog = () => {
+    setIsEditPagoDialogOpen(false);
+    setSelectedEgreso(null);
+    setPagoData({
+      fecha_pago: "",
+      monto_pagado_usd: "",
+      monto_pagado_bs: "",
+      tasa_cambio: "",
+      banco_id: "",
+      referencia_pago: "",
+      numero_factura_pagada: "",
+    });
+  };
+
+  const handleOpenEditPagoDialog = (egreso: any) => {
+    setSelectedEgreso(egreso);
+    setPagoData({
+      fecha_pago: egreso.fechaPago ? formatDateOnly(new Date(egreso.fechaPago)) : "",
+      monto_pagado_usd: egreso.montoPagadoUsd?.toString() || "",
+      monto_pagado_bs: egreso.montoPagadoBs?.toString() || "",
+      tasa_cambio: egreso.tasaCambio?.toString() || "",
+      banco_id: egreso.bancoId || "",
+      referencia_pago: egreso.referenciaPago || "",
+      numero_factura_pagada: egreso.numeroFacturaPagada || "",
+    });
+    setIsEditPagoDialogOpen(true);
+  };
+
+  const handleEditPago = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const submitData: any = {
+      fechaPago: pagoData.fecha_pago,
+      montoPagadoUsd: pagoData.monto_pagado_usd || null,
+      montoPagadoBs: pagoData.monto_pagado_bs || null,
+      tasaCambio: pagoData.tasa_cambio || null,
+      bancoId: pagoData.banco_id || null,
+      referenciaPago: pagoData.referencia_pago || null,
+      numeroFacturaPagada: pagoData.numero_factura_pagada || null,
+    };
+
+    editPagoMutation.mutate(submitData);
+  };
+
+  const handleCloseEditEgresoDialog = () => {
+    setIsEditEgresoDialogOpen(false);
+    setSelectedEgreso(null);
+    setEgresoData({
+      cta_por_pagar_usd: "",
+      cta_por_pagar_bs: "",
+      tipo_egreso_id: "",
+      descripcion: "",
+      fecha_compromiso: "",
+      numero_factura_proveedor: "",
+      requiere_aprobacion: false,
+      autorizador_id: "",
+    });
+  };
+
+  const handleOpenEditEgresoDialog = (egreso: any) => {
+    setSelectedEgreso(egreso);
+    setEgresoData({
+      cta_por_pagar_usd: egreso.ctaPorPagarUsd?.toString() || "",
+      cta_por_pagar_bs: egreso.ctaPorPagarBs?.toString() || "",
+      tipo_egreso_id: egreso.tipoEgresoId || "",
+      descripcion: egreso.descripcion || "",
+      fecha_compromiso: egreso.fechaCompromiso ? formatDateOnly(new Date(egreso.fechaCompromiso)) : "",
+      numero_factura_proveedor: egreso.numeroFacturaProveedor || "",
+      requiere_aprobacion: egreso.requiereAprobacion || false,
+      autorizador_id: egreso.autorizadorId || "",
+    });
+    setIsEditEgresoDialogOpen(true);
+  };
+
+  const handleEditEgreso = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const submitData: any = {
+      ctaPorPagarUsd: egresoData.cta_por_pagar_usd || null,
+      ctaPorPagarBs: egresoData.cta_por_pagar_bs || null,
+      tipoEgresoId: egresoData.tipo_egreso_id,
+      descripcion: egresoData.descripcion,
+      fechaCompromiso: egresoData.fecha_compromiso,
+      numeroFacturaProveedor: egresoData.numero_factura_proveedor || null,
+      requiereAprobacion: egresoData.requiere_aprobacion,
+      autorizadorId: egresoData.requiere_aprobacion ? egresoData.autorizador_id : null,
+    };
+
+    editEgresoMutation.mutate(submitData);
+  };
+
+  if (isLoading) {
+    return <div className="text-center py-12">Cargando...</div>;
+  }
+
+  return (
+    <div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Egresos Pagados</CardTitle>
+          <CardDescription>
+            Egresos con pago registrado, pendientes de verificación
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {egresos.length === 0 ? (
+            <p className="text-center py-8 text-muted-foreground">
+              No hay egresos pagados pendientes de verificación
+            </p>
+          ) : (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Fecha Registro</TableHead>
+                    <TableHead>Fecha Pago</TableHead>
+                    <TableHead>Tipo</TableHead>
+                    <TableHead>Descripción</TableHead>
+                    <TableHead>Cta x Pagar</TableHead>
+                    <TableHead>Monto Pagado</TableHead>
+                    <TableHead>Tasa Cambio</TableHead>
+                    <TableHead>Banco</TableHead>
+                    <TableHead>Referencia</TableHead>
+                    <TableHead>Acciones</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {egresos.map((egreso: any) => {
+                    const tipoNombre = tiposEgresos.find((t: any) => t.id === egreso.tipoEgresoId)?.nombre;
+                    const bancoNombre = bancos.find((b: any) => b.id === egreso.bancoId)?.nombre;
+                    
+                    return (
+                      <TableRow key={egreso.id} data-testid={`egreso-pagado-${egreso.id}`}>
+                        <TableCell>
+                          {egreso.fechaRegistro ? format(new Date(egreso.fechaRegistro), "dd/MM/yyyy") : "N/A"}
+                        </TableCell>
+                        <TableCell>
+                          {egreso.fechaPago ? format(new Date(egreso.fechaPago), "dd/MM/yyyy") : "N/A"}
+                        </TableCell>
+                        <TableCell>{tipoNombre || "N/A"}</TableCell>
+                        <TableCell className="max-w-xs truncate">{egreso.descripcion}</TableCell>
+                        <TableCell>
+                          {egreso.ctaPorPagarUsd && (
+                            <div className="text-green-600 dark:text-green-400">
+                              ${parseFloat(egreso.ctaPorPagarUsd).toFixed(2)}
+                            </div>
+                          )}
+                          {egreso.ctaPorPagarBs && (
+                            <div className="text-blue-600 dark:text-blue-400">
+                              Bs {parseFloat(egreso.ctaPorPagarBs).toFixed(2)}
+                            </div>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {egreso.montoPagadoUsd && (
+                            <div className="text-green-600 dark:text-green-400 font-medium">
+                              ${parseFloat(egreso.montoPagadoUsd).toFixed(2)}
+                            </div>
+                          )}
+                          {egreso.montoPagadoBs && (
+                            <div className="text-blue-600 dark:text-blue-400 font-medium">
+                              Bs {parseFloat(egreso.montoPagadoBs).toFixed(2)}
+                            </div>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {egreso.tasaCambio ? parseFloat(egreso.tasaCambio).toFixed(2) : "N/A"}
+                        </TableCell>
+                        <TableCell>{bancoNombre || "N/A"}</TableCell>
+                        <TableCell className="max-w-xs truncate">
+                          {egreso.referenciaPago || "N/A"}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleOpenEditEgresoDialog(egreso)}
+                              data-testid={`editar-egreso-${egreso.id}`}
+                            >
+                              Editar Egreso
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleOpenEditPagoDialog(egreso)}
+                              data-testid={`editar-pago-${egreso.id}`}
+                            >
+                              Editar Pago
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Dialog open={isEditPagoDialogOpen} onOpenChange={(open) => {
+        if (!open) handleCloseEditPagoDialog();
+        else setIsEditPagoDialogOpen(true);
+      }}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Editar Datos del Pago</DialogTitle>
+            <DialogDescription>
+              Modifique los detalles del pago registrado
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleEditPago} className="space-y-4">
+            {selectedEgreso && (
+              <div className="p-4 bg-muted rounded-md">
+                <p className="text-sm"><strong>Tipo:</strong> {tiposEgresos.find((t: any) => t.id === selectedEgreso.tipoEgresoId)?.nombre}</p>
+                <p className="text-sm"><strong>Descripción:</strong> {selectedEgreso.descripcion}</p>
+              </div>
+            )}
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="edit-fecha-pago">Fecha de Pago</Label>
+                <Input
+                  id="edit-fecha-pago"
+                  type="date"
+                  value={pagoData.fecha_pago}
+                  onChange={(e) => setPagoData({ ...pagoData, fecha_pago: e.target.value })}
+                  required
+                  data-testid="input-edit-fecha-pago"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="edit-banco-id">Banco</Label>
+                <Select
+                  value={pagoData.banco_id}
+                  onValueChange={(value) => setPagoData({ ...pagoData, banco_id: value })}
+                  required
+                >
+                  <SelectTrigger id="edit-banco-id" data-testid="select-edit-banco-id">
+                    <SelectValue placeholder="Seleccione un banco" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {bancos.map((banco: any) => (
+                      <SelectItem key={banco.id} value={banco.id}>
+                        {banco.nombre}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="edit-monto-pagado-usd">Monto Pagado USD</Label>
+                <Input
+                  id="edit-monto-pagado-usd"
+                  type="number"
+                  step="0.01"
+                  value={pagoData.monto_pagado_usd}
+                  onChange={(e) => setPagoData({ ...pagoData, monto_pagado_usd: e.target.value })}
+                  placeholder="0.00"
+                  data-testid="input-edit-monto-pagado-usd"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="edit-monto-pagado-bs">Monto Pagado Bs</Label>
+                <Input
+                  id="edit-monto-pagado-bs"
+                  type="number"
+                  step="0.01"
+                  value={pagoData.monto_pagado_bs}
+                  onChange={(e) => setPagoData({ ...pagoData, monto_pagado_bs: e.target.value })}
+                  placeholder="0.00"
+                  data-testid="input-edit-monto-pagado-bs"
+                />
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="edit-tasa-cambio">Tasa de Cambio</Label>
+              <Input
+                id="edit-tasa-cambio"
+                type="number"
+                step="0.01"
+                value={pagoData.tasa_cambio}
+                onChange={(e) => setPagoData({ ...pagoData, tasa_cambio: e.target.value })}
+                placeholder="0.00"
+                data-testid="input-edit-tasa-cambio"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="edit-referencia-pago">Referencia de Pago</Label>
+              <Input
+                id="edit-referencia-pago"
+                value={pagoData.referencia_pago}
+                onChange={(e) => setPagoData({ ...pagoData, referencia_pago: e.target.value })}
+                placeholder="Número de referencia"
+                data-testid="input-edit-referencia-pago"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="edit-numero-factura-pagada">Número de Factura Pagada</Label>
+              <Input
+                id="edit-numero-factura-pagada"
+                value={pagoData.numero_factura_pagada}
+                onChange={(e) => setPagoData({ ...pagoData, numero_factura_pagada: e.target.value })}
+                placeholder="Número de factura"
+                data-testid="input-edit-numero-factura-pagada"
+              />
+            </div>
+
+            <div className="flex gap-2">
+              <Button
+                type="submit"
+                className="flex-1"
+                disabled={editPagoMutation.isPending}
+                data-testid="button-confirmar-edit-pago"
+              >
+                {editPagoMutation.isPending ? "Guardando..." : "Guardar Cambios"}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleCloseEditPagoDialog}
+                disabled={editPagoMutation.isPending}
+                data-testid="button-cancelar-edit-pago"
+              >
+                Cancelar
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isEditEgresoDialogOpen} onOpenChange={(open) => {
+        if (!open) handleCloseEditEgresoDialog();
+        else setIsEditEgresoDialogOpen(true);
+      }}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Editar Datos del Egreso</DialogTitle>
+            <DialogDescription>
+              Modifique los detalles generales del egreso
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleEditEgreso} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="edit-cta-por-pagar-usd">Cuenta por Pagar USD</Label>
+                <Input
+                  id="edit-cta-por-pagar-usd"
+                  type="number"
+                  step="0.01"
+                  value={egresoData.cta_por_pagar_usd}
+                  onChange={(e) => setEgresoData({ ...egresoData, cta_por_pagar_usd: e.target.value })}
+                  placeholder="0.00"
+                  data-testid="input-edit-cta-por-pagar-usd"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="edit-cta-por-pagar-bs">Cuenta por Pagar Bs</Label>
+                <Input
+                  id="edit-cta-por-pagar-bs"
+                  type="number"
+                  step="0.01"
+                  value={egresoData.cta_por_pagar_bs}
+                  onChange={(e) => setEgresoData({ ...egresoData, cta_por_pagar_bs: e.target.value })}
+                  placeholder="0.00"
+                  data-testid="input-edit-cta-por-pagar-bs"
+                />
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="edit-tipo-egreso-id">Tipo de Egreso *</Label>
+              <Select
+                value={egresoData.tipo_egreso_id}
+                onValueChange={(value) => setEgresoData({ ...egresoData, tipo_egreso_id: value })}
+                required
+              >
+                <SelectTrigger id="edit-tipo-egreso-id" data-testid="select-edit-tipo-egreso-id">
+                  <SelectValue placeholder="Seleccione un tipo" />
+                </SelectTrigger>
+                <SelectContent>
+                  {tiposEgresos.map((tipo: any) => (
+                    <SelectItem key={tipo.id} value={tipo.id}>
+                      {tipo.nombre}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label htmlFor="edit-descripcion">Descripción *</Label>
+              <Textarea
+                id="edit-descripcion"
+                value={egresoData.descripcion}
+                onChange={(e) => setEgresoData({ ...egresoData, descripcion: e.target.value })}
+                placeholder="Descripción del egreso"
+                required
+                rows={3}
+                data-testid="textarea-edit-descripcion"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="edit-fecha-compromiso">Fecha de Compromiso</Label>
+              <Input
+                id="edit-fecha-compromiso"
+                type="date"
+                value={egresoData.fecha_compromiso}
+                onChange={(e) => setEgresoData({ ...egresoData, fecha_compromiso: e.target.value })}
+                data-testid="input-edit-fecha-compromiso"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="edit-numero-factura-proveedor">Número de Factura del Proveedor</Label>
+              <Input
+                id="edit-numero-factura-proveedor"
+                value={egresoData.numero_factura_proveedor}
+                onChange={(e) => setEgresoData({ ...egresoData, numero_factura_proveedor: e.target.value })}
+                placeholder="Número de factura"
+                data-testid="input-edit-numero-factura-proveedor"
+              />
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="edit-requiere-aprobacion"
+                checked={egresoData.requiere_aprobacion}
+                onChange={(e) => setEgresoData({ 
+                  ...egresoData, 
+                  requiere_aprobacion: e.target.checked,
+                  autorizador_id: e.target.checked ? egresoData.autorizador_id : ""
+                })}
+                className="h-4 w-4"
+                data-testid="checkbox-edit-requiere-aprobacion"
+              />
+              <Label htmlFor="edit-requiere-aprobacion" className="cursor-pointer">
+                Requiere Aprobación
+              </Label>
+            </div>
+
+            {egresoData.requiere_aprobacion && (
+              <div>
+                <Label htmlFor="edit-autorizador-id">Autorizador *</Label>
+                <Select
+                  value={egresoData.autorizador_id}
+                  onValueChange={(value) => setEgresoData({ ...egresoData, autorizador_id: value })}
+                  required={egresoData.requiere_aprobacion}
+                >
+                  <SelectTrigger id="edit-autorizador-id" data-testid="select-edit-autorizador-id">
+                    <SelectValue placeholder="Seleccione un autorizador" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {autorizadores.map((autorizador: any) => (
+                      <SelectItem key={autorizador.id} value={autorizador.id}>
+                        {autorizador.nombre}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            <div className="flex gap-2">
+              <Button
+                type="submit"
+                className="flex-1"
+                disabled={editEgresoMutation.isPending}
+                data-testid="button-confirmar-edit-egreso"
+              >
+                {editEgresoMutation.isPending ? "Guardando..." : "Guardar Cambios"}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleCloseEditEgresoDialog}
+                disabled={editEgresoMutation.isPending}
+                data-testid="button-cancelar-edit-egreso"
+              >
+                Cancelar
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
 function HistorialTab() {
   const [filters, setFilters] = useState({
     estado: "all",
@@ -1337,57 +1936,82 @@ function HistorialTab() {
               No se encontraron egresos con los filtros seleccionados
             </p>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Fecha Registro</TableHead>
-                  <TableHead>Fecha Autorización</TableHead>
-                  <TableHead>Tipo</TableHead>
-                  <TableHead>Descripción</TableHead>
-                  <TableHead>Monto</TableHead>
-                  <TableHead>Estado</TableHead>
-                  <TableHead>Fecha Pago</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {egresos.map((egreso: any) => {
-                  const tipoNombre = tiposEgresos.find((t: any) => t.id === egreso.tipoEgresoId)?.nombre;
-                  
-                  return (
-                    <TableRow key={egreso.id} data-testid={`egreso-historial-${egreso.id}`}>
-                      <TableCell>
-                        {egreso.fechaRegistro ? format(new Date(egreso.fechaRegistro), "dd/MM/yyyy") : "N/A"}
-                      </TableCell>
-                      <TableCell>
-                        {egreso.fechaAutorizacion ? format(new Date(egreso.fechaAutorizacion), "dd/MM/yyyy") : "N/A"}
-                      </TableCell>
-                      <TableCell>{tipoNombre || "N/A"}</TableCell>
-                      <TableCell className="max-w-xs truncate">{egreso.descripcion}</TableCell>
-                      <TableCell>
-                        {egreso.ctaPorPagarUsd && (
-                          <div className="text-green-600 dark:text-green-400">
-                            ${parseFloat(egreso.ctaPorPagarUsd).toFixed(2)}
-                          </div>
-                        )}
-                        {egreso.ctaPorPagarBs && (
-                          <div className="text-blue-600 dark:text-blue-400">
-                            Bs {parseFloat(egreso.ctaPorPagarBs).toFixed(2)}
-                          </div>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={getEstadoBadgeVariant(egreso.estado)}>
-                          {egreso.estado}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        {egreso.fechaPago ? format(new Date(egreso.fechaPago), "dd/MM/yyyy") : "N/A"}
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Fecha Registro</TableHead>
+                    <TableHead>Fecha Autorización</TableHead>
+                    <TableHead>Tipo</TableHead>
+                    <TableHead>Descripción</TableHead>
+                    <TableHead>Cta x Pagar USD</TableHead>
+                    <TableHead>Cta x Pagar Bs</TableHead>
+                    <TableHead>Monto Pagado USD</TableHead>
+                    <TableHead>Monto Pagado Bs</TableHead>
+                    <TableHead>Tasa Cambio</TableHead>
+                    <TableHead>Estado</TableHead>
+                    <TableHead>Fecha Pago</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {egresos.map((egreso: any) => {
+                    const tipoNombre = tiposEgresos.find((t: any) => t.id === egreso.tipoEgresoId)?.nombre;
+                    
+                    return (
+                      <TableRow key={egreso.id} data-testid={`egreso-historial-${egreso.id}`}>
+                        <TableCell>
+                          {egreso.fechaRegistro ? format(new Date(egreso.fechaRegistro), "dd/MM/yyyy") : "N/A"}
+                        </TableCell>
+                        <TableCell>
+                          {egreso.fechaAutorizacion ? format(new Date(egreso.fechaAutorizacion), "dd/MM/yyyy") : "N/A"}
+                        </TableCell>
+                        <TableCell>{tipoNombre || "N/A"}</TableCell>
+                        <TableCell className="max-w-xs truncate">{egreso.descripcion}</TableCell>
+                        <TableCell>
+                          {egreso.ctaPorPagarUsd ? (
+                            <span className="text-green-600 dark:text-green-400">
+                              ${parseFloat(egreso.ctaPorPagarUsd).toFixed(2)}
+                            </span>
+                          ) : "-"}
+                        </TableCell>
+                        <TableCell>
+                          {egreso.ctaPorPagarBs ? (
+                            <span className="text-blue-600 dark:text-blue-400">
+                              Bs {parseFloat(egreso.ctaPorPagarBs).toFixed(2)}
+                            </span>
+                          ) : "-"}
+                        </TableCell>
+                        <TableCell>
+                          {egreso.montoPagadoUsd ? (
+                            <span className="text-green-600 dark:text-green-400 font-medium">
+                              ${parseFloat(egreso.montoPagadoUsd).toFixed(2)}
+                            </span>
+                          ) : "-"}
+                        </TableCell>
+                        <TableCell>
+                          {egreso.montoPagadoBs ? (
+                            <span className="text-blue-600 dark:text-blue-400 font-medium">
+                              Bs {parseFloat(egreso.montoPagadoBs).toFixed(2)}
+                            </span>
+                          ) : "-"}
+                        </TableCell>
+                        <TableCell>
+                          {egreso.tasaCambio ? parseFloat(egreso.tasaCambio).toFixed(2) : "-"}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={getEstadoBadgeVariant(egreso.estado)}>
+                            {egreso.estado}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          {egreso.fechaPago ? format(new Date(egreso.fechaPago), "dd/MM/yyyy") : "N/A"}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
           )}
         </CardContent>
       </Card>
