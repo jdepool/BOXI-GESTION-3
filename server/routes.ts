@@ -4154,8 +4154,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // EGRESOS endpoints
   app.get("/api/egresos", async (req, res) => {
     try {
+      const estadoParam = req.query.estado;
+      const estado = Array.isArray(estadoParam) ? estadoParam as string[] : estadoParam ? [estadoParam as string] : undefined;
+      
       const filters = {
-        estado: req.query.estado as string | undefined,
+        estado,
         tipoEgresoId: req.query.tipoEgresoId as string | undefined,
         autorizadorId: req.query.autorizadorId as string | undefined,
         bancoId: req.query.bancoId as string | undefined,
@@ -4177,8 +4180,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get("/api/egresos/count", async (req, res) => {
     try {
+      const estadoParam = req.query.estado;
+      const estado = Array.isArray(estadoParam) ? estadoParam as string[] : estadoParam ? [estadoParam as string] : undefined;
+      
       const filters = {
-        estado: req.query.estado as string | undefined,
+        estado,
         tipoEgresoId: req.query.tipoEgresoId as string | undefined,
         autorizadorId: req.query.autorizadorId as string | undefined,
         bancoId: req.query.bancoId as string | undefined,
