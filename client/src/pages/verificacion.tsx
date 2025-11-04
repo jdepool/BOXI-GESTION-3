@@ -30,6 +30,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { VerificacionPagosCasheaTab } from "@/components/admin/verificacion-pagos-cashea-tab";
+import { VerificacionEgresosTab } from "@/components/admin/verificacion-egresos-tab";
 
 // Helper function to format Date to YYYY-MM-DD in local timezone (prevents timezone shift)
 const formatLocalDate = (date: Date) => {
@@ -616,11 +617,7 @@ export default function VerificacionPage() {
         </TabsContent>
 
         <TabsContent value="egresos">
-          <div className="p-8 text-center">
-            <p className="text-muted-foreground text-lg">
-              La verificación de egresos estará disponible próximamente
-            </p>
-          </div>
+          <VerificacionEgresosTab />
         </TabsContent>
 
         <TabsContent value="cashea">
