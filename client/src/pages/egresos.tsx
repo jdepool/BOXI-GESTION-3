@@ -105,6 +105,7 @@ function RegistrarTab() {
     cta_por_pagar_bs: "",
     tipo_egreso_id: "",
     descripcion: "",
+    beneficiario: "",
     fecha_compromiso: "",
     numero_factura_proveedor: "",
     requiere_aprobacion: false,
@@ -456,6 +457,17 @@ function RegistrarTab() {
             </div>
 
             <div>
+              <Label htmlFor="beneficiario">Beneficiario</Label>
+              <Input
+                id="beneficiario"
+                placeholder="Nombre del beneficiario"
+                value={formData.beneficiario}
+                onChange={(e) => setFormData({ ...formData, beneficiario: e.target.value })}
+                data-testid="input-beneficiario"
+              />
+            </div>
+
+            <div>
               <Label htmlFor="numero_factura_proveedor">Número de Factura del Proveedor</Label>
               <Input
                 id="numero_factura_proveedor"
@@ -797,9 +809,9 @@ function PorAutorizarTab() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Fecha Registro</TableHead>
-                  <TableHead>Fecha Autorización</TableHead>
                   <TableHead>Tipo</TableHead>
                   <TableHead>Descripción</TableHead>
+                  <TableHead>Beneficiario</TableHead>
                   <TableHead>Monto</TableHead>
                   <TableHead>Autorizador</TableHead>
                   <TableHead>Acciones</TableHead>
@@ -815,9 +827,9 @@ function PorAutorizarTab() {
                       <TableCell>
                         {egreso.fechaRegistro ? format(new Date(egreso.fechaRegistro), "dd/MM/yyyy") : "N/A"}
                       </TableCell>
-                      <TableCell>N/A</TableCell>
                       <TableCell>{tipoNombre || "N/A"}</TableCell>
                       <TableCell className="max-w-xs truncate">{egreso.descripcion}</TableCell>
+                      <TableCell>{egreso.beneficiario || "N/A"}</TableCell>
                       <TableCell>
                         {egreso.ctaPorPagarUsd && (
                           <div className="text-green-600 dark:text-green-400">
@@ -1050,9 +1062,9 @@ function PorPagarTab() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Fecha Registro</TableHead>
-                  <TableHead>Fecha Autorización</TableHead>
                   <TableHead>Tipo</TableHead>
                   <TableHead>Descripción</TableHead>
+                  <TableHead>Beneficiario</TableHead>
                   <TableHead>Monto</TableHead>
                   <TableHead>Compromiso</TableHead>
                   <TableHead>Acciones</TableHead>
@@ -1067,11 +1079,9 @@ function PorPagarTab() {
                       <TableCell>
                         {egreso.fechaRegistro ? format(new Date(egreso.fechaRegistro), "dd/MM/yyyy") : "N/A"}
                       </TableCell>
-                      <TableCell>
-                        {egreso.fechaAutorizacion ? format(new Date(egreso.fechaAutorizacion), "dd/MM/yyyy") : "N/A"}
-                      </TableCell>
                       <TableCell>{tipoNombre || "N/A"}</TableCell>
                       <TableCell className="max-w-xs truncate">{egreso.descripcion}</TableCell>
+                      <TableCell>{egreso.beneficiario || "N/A"}</TableCell>
                       <TableCell>
                         {egreso.ctaPorPagarUsd && (
                           <div className="text-green-600 dark:text-green-400">
@@ -1473,6 +1483,7 @@ function PagadosTab() {
                     <TableHead>Fecha Pago</TableHead>
                     <TableHead>Tipo</TableHead>
                     <TableHead>Descripción</TableHead>
+                    <TableHead>Beneficiario</TableHead>
                     <TableHead>Cta x Pagar</TableHead>
                     <TableHead>Monto Pagado</TableHead>
                     <TableHead>Tasa Cambio</TableHead>
@@ -1484,7 +1495,7 @@ function PagadosTab() {
                 <TableBody>
                   {egresos.map((egreso: any) => {
                     const tipoNombre = tiposEgresos.find((t: any) => t.id === egreso.tipoEgresoId)?.nombre;
-                    const bancoNombre = bancos.find((b: any) => b.id === egreso.bancoId)?.nombre;
+                    const bancoNombre = bancos.find((b: any) => b.id === egreso.bancoId)?.banco;
                     
                     return (
                       <TableRow key={egreso.id} data-testid={`egreso-pagado-${egreso.id}`}>
@@ -1496,6 +1507,7 @@ function PagadosTab() {
                         </TableCell>
                         <TableCell>{tipoNombre || "N/A"}</TableCell>
                         <TableCell className="max-w-xs truncate">{egreso.descripcion}</TableCell>
+                        <TableCell>{egreso.beneficiario || "N/A"}</TableCell>
                         <TableCell>
                           {egreso.ctaPorPagarUsd && (
                             <div className="text-green-600 dark:text-green-400">
@@ -2022,9 +2034,9 @@ function HistorialTab() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Fecha Registro</TableHead>
-                    <TableHead>Fecha Autorización</TableHead>
                     <TableHead>Tipo</TableHead>
                     <TableHead>Descripción</TableHead>
+                    <TableHead>Beneficiario</TableHead>
                     <TableHead>Cta x Pagar USD</TableHead>
                     <TableHead>Cta x Pagar Bs</TableHead>
                     <TableHead>Monto Pagado USD</TableHead>
@@ -2043,11 +2055,9 @@ function HistorialTab() {
                         <TableCell>
                           {egreso.fechaRegistro ? format(new Date(egreso.fechaRegistro), "dd/MM/yyyy") : "N/A"}
                         </TableCell>
-                        <TableCell>
-                          {egreso.fechaAutorizacion ? format(new Date(egreso.fechaAutorizacion), "dd/MM/yyyy") : "N/A"}
-                        </TableCell>
                         <TableCell>{tipoNombre || "N/A"}</TableCell>
                         <TableCell className="max-w-xs truncate">{egreso.descripcion}</TableCell>
+                        <TableCell>{egreso.beneficiario || "N/A"}</TableCell>
                         <TableCell>
                           {egreso.ctaPorPagarUsd ? (
                             <span className="text-green-600 dark:text-green-400">
