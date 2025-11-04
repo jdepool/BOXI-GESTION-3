@@ -1504,8 +1504,10 @@ function PorVerificarTab() {
                     <TableHead>Tipo</TableHead>
                     <TableHead>Descripción</TableHead>
                     <TableHead>Pagado a</TableHead>
-                    <TableHead>Cta x Pagar</TableHead>
-                    <TableHead>Monto Pagado</TableHead>
+                    <TableHead>Cta x Pagar USD</TableHead>
+                    <TableHead>Cta x Pagar Bs</TableHead>
+                    <TableHead>Monto Pagado USD</TableHead>
+                    <TableHead>Monto Pagado Bs</TableHead>
                     <TableHead>Tasa Cambio</TableHead>
                     <TableHead>Banco</TableHead>
                     <TableHead>Referencia</TableHead>
@@ -1529,27 +1531,39 @@ function PorVerificarTab() {
                         <TableCell className="max-w-xs truncate">{egreso.descripcion}</TableCell>
                         <TableCell>{egreso.beneficiario || "N/A"}</TableCell>
                         <TableCell>
-                          {egreso.ctaPorPagarUsd && (
+                          {egreso.ctaPorPagarUsd ? (
                             <div className="text-green-600 dark:text-green-400">
                               ${parseFloat(egreso.ctaPorPagarUsd).toFixed(2)}
                             </div>
-                          )}
-                          {egreso.ctaPorPagarBs && (
-                            <div className="text-blue-600 dark:text-blue-400">
-                              Bs {parseFloat(egreso.ctaPorPagarBs).toFixed(2)}
-                            </div>
+                          ) : (
+                            <span className="text-muted-foreground">-</span>
                           )}
                         </TableCell>
                         <TableCell>
-                          {egreso.montoPagadoUsd && (
+                          {egreso.ctaPorPagarBs ? (
+                            <div className="text-blue-600 dark:text-blue-400">
+                              Bs {parseFloat(egreso.ctaPorPagarBs).toFixed(2)}
+                            </div>
+                          ) : (
+                            <span className="text-muted-foreground">-</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {egreso.montoPagadoUsd ? (
                             <div className="text-green-600 dark:text-green-400 font-medium">
                               ${parseFloat(egreso.montoPagadoUsd).toFixed(2)}
                             </div>
+                          ) : (
+                            <span className="text-muted-foreground">-</span>
                           )}
-                          {egreso.montoPagadoBs && (
+                        </TableCell>
+                        <TableCell>
+                          {egreso.montoPagadoBs ? (
                             <div className="text-blue-600 dark:text-blue-400 font-medium">
                               Bs {parseFloat(egreso.montoPagadoBs).toFixed(2)}
                             </div>
+                          ) : (
+                            <span className="text-muted-foreground">-</span>
                           )}
                         </TableCell>
                         <TableCell>
