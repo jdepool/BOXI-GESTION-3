@@ -817,7 +817,8 @@ function PorAutorizarTab() {
                   <TableHead>Tipo</TableHead>
                   <TableHead>Descripción</TableHead>
                   <TableHead>Pagado a</TableHead>
-                  <TableHead>Monto</TableHead>
+                  <TableHead>Cta x pagar USD</TableHead>
+                  <TableHead>Cta x pagar Bs</TableHead>
                   <TableHead>Autorizador</TableHead>
                   <TableHead>Acciones</TableHead>
                 </TableRow>
@@ -836,15 +837,21 @@ function PorAutorizarTab() {
                       <TableCell className="max-w-xs truncate">{egreso.descripcion}</TableCell>
                       <TableCell>{egreso.beneficiario || "N/A"}</TableCell>
                       <TableCell>
-                        {egreso.ctaPorPagarUsd && (
+                        {egreso.ctaPorPagarUsd ? (
                           <div className="text-green-600 dark:text-green-400">
                             ${parseFloat(egreso.ctaPorPagarUsd).toFixed(2)}
                           </div>
+                        ) : (
+                          <span className="text-muted-foreground">-</span>
                         )}
-                        {egreso.ctaPorPagarBs && (
+                      </TableCell>
+                      <TableCell>
+                        {egreso.ctaPorPagarBs ? (
                           <div className="text-blue-600 dark:text-blue-400">
                             Bs {parseFloat(egreso.ctaPorPagarBs).toFixed(2)}
                           </div>
+                        ) : (
+                          <span className="text-muted-foreground">-</span>
                         )}
                       </TableCell>
                       <TableCell>{autorizadorNombre || "N/A"}</TableCell>
