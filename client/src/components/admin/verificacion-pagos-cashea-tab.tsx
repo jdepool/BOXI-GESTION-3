@@ -224,9 +224,10 @@ export function VerificacionPagosCasheaTab() {
       clean2 
     });
 
-    // Check for exact match after removing leading zeros
+    // Check for EXACT match after removing leading zeros
+    // IMPORTANT: Only mark as exact when references are IDENTICAL
     if (clean1 === clean2 && clean1 !== '0') {
-      console.log('EXACT MATCH found!');
+      console.log('✅ EXACT MATCH found (identical)!');
       return { 
         type: 'exact' as const, 
         matchingDigits: clean1.length,
@@ -234,23 +235,11 @@ export function VerificacionPagosCasheaTab() {
       };
     }
 
-    // Check if one reference contains the other completely
-    const shorter = clean1.length < clean2.length ? clean1 : clean2;
-    const longer = clean1.length >= clean2.length ? clean1 : clean2;
-    
-    if (shorter.length >= 6 && longer.includes(shorter)) {
-      console.log('CONTAINS MATCH found!', { shorter, longer });
-      return { 
-        type: 'exact' as const, 
-        matchingDigits: shorter.length,
-        differingDigits: 0
-      };
-    }
-
+    // All other cases are NOT exact (including substring/containment matches)
     // Count differing digits for near-exact matches
     const differingDigits = countDifferingDigits(ref1, ref2);
     
-    console.log('Differing digits count:', differingDigits);
+    console.log('❌ NOT exact match. Differing digits count:', differingDigits);
 
     return { 
       type: 'partial' as const, 
