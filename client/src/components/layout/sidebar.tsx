@@ -25,14 +25,14 @@ const navigationItems = [
     label: "Devoluciones",
   },
   {
-    href: "/verificacion",
-    icon: "fas fa-check-circle",
-    label: "Verificación",
-  },
-  {
     href: "/egresos",
     icon: "fas fa-dollar-sign",
     label: "Egresos",
+  },
+  {
+    href: "/verificacion",
+    icon: "fas fa-check-circle",
+    label: "Verificación",
   },
   {
     href: "/reportes",
