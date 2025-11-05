@@ -224,8 +224,7 @@ export function VerificacionPagosCasheaTab() {
       clean2 
     });
 
-    // Check for EXACT match after removing leading zeros
-    // IMPORTANT: Only mark as exact when references are IDENTICAL
+    // Check for EXACT match after removing leading zeros (identical references)
     if (clean1 === clean2 && clean1 !== '0') {
       console.log('✅ EXACT MATCH found (identical)!');
       return { 
@@ -235,7 +234,21 @@ export function VerificacionPagosCasheaTab() {
       };
     }
 
-    // All other cases are NOT exact (including substring/containment matches)
+    // Check for COMPLETE CONTAINMENT (one reference contains the other completely)
+    // The shorter reference must have at least 6 digits
+    const shorter = clean1.length < clean2.length ? clean1 : clean2;
+    const longer = clean1.length >= clean2.length ? clean1 : clean2;
+    
+    if (shorter.length >= 6 && longer.includes(shorter)) {
+      console.log('✅ EXACT MATCH found (complete containment)!', { shorter, longer });
+      return { 
+        type: 'exact' as const, 
+        matchingDigits: shorter.length,
+        differingDigits: 0
+      };
+    }
+
+    // All other cases are NOT exact
     // Count differing digits for near-exact matches
     const differingDigits = countDifferingDigits(ref1, ref2);
     
