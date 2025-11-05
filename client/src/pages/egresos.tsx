@@ -891,6 +891,7 @@ function PorAutorizarTab() {
                   <TableHead>Tipo</TableHead>
                   <TableHead>Descripción</TableHead>
                   <TableHead>Pagar a</TableHead>
+                  <TableHead>Nro. factura</TableHead>
                   <TableHead>Cta x pagar USD</TableHead>
                   <TableHead>Cta x pagar Bs</TableHead>
                   <TableHead>Autorizador</TableHead>
@@ -926,6 +927,7 @@ function PorAutorizarTab() {
                       <TableCell>{tipoNombre || "N/A"}</TableCell>
                       <TableCell className="max-w-xs truncate">{egreso.descripcion}</TableCell>
                       <TableCell>{egreso.beneficiario || "N/A"}</TableCell>
+                      <TableCell>{egreso.numeroFacturaProveedor || "-"}</TableCell>
                       <TableCell>
                         {egreso.ctaPorPagarUsd ? (
                           <div className="text-green-600 dark:text-green-400">
@@ -1434,6 +1436,7 @@ function PorPagarTab() {
                   <TableHead>Tipo</TableHead>
                   <TableHead>Descripción</TableHead>
                   <TableHead>Pagar a</TableHead>
+                  <TableHead>Nro. factura</TableHead>
                   <TableHead>Cta x pagar USD</TableHead>
                   <TableHead>Cta x pagar Bs</TableHead>
                   <TableHead>Acciones</TableHead>
@@ -1466,6 +1469,7 @@ function PorPagarTab() {
                       <TableCell>{tipoNombre || "N/A"}</TableCell>
                       <TableCell className="max-w-xs truncate">{egreso.descripcion}</TableCell>
                       <TableCell>{egreso.beneficiario || "N/A"}</TableCell>
+                      <TableCell>{egreso.numeroFacturaProveedor || "-"}</TableCell>
                       <TableCell>
                         {egreso.ctaPorPagarUsd ? (
                           <div className="text-green-600 dark:text-green-400">
@@ -2053,6 +2057,7 @@ function PorVerificarTab() {
                     <TableHead>Tipo</TableHead>
                     <TableHead>Descripción</TableHead>
                     <TableHead>Pagado a</TableHead>
+                    <TableHead>Nro. factura</TableHead>
                     <TableHead>Cta x Pagar USD</TableHead>
                     <TableHead>Cta x Pagar Bs</TableHead>
                     <TableHead>Monto Pagado USD</TableHead>
@@ -2094,6 +2099,7 @@ function PorVerificarTab() {
                         <TableCell>{tipoNombre || "N/A"}</TableCell>
                         <TableCell className="max-w-xs truncate">{egreso.descripcion}</TableCell>
                         <TableCell>{egreso.beneficiario || "N/A"}</TableCell>
+                        <TableCell>{egreso.numeroFacturaProveedor || "-"}</TableCell>
                         <TableCell>
                           {egreso.ctaPorPagarUsd ? (
                             <div className="text-green-600 dark:text-green-400">
@@ -2638,6 +2644,7 @@ function HistorialTab() {
                     <TableHead>Tipo</TableHead>
                     <TableHead>Descripción</TableHead>
                     <TableHead>Pagado a</TableHead>
+                    <TableHead>Nro. factura</TableHead>
                     <TableHead>Cta x Pagar USD</TableHead>
                     <TableHead>Cta x Pagar Bs</TableHead>
                     <TableHead>Monto Pagado USD</TableHead>
@@ -2676,6 +2683,7 @@ function HistorialTab() {
                         <TableCell>{tipoNombre || "N/A"}</TableCell>
                         <TableCell className="max-w-xs truncate">{egreso.descripcion}</TableCell>
                         <TableCell>{egreso.beneficiario || "N/A"}</TableCell>
+                        <TableCell>{egreso.numeroFacturaProveedor || "-"}</TableCell>
                         <TableCell>
                           {egreso.ctaPorPagarUsd ? (
                             <span className="text-green-600 dark:text-green-400">
