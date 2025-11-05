@@ -774,10 +774,11 @@ function PorAutorizarTab() {
 
   const editEgresoMutation = useMutation({
     mutationFn: async (data: any) => {
-      return apiRequest("PATCH", `/api/egresos/${selectedEgreso.id}`, data);
+      return apiRequest("PUT", `/api/egresos/${selectedEgreso.id}`, data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/egresos"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/egresos", "por-autorizar"] });
       toast({
         title: "Egreso actualizado",
         description: "El egreso ha sido actualizado exitosamente",
@@ -1295,10 +1296,11 @@ function PorPagarTab() {
 
   const editEgresoMutation = useMutation({
     mutationFn: async (data: any) => {
-      return apiRequest("PATCH", `/api/egresos/${selectedEgreso.id}`, data);
+      return apiRequest("PUT", `/api/egresos/${selectedEgreso.id}`, data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/egresos"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/egresos", "por-pagar"] });
       toast({
         title: "Egreso actualizado",
         description: "El egreso ha sido actualizado exitosamente",
