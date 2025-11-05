@@ -72,7 +72,7 @@ export default function FleteModal({ open, onOpenChange, sale }: FleteModalProps
 
   // Fetch all sales from the same order
   const { data: orderSales = [] } = useQuery<Sale[]>({
-    queryKey: ['/api/sales', { orden: sale?.orden }],
+    queryKey: ['/api/sales', { ordenExacto: sale?.orden }],
     enabled: !!sale?.orden,
     select: (data: any) => data?.data || [],
   });

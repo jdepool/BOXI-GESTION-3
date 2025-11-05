@@ -493,7 +493,9 @@ export class DatabaseStorage implements IStorage {
     canalMompox?: string; // Filter for ShopMom OR canals containing "MP"
     canalBoxi?: string; // Filter for Boxi channels (exclude ShopMom and MP)
     estadoEntrega?: string;
+    search?: string; // Search by order number OR customer name
     orden?: string;
+    ordenExacto?: string; // For exact order match (modals, forms)
     startDate?: string;
     endDate?: string;
     tipo?: string;
@@ -533,8 +535,11 @@ export class DatabaseStorage implements IStorage {
           ilike(sales.nombre, `%${filters.search}%`)
         )
       );
+    } else if (filters?.ordenExacto) {
+      // Exact match for orden (used by modals/forms to avoid partial matches)
+      conditions.push(eq(sales.orden, filters.ordenExacto));
     } else if (filters?.orden) {
-      // Only apply orden filter if search is not being used
+      // Partial match for orden (used by table search)
       conditions.push(ilike(sales.orden, `%${filters.orden}%`));
     }
     if (filters?.startDate) {
@@ -1540,7 +1545,9 @@ export class DatabaseStorage implements IStorage {
     canalMompox?: string; // Filter for ShopMom OR canals containing "MP"
     canalBoxi?: string; // Filter for Boxi channels (exclude ShopMom and MP)
     estadoEntrega?: string;
+    search?: string; // Search by order number OR customer name
     orden?: string;
+    ordenExacto?: string; // For exact order match (modals, forms)
     startDate?: string;
     endDate?: string;
     tipo?: string;
@@ -1578,8 +1585,11 @@ export class DatabaseStorage implements IStorage {
           ilike(sales.nombre, `%${filters.search}%`)
         )
       );
+    } else if (filters?.ordenExacto) {
+      // Exact match for orden (used by modals/forms to avoid partial matches)
+      conditions.push(eq(sales.orden, filters.ordenExacto));
     } else if (filters?.orden) {
-      // Only apply orden filter if search is not being used
+      // Partial match for orden (used by table search)
       conditions.push(ilike(sales.orden, `%${filters.orden}%`));
     }
     if (filters?.startDate) {
