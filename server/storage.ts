@@ -2013,7 +2013,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async autorizarEgreso(id: string, accion: string, notas?: string): Promise<Egreso | undefined> {
-    const nuevoEstado = accion === 'Aprobar' ? 'Por pagar' : 'Borrador';
+    const nuevoEstado = accion === 'Aprobar' ? 'Por pagar' : 'Por autorizar';
     
     const [updated] = await db
       .update(egresos)
@@ -2022,7 +2022,7 @@ export class DatabaseStorage implements IStorage {
         accionAutorizacion: accion,
         notasAutorizacion: notas || null,
         estado: nuevoEstado,
-        esBorrador: accion !== 'Aprobar',
+        esBorrador: false,
         updatedAt: new Date(),
       })
       .where(eq(egresos.id, id))
