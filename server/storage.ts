@@ -126,6 +126,8 @@ export interface IStorage {
     canal?: string;
     canalMompox?: string;
     canalBoxi?: string;
+    search?: string;
+    ordenExacto?: string;
     orden?: string;
     startDate?: string;
     endDate?: string;
@@ -689,7 +691,9 @@ export class DatabaseStorage implements IStorage {
     canal?: string;
     canalMompox?: string; // Filter for ShopMom OR canals containing "MP"
     canalBoxi?: string; // Filter for Boxi channels (exclude ShopMom and MP)
-    orden?: string;
+    search?: string; // For user-typed search queries (partial match)
+    ordenExacto?: string; // For exact order match (modals, forms)
+    orden?: string; // Legacy partial match
     startDate?: string;
     endDate?: string;
     asesorId?: string;
@@ -775,8 +779,20 @@ export class DatabaseStorage implements IStorage {
       conditions.push(eq(sales.canal, filters.canal));
     }
 
-    // Add orden filter if provided - search both order number AND customer name
-    if (filters?.orden) {
+    // Add orden filter with priority: search > ordenExacto > orden (partial)
+    if (filters?.search) {
+      // User-typed search: partial match on orden OR nombre
+      conditions.push(
+        or(
+          sql`${sales.orden} ILIKE ${`%${filters.search}%`}`,
+          sql`${sales.nombre} ILIKE ${`%${filters.search}%`}`
+        )
+      );
+    } else if (filters?.ordenExacto) {
+      // Exact match for orden (used by modals/forms to avoid partial matches)
+      conditions.push(eq(sales.orden, filters.ordenExacto));
+    } else if (filters?.orden) {
+      // Legacy partial match - search both order number AND customer name
       conditions.push(
         or(
           sql`${sales.orden} ILIKE ${`%${filters.orden}%`}`,
