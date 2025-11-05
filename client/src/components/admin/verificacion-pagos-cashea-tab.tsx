@@ -186,82 +186,26 @@ export function VerificacionPagosCasheaTab() {
     }
   };
 
-  const findPaymentMatches = (transactions: BankTransaction[], payments: PendingPayment[]): PaymentMatch[] => {
-    const matches: PaymentMatch[] = [];
-
-    console.log('Buscando matches...', {
-      transactions: transactions.length,
-      payments: payments.length
-    });
-
-    for (const transaction of transactions) {
-      for (const payment of payments) {
-        if (!payment.referencia) continue;
-
-        console.log('Comparando:', {
-          transactionRef: transaction.referencia,
-          paymentRef: payment.referencia,
-          transactionAmount: transaction.monto,
-          paymentAmount: payment.montoBs,
-          orden: payment.orden,
-          tipoPago: payment.tipoPago
-        });
-
-        const match = compareReferences(transaction.referencia, payment.referencia);
-        console.log('Match result:', match);
-        
-        if (match.type === 'exact') {
-          console.log('Match exacto encontrado para pago:', payment.orden, payment.tipoPago);
-          matches.push({
-            payment: payment,
-            bankTransaction: transaction,
-            matchType: 'exact',
-            confidence: 100
-          });
-        } else if (match.type === 'partial' && match.matchingDigits >= 6) {
-          // For partial matches, verify amount only if montoBs is available (VES payment)
-          const paymentAmountVES = payment.montoBs;
-          const bankAmount = transaction.monto;
-          
-          // If the payment has VES amount, check amount tolerance
-          if (paymentAmountVES !== null && paymentAmountVES !== undefined) {
-            console.log('Verificando montos para partial match:', {
-              paymentAmountVES,
-              bankAmount,
-              difference: Math.abs(bankAmount - paymentAmountVES),
-              matchingDigits: match.matchingDigits
-            });
-            
-            // Para matches con menos dígitos, ser más estricto con el monto
-            const amountTolerance = match.matchingDigits >= 8 ? 1000 : 100; // Mayor tolerancia para matches largos
-            if (Math.abs(bankAmount - paymentAmountVES) < amountTolerance) {
-              console.log('Match por referencia + monto encontrado para pago:', payment.orden, payment.tipoPago);
-              const confidence = match.matchingDigits >= 8 ? 95 : 85; // Confianza basada en dígitos
-              matches.push({
-                payment: payment,
-                bankTransaction: transaction,
-                matchType: 'reference_amount',
-                confidence
-              });
-            }
-          } else {
-            // For USD-only payments (no VES amount), rely on strong reference match alone
-            if (match.matchingDigits >= 8) {
-              console.log('Match por referencia fuerte (sin monto VES) para pago USD:', payment.orden, payment.tipoPago);
-              matches.push({
-                payment: payment,
-                bankTransaction: transaction,
-                matchType: 'reference_amount',
-                confidence: 90 // High confidence for strong reference even without amount check
-              });
-            }
-          }
-        }
+  // Helper function to count differing digits between two references
+  const countDifferingDigits = (ref1: string, ref2: string): number => {
+    // Clean references: remove non-numeric and leading zeros
+    let clean1 = ref1.replace(/\D/g, '').replace(/^0+/, '') || '0';
+    let clean2 = ref2.replace(/\D/g, '').replace(/^0+/, '') || '0';
+    
+    // If lengths differ significantly, they're very different
+    if (clean1.length !== clean2.length) {
+      return Math.max(clean1.length, clean2.length);
+    }
+    
+    // Count differing positions
+    let differingCount = 0;
+    for (let i = 0; i < clean1.length; i++) {
+      if (clean1[i] !== clean2[i]) {
+        differingCount++;
       }
     }
-
-    console.log('Total matches encontrados:', matches.length);
-    return matches;
+    
+    return differingCount;
   };
 
   const compareReferences = (ref1: string, ref2: string) => {
@@ -283,7 +227,11 @@ export function VerificacionPagosCasheaTab() {
     // Check for exact match after removing leading zeros
     if (clean1 === clean2 && clean1 !== '0') {
       console.log('EXACT MATCH found!');
-      return { type: 'exact' as const, matchingDigits: clean1.length };
+      return { 
+        type: 'exact' as const, 
+        matchingDigits: clean1.length,
+        differingDigits: 0
+      };
     }
 
     // Check if one reference contains the other completely
@@ -292,67 +240,106 @@ export function VerificacionPagosCasheaTab() {
     
     if (shorter.length >= 6 && longer.includes(shorter)) {
       console.log('CONTAINS MATCH found!', { shorter, longer });
-      return { type: 'exact' as const, matchingDigits: shorter.length };
-    }
-
-    // Count matching consecutive digits from the end (most significant digits)
-    let matchingDigits = 0;
-    const minLength = Math.min(clean1.length, clean2.length);
-    
-    // Match from the end of the strings (right to left)
-    for (let i = 1; i <= minLength; i++) {
-      if (clean1[clean1.length - i] === clean2[clean2.length - i]) {
-        matchingDigits++;
-      } else {
-        break;
-      }
-    }
-
-    console.log('Consecutive digits from end:', matchingDigits);
-
-    // If we have 8+ consecutive digits, that's a strong partial match
-    if (matchingDigits >= 8) {
       return { 
-        type: 'partial' as const, 
-        matchingDigits: matchingDigits 
+        type: 'exact' as const, 
+        matchingDigits: shorter.length,
+        differingDigits: 0
       };
     }
 
-    // Check for substring matches (either direction) - más agresivo
-    if (clean1.length >= 6 && clean2.includes(clean1)) {
-      console.log('SUBSTRING MATCH 1:', clean1, 'found in', clean2);
-      return { type: 'partial' as const, matchingDigits: clean1.length };
-    }
+    // Count differing digits for near-exact matches
+    const differingDigits = countDifferingDigits(ref1, ref2);
     
-    if (clean2.length >= 6 && clean1.includes(clean2)) {
-      console.log('SUBSTRING MATCH 2:', clean2, 'found in', clean1);
-      return { type: 'partial' as const, matchingDigits: clean2.length };
-    }
-    
-    // Check for partial matches - últimos 6+ dígitos
-    if (clean1.length >= 6 && clean2.length >= 6) {
-      const suffix1 = clean1.slice(-6); // Últimos 6 dígitos
-      const suffix2 = clean2.slice(-6);
-      if (suffix1 === suffix2) {
-        console.log('SUFFIX MATCH (6 digits):', suffix1);
-        return { type: 'partial' as const, matchingDigits: 6 };
-      }
-    }
-    
-    // Check for prefix matches - primeros 6+ dígitos  
-    if (clean1.length >= 8 && clean2.length >= 8) {
-      const prefix1 = clean1.slice(0, 8); // Primeros 8 dígitos
-      const prefix2 = clean2.slice(0, 8);
-      if (prefix1 === prefix2) {
-        console.log('PREFIX MATCH (8 digits):', prefix1);
-        return { type: 'partial' as const, matchingDigits: 8 };
-      }
-    }
+    console.log('Differing digits count:', differingDigits);
 
     return { 
       type: 'partial' as const, 
-      matchingDigits: matchingDigits 
+      matchingDigits: 0,
+      differingDigits: differingDigits
     };
+  };
+
+  const findPaymentMatches = (transactions: BankTransaction[], payments: PendingPayment[]): PaymentMatch[] => {
+    const matches: PaymentMatch[] = [];
+
+    console.log('🔍 Buscando matches con nuevos criterios...', {
+      transactions: transactions.length,
+      payments: payments.length
+    });
+
+    for (const transaction of transactions) {
+      for (const payment of payments) {
+        if (!payment.referencia) continue;
+
+        // Skip if payment doesn't have a VES amount (can't match bank statement)
+        if (!payment.montoBs || payment.montoBs <= 0) continue;
+
+        const bankAmount = transaction.monto;
+        const paymentAmount = payment.montoBs;
+        const amountDifference = Math.abs(bankAmount - paymentAmount);
+        const isAmountExact = amountDifference === 0;
+        const isAmountWithinTolerance = amountDifference <= 1000;
+
+        console.log('💰 Comparando:', {
+          orden: payment.orden,
+          tipoPago: payment.tipoPago,
+          transactionRef: transaction.referencia,
+          paymentRef: payment.referencia,
+          bankAmount,
+          paymentAmount,
+          amountDifference,
+          isAmountExact,
+          isAmountWithinTolerance
+        });
+
+        const refMatch = compareReferences(transaction.referencia, payment.referencia);
+        console.log('📋 Reference match result:', refMatch);
+        
+        // CRITERIA 1: 100% Confidence - Exact reference + Exact amount
+        if (refMatch.type === 'exact' && isAmountExact) {
+          console.log('✅ 100% MATCH: Referencia exacta + Monto exacto');
+          matches.push({
+            payment: payment,
+            bankTransaction: transaction,
+            matchType: 'exact',
+            confidence: 100
+          });
+          continue;
+        }
+
+        // CRITERIA 2a: 90% Confidence - Exact reference + Amount within tolerance (Bs 1000)
+        if (refMatch.type === 'exact' && isAmountWithinTolerance && !isAmountExact) {
+          console.log('⚠️ 90% MATCH: Referencia exacta + Monto dentro de tolerancia (Bs 1000)');
+          matches.push({
+            payment: payment,
+            bankTransaction: transaction,
+            matchType: 'reference_amount',
+            confidence: 90
+          });
+          continue;
+        }
+
+        // CRITERIA 2b: 90% Confidence - Exact amount + Only 1 digit differs in reference
+        if (isAmountExact && refMatch.differingDigits === 1) {
+          console.log('⚠️ 90% MATCH: Monto exacto + Solo 1 dígito diferente en referencia');
+          matches.push({
+            payment: payment,
+            bankTransaction: transaction,
+            matchType: 'reference_amount',
+            confidence: 90
+          });
+          continue;
+        }
+
+        // All other cases: REJECT (no match added)
+        console.log('❌ RECHAZADO: No cumple criterios (ref exacta + monto exacto, ref exacta + tolerancia, o monto exacto + 1 dígito)');
+      }
+    }
+
+    console.log(`✨ Total matches encontrados: ${matches.length}`);
+    console.log('  - 100% confianza:', matches.filter(m => m.confidence === 100).length);
+    console.log('  - 90% confianza:', matches.filter(m => m.confidence === 90).length);
+    return matches;
   };
 
   const handleVerifyPayments = () => {
