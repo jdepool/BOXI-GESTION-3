@@ -69,7 +69,7 @@ export default function Egresos() {
               Por verificar
             </TabsTrigger>
             <TabsTrigger value="historial" data-testid="tab-historial">
-              Historial Completo
+              Lista de Egresos
             </TabsTrigger>
           </TabsList>
 
@@ -340,10 +340,22 @@ function RegistrarTab() {
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <Card>
         <CardHeader>
-          <CardTitle>{editingEgreso ? "Editar Borrador" : "Registrar Nueva Cuenta por Pagar"}</CardTitle>
-          <CardDescription>
-            Complete los campos necesarios. Los borradores se pueden guardar parcialmente.
-          </CardDescription>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle>{editingEgreso ? "Editar Borrador" : "Registrar Nueva Cuenta por Pagar"}</CardTitle>
+              <CardDescription>
+                Complete los campos necesarios. Los borradores se pueden guardar parcialmente.
+              </CardDescription>
+            </div>
+            {editingEgreso && editingEgreso.numeroEgreso && (
+              <div className="text-right">
+                <p className="text-sm text-muted-foreground">Egreso</p>
+                <p className="text-2xl font-bold" data-testid="numero-egreso-header">
+                  {editingEgreso.numeroEgreso}
+                </p>
+              </div>
+            )}
+          </div>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -886,6 +898,7 @@ function PorAutorizarTab() {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead>Egreso</TableHead>
                   <TableHead>Recurrencia</TableHead>
                   <TableHead>Fecha Registro</TableHead>
                   <TableHead>Fecha Compromiso</TableHead>
@@ -907,6 +920,11 @@ function PorAutorizarTab() {
                   
                   return (
                     <TableRow key={egreso.id} data-testid={`egreso-por-autorizar-${egreso.id}`}>
+                      <TableCell>
+                        <span className="font-semibold" data-testid={`numero-egreso-${egreso.id}`}>
+                          {egreso.numeroEgreso || "-"}
+                        </span>
+                      </TableCell>
                       <TableCell>
                         {egreso.esRecurrente && egreso.numeroEnSerie && egreso.numeroRepeticiones ? (
                           <div className="flex items-center gap-1">
@@ -1432,6 +1450,7 @@ function PorPagarTab() {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead>Egreso</TableHead>
                   <TableHead>Recurrencia</TableHead>
                   <TableHead>Fecha Registro</TableHead>
                   <TableHead>Fecha Compromiso</TableHead>
@@ -1450,6 +1469,11 @@ function PorPagarTab() {
                   
                   return (
                     <TableRow key={egreso.id} data-testid={`egreso-por-pagar-${egreso.id}`}>
+                      <TableCell>
+                        <span className="font-semibold" data-testid={`numero-egreso-${egreso.id}`}>
+                          {egreso.numeroEgreso || "-"}
+                        </span>
+                      </TableCell>
                       <TableCell>
                         {egreso.esRecurrente && egreso.numeroEnSerie && egreso.numeroRepeticiones ? (
                           <div className="flex items-center gap-1">
@@ -2052,6 +2076,7 @@ function PorVerificarTab() {
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead>Egreso</TableHead>
                     <TableHead>Recurrencia</TableHead>
                     <TableHead>Fecha Registro</TableHead>
                     <TableHead>Fecha Compromiso</TableHead>
@@ -2077,6 +2102,11 @@ function PorVerificarTab() {
                     
                     return (
                       <TableRow key={egreso.id} data-testid={`egreso-pagado-${egreso.id}`}>
+                        <TableCell>
+                          <span className="font-semibold" data-testid={`numero-egreso-${egreso.id}`}>
+                            {egreso.numeroEgreso || "-"}
+                          </span>
+                        </TableCell>
                         <TableCell>
                           {egreso.esRecurrente && egreso.numeroEnSerie && egreso.numeroRepeticiones ? (
                             <div className="flex items-center gap-1">
@@ -2624,7 +2654,7 @@ function HistorialTab() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Historial Completo de Egresos</CardTitle>
+          <CardTitle>Lista de Egresos</CardTitle>
           <CardDescription>
             Todos los egresos registrados en el sistema
           </CardDescription>
@@ -2639,6 +2669,7 @@ function HistorialTab() {
               <Table>
                 <TableHeader>
                   <TableRow>
+                    <TableHead>Egreso</TableHead>
                     <TableHead>Recurrencia</TableHead>
                     <TableHead>Fecha Registro</TableHead>
                     <TableHead>Fecha Compromiso</TableHead>
@@ -2661,6 +2692,11 @@ function HistorialTab() {
                     
                     return (
                       <TableRow key={egreso.id} data-testid={`egreso-historial-${egreso.id}`}>
+                        <TableCell>
+                          <span className="font-semibold" data-testid={`numero-egreso-${egreso.id}`}>
+                            {egreso.numeroEgreso || "-"}
+                          </span>
+                        </TableCell>
                         <TableCell>
                           {egreso.esRecurrente && egreso.numeroEnSerie && egreso.numeroRepeticiones ? (
                             <div className="flex items-center gap-1">

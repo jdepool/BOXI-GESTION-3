@@ -2015,9 +2015,23 @@ export class DatabaseStorage implements IStorage {
     return egreso || undefined;
   }
 
+  async getNextNumeroEgreso(): Promise<number> {
+    // Use PostgreSQL sequence for thread-safe correlative number generation
+    // This prevents race conditions even under high concurrency
+    const result = await db.execute(sql`SELECT nextval('egresos_numero_seq'::regclass) as numero`);
+    return Number(result.rows[0].numero);
+  }
+
   async createEgreso(egreso: InsertEgreso): Promise<Egreso> {
+    // Assign numeroEgreso if egreso is being submitted (not a draft)
+    let numeroEgreso: number | null = null;
+    if (!egreso.esBorrador) {
+      numeroEgreso = await this.getNextNumeroEgreso();
+    }
+
     const [newEgreso] = await db.insert(egresos).values({
       ...egreso,
+      numeroEgreso,
       createdAt: new Date(),
       updatedAt: new Date(),
     }).returning();
@@ -2025,9 +2039,23 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateEgreso(id: string, egreso: Partial<InsertEgreso>): Promise<Egreso | undefined> {
+    // Get current egreso to check if it's transitioning from draft to submitted
+    const current = await this.getEgresoById(id);
+    
+    let numeroEgreso: number | null | undefined = egreso.numeroEgreso;
+    
+    // If egreso is transitioning from draft to submitted, assign numeroEgreso
+    if (current?.esBorrador && egreso.esBorrador === false && !current.numeroEgreso) {
+      numeroEgreso = await this.getNextNumeroEgreso();
+    }
+
     const [updated] = await db
       .update(egresos)
-      .set({ ...egreso, updatedAt: new Date() })
+      .set({ 
+        ...egreso, 
+        ...(numeroEgreso !== undefined && { numeroEgreso }),
+        updatedAt: new Date() 
+      })
       .where(eq(egresos.id, id))
       .returning();
     return updated || undefined;

@@ -1,7 +1,13 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, decimal, timestamp, integer, boolean, index, unique, check, jsonb } from "drizzle-orm/pg-core";
+import { pgTable, pgSequence, text, varchar, decimal, timestamp, integer, boolean, index, unique, check, jsonb } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
+
+// Sequence for egresos correlative numbering
+export const egresosNumeroSeq = pgSequence("egresos_numero_seq", {
+  startWith: 1001,
+  cache: 1,
+});
 
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -351,6 +357,9 @@ export const autorizadores = pgTable("autorizadores", {
 // New egresos table with 4-stage workflow
 export const egresos = pgTable("egresos", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  
+  // Correlative number assigned when egreso is submitted (not in draft)
+  numeroEgreso: integer("numero_egreso").unique(),
   
   // Stage 1: Registration fields
   fechaRegistro: timestamp("fecha_registro").notNull().defaultNow(),
