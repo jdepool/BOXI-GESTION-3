@@ -926,7 +926,7 @@ function PorAutorizarTab() {
                         {egreso.fechaCompromiso ? format(new Date(egreso.fechaCompromiso), "dd/MM/yyyy") : "N/A"}
                       </TableCell>
                       <TableCell>{tipoNombre || "N/A"}</TableCell>
-                      <TableCell className="max-w-xs truncate">{egreso.descripcion}</TableCell>
+                      <TableCell className="w-64 truncate">{egreso.descripcion}</TableCell>
                       <TableCell>{egreso.beneficiario || "N/A"}</TableCell>
                       <TableCell>{egreso.numeroFacturaProveedor || "-"}</TableCell>
                       <TableCell>
@@ -1469,7 +1469,7 @@ function PorPagarTab() {
                         {egreso.fechaCompromiso ? format(new Date(egreso.fechaCompromiso), "dd/MM/yyyy") : "N/A"}
                       </TableCell>
                       <TableCell>{tipoNombre || "N/A"}</TableCell>
-                      <TableCell className="max-w-xs truncate">{egreso.descripcion}</TableCell>
+                      <TableCell className="w-64 truncate">{egreso.descripcion}</TableCell>
                       <TableCell>{egreso.beneficiario || "N/A"}</TableCell>
                       <TableCell>{egreso.numeroFacturaProveedor || "-"}</TableCell>
                       <TableCell>
@@ -2099,7 +2099,7 @@ function PorVerificarTab() {
                           {egreso.fechaPago ? format(new Date(egreso.fechaPago), "dd/MM/yyyy") : "N/A"}
                         </TableCell>
                         <TableCell>{tipoNombre || "N/A"}</TableCell>
-                        <TableCell className="max-w-xs truncate">{egreso.descripcion}</TableCell>
+                        <TableCell className="w-64 truncate">{egreso.descripcion}</TableCell>
                         <TableCell>{egreso.beneficiario || "N/A"}</TableCell>
                         <TableCell>{egreso.numeroFacturaProveedor || "-"}</TableCell>
                         <TableCell>
@@ -2683,7 +2683,7 @@ function HistorialTab() {
                           {egreso.fechaPago ? format(new Date(egreso.fechaPago), "dd/MM/yyyy") : "N/A"}
                         </TableCell>
                         <TableCell>{tipoNombre || "N/A"}</TableCell>
-                        <TableCell className="max-w-xs truncate">{egreso.descripcion}</TableCell>
+                        <TableCell className="w-64 truncate">{egreso.descripcion}</TableCell>
                         <TableCell>{egreso.beneficiario || "N/A"}</TableCell>
                         <TableCell>{egreso.numeroFacturaProveedor || "-"}</TableCell>
                         <TableCell>
