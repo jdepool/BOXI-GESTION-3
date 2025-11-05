@@ -10,7 +10,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { CalendarIcon, Plus, Edit2, Trash2 } from "lucide-react";
+import { CalendarIcon, Plus, Edit2, Trash2, CreditCard } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useForm } from "react-hook-form";
@@ -229,17 +229,60 @@ export default function PaymentInstallmentsModal({ sale, open, onOpenChange }: P
 
   if (!sale) return null;
 
+  const formatCurrency = (value: number | string | null | undefined) => {
+    if (value === null || value === undefined) return "$0";
+    const numValue = typeof value === 'string' ? parseFloat(value) : value;
+    if (isNaN(numValue)) return "$0";
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(numValue);
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Cuotas de Pago - Orden {sale.orden || 'Sin número'}</DialogTitle>
+          <DialogTitle className="flex items-center gap-2">
+            <CreditCard className="h-5 w-5" />
+            Cuotas de Pago
+          </DialogTitle>
         </DialogHeader>
 
         <div className="space-y-6">
+          {/* Order Information Header */}
+          <div className="bg-muted/50 p-4 rounded-lg border">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
+              <div>
+                <span className="font-medium text-muted-foreground">Orden:</span>
+                <p className="text-base font-semibold" data-testid="text-orden">{sale.orden || 'Sin número'}</p>
+              </div>
+              <div>
+                <span className="font-medium text-muted-foreground">Cliente:</span>
+                <p className="text-base font-semibold" data-testid="text-nombre">{sale.nombre}</p>
+              </div>
+              <div>
+                <span className="font-medium text-muted-foreground">Total Orden:</span>
+                <p className="text-base font-semibold text-green-600 dark:text-green-400" data-testid="text-total-usd">
+                  {formatCurrency(sale.totalOrderUsd || sale.totalUsd)}
+                </p>
+              </div>
+              <div>
+                <span className="font-medium text-muted-foreground">Canal:</span>
+                <p className="text-base font-semibold" data-testid="text-canal">{sale.canal || 'N/A'}</p>
+              </div>
+              <div>
+                <span className="font-medium text-muted-foreground">Tipo:</span>
+                <p className="text-base font-semibold" data-testid="text-tipo">{sale.tipo || 'N/A'}</p>
+              </div>
+            </div>
+          </div>
+
           {/* Add Installment Button */}
           <div className="flex justify-between items-center">
-            <h3 className="text-lg font-semibold">Cuotas de Pago</h3>
+            <h3 className="text-lg font-semibold">Lista de Cuotas</h3>
             <Button
               onClick={handleAddInstallment}
               disabled={createInstallmentMutation.isPending}

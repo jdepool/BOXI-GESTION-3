@@ -777,7 +777,10 @@ export default function PagosTable({
                           if (salesData.data && salesData.data.length > 0) {
                             setSelectedSale({
                               ...salesData.data[0],
-                              orden: order.orden
+                              orden: order.orden,
+                              totalOrderUsd: order.totalOrderUsd, // Use aggregated order total
+                              canal: order.canal,
+                              tipo: order.tipo
                             });
                             setCuotasModalOpen(true);
                           }
