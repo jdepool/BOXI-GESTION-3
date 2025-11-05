@@ -116,6 +116,7 @@ const getSalesQuerySchema = z.object({
   canalBoxi: z.string().optional(), // Filter for Boxi channels (exclude ShopMom and MP)
   estadoEntrega: z.string().optional(),
   orden: z.string().optional(),
+  ordenExacto: z.string().optional(), // For exact order match (modals, forms)
   search: z.string().optional(), // Search by order number or customer name
   startDate: z.string().optional(),
   endDate: z.string().optional(),
@@ -890,6 +891,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         canalBoxi: query.canalBoxi,
         estadoEntrega: query.estadoEntrega,
         orden: query.orden,
+        ordenExacto: query.ordenExacto, // For exact order match (modals, forms)
         search: query.search, // Search by order number or customer name
         startDate: query.startDate,
         endDate: query.endDate,
