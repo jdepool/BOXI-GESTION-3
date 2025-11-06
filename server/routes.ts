@@ -2413,12 +2413,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const { canal } = req.body;
       const canalLower = canal ? canal.toLowerCase() : '';
-      if (!canal || !['cashea', 'shopify', 'shopmom', 'treble'].includes(canalLower)) {
+      
+      // Validate canal
+      const validCanals = ['shopify', 'shopmom', 'treble'];
+      const isCashea = canalLower.includes('cashe');
+      const isValidCanal = validCanals.includes(canalLower);
+      
+      if (!canal || (!isCashea && !isValidCanal)) {
         return res.status(400).json({ error: "Invalid or missing canal. Must be: cashea, shopify, ShopMom, or treble" });
       }
 
       // Normalize canal to canonical casing for database storage
-      const canonicalCanal = canalLower === 'shopmom' ? 'ShopMom' : canal;
+      let canonicalCanal = canal;
+      if (isCashea) {
+        canonicalCanal = 'Cashea';
+      } else if (canalLower === 'shopmom') {
+        canonicalCanal = 'ShopMom';
+      }
 
       // Parse file (Excel or CSV)
       const salesData = parseFile(req.file.buffer, canonicalCanal, req.file.originalname);
