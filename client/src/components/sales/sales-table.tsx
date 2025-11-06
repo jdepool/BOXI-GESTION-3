@@ -1040,13 +1040,19 @@ export default function SalesTable({
                               setSelectedSaleForReturn(sale);
                               setReturnConfirmOpen(true);
                             }}
-                            disabled={sale.estadoEntrega === "A devolver" || returnSaleMutation.isPending}
+                            disabled={sale.estadoEntrega === "A devolver" || sale.estadoEntrega === "Devuelto" || returnSaleMutation.isPending}
                             data-testid={`return-sale-${sale.id}`}
                             className={cn(
                               "h-7 text-xs bg-slate-500 text-white border-slate-500 hover:bg-slate-600 hover:border-slate-600 dark:bg-slate-500 dark:text-white dark:border-slate-500 dark:hover:bg-slate-600",
-                              sale.estadoEntrega === "A devolver" && "opacity-70 cursor-not-allowed hover:bg-slate-500"
+                              (sale.estadoEntrega === "A devolver" || sale.estadoEntrega === "Devuelto") && "opacity-70 cursor-not-allowed hover:bg-slate-500"
                             )}
-                            title={sale.estadoEntrega === "A devolver" ? "Venta ya marcada a devolver" : "Marcar como a devolver"}
+                            title={
+                              sale.estadoEntrega === "Devuelto"
+                                ? "Venta ya devuelta"
+                                : sale.estadoEntrega === "A devolver"
+                                ? "Venta en proceso de devolución"
+                                : "Marcar como a devolver"
+                            }
                           >
                             <RotateCcw className="h-3 w-3 mr-1" />
                             Devolver
