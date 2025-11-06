@@ -622,7 +622,7 @@ export default function CancellationsTable({
                               size="sm"
                               variant="default"
                               className="w-full h-8 text-xs"
-                              disabled={completeCancellationMutation.isPending}
+                              disabled={completeCancellationMutation.isPending || sale.estadoEntrega === "Cancelada" || !sale.finalizacionCancelacion}
                               data-testid={`cancelado-button-${sale.id}`}
                             >
                               <CheckCircle className="h-3 w-3 mr-1" />
