@@ -12,15 +12,20 @@ export interface CasheaDownloadResult {
   message: string;
 }
 
-async function callCasheaApi(startDate: string, endDate: string): Promise<any[]> {
-  const casheaEmail = process.env.CASHEA_EMAIL;
-  const casheaPassword = process.env.CASHEA_PASSWORD;
+async function callCasheaApi(startDate: string, endDate: string, portal: "Cashea" | "Cashea MP" = "Cashea"): Promise<any[]> {
+  // Select credentials based on portal
+  const casheaEmail = portal === "Cashea MP" 
+    ? process.env.CASHEA_MP_EMAIL 
+    : process.env.CASHEA_EMAIL;
+  const casheaPassword = portal === "Cashea MP"
+    ? process.env.CASHEA_MP_PASSWORD
+    : process.env.CASHEA_PASSWORD;
 
   if (!casheaEmail || !casheaPassword) {
-    throw new Error("CASHEA credentials not configured");
+    throw new Error(`${portal} credentials not configured`);
   }
 
-  console.log(`🔍 CASHEA API Investigation for date range: ${startDate} to ${endDate}`);
+  console.log(`🔍 ${portal} API Investigation for date range: ${startDate} to ${endDate}`);
   console.log(`📧 Using credentials: ${casheaEmail}`);
 
   // Handle both ISO timestamps and YYYY-MM-DD dates
@@ -46,11 +51,14 @@ async function callCasheaApi(startDate: string, endDate: string): Promise<any[]>
 
   const url = "https://cashea.retool.com/api/public/83942c1c-e0a6-11ee-9c54-4bdcfcdd4f2c/query?queryName=getOnlineOrdersWithProducts";
   
+  // Select tenant based on portal
+  const tenant = portal === "Cashea MP" ? "Mompox" : "Boxi Sleep";
+  
   const body = JSON.stringify({
     "userParams": {
       "queryParams": {
-        "0": "Boxi Sleep",
-        "1": "Boxi Sleep", 
+        "0": tenant,
+        "1": tenant, 
         "2": startDateISO,
         "3": endDateISO,
         "length": 4
@@ -125,7 +133,7 @@ async function findCasheaBankId(storage: IStorage): Promise<string | null> {
   }
 }
 
-async function transformCasheaData(rawData: any[], storage: IStorage): Promise<any[]> {
+async function transformCasheaData(rawData: any[], storage: IStorage, portal: "Cashea" | "Cashea MP" = "Cashea"): Promise<any[]> {
   if (!Array.isArray(rawData) || rawData.length === 0) {
     return [];
   }
@@ -225,7 +233,7 @@ async function transformCasheaData(rawData: any[], storage: IStorage): Promise<a
       totalUsd: totalUsdValue,
       totalOrderUsd: totalOrderUsdValue,
       fecha,
-      canal: 'cashea',
+      canal: portal,
       estadoEntrega: 'En proceso',
       orden: ordenes[i] ? String(ordenes[i]) : null,
       pagoInicialUsd: pagosIniciales[i] ? String(pagosIniciales[i]) : null,
@@ -266,16 +274,16 @@ async function transformCasheaData(rawData: any[], storage: IStorage): Promise<a
   return records;
 }
 
-async function sendCasheaOrderWebhook(newSales: any[]): Promise<void> {
+async function sendCasheaOrderWebhook(newSales: any[], portal: "Cashea" | "Cashea MP" = "Cashea"): Promise<void> {
   const webhookUrl = process.env.CASHEA_WEBHOOK_URL;
   
   if (!webhookUrl) {
-    console.log('No Cashea webhook URL configured, skipping webhook notification');
+    console.log(`No ${portal} webhook URL configured, skipping webhook notification`);
     return;
   }
 
-  // Filter to ensure only Cashea orders are sent
-  const casheaOrders = newSales.filter(sale => sale.canal === 'cashea');
+  // Filter to ensure only orders from this portal are sent
+  const casheaOrders = newSales.filter(sale => sale.canal === portal);
   
   if (casheaOrders.length === 0) {
     console.log('No Cashea orders to send to webhook');
@@ -330,13 +338,14 @@ async function sendCasheaOrderWebhook(newSales: any[]): Promise<void> {
 export async function performCasheaDownload(
   startDate: string, 
   endDate: string,
-  storage: IStorage
+  storage: IStorage,
+  portal: "Cashea" | "Cashea MP" = "Cashea"
 ): Promise<CasheaDownloadResult> {
-  console.log(`📊 CASHEA download request: ${startDate} to ${endDate}`);
+  console.log(`📊 ${portal} download request: ${startDate} to ${endDate}`);
 
   try {
-    const casheaData = await callCasheaApi(startDate, endDate);
-    const transformedData = await transformCasheaData(casheaData, storage);
+    const casheaData = await callCasheaApi(startDate, endDate, portal);
+    const transformedData = await transformCasheaData(casheaData, storage, portal);
     
     const validatedSales = [];
     const errors = [];
@@ -355,8 +364,8 @@ export async function performCasheaDownload(
 
     if (errors.length > 0) {
       await storage.createUploadHistory({
-        filename: `cashea_download_${startDate}_to_${endDate}`,
-        canal: 'cashea',
+        filename: `${portal}_download_${startDate}_to_${endDate}`,
+        canal: portal,
         recordsCount: 0,
         status: 'error',
         errorMessage: `Validation errors in ${errors.length} rows`,
@@ -386,8 +395,8 @@ export async function performCasheaDownload(
     }
 
     await storage.createUploadHistory({
-      filename: `cashea_download_${startDate}_to_${endDate}`,
-      canal: 'cashea',
+      filename: `${portal}_download_${startDate}_to_${endDate}`,
+      canal: portal,
       recordsCount: newSales.length,
       status: 'success',
       errorMessage: duplicatesCount > 0 ? `${duplicatesCount} duplicate order(s) ignored` : undefined,
@@ -395,13 +404,13 @@ export async function performCasheaDownload(
 
     if (newSales.length > 0) {
       try {
-        await sendCasheaOrderWebhook(newSales);
+        await sendCasheaOrderWebhook(newSales, portal);
       } catch (webhookError) {
-        console.error('Cashea webhook notification failed, but download was successful:', webhookError);
+        console.error(`${portal} webhook notification failed, but download was successful:`, webhookError);
       }
     }
 
-    console.log(`✅ Transformed ${transformedData.length} CASHEA records`);
+    console.log(`✅ Transformed ${transformedData.length} ${portal} records`);
 
     return {
       success: true,
@@ -410,14 +419,14 @@ export async function performCasheaDownload(
       errors: [],
       recordsProcessed: newSales.length,
       message: duplicatesCount > 0 
-        ? `Downloaded ${newSales.length} CASHEA records. ${duplicatesCount} duplicate order(s) were ignored.`
-        : `Downloaded ${newSales.length} CASHEA records successfully`
+        ? `Downloaded ${newSales.length} ${portal} records. ${duplicatesCount} duplicate order(s) were ignored.`
+        : `Downloaded ${newSales.length} ${portal} records successfully`
     };
 
   } catch (error) {
     await storage.createUploadHistory({
-      filename: `cashea_download_${startDate}_to_${endDate}`,
-      canal: 'cashea',
+      filename: `${portal}_download_${startDate}_to_${endDate}`,
+      canal: portal,
       recordsCount: 0,
       status: 'error',
       errorMessage: error instanceof Error ? error.message : 'Unknown error',
