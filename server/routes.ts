@@ -2415,18 +2415,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const canalLower = canal ? canal.toLowerCase() : '';
       
       // Validate canal
-      const validCanals = ['shopify', 'shopmom', 'treble'];
-      const isCashea = canalLower.includes('cashe');
+      const validCanals = ['shopify', 'shopmom', 'treble', 'cashea', 'cashea mp'];
       const isValidCanal = validCanals.includes(canalLower);
       
-      if (!canal || (!isCashea && !isValidCanal)) {
-        return res.status(400).json({ error: "Invalid or missing canal. Must be: cashea, shopify, ShopMom, or treble" });
+      if (!canal || !isValidCanal) {
+        return res.status(400).json({ error: "Invalid or missing canal. Must be: Cashea, Cashea MP, Shopify, ShopMom, or Treble" });
       }
 
       // Normalize canal to canonical casing for database storage
       let canonicalCanal = canal;
-      if (isCashea) {
+      if (canalLower === 'cashea') {
         canonicalCanal = 'Cashea';
+      } else if (canalLower === 'cashea mp') {
+        canonicalCanal = 'Cashea MP';
       } else if (canalLower === 'shopmom') {
         canonicalCanal = 'ShopMom';
       }

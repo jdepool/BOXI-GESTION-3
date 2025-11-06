@@ -334,6 +334,7 @@ export const uploadHistory = pgTable("upload_history", {
 
 export const casheaAutomationConfig = pgTable("cashea_automation_config", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  portal: text("portal").notNull().default("Cashea"), // "Cashea" or "Cashea MP"
   enabled: boolean("enabled").notNull().default(false),
   frequency: text("frequency").notNull().default("2 hours"), // 30 minutes, 1 hour, 2 hours, 4 hours, 8 hours, 16 hours, 24 hours
   createdAt: timestamp("created_at").defaultNow(),
@@ -342,6 +343,7 @@ export const casheaAutomationConfig = pgTable("cashea_automation_config", {
 
 export const casheaAutomaticDownloads = pgTable("cashea_automatic_downloads", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  portal: text("portal").notNull().default("Cashea"), // "Cashea" or "Cashea MP"
   startDate: timestamp("start_date").notNull(),
   endDate: timestamp("end_date").notNull(),
   recordsCount: integer("records_count").notNull(),
