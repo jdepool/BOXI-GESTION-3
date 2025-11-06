@@ -207,8 +207,8 @@ export default function ProspectosTable({
   const [seguimientoDialogOpen, setSeguimientoDialogOpen] = useState(false);
   const [prospectoForSeguimiento, setProspectoForSeguimiento] = useState<Prospecto | null>(null);
   
-  // Debounced search for prospecto number and nombre
-  const { inputValue: searchInput, debouncedValue: debouncedSearch, setInputValue: setSearchInput } = useDebouncedSearch(filters?.prospecto || "", 500);
+  // Debounced search for prospecto number and nombre (300ms for faster response)
+  const { inputValue: searchInput, debouncedValue: debouncedSearch, setInputValue: setSearchInput } = useDebouncedSearch(filters?.prospecto || "", 300);
   
   // Sync search input when filters are cleared externally
   useEffect(() => {

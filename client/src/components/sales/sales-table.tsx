@@ -173,8 +173,8 @@ export default function SalesTable({
   const [seguimientoDialogOpen, setSeguimientoDialogOpen] = useState(false);
   const [selectedSaleForSeguimiento, setSelectedSaleForSeguimiento] = useState<Sale | null>(null);
   
-  // Debounced search for orden and nombre
-  const { inputValue: searchInput, debouncedValue: debouncedSearch, setInputValue: setSearchInput } = useDebouncedSearch(parentFilters?.search || "", 500);
+  // Debounced search for orden and nombre (300ms for faster response)
+  const { inputValue: searchInput, debouncedValue: debouncedSearch, setInputValue: setSearchInput } = useDebouncedSearch(parentFilters?.search || "", 300);
   
   // Sync search input when filters are cleared externally
   useEffect(() => {

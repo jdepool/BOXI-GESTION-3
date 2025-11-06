@@ -33,8 +33,8 @@ export function EdicionOrdenesTab() {
   const [limit] = useState(20);
   const [offset, setOffset] = useState(0);
   
-  // Search state with debouncing
-  const { inputValue: searchInput, debouncedValue: debouncedSearch, setInputValue: setSearchInput } = useDebouncedSearch("", 500);
+  // Search state with debouncing (300ms for faster response)
+  const { inputValue: searchInput, debouncedValue: debouncedSearch, setInputValue: setSearchInput } = useDebouncedSearch("", 300);
   const [formData, setFormData] = useState({
     // Campos principales
     nombre: "",

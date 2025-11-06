@@ -138,8 +138,8 @@ export default function PagosTable({
   // Ref to track the textarea element for reading current value on blur
   const notesTextareaRef = useRef<HTMLTextAreaElement>(null);
   
-  // Debounced search for orden and nombre
-  const { inputValue: searchInput, debouncedValue: debouncedSearch, setInputValue: setSearchInput } = useDebouncedSearch(filters?.orden || "", 500);
+  // Debounced search for orden and nombre (300ms for faster response)
+  const { inputValue: searchInput, debouncedValue: debouncedSearch, setInputValue: setSearchInput } = useDebouncedSearch(filters?.orden || "", 300);
   
   // Sync search input when filters are cleared externally
   useEffect(() => {
