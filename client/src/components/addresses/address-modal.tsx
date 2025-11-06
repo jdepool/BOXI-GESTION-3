@@ -240,7 +240,7 @@ export default function AddressModal({ open, onOpenChange, sale }: AddressModalP
 
   if (!sale) return null;
 
-  const isCasheaOrder = sale.canal === "Cashea Boxi" || sale.canal === "Cashea Mompox";
+  const isCasheaOrder = sale.canal?.toLowerCase().includes("cashea") || false;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
