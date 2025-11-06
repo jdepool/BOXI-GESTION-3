@@ -594,9 +594,9 @@ export default function SalesTable({
                         <SelectItem value="Entregado">Entregado</SelectItem>
                         <SelectItem value="A devolver">A devolver</SelectItem>
                         <SelectItem value="Devuelto">Devuelto</SelectItem>
+                        <SelectItem value="A cancelar">A cancelar</SelectItem>
                         <SelectItem value="Cancelada">Cancelada</SelectItem>
-                        <SelectItem value="Despachado">Despachado</SelectItem>
-                        <SelectItem value="Retirado en tienda">Retirado en tienda</SelectItem>
+                        <SelectItem value="Perdida">Perdida</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
