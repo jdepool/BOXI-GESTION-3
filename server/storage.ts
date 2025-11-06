@@ -1740,7 +1740,7 @@ export class DatabaseStorage implements IStorage {
     const existingConfig = await this.getCasheaAutomationConfig();
     
     const updateData: any = { enabled, frequency };
-    if (portal) {
+    if (portal !== undefined) {
       updateData.portal = portal;
     }
     
