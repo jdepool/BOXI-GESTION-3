@@ -240,6 +240,8 @@ export default function AddressModal({ open, onOpenChange, sale }: AddressModalP
 
   if (!sale) return null;
 
+  const isCasheaOrder = sale.canal === "Cashea Boxi" || sale.canal === "Cashea Mompox";
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -310,46 +312,66 @@ export default function AddressModal({ open, onOpenChange, sale }: AddressModalP
               </div>
               <div>
                 <Label htmlFor="shipping-state">Estado *</Label>
-                <Select
-                  value={addressData.direccionDespachoEstado}
-                  onValueChange={(value) => {
-                    handleAddressChange('direccionDespachoEstado', value);
-                    handleAddressChange('direccionDespachoCiudad', ''); // Clear ciudad when estado changes
-                  }}
-                >
-                  <SelectTrigger id="shipping-state" data-testid="select-shipping-state">
-                    <SelectValue placeholder="Seleccione estado" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {estados.map((estado) => (
-                      <SelectItem key={estado.id} value={estado.nombre}>
-                        {estado.nombre}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                {isCasheaOrder ? (
+                  <Input
+                    id="shipping-state"
+                    value={addressData.direccionDespachoEstado}
+                    onChange={(e) => handleAddressChange('direccionDespachoEstado', e.target.value)}
+                    placeholder="Estado o provincia"
+                    data-testid="input-shipping-state"
+                  />
+                ) : (
+                  <Select
+                    value={addressData.direccionDespachoEstado}
+                    onValueChange={(value) => {
+                      handleAddressChange('direccionDespachoEstado', value);
+                      handleAddressChange('direccionDespachoCiudad', '');
+                    }}
+                  >
+                    <SelectTrigger id="shipping-state" data-testid="select-shipping-state">
+                      <SelectValue placeholder="Seleccione estado" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {estados.map((estado) => (
+                        <SelectItem key={estado.id} value={estado.nombre}>
+                          {estado.nombre}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="shipping-city">Ciudad *</Label>
-                <Select
-                  value={addressData.direccionDespachoCiudad}
-                  onValueChange={(value) => handleAddressChange('direccionDespachoCiudad', value)}
-                  disabled={!addressData.direccionDespachoEstado}
-                >
-                  <SelectTrigger id="shipping-city" data-testid="select-shipping-city">
-                    <SelectValue placeholder={addressData.direccionDespachoEstado ? "Seleccione ciudad" : "Seleccione estado primero"} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {ciudadesDespacho.map((ciudad) => (
-                      <SelectItem key={ciudad.id} value={ciudad.nombre}>
-                        {ciudad.nombre}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                {isCasheaOrder ? (
+                  <Input
+                    id="shipping-city"
+                    value={addressData.direccionDespachoCiudad}
+                    onChange={(e) => handleAddressChange('direccionDespachoCiudad', e.target.value)}
+                    placeholder="Ciudad"
+                    data-testid="input-shipping-city"
+                  />
+                ) : (
+                  <Select
+                    value={addressData.direccionDespachoCiudad}
+                    onValueChange={(value) => handleAddressChange('direccionDespachoCiudad', value)}
+                    disabled={!addressData.direccionDespachoEstado}
+                  >
+                    <SelectTrigger id="shipping-city" data-testid="select-shipping-city">
+                      <SelectValue placeholder={addressData.direccionDespachoEstado ? "Seleccione ciudad" : "Seleccione estado primero"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {ciudadesDespacho.map((ciudad) => (
+                        <SelectItem key={ciudad.id} value={ciudad.nombre}>
+                          {ciudad.nombre}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
               </div>
               <div>
                 <Label htmlFor="shipping-urbanization">Urbanización</Label>
@@ -420,46 +442,66 @@ export default function AddressModal({ open, onOpenChange, sale }: AddressModalP
                 </div>
                 <div>
                   <Label htmlFor="billing-state">Estado *</Label>
-                  <Select
-                    value={addressData.direccionFacturacionEstado}
-                    onValueChange={(value) => {
-                      handleAddressChange('direccionFacturacionEstado', value);
-                      handleAddressChange('direccionFacturacionCiudad', ''); // Clear ciudad when estado changes
-                    }}
-                  >
-                    <SelectTrigger id="billing-state" data-testid="select-billing-state">
-                      <SelectValue placeholder="Seleccione estado" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {estados.map((estado) => (
-                        <SelectItem key={estado.id} value={estado.nombre}>
-                          {estado.nombre}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  {isCasheaOrder ? (
+                    <Input
+                      id="billing-state"
+                      value={addressData.direccionFacturacionEstado}
+                      onChange={(e) => handleAddressChange('direccionFacturacionEstado', e.target.value)}
+                      placeholder="Estado o provincia"
+                      data-testid="input-billing-state"
+                    />
+                  ) : (
+                    <Select
+                      value={addressData.direccionFacturacionEstado}
+                      onValueChange={(value) => {
+                        handleAddressChange('direccionFacturacionEstado', value);
+                        handleAddressChange('direccionFacturacionCiudad', '');
+                      }}
+                    >
+                      <SelectTrigger id="billing-state" data-testid="select-billing-state">
+                        <SelectValue placeholder="Seleccione estado" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {estados.map((estado) => (
+                          <SelectItem key={estado.id} value={estado.nombre}>
+                            {estado.nombre}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="billing-city">Ciudad *</Label>
-                  <Select
-                    value={addressData.direccionFacturacionCiudad}
-                    onValueChange={(value) => handleAddressChange('direccionFacturacionCiudad', value)}
-                    disabled={!addressData.direccionFacturacionEstado}
-                  >
-                    <SelectTrigger id="billing-city" data-testid="select-billing-city">
-                      <SelectValue placeholder={addressData.direccionFacturacionEstado ? "Seleccione ciudad" : "Seleccione estado primero"} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {ciudadesFacturacion.map((ciudad) => (
-                        <SelectItem key={ciudad.id} value={ciudad.nombre}>
-                          {ciudad.nombre}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  {isCasheaOrder ? (
+                    <Input
+                      id="billing-city"
+                      value={addressData.direccionFacturacionCiudad}
+                      onChange={(e) => handleAddressChange('direccionFacturacionCiudad', e.target.value)}
+                      placeholder="Ciudad"
+                      data-testid="input-billing-city"
+                    />
+                  ) : (
+                    <Select
+                      value={addressData.direccionFacturacionCiudad}
+                      onValueChange={(value) => handleAddressChange('direccionFacturacionCiudad', value)}
+                      disabled={!addressData.direccionFacturacionEstado}
+                    >
+                      <SelectTrigger id="billing-city" data-testid="select-billing-city">
+                        <SelectValue placeholder={addressData.direccionFacturacionEstado ? "Seleccione ciudad" : "Seleccione estado primero"} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {ciudadesFacturacion.map((ciudad) => (
+                          <SelectItem key={ciudad.id} value={ciudad.nombre}>
+                            {ciudad.nombre}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
                 </div>
                 <div>
                   <Label htmlFor="billing-urbanization">Urbanización</Label>
