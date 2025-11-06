@@ -1172,7 +1172,7 @@ export default function SalesTable({
                 )}
                 <div className="p-4 bg-destructive/10 border border-destructive/30 rounded-md">
                   <div className="text-foreground font-medium mb-2">
-                    Esta acción es permanente y cambiará el estado de entrega a "Cancelada" en todos los registros del sistema.
+                    Esta acción es permanente y cambiará el estado de venta/entrega a "A cancelar" en todos los registros del sistema.
                   </div>
                   <div className="text-foreground font-semibold">
                     Por favor, antes de cancelar la orden asegúrate de explicar en la sección de <span className="underline">Notas</span> las razones por las cuales la orden ha sido cancelada.
