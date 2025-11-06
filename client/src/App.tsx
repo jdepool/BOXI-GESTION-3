@@ -8,7 +8,7 @@ import { useAuth } from "@/hooks/useAuth";
 import Sales from "@/pages/sales";
 import VentasMompox from "@/pages/ventas-mompox";
 import Despachos from "@/pages/despachos";
-import Devoluciones from "@/pages/devoluciones";
+import DevolucionesCancelaciones from "@/pages/devoluciones-cancelaciones";
 import Verificacion from "@/pages/verificacion";
 import Egresos from "@/pages/egresos";
 import Reportes from "@/pages/reportes";
@@ -41,7 +41,7 @@ function Router() {
         <ProtectedRoute component={Despachos} />
       </Route>
       <Route path="/devoluciones">
-        <ProtectedRoute component={Devoluciones} />
+        <ProtectedRoute component={DevolucionesCancelaciones} />
       </Route>
       <Route path="/verificacion">
         <ProtectedRoute component={Verificacion} />

@@ -22,7 +22,7 @@ const navigationItems = [
   {
     href: "/devoluciones",
     icon: "fas fa-undo",
-    label: "Devoluciones",
+    label: "Devoluciones/Cancelaciones",
   },
   {
     href: "/egresos",

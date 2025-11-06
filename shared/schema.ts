@@ -260,6 +260,11 @@ export const sales = pgTable("sales", {
   fechaDevolucion: varchar("fecha_devolucion", { length: 10 }),
   datosDevolucion: text("datos_devolucion"),
   tipoDevolucion: text("tipo_devolucion"),
+  finalizacionDevolucion: varchar("finalizacion_devolucion", { length: 10 }),
+  // Cancellation tracking
+  datosCancelacion: text("datos_cancelacion"),
+  fechaCancelacion: varchar("fecha_cancelacion", { length: 10 }),
+  finalizacionCancelacion: varchar("finalizacion_cancelacion", { length: 10 }),
   // Email tracking
   emailSentAt: timestamp("email_sent_at"),
   emailFleteSentAt: timestamp("email_flete_sent_at"),
@@ -282,7 +287,7 @@ export const sales = pgTable("sales", {
   // Check constraint to enforce tipo values
   tipoCheck: check("tipo_check", sql`${table.tipo} IN ('Inmediato', 'Reserva')`),
   // Check constraint to enforce estadoEntrega values
-  estadoEntregaCheck: check("estado_entrega_check", sql`${table.estadoEntrega} IN ('Pendiente', 'Perdida', 'En proceso', 'A despachar', 'En tránsito', 'Entregado', 'A devolver', 'Devuelto', 'Cancelada')`),
+  estadoEntregaCheck: check("estado_entrega_check", sql`${table.estadoEntrega} IN ('Pendiente', 'Perdida', 'En proceso', 'A despachar', 'En tránsito', 'Entregado', 'A devolver', 'Devuelto', 'A cancelar', 'Cancelada')`),
   // Index for performance on asesor queries
   asesorIdIdx: index("sales_asesor_id_idx").on(table.asesorId),
 }));

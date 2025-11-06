@@ -40,6 +40,7 @@ function normalizeEstadoEntrega(status: string | null | undefined): string | nul
     'entregado': 'Entregado',
     'a devolver': 'A devolver',
     'devuelto': 'Devuelto',
+    'a cancelar': 'A cancelar',
     'cancelada': 'Cancelada'
   };
   
@@ -994,6 +995,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get sales with "A cancelar" status for cancelaciones
+  app.get("/api/sales/cancelaciones", async (req, res) => {
+    try {
+      const limit = parseInt(req.query.limit as string) || 20;
+      const offset = parseInt(req.query.offset as string) || 0;
+
+      const filters = {
+        estadoEntrega: "A cancelar",
+        limit,
+        offset,
+      };
+
+      const [salesData, totalCount] = await Promise.all([
+        storage.getSales(filters),
+        storage.getTotalSalesCount(filters),
+      ]);
+
+      res.json({
+        data: salesData,
+        total: totalCount,
+        limit,
+        offset
+      });
+    } catch (error) {
+      console.error("Get cancelaciones error:", error);
+      res.status(500).json({ error: "Failed to get cancelaciones" });
+    }
+  });
+
   // Export sales data to Excel
   app.get("/api/sales/export", async (req, res) => {
     try {
@@ -1412,7 +1442,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Validate estadoEntrega against known delivery statuses (must match database schema)
       const validEstadoEntrega = [
         "Pendiente", "Perdida", "En proceso", "A despachar", "En tránsito",
-        "Entregado", "A devolver", "Devuelto", "Cancelada"
+        "Entregado", "A devolver", "Devuelto", "A cancelar", "Cancelada"
       ];
       const estadoEntregaParam = req.query.estadoEntrega as string | undefined;
       const estadoEntrega = estadoEntregaParam && validEstadoEntrega.includes(estadoEntregaParam)
@@ -1458,7 +1488,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Validate estadoEntrega against known delivery statuses - matching the Pagos tab UI
       const validEstadoEntrega = [
         "Pendiente", "En proceso", "Perdida", "A despachar", 
-        "En tránsito", "Entregado", "A devolver", "Devuelto", "Cancelada"
+        "En tránsito", "Entregado", "A devolver", "Devuelto", "A cancelar", "Cancelada"
       ];
       const estadoEntregaParam = req.query.estadoEntrega as string | undefined;
       const estadoEntrega = estadoEntregaParam && validEstadoEntrega.includes(estadoEntregaParam)
@@ -3068,7 +3098,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const normalizedStatus = normalizeEstadoEntrega(status);
 
       // Validate status
-      const validStatuses = ['Pendiente', 'Perdida', 'En proceso', 'A despachar', 'En tránsito', 'Entregado', 'A devolver', 'Devuelto', 'Cancelada'];
+      const validStatuses = ['Pendiente', 'Perdida', 'En proceso', 'A despachar', 'En tránsito', 'Entregado', 'A devolver', 'Devuelto', 'A cancelar', 'Cancelada'];
       if (!normalizedStatus || !validStatuses.includes(normalizedStatus)) {
         return res.status(400).json({ 
           error: "Invalid status. Must be one of: " + validStatuses.join(', ')
@@ -3249,7 +3279,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Mark a single sale as Cancelada
+  // Mark a single sale as A cancelar (starts cancellation process)
   app.put("/api/sales/:saleId/cancel", async (req, res) => {
     try {
       const { saleId } = req.params;
@@ -3260,8 +3290,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Sale not found" });
       }
 
+      // Get current date in YYYY-MM-DD format
+      const today = new Date().toISOString().split('T')[0];
+
       const updatedSale = await storage.updateSale(saleId, { 
-        estadoEntrega: "Cancelada" 
+        estadoEntrega: "A cancelar",
+        fechaCancelacion: today
       });
       
       if (!updatedSale) {
@@ -3270,7 +3304,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       res.json({ 
         success: true, 
-        message: "Sale cancelled successfully",
+        message: "Sale marked for cancellation successfully",
         sale: updatedSale 
       });
     } catch (error) {
@@ -3311,19 +3345,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Update sale devoluciones fields (datosDevolucion, tipoDevolucion)
+  // Complete cancellation (mark sale as Cancelada)
+  app.put("/api/sales/:saleId/complete-cancellation", async (req, res) => {
+    try {
+      const { saleId } = req.params;
+
+      // Validate that sale exists
+      const existingSale = await storage.getSaleById(saleId);
+      if (!existingSale) {
+        return res.status(404).json({ error: "Sale not found" });
+      }
+
+      // Validate that sale is in "A cancelar" status
+      if (existingSale.estadoEntrega !== "A cancelar") {
+        return res.status(400).json({ error: "Sale is not in cancellation process" });
+      }
+
+      const updatedSale = await storage.updateSale(saleId, { 
+        estadoEntrega: "Cancelada"
+      });
+      
+      if (!updatedSale) {
+        return res.status(500).json({ error: "Failed to complete cancellation" });
+      }
+
+      res.json({ 
+        success: true, 
+        message: "Cancellation completed successfully",
+        sale: updatedSale 
+      });
+    } catch (error) {
+      console.error("Complete cancellation error:", error);
+      res.status(500).json({ error: "Failed to complete cancellation" });
+    }
+  });
+
+  // Update sale devoluciones and cancelaciones fields
   app.patch("/api/sales/:saleId", async (req, res) => {
     try {
       const { saleId } = req.params;
       
-      // Define schema for allowed fields
-      const updateDevolucionSchema = z.object({
+      // Define schema for allowed fields (devoluciones and cancelaciones)
+      const updateSaleSchema = z.object({
         datosDevolucion: z.string().nullable().optional(),
         tipoDevolucion: z.string().nullable().optional(),
+        finalizacionDevolucion: z.string().nullable().optional(),
+        datosCancelacion: z.string().nullable().optional(),
+        finalizacionCancelacion: z.string().nullable().optional(),
       }).strict(); // strict() ensures no other fields are allowed
 
       // Validate request body
-      const validationResult = updateDevolucionSchema.safeParse(req.body);
+      const validationResult = updateSaleSchema.safeParse(req.body);
       if (!validationResult.success) {
         return res.status(400).json({ 
           error: "Invalid fields in request", 
@@ -3331,7 +3403,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      const { datosDevolucion, tipoDevolucion } = validationResult.data;
+      const { datosDevolucion, tipoDevolucion, finalizacionDevolucion, datosCancelacion, finalizacionCancelacion } = validationResult.data;
 
       // Validate that sale exists
       const existingSale = await storage.getSaleById(saleId);
@@ -3346,6 +3418,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       if (tipoDevolucion !== undefined) {
         updateData.tipoDevolucion = tipoDevolucion;
+      }
+      if (finalizacionDevolucion !== undefined) {
+        updateData.finalizacionDevolucion = finalizacionDevolucion;
+      }
+      if (datosCancelacion !== undefined) {
+        updateData.datosCancelacion = datosCancelacion;
+      }
+      if (finalizacionCancelacion !== undefined) {
+        updateData.finalizacionCancelacion = finalizacionCancelacion;
       }
 
       // Ensure at least one field is being updated
