@@ -2298,33 +2298,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const payload = req.body;
       
       // Basic validation
-      if (!payload || !payload.user_session_keys || !Array.isArray(payload.user_session_keys)) {
+      if (!payload || typeof payload !== 'object') {
         console.log("❌ Invalid Treble webhook data received");
         return res.status(400).json({ error: "Invalid webhook data" });
       }
 
-      // Extract data from user_session_keys array
-      const sessionKeys = payload.user_session_keys;
-      const getData = (key: string) => {
-        const item = sessionKeys.find((k: any) => k.key === key);
-        return item?.value || null;
+      // Helper function to extract data from key/value pairs
+      // The webhook sends data as: key, value, key_1, value_1, key_2, value_2, etc.
+      const getData = (targetKey: string): string | null => {
+        // Check direct key match
+        if (payload.key === targetKey && payload.value) {
+          return payload.value;
+        }
+        
+        // Check numbered keys (key_1, key_2, etc.)
+        for (let i = 1; i < 20; i++) {
+          const keyField = `key_${i}`;
+          const valueField = `value_${i}`;
+          if (payload[keyField] === targetKey && payload[valueField]) {
+            return payload[valueField];
+          }
+        }
+        
+        return null;
       };
 
-      const orderNumber = getData('numero_de_orden');
-      const customerName = getData('name');
-      const ciudad = getData('sheets_ciudad');
-      const estado = getData('sheets_estado');
-      const direccion = getData('sheets_direccion');
-      const municipio = getData('sheets_municipio');
-      const observaciones = getData('sheets_observaciones');
-      const urbanizacion = getData('sheets_urbanizacion');
-      const direccionFacturacion = getData('sheets_dir_facturacion');
-      const mismaDireccion = getData('sheets_misma_direccion');
+      // Extract all fields from the webhook
+      const orderNumber = getData('numero_orden');
+      const estado = getData('estado');
+      const ciudad = getData('ciudad');
+      const urbanizacion = getData('urbanizacion');
+      const direccionUnificada = getData('direccion_unificada');
+      const indicaciones = getData('indicaciones');
+      const mismaDirFact = getData('misma_dir_fact');
+      const direccionFacturacion = getData('direccion_facturacion');
 
       console.log(`📦 Processing address update for order: ${orderNumber}`);
-      console.log(`👤 Customer: ${customerName}`);
       console.log(`📍 Estado: ${estado}, Ciudad: ${ciudad}`);
-      console.log(`🏠 Same address: ${mismaDireccion}`);
+      console.log(`🏠 Urbanización: ${urbanizacion}`);
+      console.log(`📬 Dirección: ${direccionUnificada}`);
+      console.log(`📝 Indicaciones: ${indicaciones}`);
+      console.log(`🏢 Misma dirección facturación: ${mismaDirFact}`);
 
       // Validate order number
       if (!orderNumber) {
@@ -2344,7 +2358,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Determine if billing address is same as shipping
-      const addressesAreSame = mismaDireccion && mismaDireccion.includes('0_');
+      // The webhook sends "1_No" for different addresses, anything else means same address
+      const addressesAreSame = !mismaDirFact || !mismaDirFact.includes('No');
 
       // Prepare address update data
       const addressData: any = {
@@ -2352,9 +2367,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         direccionDespachoPais: 'Venezuela',
         direccionDespachoEstado: estado || null,
         direccionDespachoCiudad: ciudad || null,
-        direccionDespachoDireccion: direccion || null,
+        direccionDespachoDireccion: direccionUnificada || null,
         direccionDespachoUrbanizacion: urbanizacion || null,
-        direccionDespachoReferencia: municipio ? `${observaciones ? observaciones + ' - ' : ''}Municipio: ${municipio}` : observaciones || null,
+        direccionDespachoReferencia: indicaciones || null,
         direccionDespachoIgualFacturacion: addressesAreSame ? 'true' : 'false',
       };
 
