@@ -74,15 +74,23 @@ export default function Sidebar() {
                 <Link href={item.href}>
                   <div 
                     className={cn(
-                      "flex items-center space-x-3 p-3 rounded-lg transition-colors cursor-pointer",
+                      "flex p-3 rounded-lg transition-colors cursor-pointer",
+                      item.href === "/devoluciones" ? "items-center space-x-3" : "items-center space-x-3",
                       isActive 
                         ? "bg-primary text-primary-foreground" 
                         : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
                     )}
                     data-testid={item.testId || `nav-${item.label.toLowerCase().replace(' ', '-')}`}
                   >
-                    <i className={item.icon}></i>
-                    <span>{item.label}</span>
+                    <i className={cn(item.icon, item.href === "/devoluciones" && "self-start mt-0.5")}></i>
+                    {item.href === "/devoluciones" ? (
+                      <span className="flex flex-col leading-tight">
+                        <span>Devoluciones /</span>
+                        <span>Cancelaciones</span>
+                      </span>
+                    ) : (
+                      <span>{item.label}</span>
+                    )}
                   </div>
                 </Link>
               </li>
