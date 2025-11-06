@@ -3325,9 +3325,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Sale not found" });
       }
 
+      // Get current date in YYYY-MM-DD format
+      const today = new Date().toISOString().split('T')[0];
+
       const updatedSale = await storage.updateSale(saleId, { 
         estadoEntrega: "A devolver",
-        tipoDevolucion: tipoDevolucion || null
+        tipoDevolucion: tipoDevolucion || null,
+        fechaDevolucion: today
       });
       
       if (!updatedSale) {

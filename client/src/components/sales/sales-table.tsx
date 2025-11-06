@@ -1058,13 +1058,19 @@ export default function SalesTable({
                               setSelectedSaleForCancel(sale);
                               setCancelConfirmOpen(true);
                             }}
-                            disabled={sale.estadoEntrega === "Cancelada" || cancelSaleMutation.isPending}
+                            disabled={sale.estadoEntrega === "Cancelada" || sale.estadoEntrega === "A cancelar" || cancelSaleMutation.isPending}
                             data-testid={`cancel-sale-${sale.id}`}
                             className={cn(
                               "h-7 text-xs",
-                              sale.estadoEntrega === "Cancelada" && "opacity-70 cursor-not-allowed"
+                              (sale.estadoEntrega === "Cancelada" || sale.estadoEntrega === "A cancelar") && "opacity-70 cursor-not-allowed"
                             )}
-                            title={sale.estadoEntrega === "Cancelada" ? "Venta ya cancelada" : "Cancelar venta"}
+                            title={
+                              sale.estadoEntrega === "Cancelada" 
+                                ? "Venta ya cancelada" 
+                                : sale.estadoEntrega === "A cancelar"
+                                ? "Venta en proceso de cancelación"
+                                : "Cancelar venta"
+                            }
                           >
                             <XCircle className="h-3 w-3 mr-1" />
                             Cancelar

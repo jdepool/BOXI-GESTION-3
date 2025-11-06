@@ -71,6 +71,7 @@ export default function DevolucionesTable({
   const [datosDevolucionValue, setDatosDevolucionValue] = useState("");
   const [originalDatosDevolucionValue, setOriginalDatosDevolucionValue] = useState("");
   const [openFechaDevolucionId, setOpenFechaDevolucionId] = useState<string | null>(null);
+  const [openFinalizacionDevolucionId, setOpenFinalizacionDevolucionId] = useState<string | null>(null);
   const [openFechaClienteId, setOpenFechaClienteId] = useState<string | null>(null);
 
   const getStatusBadgeVariant = (status: string) => {
@@ -184,6 +185,45 @@ export default function DevolucionesTable({
     }
     // Close the popover after selection
     setOpenFechaDevolucionId(null);
+  };
+
+  const updateFinalizacionDevolucionMutation = useMutation({
+    mutationFn: async ({ saleId, finalizacionDevolucion }: { saleId: string; finalizacionDevolucion: string | null }) => {
+      return apiRequest("PATCH", `/api/sales/${saleId}`, { finalizacionDevolucion });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ 
+        predicate: (query) => Array.isArray(query.queryKey) && typeof query.queryKey[0] === 'string' && query.queryKey[0].startsWith('/api/sales')
+      });
+      toast({
+        title: "Finalización de Devolución actualizada",
+        description: "La fecha de finalización de devolución ha sido actualizada correctamente.",
+      });
+    },
+    onError: (error) => {
+      console.error('Failed to update finalizacion devolucion:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo actualizar la finalización de devolución.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleFinalizacionDevolucionChange = (saleId: string, date: Date | undefined) => {
+    if (date) {
+      // Format date as YYYY-MM-DD
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const finalizacionDevolucion = `${year}-${month}-${day}`;
+      
+      updateFinalizacionDevolucionMutation.mutate({ saleId, finalizacionDevolucion });
+    } else {
+      updateFinalizacionDevolucionMutation.mutate({ saleId, finalizacionDevolucion: null });
+    }
+    // Close the popover after selection
+    setOpenFinalizacionDevolucionId(null);
   };
 
   const updateFechaClienteMutation = useMutation({
@@ -405,6 +445,7 @@ export default function DevolucionesTable({
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[200px]">Email</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[200px]">Notas</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[200px]">Datos Devolución</th>
+                    <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[150px]">Fecha de Devolución</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[150px]">Finalización de Devolución</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[120px]">Acciones</th>
                   </tr>
@@ -625,6 +666,37 @@ export default function DevolucionesTable({
                               selected={parseFechaDevolucion(sale.fechaDevolucion)}
                               onSelect={(date) => handleFechaDevolucionChange(sale.id, date)}
                               initialFocus
+                              data-testid={`fecha-devolucion-calendar-${sale.id}`}
+                            />
+                          </PopoverContent>
+                        </Popover>
+                      </td>
+                      
+                      <td className="p-2 pr-6 min-w-[150px] text-xs">
+                        <Popover
+                          open={openFinalizacionDevolucionId === sale.id}
+                          onOpenChange={(open) => setOpenFinalizacionDevolucionId(open ? sale.id : null)}
+                        >
+                          <PopoverTrigger asChild>
+                            <Button
+                              variant="outline"
+                              className={cn(
+                                "w-full h-8 justify-start text-left font-normal text-xs",
+                                !sale.finalizacionDevolucion && "text-muted-foreground"
+                              )}
+                              data-testid={`finalizacion-devolucion-button-${sale.id}`}
+                            >
+                              <CalendarIcon className={cn("mr-2 h-3 w-3", !sale.finalizacionDevolucion && "text-amber-500")} />
+                              {sale.finalizacionDevolucion ? formatFechaDevolucion(sale.finalizacionDevolucion) : "Seleccionar"}
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar
+                              mode="single"
+                              selected={parseFechaDevolucion(sale.finalizacionDevolucion)}
+                              onSelect={(date) => handleFinalizacionDevolucionChange(sale.id, date)}
+                              initialFocus
+                              data-testid={`finalizacion-devolucion-calendar-${sale.id}`}
                             />
                           </PopoverContent>
                         </Popover>
