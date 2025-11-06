@@ -3325,14 +3325,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Sale not found" });
       }
 
-      // Get current date in YYYY-MM-DD format
-      const today = new Date().toISOString().split('T')[0];
-
-      const updatedSale = await storage.updateSale(saleId, { 
+      // Only set fechaDevolucion if it's not already set (preserve manual edits)
+      const updateData: any = {
         estadoEntrega: "A devolver",
         tipoDevolucion: tipoDevolucion || null,
-        fechaDevolucion: today
-      });
+      };
+      
+      // Only auto-generate fechaDevolucion if it's empty
+      if (!existingSale.fechaDevolucion) {
+        const today = new Date().toISOString().split('T')[0];
+        updateData.fechaDevolucion = today;
+      }
+
+      const updatedSale = await storage.updateSale(saleId, updateData);
       
       if (!updatedSale) {
         return res.status(500).json({ error: "Failed to mark sale as returned" });
