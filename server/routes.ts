@@ -3095,7 +3095,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Update Cashea automation config
   app.put("/api/cashea/automation/config", async (req, res) => {
     try {
-      const { enabled, frequency } = req.body;
+      const { enabled, frequency, portal } = req.body;
 
       if (typeof enabled !== 'boolean') {
         return res.status(400).json({ error: "enabled must be a boolean" });
@@ -3108,7 +3108,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      const config = await storage.updateCasheaAutomationConfig(enabled, frequency);
+      const validPortals = ['Cashea', 'Cashea MP'];
+      if (portal && !validPortals.includes(portal)) {
+        return res.status(400).json({
+          error: "Invalid portal. Must be one of: " + validPortals.join(', ')
+        });
+      }
+
+      const config = await storage.updateCasheaAutomationConfig(enabled, frequency, portal);
       
       // Restart scheduler with new config
       const { restartCasheaScheduler } = await import('./cashea-scheduler');
@@ -3138,6 +3145,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       console.log('📥 Manual 24-hour download requested...');
       
+      // Get the active configuration to determine which portal to use
+      const config = await storage.getCasheaAutomationConfig();
+      const portal = (config?.portal || "Cashea") as "Cashea" | "Cashea MP";
+      
       // Calculate 24 hours ago, but format as YYYY-MM-DD for API compatibility
       const endDate = new Date();
       const startDate = new Date(endDate.getTime() - 24 * 60 * 60 * 1000);
@@ -3146,9 +3157,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const startDateStr = startDate.toISOString().split('T')[0];
       const endDateStr = endDate.toISOString().split('T')[0];
       
-      console.log(`📥 Downloading Cashea data (24hr lookback): ${startDateStr} to ${endDateStr}`);
+      console.log(`📥 Downloading ${portal} data (24hr lookback): ${startDateStr} to ${endDateStr}`);
       
-      const result = await performCasheaDownload(startDateStr, endDateStr, storage);
+      const result = await performCasheaDownload(startDateStr, endDateStr, storage, portal);
       
       if (!result.success) {
         return res.status(400).json({

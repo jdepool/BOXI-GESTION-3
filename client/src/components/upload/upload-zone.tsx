@@ -76,8 +76,8 @@ export default function UploadZone({ recentUploads, showOnlyCashea = false }: Up
 
   // Update automation config mutation
   const updateAutomationMutation = useMutation({
-    mutationFn: async ({ enabled, frequency }: { enabled: boolean; frequency: string }) => {
-      const res = await apiRequest('PUT', '/api/cashea/automation/config', { enabled, frequency });
+    mutationFn: async ({ enabled, frequency, portal }: { enabled: boolean; frequency: string; portal?: string }) => {
+      const res = await apiRequest('PUT', '/api/cashea/automation/config', { enabled, frequency, portal });
       return res.json();
     },
     onSuccess: () => {
@@ -404,13 +404,22 @@ export default function UploadZone({ recentUploads, showOnlyCashea = false }: Up
   const handleAutomationToggle = (enabled: boolean) => {
     if (!automationConfig) return; // Wait for config to load
     const frequency = automationConfig.frequency;
-    updateAutomationMutation.mutate({ enabled, frequency });
+    const portal = automationConfig.portal;
+    updateAutomationMutation.mutate({ enabled, frequency, portal });
   };
 
   const handleFrequencyChange = (frequency: string) => {
     if (!automationConfig) return; // Wait for config to load
     const enabled = automationConfig.enabled;
-    updateAutomationMutation.mutate({ enabled, frequency });
+    const portal = automationConfig.portal;
+    updateAutomationMutation.mutate({ enabled, frequency, portal });
+  };
+
+  const handlePortalChange = (portal: string) => {
+    if (!automationConfig) return; // Wait for config to load
+    const enabled = automationConfig.enabled;
+    const frequency = automationConfig.frequency;
+    updateAutomationMutation.mutate({ enabled, frequency, portal });
   };
 
   // Historical import handlers
@@ -619,6 +628,27 @@ export default function UploadZone({ recentUploads, showOnlyCashea = false }: Up
         )}
 
         <div className="space-y-3">
+          <div>
+            <Label className="text-sm">Portal</Label>
+            {isLoadingConfig ? (
+              <div className="h-10 bg-muted animate-pulse rounded mt-1" />
+            ) : (
+              <Select
+                value={automationConfig?.portal || 'Cashea'}
+                onValueChange={handlePortalChange}
+                disabled={isLoadingConfig || !!configError || updateAutomationMutation.isPending}
+              >
+                <SelectTrigger className="mt-1" data-testid="portal-select">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Cashea">Cashea (Boxi)</SelectItem>
+                  <SelectItem value="Cashea MP">Cashea MP (Mompox)</SelectItem>
+                </SelectContent>
+              </Select>
+            )}
+          </div>
+
           <div>
             <Label className="text-sm">Frecuencia de Descarga</Label>
             {isLoadingConfig ? (

@@ -169,7 +169,7 @@ export interface IStorage {
 
   // Cashea automation methods
   getCasheaAutomationConfig(): Promise<any>;
-  updateCasheaAutomationConfig(enabled: boolean, frequency: string): Promise<any>;
+  updateCasheaAutomationConfig(enabled: boolean, frequency: string, portal?: string): Promise<any>;
   getCasheaAutomaticDownloads(limit?: number): Promise<any[]>;
 
   // Admin configuration methods
@@ -1735,13 +1735,18 @@ export class DatabaseStorage implements IStorage {
     return configs[0];
   }
 
-  async updateCasheaAutomationConfig(enabled: boolean, frequency: string): Promise<any> {
+  async updateCasheaAutomationConfig(enabled: boolean, frequency: string, portal?: string): Promise<any> {
     const { casheaAutomationConfig } = await import('@shared/schema');
     const existingConfig = await this.getCasheaAutomationConfig();
     
+    const updateData: any = { enabled, frequency };
+    if (portal) {
+      updateData.portal = portal;
+    }
+    
     const [updatedConfig] = await db
       .update(casheaAutomationConfig)
-      .set({ enabled, frequency })
+      .set(updateData)
       .where(eq(casheaAutomationConfig.id, existingConfig.id))
       .returning();
     

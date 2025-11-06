@@ -86,6 +86,10 @@ export async function restartCasheaScheduler() {
 }
 
 async function runAutomaticDownload(frequency: string) {
+  // Get the active configuration to determine which portal to use
+  const config = await getAutomationConfig();
+  const portal = (config.portal || "Cashea") as "Cashea" | "Cashea MP";
+  
   // Always look back 24 hours regardless of frequency
   // This ensures we catch all orders while the duplicate filter prevents re-downloading
   const endDate = new Date();
@@ -95,14 +99,15 @@ async function runAutomaticDownload(frequency: string) {
   const startDateStr = startDate.toISOString().split('T')[0];
   const endDateStr = endDate.toISOString().split('T')[0];
   
-  console.log(`📥 Auto-downloading Cashea data (24hr lookback): ${startDateStr} to ${endDateStr}`);
+  console.log(`📥 Auto-downloading ${portal} data (24hr lookback): ${startDateStr} to ${endDateStr}`);
   
   try {
-    const result = await performCasheaDownload(startDateStr, endDateStr, storage);
+    const result = await performCasheaDownload(startDateStr, endDateStr, storage, portal);
     
     if (!result.success) {
       // Handle validation errors as failures
       await db.insert(casheaAutomaticDownloads).values({
+        portal: portal,
         startDate: startDate,
         endDate: endDate,
         recordsCount: 0,
@@ -116,6 +121,7 @@ async function runAutomaticDownload(frequency: string) {
     
     // Record successful download
     await db.insert(casheaAutomaticDownloads).values({
+      portal: portal,
       startDate: startDate,
       endDate: endDate,
       recordsCount: result.recordsProcessed,
@@ -128,6 +134,7 @@ async function runAutomaticDownload(frequency: string) {
     
     // Record failed download
     await db.insert(casheaAutomaticDownloads).values({
+      portal: portal,
       startDate: startDate,
       endDate: endDate,
       recordsCount: 0,
