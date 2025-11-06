@@ -1370,8 +1370,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
           await tx.delete(sales).where(eq(sales.id, sale.id));
         }
 
+        // Enrich SKUs from productos table for products that don't have SKU
+        const enrichedProducts = await Promise.all(
+          products.map(async (product: any) => {
+            let sku = product.sku || null;
+            if (!sku && product.producto) {
+              sku = await storage.enrichSkuFromProduct(product.producto);
+            }
+            return { ...product, sku };
+          })
+        );
+
         // Create new sales with updated information within transaction
-        const newSalesData = products.map((product: any) => ({
+        const newSalesData = enrichedProducts.map((product: any) => ({
           orden: orderNumber,
           nombre,
           cedula: cedula || null,
@@ -1381,7 +1392,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           totalUsd: product.totalUsd?.toString() || "0",
           totalOrderUsd: parseFloat(totalUsd) || null,
           product: product.producto,
-          sku: product.sku || null,
+          sku: product.sku,
           cantidad: product.cantidad || 1,
           esObsequio: product.esObsequio || false,
           medidaEspecial: product.medidaEspecial || null,
@@ -2034,14 +2045,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // Save to database
-      await storage.createSales(newSales);
+      // Enrich SKUs from productos table before saving
+      const salesWithEnrichedSkus = await Promise.all(
+        newSales.map(async (sale) => {
+          // If SKU already exists, keep it
+          if (sale.sku) {
+            return sale;
+          }
+          // Otherwise, try to enrich from productos table
+          const enrichedSku = await storage.enrichSkuFromProduct(sale.product);
+          return {
+            ...sale,
+            sku: enrichedSku || sale.sku
+          };
+        })
+      );
+
+      // Save to database with enriched SKUs
+      await storage.createSales(salesWithEnrichedSkus);
 
       // Log successful webhook processing
       await storage.createUploadHistory({
         filename: `shopify_webhook_${shopifyOrder.name}`,
         canal: 'shopify',
-        recordsCount: newSales.length,
+        recordsCount: salesWithEnrichedSkus.length,
         status: 'success',
         errorMessage: null,
       });
@@ -2051,7 +2078,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(200).json({ 
         success: true, 
         message: "Order processed successfully",
-        ordersCreated: newSales.length 
+        ordersCreated: salesWithEnrichedSkus.length 
       });
 
     } catch (error) {
@@ -2217,14 +2244,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      // Save to database
-      await storage.createSales(newSales);
+      // Enrich SKUs from productos table before saving
+      const salesWithEnrichedSkus = await Promise.all(
+        newSales.map(async (sale) => {
+          // If SKU already exists, keep it
+          if (sale.sku) {
+            return sale;
+          }
+          // Otherwise, try to enrich from productos table
+          const enrichedSku = await storage.enrichSkuFromProduct(sale.product);
+          return {
+            ...sale,
+            sku: enrichedSku || sale.sku
+          };
+        })
+      );
+
+      // Save to database with enriched SKUs
+      await storage.createSales(salesWithEnrichedSkus);
 
       // Log successful webhook processing
       await storage.createUploadHistory({
         filename: `shopmom_webhook_${shopifyOrder.name}`,
         canal: 'ShopMom',
-        recordsCount: newSales.length,
+        recordsCount: salesWithEnrichedSkus.length,
         status: 'success',
         errorMessage: null,
       });
@@ -2234,7 +2277,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(200).json({ 
         success: true, 
         message: "ShopMom order processed successfully",
-        ordersCreated: newSales.length 
+        ordersCreated: salesWithEnrichedSkus.length 
       });
 
     } catch (error) {
@@ -2440,9 +2483,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const duplicatesCount = validatedSales.length - newSales.length;
 
-      // Save to database only new sales
-      if (newSales.length > 0) {
-        await storage.createSales(newSales);
+      // Enrich SKUs from productos table before saving
+      const salesWithEnrichedSkus = await Promise.all(
+        newSales.map(async (sale) => {
+          // If SKU already exists, keep it
+          if (sale.sku) {
+            return sale;
+          }
+          // Otherwise, try to enrich from productos table
+          const enrichedSku = await storage.enrichSkuFromProduct(sale.product);
+          return {
+            ...sale,
+            sku: enrichedSku || sale.sku
+          };
+        })
+      );
+
+      // Save to database only new sales with enriched SKUs
+      if (salesWithEnrichedSkus.length > 0) {
+        await storage.createSales(salesWithEnrichedSkus);
       }
 
       // Log successful upload
@@ -2455,13 +2514,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       // Send webhook notification for Cashea uploads
-      if (canalLower === 'cashea' && newSales.length > 0) {
+      if (canalLower === 'cashea' && salesWithEnrichedSkus.length > 0) {
         try {
           await sendWebhookToZapier({
-            recordsProcessed: newSales.length,
+            recordsProcessed: salesWithEnrichedSkus.length,
             duplicatesIgnored: duplicatesCount,
             filename: req.file.originalname,
-            salesData: newSales
+            salesData: salesWithEnrichedSkus
           }, canal);
         } catch (webhookError) {
           console.error('Webhook notification failed, but upload was successful:', webhookError);
@@ -2471,11 +2530,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       res.json({
         success: true,
-        recordsProcessed: newSales.length,
+        recordsProcessed: salesWithEnrichedSkus.length,
         duplicatesIgnored: duplicatesCount,
         message: duplicatesCount > 0 
-          ? `Successfully uploaded ${newSales.length} sales records. ${duplicatesCount} duplicate order(s) were ignored.`
-          : `Successfully uploaded ${newSales.length} sales records`
+          ? `Successfully uploaded ${salesWithEnrichedSkus.length} sales records. ${duplicatesCount} duplicate order(s) were ignored.`
+          : `Successfully uploaded ${salesWithEnrichedSkus.length} sales records`
       });
 
     } catch (error) {
@@ -6375,10 +6434,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Multi-product mode: create one sale record per product with same order number
         const createdSales = [];
         for (const product of products) {
+          // Enrich SKU from productos table if not provided
+          let sku = product.sku || null;
+          if (!sku && product.producto) {
+            sku = await storage.enrichSkuFromProduct(product.producto);
+          }
+          
           const saleData = {
             ...baseSaleData,
             product: product.producto,
-            sku: product.sku || null,
+            sku: sku,
             cantidad: parseInt(product.cantidad) || 1,
             // Override totalUsd with product-specific amount
             totalUsd: String(product.totalUsd),
@@ -6400,10 +6465,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       } else {
         // Legacy single-product mode (backwards compatibility)
+        // Enrich SKU from productos table if not provided
+        let sku = body.sku || null;
+        if (!sku && body.product) {
+          sku = await storage.enrichSkuFromProduct(body.product);
+        }
+        
         const saleData = {
           ...baseSaleData,
           product: body.product,
-          sku: body.sku || null,
+          sku: sku,
           cantidad: parseInt(body.cantidad) || 1,
           totalUsd: body.totalUsd ? body.totalUsd.toString() : "0",
         };

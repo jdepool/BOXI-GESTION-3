@@ -657,6 +657,26 @@ export class DatabaseStorage implements IStorage {
     return salesWithSku;
   }
 
+  // Helper function to enrich SKU from productos table based on product name
+  async enrichSkuFromProduct(productName: string | null): Promise<string | null> {
+    if (!productName) return null;
+
+    const normalized = productName.toLowerCase().trim();
+    
+    const matchedProduct = await db
+      .select({ sku: productos.sku })
+      .from(productos)
+      .where(
+        and(
+          isNotNull(productos.sku),
+          sql`LOWER(TRIM(${productos.nombre})) = ${normalized}`
+        )
+      )
+      .limit(1);
+
+    return matchedProduct[0]?.sku || null;
+  }
+
   async getSalesWithInstallments(filters?: {
     canal?: string;
     estadoEntrega?: string;
