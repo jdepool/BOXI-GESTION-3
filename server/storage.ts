@@ -48,6 +48,7 @@ export interface IStorage {
     canal?: string;
     estadoEntrega?: string;
     transportistaId?: string;
+    sku?: string;
     startDate?: string;
     endDate?: string;
     search?: string;
@@ -1031,6 +1032,7 @@ export class DatabaseStorage implements IStorage {
       canal?: string;
       estadoEntrega?: string;
       transportistaId?: string;
+      sku?: string;
       startDate?: string;
       endDate?: string;
       search?: string;
@@ -1062,6 +1064,10 @@ export class DatabaseStorage implements IStorage {
     
     if (filters?.transportistaId) {
       conditions.push(eq(sales.transportistaId, filters.transportistaId));
+    }
+    
+    if (filters?.sku) {
+      conditions.push(eq(sales.sku, filters.sku));
     }
     
     // Date range filter (using YYYY-MM-DD format to avoid timezone issues)

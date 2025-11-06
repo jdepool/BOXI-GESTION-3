@@ -44,6 +44,7 @@ interface DispatchTableProps {
     canal?: string;
     estadoEntrega?: string;
     transportistaId?: string;
+    sku?: string;
     startDate?: string;
     endDate?: string;
     search?: string;
@@ -87,6 +88,7 @@ export default function DispatchTable({
     canal: parentFilters?.canal || "",
     estadoEntrega: parentFilters?.estadoEntrega || "",
     transportistaId: parentFilters?.transportistaId || "",
+    sku: parentFilters?.sku || "",
     search: parentFilters?.search || "",
     startDate: parentFilters?.startDate || "",
     endDate: parentFilters?.endDate || ""
@@ -97,6 +99,7 @@ export default function DispatchTable({
     parentFilters?.canal || 
     parentFilters?.estadoEntrega || 
     parentFilters?.transportistaId || 
+    parentFilters?.sku ||
     parentFilters?.search || 
     parentFilters?.startDate || 
     parentFilters?.endDate
@@ -107,6 +110,7 @@ export default function DispatchTable({
     parentFilters?.canal,
     parentFilters?.estadoEntrega,
     parentFilters?.transportistaId,
+    parentFilters?.sku,
     parentFilters?.search,
     parentFilters?.startDate,
     parentFilters?.endDate
@@ -148,6 +152,18 @@ export default function DispatchTable({
   const { data: canales = [] } = useQuery<Array<{ id: string; nombre: string; activo: boolean }>>({
     queryKey: ["/api/admin/canales"],
   });
+
+  // Fetch productos data to extract unique SKUs
+  const { data: productos = [] } = useQuery<Array<{ id: string; nombre: string; sku: string | null }>>({
+    queryKey: ["/api/admin/productos"],
+  });
+
+  // Extract unique SKUs, filter out nulls/empty strings, and sort alphabetically
+  const uniqueSkus = Array.from(new Set(
+    productos
+      .map(p => p.sku)
+      .filter((sku): sku is string => !!sku && sku.trim() !== "")
+  )).sort();
 
   const handleFilterChange = (key: string, value: string) => {
     onFilterChange?.(key, value === "all" ? "" : value);
@@ -604,6 +620,26 @@ export default function DispatchTable({
                   {transportistas.map((transportista) => (
                     <SelectItem key={transportista.id} value={transportista.id}>
                       {transportista.nombre}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <label className="text-sm font-medium mb-1 block">SKU:</label>
+              <Select 
+                value={filters.sku || "all"} 
+                onValueChange={(value) => handleFilterChange('sku', value)}
+              >
+                <SelectTrigger className="w-40" data-testid="filter-sku">
+                  <SelectValue placeholder="Todos los SKUs" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos los SKUs</SelectItem>
+                  {uniqueSkus.map((sku) => (
+                    <SelectItem key={sku} value={sku}>
+                      {sku}
                     </SelectItem>
                   ))}
                 </SelectContent>

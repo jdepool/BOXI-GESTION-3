@@ -938,6 +938,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         canal?: string;
         estadoEntrega?: string;
         transportistaId?: string;
+        sku?: string;
         startDate?: string;
         endDate?: string;
         search?: string;
@@ -946,6 +947,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (req.query.canal) filters.canal = req.query.canal as string;
       if (req.query.estadoEntrega) filters.estadoEntrega = req.query.estadoEntrega as string;
       if (req.query.transportistaId) filters.transportistaId = req.query.transportistaId as string;
+      if (req.query.sku) filters.sku = req.query.sku as string;
       if (req.query.startDate) filters.startDate = req.query.startDate as string;
       if (req.query.endDate) filters.endDate = req.query.endDate as string;
       if (req.query.search) filters.search = req.query.search as string;
