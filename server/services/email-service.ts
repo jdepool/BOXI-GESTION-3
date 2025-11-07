@@ -509,7 +509,7 @@ export async function sendInternalAlert(data: InternalAlertData, recipientEmail?
     const emailContent = generateInternalAlertHTML(data);
     
     // Use test email or production emails
-    const productionEmails = ['santiago@boxisleep.com.co', 'natachavillasmil7@gmail.com'];
+    const productionEmails = ['santiago@boxisleep.com.co', 'jose.gracia@boxisleep.com.co'];
     const targetEmails = recipientEmail ? [recipientEmail] : productionEmails;
     
     // Determine subject based on alert type
