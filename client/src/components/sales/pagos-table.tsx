@@ -703,7 +703,7 @@ export default function PagosTable({
                             Flete
                           </Button>
                         </PopoverTrigger>
-                        <PopoverContent className="w-96" align="start">
+                        <PopoverContent className="w-[600px]" align="start">
                           <div className="space-y-4">
                             <h4 className="font-semibold text-sm">Flete a Pagar</h4>
                             
