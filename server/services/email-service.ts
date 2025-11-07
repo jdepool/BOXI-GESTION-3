@@ -508,8 +508,9 @@ export async function sendInternalAlert(data: InternalAlertData, recipientEmail?
     const client = await getUncachableOutlookClient();
     const emailContent = generateInternalAlertHTML(data);
     
-    // Use test email or production email
-    const targetEmail = recipientEmail || 'santiago@boxisleep.com.co';
+    // Use test email or production emails
+    const productionEmails = ['santiago@boxisleep.com.co', 'natachavillasmil7@gmail.com'];
+    const targetEmails = recipientEmail ? [recipientEmail] : productionEmails;
     
     // Determine subject based on alert type
     let subject = '';
@@ -531,20 +532,18 @@ export async function sendInternalAlert(data: InternalAlertData, recipientEmail?
         contentType: 'HTML',
         content: emailContent
       },
-      toRecipients: [
-        {
-          emailAddress: {
-            address: targetEmail
-          }
+      toRecipients: targetEmails.map(email => ({
+        emailAddress: {
+          address: email
         }
-      ]
+      }))
     };
 
     await client.api('/me/sendMail').post({
       message: message
     });
 
-    console.log(`📧 Internal alert sent to ${targetEmail} for ${data.alertType}: Order ${data.orderNumber || 'N/A'}`);
+    console.log(`📧 Internal alert sent to ${targetEmails.join(', ')} for ${data.alertType}: Order ${data.orderNumber || 'N/A'}`);
     return true;
   } catch (error) {
     console.error('Error sending internal alert email:', error);
