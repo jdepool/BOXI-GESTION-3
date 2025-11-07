@@ -233,7 +233,8 @@ export const sales = pgTable("sales", {
   direccionDespachoUrbanizacion: text("direccion_despacho_urbanizacion"),
   direccionDespachoReferencia: text("direccion_despacho_referencia"),
   // Flete
-  fleteAPagar: decimal("flete_a_pagar", { precision: 10, scale: 2 }), // Amount that SHOULD be paid for freight
+  fleteAPagar: decimal("flete_a_pagar", { precision: 10, scale: 2 }), // Amount that SHOULD be paid for freight (total sum of individual fletes)
+  fleteIndividualUsd: decimal("flete_individual_usd", { precision: 10, scale: 2 }), // Individual freight amount for this specific product
   montoFleteUsd: decimal("monto_flete_usd", { precision: 10, scale: 2 }),
   fechaFlete: timestamp("fecha_flete"),
   pagoFleteUsd: decimal("pago_flete_usd", { precision: 10, scale: 2 }),
