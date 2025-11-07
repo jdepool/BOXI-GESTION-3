@@ -3229,6 +3229,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(500).json({ error: "Failed to update delivery status" });
       }
 
+      // Check and send internal alerts if estado changes to "En proceso"
+      await storage.checkAndSendInternalAlerts(existingSale, updatedSale);
+
       res.json({ success: true, sale: updatedSale });
     } catch (error) {
       console.error("Update delivery status error:", error);
@@ -3702,6 +3705,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           // Refetch to get the updated estadoEntrega in response
           finalSales = await storage.getSalesByOrderNumber(orderNumber);
+          
+          // Send internal alerts for each sale that changed to "En proceso"
+          for (const sale of finalSales) {
+            // Find the original sale to compare
+            const originalSale = salesInOrder.find(s => s.id === sale.id);
+            if (originalSale) {
+              await storage.checkAndSendInternalAlerts(originalSale, sale);
+            }
+          }
         }
       }
 

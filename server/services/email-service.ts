@@ -64,6 +64,16 @@ export interface OrderEmailData {
   referenciaInicial?: string;
 }
 
+export interface InternalAlertData {
+  sku: string | null;
+  productName: string;
+  quantity: number;
+  customerName: string;
+  orderNumber: string | null;
+  fechaCompromisoEntrega: string | null;
+  alertType: 'medida_especial' | 'base_cama' | 'bed';
+}
+
 export function generateOrderConfirmationHTML(data: OrderEmailData): string {
   const mompoxChannels = ['Cashea MP', 'ShopMom', 'Manual MP', 'Tienda MP'];
   const isMompox = mompoxChannels.includes(data.canal);
@@ -367,6 +377,169 @@ export async function sendOrderConfirmationEmail(orderData: OrderEmailData): Pro
     return true;
   } catch (error) {
     console.error('Error sending order confirmation email:', error);
+    throw error;
+  }
+}
+
+export function generateInternalAlertHTML(data: InternalAlertData): string {
+  const brandColor = '#1DB5A6';
+  
+  return `
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alerta Interna - Venta Especial</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background-color: ${brandColor};
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-radius: 8px 8px 0 0;
+        }
+        .content {
+            background-color: #f9f9f9;
+            padding: 30px;
+            border-radius: 0 0 8px 8px;
+        }
+        .alert-details {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 4px solid ${brandColor};
+        }
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 10px 0;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .detail-label {
+            font-weight: bold;
+            color: #555;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+            color: #666;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1 style="color: white; margin: 10px 0;">🔔 Alerta de Venta</h1>
+    </div>
+    
+    <div class="content">
+        <p>Se ha registrado una venta que requiere atención especial:</p>
+        
+        <div class="alert-details">
+            <h3>📋 Detalles de la Venta</h3>
+            
+            <div class="detail-row">
+                <span class="detail-label">Número de Orden:</span>
+                <span>${data.orderNumber || 'N/A'}</span>
+            </div>
+            
+            <div class="detail-row">
+                <span class="detail-label">Cliente:</span>
+                <span>${data.customerName}</span>
+            </div>
+            
+            <div class="detail-row">
+                <span class="detail-label">Producto:</span>
+                <span>${data.productName}</span>
+            </div>
+            
+            <div class="detail-row">
+                <span class="detail-label">SKU:</span>
+                <span>${data.sku || 'N/A'}</span>
+            </div>
+            
+            <div class="detail-row">
+                <span class="detail-label">Cantidad:</span>
+                <span>${data.quantity}</span>
+            </div>
+            
+            <div class="detail-row">
+                <span class="detail-label">Fecha Compromiso Entrega:</span>
+                <span>${data.fechaCompromisoEntrega ? new Date(data.fechaCompromisoEntrega).toLocaleDateString('es-ES', { 
+                    day: '2-digit', 
+                    month: 'long', 
+                    year: 'numeric' 
+                }) : 'N/A'}</span>
+            </div>
+        </div>
+    </div>
+    
+    <div class="footer">
+        <p>Este es un mensaje automático del sistema de gestión de ventas BoxiSleep.</p>
+    </div>
+</body>
+</html>
+  `.trim();
+}
+
+export async function sendInternalAlert(data: InternalAlertData, recipientEmail?: string): Promise<boolean> {
+  try {
+    const client = await getUncachableOutlookClient();
+    const emailContent = generateInternalAlertHTML(data);
+    
+    // Use test email or production email
+    const targetEmail = recipientEmail || 'santiago@boxisleep.com.co';
+    
+    // Determine subject based on alert type
+    let subject = '';
+    switch (data.alertType) {
+      case 'medida_especial':
+        subject = 'Se ha vendido una medida especial';
+        break;
+      case 'base_cama':
+        subject = 'Se ha vendido una Base Cama';
+        break;
+      case 'bed':
+        subject = 'Se ha vendido una Bed';
+        break;
+    }
+    
+    const message = {
+      subject: subject,
+      body: {
+        contentType: 'HTML',
+        content: emailContent
+      },
+      toRecipients: [
+        {
+          emailAddress: {
+            address: targetEmail
+          }
+        }
+      ]
+    };
+
+    await client.api('/me/sendMail').post({
+      message: message
+    });
+
+    console.log(`📧 Internal alert sent to ${targetEmail} for ${data.alertType}: Order ${data.orderNumber || 'N/A'}`);
+    return true;
+  } catch (error) {
+    console.error('Error sending internal alert email:', error);
     throw error;
   }
 }

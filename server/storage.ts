@@ -245,6 +245,8 @@ export interface IStorage {
   // Productos
   getProductos(): Promise<any[]>;
   getProductoByNombre(nombre: string): Promise<Producto | undefined>;
+  getProductCategory(productName: string): Promise<string | null>;
+  checkAndSendInternalAlerts(previousSale: Sale | null, newSale: Sale, testEmail?: string): Promise<void>;
   createProducto(producto: InsertProducto): Promise<Producto>;
   updateProducto(id: string, producto: Partial<InsertProducto>): Promise<Producto | undefined>;
   deleteProducto(id: string): Promise<boolean>;
@@ -2313,6 +2315,68 @@ export class DatabaseStorage implements IStorage {
       .where(ilike(productos.nombre, trimmedNombre))
       .limit(1);
     return producto;
+  }
+
+  async getProductCategory(productName: string): Promise<string | null> {
+    const trimmedName = productName.trim();
+    const [result] = await db
+      .select({
+        categoryName: categorias.nombre
+      })
+      .from(productos)
+      .leftJoin(categorias, eq(productos.categoriaId, categorias.id))
+      .where(ilike(productos.nombre, trimmedName))
+      .limit(1);
+    
+    return result?.categoryName || null;
+  }
+
+  async checkAndSendInternalAlerts(previousSale: Sale | null, newSale: Sale, testEmail?: string): Promise<void> {
+    // Only send alerts when estadoEntrega changes to "En proceso"
+    const isChangingToEnProceso = 
+      newSale.estadoEntrega === 'En proceso' && 
+      (!previousSale || previousSale.estadoEntrega !== 'En proceso');
+    
+    if (!isChangingToEnProceso) {
+      return;
+    }
+
+    const { sendInternalAlert } = await import('./services/email-service');
+    
+    // Check the 3 conditions for sending alerts
+    const hasMedidaEspecial = !!(newSale.medidaEspecial && newSale.medidaEspecial.trim().length > 0);
+    const productCategory = await this.getProductCategory(newSale.product);
+    const isBaseCama = productCategory === 'Base Cama';
+    const isBed = productCategory === 'Bed';
+    
+    // Determine which alert to send (priority order: medida especial > base cama > bed)
+    let alertType: 'medida_especial' | 'base_cama' | 'bed' | null = null;
+    
+    if (hasMedidaEspecial) {
+      alertType = 'medida_especial';
+    } else if (isBaseCama) {
+      alertType = 'base_cama';
+    } else if (isBed) {
+      alertType = 'bed';
+    }
+    
+    // Send alert if any condition is met
+    if (alertType) {
+      try {
+        await sendInternalAlert({
+          sku: newSale.sku,
+          productName: newSale.product,
+          quantity: newSale.cantidad,
+          customerName: newSale.nombre,
+          orderNumber: newSale.orden,
+          fechaCompromisoEntrega: newSale.fechaEntrega ? newSale.fechaEntrega.toISOString() : null,
+          alertType: alertType
+        }, testEmail);
+      } catch (error) {
+        console.error('Error sending internal alert email:', error);
+        // Don't throw error - we don't want to block the sale update if email fails
+      }
+    }
   }
 
   async createProducto(producto: InsertProducto): Promise<Producto> {
