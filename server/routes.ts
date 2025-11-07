@@ -19,7 +19,7 @@ import session from "express-session";
 import MemoryStore from "memorystore";
 import crypto from "crypto";
 import fetch from "node-fetch";
-import { sendOrderConfirmationEmail, type OrderEmailData } from "./services/email-service";
+import { sendOrderConfirmationEmail, sendInternalAlert, type OrderEmailData, type InternalAlertData } from "./services/email-service";
 import { performCasheaDownload } from "./services/cashea-download";
 
 // Helper function to normalize estadoEntrega casing
@@ -7974,6 +7974,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error serving UAT file:", error);
       res.status(500).json({ error: "Failed to serve UAT file" });
+    }
+  });
+
+  // Test endpoint for internal alert emails
+  app.get("/api/test/internal-alert", async (req, res) => {
+    try {
+      const { type } = req.query;
+      
+      // Validate type parameter
+      const validTypes = ['medida_especial', 'base_cama', 'bed'];
+      if (!type || !validTypes.includes(type as string)) {
+        return res.status(400).json({ 
+          error: "Invalid type parameter. Must be one of: medida_especial, base_cama, bed",
+          example: "/api/test/internal-alert?type=medida_especial"
+        });
+      }
+
+      // Prepare sample data
+      const alertData: InternalAlertData = {
+        sku: 'BOX-QUEEN-001',
+        productName: 'Colchón Queen Size Premium',
+        quantity: 2,
+        customerName: 'María García',
+        orderNumber: '#TEST-12345',
+        fechaCompromisoEntrega: '2025-11-15',
+        alertType: type as 'medida_especial' | 'base_cama' | 'bed'
+      };
+
+      // Send test email
+      await sendInternalAlert(alertData, 'labradormariaeugenia@gmail.com');
+
+      res.json({ 
+        success: true, 
+        message: `Test email sent successfully to labradormariaeugenia@gmail.com`,
+        data: alertData
+      });
+    } catch (error) {
+      console.error("Error sending test internal alert:", error);
+      res.status(500).json({ error: "Failed to send test email" });
     }
   });
 
