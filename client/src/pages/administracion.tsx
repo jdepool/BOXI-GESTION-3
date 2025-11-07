@@ -18,6 +18,7 @@ import { SeguimientoConfigTab } from "../components/admin/seguimiento-config-tab
 import { PreciosCostosTab } from "../components/admin/precios-costos-tab";
 import { EstadosCiudadesTab } from "../components/admin/estados-ciudades-tab";
 import { EnriquecerSkusTab } from "../components/admin/enriquecer-skus-tab";
+import { CorregirSkusTab } from "../components/admin/corregir-skus-tab";
 
 export default function Administracion() {
   const [activeTab, setActiveTab] = useState("bancos");
@@ -85,6 +86,9 @@ export default function Administracion() {
           <TabsTrigger value="enriquecer-skus" className="text-xs">
             ENRIQUECER SKUs
           </TabsTrigger>
+          <TabsTrigger value="corregir-skus" className="text-xs">
+            CORREGIR SKUs
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="bancos" className="space-y-4">
@@ -145,6 +149,10 @@ export default function Administracion() {
 
         <TabsContent value="enriquecer-skus" className="space-y-4">
           <EnriquecerSkusTab />
+        </TabsContent>
+
+        <TabsContent value="corregir-skus" className="space-y-4">
+          <CorregirSkusTab />
         </TabsContent>
       </Tabs>
     </div>
