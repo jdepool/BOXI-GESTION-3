@@ -413,6 +413,7 @@ export interface IStorage {
     bancoReceptorFlete?: string;
     fleteGratis?: boolean;
     fleteAPagar?: string;
+    fletesIndividuales?: Array<{ saleId: string; fleteIndividual: number }>;
   }): Promise<Sale[]>;
   updateOrderPagoInicial(orderNumber: string, pagoData: {
     fechaPagoInicial?: string | null;
@@ -1550,7 +1551,41 @@ export class DatabaseStorage implements IStorage {
     bancoReceptorFlete?: string;
     fleteGratis?: boolean;
     fleteAPagar?: string;
+    fletesIndividuales?: Array<{ saleId: string; fleteIndividual: number }>;
   }): Promise<Sale[]> {
+    // Handle individual fletes if provided
+    if (flete.fletesIndividuales && flete.fletesIndividuales.length > 0) {
+      // Update each product with its individual flete
+      for (const item of flete.fletesIndividuales) {
+        await db
+          .update(sales)
+          .set({
+            fleteIndividualUsd: item.fleteIndividual.toString(),
+            updatedAt: new Date()
+          })
+          .where(eq(sales.id, item.saleId));
+      }
+      
+      // Calculate total fleteAPagar as sum of all individual fletes
+      const totalFleteAPagar = flete.fletesIndividuales.reduce((sum, item) => sum + item.fleteIndividual, 0);
+      
+      // Update all products in order with the total fleteAPagar and fleteGratis
+      const commonUpdateData: any = {
+        fleteAPagar: totalFleteAPagar,
+        fleteGratis: flete.fleteGratis || false,
+        updatedAt: new Date()
+      };
+      
+      const updatedSales = await db
+        .update(sales)
+        .set(commonUpdateData)
+        .where(eq(sales.orden, orderNumber))
+        .returning();
+      
+      return updatedSales;
+    }
+    
+    // Original logic for backward compatibility (when fletesIndividuales is not provided)
     const updateData: any = {};
     
     // Add all flete fields to update data
