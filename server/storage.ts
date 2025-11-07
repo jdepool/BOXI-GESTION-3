@@ -106,14 +106,6 @@ export interface IStorage {
   }): Promise<number>;
   getExistingOrderNumbers(orders: string[]): Promise<string[]>;
   getOrdersByOrderNumber(orderNumber: string): Promise<{orden: string; product: string}[]>;
-  getSalesWithMissingSku(): Promise<Array<{
-    id: string;
-    orden: string | null;
-    product: string | null;
-    sku: string | null;
-    suggestedSku: string | null;
-  }>>;
-  enrichSalesSkus(updates: Array<{ id: string; sku: string }>): Promise<number>;
   correctSalesSkus(updates: Array<{ id: string; sku: string }>): Promise<number>;
   getSalesWithInstallments(filters?: {
     canal?: string;
@@ -687,57 +679,6 @@ export class DatabaseStorage implements IStorage {
       .limit(1);
 
     return matchedProduct[0]?.sku || null;
-  }
-
-  async getSalesWithMissingSku(): Promise<Array<{
-    id: string;
-    orden: string;
-    product: string | null;
-    sku: string | null;
-    suggestedSku: string | null;
-  }>> {
-    // Get all sales where SKU is NULL
-    const salesWithNullSku = await db
-      .select({
-        id: sales.id,
-        orden: sales.orden,
-        product: sales.product,
-        sku: sales.sku,
-      })
-      .from(sales)
-      .where(isNull(sales.sku))
-      .orderBy(desc(sales.fecha));
-
-    // For each sale, get the suggested SKU
-    const salesWithSuggestions = await Promise.all(
-      salesWithNullSku.map(async (sale) => {
-        const suggestedSku = await this.enrichSkuFromProduct(sale.product);
-        return {
-          ...sale,
-          suggestedSku,
-        };
-      })
-    );
-
-    return salesWithSuggestions;
-  }
-
-  async enrichSalesSkus(updates: Array<{ id: string; sku: string }>): Promise<number> {
-    if (updates.length === 0) return 0;
-
-    let updatedCount = 0;
-
-    // Update each sale individually
-    for (const update of updates) {
-      const result = await db
-        .update(sales)
-        .set({ sku: update.sku })
-        .where(eq(sales.id, update.id));
-      
-      updatedCount++;
-    }
-
-    return updatedCount;
   }
 
   async correctSalesSkus(updates: Array<{ id: string; sku: string }>): Promise<number> {
