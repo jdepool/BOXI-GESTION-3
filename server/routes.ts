@@ -30,8 +30,9 @@ function normalizeEstadoEntrega(status: string | null | undefined): string | nul
   
   const normalized = status.toLowerCase().trim();
   
-  // Map lowercase to correct casing
+  // Map lowercase to correct casing (Spanish and English variants)
   const statusMap: Record<string, string> = {
+    // Spanish variants
     'pendiente': 'Pendiente',
     'perdida': 'Perdida',
     'en proceso': 'En proceso',
@@ -41,7 +42,21 @@ function normalizeEstadoEntrega(status: string | null | undefined): string | nul
     'a devolver': 'A devolver',
     'devuelto': 'Devuelto',
     'a cancelar': 'A cancelar',
-    'cancelada': 'Cancelada'
+    'cancelada': 'Cancelada',
+    // English variants from Cashea
+    'pending': 'Pendiente',
+    'lost': 'Perdida',
+    'in progress': 'En proceso',
+    'to deliver': 'A despachar',
+    'to dispatch': 'A despachar',
+    'in transit': 'En tránsito',
+    'delivered': 'Entregado',
+    'to return': 'A devolver',
+    'returned': 'Devuelto',
+    'to cancel': 'A cancelar',
+    'canceled': 'Cancelada',
+    'cancelled': 'Cancelada',
+    'done': 'Entregado'
   };
   
   return statusMap[normalized] || status; // Return original if not found in map
