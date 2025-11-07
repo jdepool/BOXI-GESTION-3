@@ -5664,6 +5664,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             precioReservaUsd: String(row["Precio Reserva USD"] || "0"),
             precioCasheaUsd: String(row["Precio Cashea USD"] || "0"),
             costoUnitarioUsd: String(row["Costo Unitario USD"] || "0"),
+            iva: row["IVA"] != null ? String(row["IVA"]) : undefined,
             fechaVigenciaDesde
           };
 

@@ -27,6 +27,7 @@ export function PreciosCostosTab() {
     precioReservaUsd: "",
     precioCasheaUsd: "",
     costoUnitarioUsd: "",
+    iva: "",
     fechaVigenciaDesde: new Date(),
   });
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -157,6 +158,7 @@ export function PreciosCostosTab() {
       precioReservaUsd: formData.precioReservaUsd,
       precioCasheaUsd: formData.precioCasheaUsd,
       costoUnitarioUsd: formData.costoUnitarioUsd,
+      iva: formData.iva || undefined,
       fechaVigenciaDesde: formData.fechaVigenciaDesde,
     };
 
@@ -176,6 +178,7 @@ export function PreciosCostosTab() {
       precioReservaUsd: precio.precioReservaUsd,
       precioCasheaUsd: precio.precioCasheaUsd,
       costoUnitarioUsd: precio.costoUnitarioUsd,
+      iva: precio.iva || "",
       fechaVigenciaDesde: new Date(precio.fechaVigenciaDesde),
     });
     setIsDialogOpen(true);
@@ -189,6 +192,7 @@ export function PreciosCostosTab() {
       precioReservaUsd: "",
       precioCasheaUsd: "",
       costoUnitarioUsd: "",
+      iva: "",
       fechaVigenciaDesde: new Date(),
     });
   };
@@ -279,7 +283,7 @@ export function PreciosCostosTab() {
                 <DialogHeader>
                   <DialogTitle>Cargar Precios/Costos desde Excel</DialogTitle>
                   <DialogDescription>
-                    Sube un archivo Excel con las columnas: País, SKU, Precio Inmediata USD, Precio Reserva USD, Precio Cashea USD, Costo Unitario USD, Fecha Vigencia Desde
+                    Sube un archivo Excel con las columnas: País, SKU, Precio Inmediata USD, Precio Reserva USD, Precio Cashea USD, Costo Unitario USD, IVA (opcional), Fecha Vigencia Desde
                   </DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4">
@@ -432,6 +436,21 @@ export function PreciosCostosTab() {
                     data-testid="input-costo-unitario"
                   />
                 </div>
+
+                <div>
+                  <Label htmlFor="iva">IVA (%)</Label>
+                  <Input
+                    id="iva"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    max="100"
+                    value={formData.iva}
+                    onChange={(e) => setFormData({ ...formData, iva: e.target.value })}
+                    placeholder="0.00"
+                    data-testid="input-iva"
+                  />
+                </div>
               </div>
 
               <div>
@@ -499,6 +518,7 @@ export function PreciosCostosTab() {
               <TableHead>Precio Reserva USD</TableHead>
               <TableHead>Precio Cashea USD</TableHead>
               <TableHead>Costo Unitario USD</TableHead>
+              <TableHead>IVA (%)</TableHead>
               <TableHead>Vigencia Desde</TableHead>
               <TableHead className="w-[100px]">Acciones</TableHead>
             </TableRow>
@@ -506,13 +526,13 @@ export function PreciosCostosTab() {
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={8} className="text-center py-4">
+                <TableCell colSpan={9} className="text-center py-4">
                   Cargando precios...
                 </TableCell>
               </TableRow>
             ) : precios.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className="text-center py-4 text-muted-foreground">
+                <TableCell colSpan={9} className="text-center py-4 text-muted-foreground">
                   No hay precios/costos registrados
                 </TableCell>
               </TableRow>
@@ -528,6 +548,7 @@ export function PreciosCostosTab() {
                   <TableCell>${Number(precio.precioReservaUsd).toFixed(2)}</TableCell>
                   <TableCell>${Number(precio.precioCasheaUsd).toFixed(2)}</TableCell>
                   <TableCell>${Number(precio.costoUnitarioUsd).toFixed(2)}</TableCell>
+                  <TableCell>{precio.iva ? `${Number(precio.iva).toFixed(2)}%` : "-"}</TableCell>
                   <TableCell>{format(new Date(precio.fechaVigenciaDesde), "dd/MM/yyyy")}</TableCell>
                   <TableCell>
                     <TooltipProvider>
