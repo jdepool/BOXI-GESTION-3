@@ -114,6 +114,7 @@ export interface IStorage {
     suggestedSku: string | null;
   }>>;
   enrichSalesSkus(updates: Array<{ id: string; sku: string }>): Promise<number>;
+  correctSalesSkus(updates: Array<{ id: string; sku: string }>): Promise<number>;
   getSalesWithInstallments(filters?: {
     canal?: string;
     estadoEntrega?: string;
@@ -731,6 +732,27 @@ export class DatabaseStorage implements IStorage {
       const result = await db
         .update(sales)
         .set({ sku: update.sku })
+        .where(eq(sales.id, update.id));
+      
+      updatedCount++;
+    }
+
+    return updatedCount;
+  }
+
+  async correctSalesSkus(updates: Array<{ id: string; sku: string }>): Promise<number> {
+    if (updates.length === 0) return 0;
+
+    let updatedCount = 0;
+
+    // Update each sale individually with the corrected SKU
+    for (const update of updates) {
+      await db
+        .update(sales)
+        .set({ 
+          sku: update.sku,
+          updatedAt: new Date()
+        })
         .where(eq(sales.id, update.id));
       
       updatedCount++;

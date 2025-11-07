@@ -8060,6 +8060,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Correct SKUs for sales by order number (update database)
+  app.patch("/api/admin/sales/correct-skus", async (req, res) => {
+    try {
+      const updateSchema = z.object({
+        updates: z.array(z.object({
+          id: z.string(),
+          sku: z.string().min(1, "SKU cannot be empty")
+        }))
+      });
+
+      const { updates } = updateSchema.parse(req.body);
+
+      if (updates.length === 0) {
+        return res.status(400).json({ error: "No updates provided" });
+      }
+
+      const updatedCount = await storage.correctSalesSkus(updates);
+
+      res.json({ 
+        success: true, 
+        updatedCount,
+        message: `Successfully corrected ${updatedCount} SKU(s)` 
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Invalid request data", details: error.errors });
+      }
+      console.error("Error correcting SKUs:", error);
+      res.status(500).json({ error: "Failed to correct SKUs" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
