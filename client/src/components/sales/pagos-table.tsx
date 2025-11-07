@@ -132,6 +132,8 @@ export default function PagosTable({
   const [fleteAPagarValue, setFleteAPagarValue] = useState<string>("");
   const [fleteGratisValue, setFleteGratisValue] = useState<boolean>(false);
   const [currentFleteOrder, setCurrentFleteOrder] = useState<string | null>(null);
+  const [fleteIndividualValues, setFleteIndividualValues] = useState<Record<string, string>>({});
+  const [orderProducts, setOrderProducts] = useState<any[]>([]);
   const [editingNotesId, setEditingNotesId] = useState<string | null>(null);
   const [notesValue, setNotesValue] = useState<string>("");
   
@@ -287,12 +289,12 @@ export default function PagosTable({
     },
   });
 
-  // Mutation to update flete data (fleteAPagar and fleteGratis)
+  // Mutation to update flete data (individual fletes and fleteGratis)
   const updateFleteMutation = useMutation({
-    mutationFn: async ({ orden, fleteAPagar, fleteGratis }: { orden: string; fleteAPagar: string; fleteGratis: boolean }) => {
+    mutationFn: async ({ orden, fleteGratis, fletesIndividuales }: { orden: string; fleteGratis: boolean; fletesIndividuales: Array<{saleId: string; fleteIndividual: number}> }) => {
       return apiRequest("PATCH", `/api/sales/${encodeURIComponent(orden)}/flete`, { 
-        fleteAPagar, 
-        fleteGratis 
+        fleteGratis,
+        fletesIndividuales
       });
     },
     onSuccess: () => {
@@ -313,19 +315,32 @@ export default function PagosTable({
   const handleFletePopoverOpen = (order: Order) => {
     setFletePopoverOpen(order.orden);
     setCurrentFleteOrder(order.orden);
-    // Use nullish coalescing to handle zero values correctly
-    setFleteAPagarValue(order.fleteAPagar != null ? order.fleteAPagar.toString() : "");
-    // Fetch the sale to get fleteGratis value
-    fetch(`/api/sales?ordenExacto=${encodeURIComponent(order.orden)}&limit=1`)
+    
+    // Fetch all products in this order
+    fetch(`/api/sales?ordenExacto=${encodeURIComponent(order.orden)}&limit=100`)
       .then(res => res.json())
       .then(data => {
         if (data.data && data.data.length > 0) {
-          const fleteGratis = data.data[0].fleteGratis || false;
+          const products = data.data;
+          setOrderProducts(products);
+          
+          const fleteGratis = products[0].fleteGratis || false;
           setFleteGratisValue(fleteGratis);
-          // If fleteGratis is true, ensure the field shows "0"
-          if (fleteGratis) {
-            setFleteAPagarValue("0");
-          }
+          
+          // Initialize individual flete values for each product
+          const initialValues: Record<string, string> = {};
+          products.forEach((product: any) => {
+            const fleteValue = product.fleteIndividualUsd != null ? product.fleteIndividualUsd.toString() : "";
+            initialValues[product.id] = fleteGratis ? "0" : fleteValue;
+          });
+          setFleteIndividualValues(initialValues);
+          
+          // Calculate and set total
+          const total = Object.values(initialValues).reduce((sum, val) => {
+            const num = parseFloat(val) || 0;
+            return sum + num;
+          }, 0);
+          setFleteAPagarValue(total.toString());
         }
       });
   };
@@ -333,32 +348,62 @@ export default function PagosTable({
   const handleFleteCheckboxChange = (checked: boolean) => {
     setFleteGratisValue(checked);
     if (checked) {
+      // Set all individual fletes to 0 when flete gratis is checked
+      const updatedValues: Record<string, string> = {};
+      Object.keys(fleteIndividualValues).forEach(key => {
+        updatedValues[key] = "0";
+      });
+      setFleteIndividualValues(updatedValues);
       setFleteAPagarValue("0");
     }
   };
 
-  const handleFleteAPagarChange = (value: string) => {
+  const handleFleteIndividualChange = (productId: string, value: string) => {
     // Allow empty, numbers, and decimal point
     if (value === '' || /^\d*\.?\d*$/.test(value)) {
-      setFleteAPagarValue(value);
+      const updatedValues = {
+        ...fleteIndividualValues,
+        [productId]: value
+      };
+      setFleteIndividualValues(updatedValues);
+      
+      // Recalculate total
+      const total = Object.values(updatedValues).reduce((sum, val) => {
+        const num = parseFloat(val) || 0;
+        return sum + num;
+      }, 0);
+      setFleteAPagarValue(total.toFixed(2));
     }
   };
 
   const handleFleteSave = (orden: string) => {
-    // Validation: fleteAPagar is required when fleteGratis is false
-    if (!fleteGratisValue && fleteAPagarValue.trim() === "") {
-      toast({
-        title: "Campo obligatorio",
-        description: "Debes ingresar el Flete A Pagar o marcar Flete Gratis",
-        variant: "destructive",
+    // Validation: at least one product must have a flete value when fleteGratis is false
+    if (!fleteGratisValue) {
+      const hasAnyValue = Object.values(fleteIndividualValues).some(val => {
+        const num = parseFloat(val) || 0;
+        return num > 0;
       });
-      return;
+      
+      if (!hasAnyValue) {
+        toast({
+          title: "Campo obligatorio",
+          description: "Debes ingresar al menos un Flete para un producto o marcar Flete Gratis",
+          variant: "destructive",
+        });
+        return;
+      }
     }
+
+    // Prepare array of individual fletes
+    const fletesIndividuales = orderProducts.map(product => ({
+      saleId: product.id,
+      fleteIndividual: parseFloat(fleteIndividualValues[product.id] || "0")
+    }));
 
     updateFleteMutation.mutate({
       orden,
-      fleteAPagar: fleteAPagarValue,
-      fleteGratis: fleteGratisValue
+      fleteGratis: fleteGratisValue,
+      fletesIndividuales
     });
     setFletePopoverOpen(null);
   };
@@ -658,27 +703,44 @@ export default function PagosTable({
                             Flete
                           </Button>
                         </PopoverTrigger>
-                        <PopoverContent className="w-80" align="start">
+                        <PopoverContent className="w-96" align="start">
                           <div className="space-y-4">
-                            <h4 className="font-semibold text-sm">Flete A Pagar</h4>
+                            <h4 className="font-semibold text-sm">Flete a Pagar</h4>
                             
-                            <div className="space-y-2">
-                              <Label htmlFor={`flete-a-pagar-${order.orden}`} className="text-sm">
-                                Flete A Pagar (USD) {!fleteGratisValue && <span className="text-red-500">*</span>}
-                              </Label>
-                              <Input
-                                id={`flete-a-pagar-${order.orden}`}
-                                type="text"
-                                inputMode="decimal"
-                                placeholder="0.00"
-                                value={fleteAPagarValue}
-                                onChange={(e) => handleFleteAPagarChange(e.target.value)}
-                                disabled={fleteGratisValue}
-                                className={cn("text-sm", fleteGratisValue && "opacity-50 cursor-not-allowed")}
-                                data-testid={`input-flete-a-pagar-inline-${order.orden}`}
-                              />
+                            {/* List of products with individual flete inputs */}
+                            <div className="space-y-3 max-h-60 overflow-y-auto">
+                              {orderProducts.map((product) => (
+                                <div key={product.id} className="flex items-center gap-2">
+                                  <div className="flex-1 text-xs text-muted-foreground">
+                                    {product.product} × {product.cantidad}
+                                  </div>
+                                  <div className="w-24">
+                                    <Input
+                                      type="text"
+                                      inputMode="decimal"
+                                      placeholder="0.00"
+                                      value={fleteIndividualValues[product.id] || ""}
+                                      onChange={(e) => handleFleteIndividualChange(product.id, e.target.value)}
+                                      disabled={fleteGratisValue}
+                                      className={cn("text-xs h-8", fleteGratisValue && "opacity-50 cursor-not-allowed")}
+                                      data-testid={`input-flete-individual-${product.id}`}
+                                    />
+                                  </div>
+                                </div>
+                              ))}
                             </div>
 
+                            {/* Total (read-only) */}
+                            <div className="pt-2 border-t">
+                              <div className="flex items-center justify-between">
+                                <Label className="text-sm font-semibold">Total Flete a Pagar:</Label>
+                                <div className="text-sm font-bold">
+                                  ${parseFloat(fleteAPagarValue || "0").toFixed(2)}
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Flete Gratis checkbox */}
                             <div className="flex items-center space-x-2">
                               <Checkbox
                                 id={`flete-gratis-${order.orden}`}
@@ -691,6 +753,7 @@ export default function PagosTable({
                               </Label>
                             </div>
 
+                            {/* Action buttons */}
                             <div className="flex justify-end gap-2 pt-2">
                               <Button 
                                 variant="outline" 
