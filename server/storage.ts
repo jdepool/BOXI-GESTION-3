@@ -2370,6 +2370,7 @@ export class DatabaseStorage implements IStorage {
           customerName: newSale.nombre,
           orderNumber: newSale.orden,
           fechaCompromisoEntrega: newSale.fechaEntrega ? newSale.fechaEntrega.toISOString() : null,
+          medidaEspecial: newSale.medidaEspecial,
           alertType: alertType
         }, testEmail);
       } catch (error) {

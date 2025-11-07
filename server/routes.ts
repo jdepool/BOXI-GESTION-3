@@ -7999,6 +7999,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         customerName: 'María García',
         orderNumber: '#TEST-12345',
         fechaCompromisoEntrega: '2025-11-15',
+        medidaEspecial: type === 'medida_especial' ? '190cm x 200cm x 25cm' : null,
         alertType: type as 'medida_especial' | 'base_cama' | 'bed'
       };
 

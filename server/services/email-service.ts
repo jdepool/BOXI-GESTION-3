@@ -71,6 +71,7 @@ export interface InternalAlertData {
   customerName: string;
   orderNumber: string | null;
   fechaCompromisoEntrega: string | null;
+  medidaEspecial?: string | null;
   alertType: 'medida_especial' | 'base_cama' | 'bed';
 }
 
@@ -470,6 +471,13 @@ export function generateInternalAlertHTML(data: InternalAlertData): string {
                 <span class="detail-label">SKU:</span>
                 <span>${data.sku || 'N/A'}</span>
             </div>
+            
+            ${data.alertType === 'medida_especial' && data.medidaEspecial ? `
+            <div class="detail-row">
+                <span class="detail-label">Medida Especial:</span>
+                <span style="font-weight: bold; color: #e74c3c;">${data.medidaEspecial}</span>
+            </div>
+            ` : ''}
             
             <div class="detail-row">
                 <span class="detail-label">Cantidad:</span>
