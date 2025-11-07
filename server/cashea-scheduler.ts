@@ -86,10 +86,6 @@ export async function restartCasheaScheduler() {
 }
 
 async function runAutomaticDownload(frequency: string) {
-  // Get the active configuration to determine which portal to use
-  const config = await getAutomationConfig();
-  const portal = (config.portal || "Cashea") as "Cashea" | "Cashea MP";
-  
   // Always look back 24 hours regardless of frequency
   // This ensures we catch all orders while the duplicate filter prevents re-downloading
   const endDate = new Date();
@@ -99,48 +95,53 @@ async function runAutomaticDownload(frequency: string) {
   const startDateStr = startDate.toISOString().split('T')[0];
   const endDateStr = endDate.toISOString().split('T')[0];
   
-  console.log(`📥 Auto-downloading ${portal} data (24hr lookback): ${startDateStr} to ${endDateStr}`);
+  // Download from BOTH portals
+  const portals: Array<"Cashea" | "Cashea MP"> = ["Cashea", "Cashea MP"];
   
-  try {
-    const result = await performCasheaDownload(startDateStr, endDateStr, storage, portal);
+  for (const portal of portals) {
+    console.log(`📥 Auto-downloading ${portal} data (24hr lookback): ${startDateStr} to ${endDateStr}`);
     
-    if (!result.success) {
-      // Handle validation errors as failures
+    try {
+      const result = await performCasheaDownload(startDateStr, endDateStr, storage, portal);
+      
+      if (!result.success) {
+        // Handle validation errors as failures
+        await db.insert(casheaAutomaticDownloads).values({
+          portal: portal,
+          startDate: startDate,
+          endDate: endDate,
+          recordsCount: 0,
+          status: 'error',
+          errorMessage: result.message
+        });
+        
+        console.error(`❌ ${portal} automatic download failed: ${result.message}`);
+        continue; // Continue with next portal even if this one fails
+      }
+      
+      // Record successful download
+      await db.insert(casheaAutomaticDownloads).values({
+        portal: portal,
+        startDate: startDate,
+        endDate: endDate,
+        recordsCount: result.recordsProcessed,
+        status: 'success'
+      });
+      
+      console.log(`✅ ${portal} automatic download completed: ${result.recordsProcessed} new sales`);
+    } catch (error) {
+      console.error(`❌ ${portal} automatic download failed:`, error);
+      
+      // Record failed download
       await db.insert(casheaAutomaticDownloads).values({
         portal: portal,
         startDate: startDate,
         endDate: endDate,
         recordsCount: 0,
         status: 'error',
-        errorMessage: result.message
+        errorMessage: error instanceof Error ? error.message : 'Unknown error'
       });
-      
-      console.error(`❌ Automatic download failed: ${result.message}`);
-      return;
     }
-    
-    // Record successful download
-    await db.insert(casheaAutomaticDownloads).values({
-      portal: portal,
-      startDate: startDate,
-      endDate: endDate,
-      recordsCount: result.recordsProcessed,
-      status: 'success'
-    });
-    
-    console.log(`✅ Automatic download completed: ${result.recordsProcessed} new sales`);
-  } catch (error) {
-    console.error('❌ Automatic download failed:', error);
-    
-    // Record failed download
-    await db.insert(casheaAutomaticDownloads).values({
-      portal: portal,
-      startDate: startDate,
-      endDate: endDate,
-      recordsCount: 0,
-      status: 'error',
-      errorMessage: error instanceof Error ? error.message : 'Unknown error'
-    });
   }
 }
 
