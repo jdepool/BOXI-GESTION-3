@@ -599,7 +599,10 @@ export default function UploadZone({ recentUploads, showOnlyCashea = false }: Up
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <Power className="h-5 w-5 text-primary" />
-            <h4 className="font-semibold text-foreground">Descarga Automática</h4>
+            <div>
+              <h4 className="font-semibold text-foreground">Descarga Automática</h4>
+              <p className="text-xs text-muted-foreground mt-0.5">Descarga de ambos portales (Cashea y Cashea MP)</p>
+            </div>
           </div>
           <div className="flex items-center gap-2">
             {!isLoadingConfig && automationConfig?.enabled && (
@@ -628,27 +631,6 @@ export default function UploadZone({ recentUploads, showOnlyCashea = false }: Up
         )}
 
         <div className="space-y-3">
-          <div>
-            <Label className="text-sm">Portal</Label>
-            {isLoadingConfig ? (
-              <div className="h-10 bg-muted animate-pulse rounded mt-1" />
-            ) : (
-              <Select
-                value={automationConfig?.portal || 'Cashea'}
-                onValueChange={handlePortalChange}
-                disabled={isLoadingConfig || !!configError || updateAutomationMutation.isPending}
-              >
-                <SelectTrigger className="mt-1" data-testid="portal-select">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Cashea">Cashea (Boxi)</SelectItem>
-                  <SelectItem value="Cashea MP">Cashea MP (Mompox)</SelectItem>
-                </SelectContent>
-              </Select>
-            )}
-          </div>
-
           <div>
             <Label className="text-sm">Frecuencia de Descarga</Label>
             {isLoadingConfig ? (
