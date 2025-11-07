@@ -17,6 +17,7 @@ import { TransportistasTab } from "../components/admin/transportistas-tab";
 import { SeguimientoConfigTab } from "../components/admin/seguimiento-config-tab";
 import { PreciosCostosTab } from "../components/admin/precios-costos-tab";
 import { EstadosCiudadesTab } from "../components/admin/estados-ciudades-tab";
+import { EnriquecerSkusTab } from "../components/admin/enriquecer-skus-tab";
 
 export default function Administracion() {
   const [activeTab, setActiveTab] = useState("bancos");
@@ -81,6 +82,9 @@ export default function Administracion() {
           <TabsTrigger value="estados-ciudades" className="text-xs">
             ESTADOS/CIUDADES
           </TabsTrigger>
+          <TabsTrigger value="enriquecer-skus" className="text-xs">
+            ENRIQUECER SKUs
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="bancos" className="space-y-4">
@@ -137,6 +141,10 @@ export default function Administracion() {
 
         <TabsContent value="estados-ciudades" className="space-y-4">
           <EstadosCiudadesTab />
+        </TabsContent>
+
+        <TabsContent value="enriquecer-skus" className="space-y-4">
+          <EnriquecerSkusTab />
         </TabsContent>
       </Tabs>
     </div>

@@ -7965,6 +7965,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get sales with missing SKUs and suggested SKUs
+  app.get("/api/admin/sales/missing-skus", async (req, res) => {
+    try {
+      const salesWithMissingSku = await storage.getSalesWithMissingSku();
+      res.json(salesWithMissingSku);
+    } catch (error) {
+      console.error("Error fetching sales with missing SKUs:", error);
+      res.status(500).json({ error: "Failed to fetch sales with missing SKUs" });
+    }
+  });
+
+  // Enrich SKUs for sales (update database)
+  app.patch("/api/admin/sales/enrich-skus", async (req, res) => {
+    try {
+      const updateSchema = z.object({
+        updates: z.array(z.object({
+          id: z.string(),
+          sku: z.string().min(1, "SKU cannot be empty")
+        }))
+      });
+
+      const { updates } = updateSchema.parse(req.body);
+
+      if (updates.length === 0) {
+        return res.status(400).json({ error: "No updates provided" });
+      }
+
+      const updatedCount = await storage.enrichSalesSkus(updates);
+
+      res.json({ 
+        success: true, 
+        updatedCount,
+        message: `Successfully updated ${updatedCount} SKU(s)` 
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Invalid request data", details: error.errors });
+      }
+      console.error("Error enriching SKUs:", error);
+      res.status(500).json({ error: "Failed to enrich SKUs" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
