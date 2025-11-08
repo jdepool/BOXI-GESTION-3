@@ -2557,38 +2557,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
 
           try {
-            // First, try to get SKU if we don't have one
+            // First, map product name to SKU via productos table
             let sku = sale.sku;
             if (!sku) {
               const producto = await storage.getProductoByNombre(sale.product);
               if (producto && producto.sku) {
                 sku = producto.sku;
+                console.log(`📋 Excel upload: Mapped product "${sale.product}" to SKU "${sku}"`);
+              } else {
+                console.warn(`⚠️ Excel upload: Product "${sale.product}" not found in productos table, using Excel Total (USD)`);
               }
             }
 
             // If we have a SKU, look up pricing
             if (sku) {
               const precio = await storage.getPrecioBySkuLatest(sku);
+              console.log(`🔍 Excel upload: Pricing lookup for SKU "${sku}":`, precio ? {
+                hasPrecio: true,
+                precioCasheaUsd: precio.precioCasheaUsd,
+                type: typeof precio.precioCasheaUsd,
+                value: String(precio.precioCasheaUsd)
+              } : { hasPrecio: false });
+              
               if (precio && precio.precioCasheaUsd !== null && precio.precioCasheaUsd !== undefined) {
                 const precioCashea = parseFloat(String(precio.precioCasheaUsd));
                 if (!isNaN(precioCashea) && precioCashea > 0) {
                   const cantidad = sale.cantidad || 1;
                   const calculatedTotal = precioCashea * cantidad;
-                  console.log(`✅ Cashea Excel pricing: SKU "${sku}" x ${cantidad} = $${calculatedTotal.toFixed(2)} (from precios table)`);
+                  console.log(`✅ Cashea Excel pricing lookup: SKU "${sku}" x ${cantidad} = $${calculatedTotal.toFixed(2)} (precioCasheaUsd from precios table)`);
                   return {
                     ...sale,
                     totalUsd: calculatedTotal.toFixed(2)
                   };
+                } else {
+                  console.warn(`⚠️ Invalid precioCasheaUsd value for SKU "${sku}" (${precio.precioCasheaUsd}), using Excel Total (USD)`);
                 }
+              } else {
+                console.warn(`⚠️ No precioCasheaUsd found for SKU "${sku}", using Excel Total (USD)`);
               }
             }
 
-            // Fallback: keep totalOrderUsd value (from "Total (USD)" column)
-            console.log(`⚠️ No pricing found for product "${sale.product}", using Excel Total (USD): $${sale.totalUsd}`);
-            return sale;
+            // Fallback: use totalOrderUsd value (from "Total (USD)" column)
+            const fallbackValue = sale.totalOrderUsd || sale.totalUsd || '0';
+            console.log(`⚠️ No pricing found for product "${sale.product}", using Excel Total (USD): $${fallbackValue}`);
+            return {
+              ...sale,
+              totalUsd: fallbackValue
+            };
           } catch (error) {
             console.error(`Error looking up pricing for product "${sale.product}":`, error);
-            return sale; // Keep existing totalUsd on error
+            // On error, fallback to totalOrderUsd (from "Total (USD)" column)
+            const fallbackValue = sale.totalOrderUsd || sale.totalUsd || '0';
+            return {
+              ...sale,
+              totalUsd: fallbackValue
+            };
           }
         })
       );
