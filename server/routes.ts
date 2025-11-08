@@ -301,17 +301,19 @@ function parseFile(buffer: Buffer, canal: string, filename: string) {
         };
       } else {
         // Expected columns from Cashea/other files: Nombre, Cedula, Telefono, Email, Total usd, Sucursal, Tienda, Fecha, Canal, Estado, Estado pago inicial, Pago inicial usd, Orden, Factura, Referencia, Monto en bs, Estado de entrega, Product, Cantidad
-        const totalUsdValue = String(row['Total usd'] || '0');
-        const isCashea = canal.toLowerCase() === 'cashea';
-        const totalOrderUsdValue = isCashea ? totalUsdValue : null;
+        // For Cashea files, "Total (USD)" from export becomes totalOrderUsd
+        // totalUsd will be calculated via pricing lookup (matching automatic download logic)
+        const isCashea = canal.toLowerCase() === 'cashea' || canal.toLowerCase() === 'cashea mp';
+        const totalOrderUsdValue = row['Total (USD)'] || row['Total Order USD'] || row['Total usd'] || null;
+        const totalUsdValue = totalOrderUsdValue ? String(totalOrderUsdValue) : '0'; // Temporary, will be recalculated via pricing
         
         return {
           nombre: String(row.Nombre || ''),
           cedula: row.Cedula ? String(row.Cedula) : null,
           telefono: row.Telefono ? String(row.Telefono) : null,
           email: row.Email ? String(row.Email) : null,
-          totalUsd: totalUsdValue,
-          totalOrderUsd: totalOrderUsdValue,
+          totalUsd: totalUsdValue, // Will be recalculated for Cashea via pricing lookup
+          totalOrderUsd: totalOrderUsdValue ? String(totalOrderUsdValue) : null,
           fecha,
           canal: canal, // Use the provided canal parameter
           estadoPagoInicial: row['Estado pago inicial'] ? String(row['Estado pago inicial']) : null,
@@ -2541,9 +2543,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
         })
       );
 
-      // Save to database only new sales with enriched SKUs
-      if (salesWithEnrichedSkus.length > 0) {
-        await storage.createSales(salesWithEnrichedSkus);
+      // For Cashea orders, calculate totalUsd using pricing lookup (matching automatic download logic)
+      const salesWithPricing = await Promise.all(
+        salesWithEnrichedSkus.map(async (sale) => {
+          // Only apply pricing lookup for Cashea and Cashea MP
+          if (canalLower !== 'cashea' && canalLower !== 'cashea mp') {
+            return sale;
+          }
+
+          // If no SKU or no product, keep existing totalUsd
+          if (!sale.sku && !sale.product) {
+            return sale;
+          }
+
+          try {
+            // First, try to get SKU if we don't have one
+            let sku = sale.sku;
+            if (!sku) {
+              const producto = await storage.getProductoByNombre(sale.product);
+              if (producto && producto.sku) {
+                sku = producto.sku;
+              }
+            }
+
+            // If we have a SKU, look up pricing
+            if (sku) {
+              const precio = await storage.getPrecioBySkuLatest(sku);
+              if (precio && precio.precioCasheaUsd !== null && precio.precioCasheaUsd !== undefined) {
+                const precioCashea = parseFloat(String(precio.precioCasheaUsd));
+                if (!isNaN(precioCashea) && precioCashea > 0) {
+                  const cantidad = sale.cantidad || 1;
+                  const calculatedTotal = precioCashea * cantidad;
+                  console.log(`✅ Cashea Excel pricing: SKU "${sku}" x ${cantidad} = $${calculatedTotal.toFixed(2)} (from precios table)`);
+                  return {
+                    ...sale,
+                    totalUsd: calculatedTotal.toFixed(2)
+                  };
+                }
+              }
+            }
+
+            // Fallback: keep totalOrderUsd value (from "Total (USD)" column)
+            console.log(`⚠️ No pricing found for product "${sale.product}", using Excel Total (USD): $${sale.totalUsd}`);
+            return sale;
+          } catch (error) {
+            console.error(`Error looking up pricing for product "${sale.product}":`, error);
+            return sale; // Keep existing totalUsd on error
+          }
+        })
+      );
+
+      // Save to database only new sales with enriched SKUs and pricing
+      if (salesWithPricing.length > 0) {
+        await storage.createSales(salesWithPricing);
       }
 
       // Log successful upload
@@ -2556,13 +2608,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       // Send webhook notification for Cashea uploads
-      if (canalLower === 'cashea' && salesWithEnrichedSkus.length > 0) {
+      if (canalLower === 'cashea' && salesWithPricing.length > 0) {
         try {
           await sendWebhookToZapier({
-            recordsProcessed: salesWithEnrichedSkus.length,
+            recordsProcessed: salesWithPricing.length,
             duplicatesIgnored: duplicatesCount,
             filename: req.file.originalname,
-            salesData: salesWithEnrichedSkus
+            salesData: salesWithPricing
           }, canal);
         } catch (webhookError) {
           console.error('Webhook notification failed, but upload was successful:', webhookError);
@@ -2572,11 +2624,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       res.json({
         success: true,
-        recordsProcessed: salesWithEnrichedSkus.length,
+        recordsProcessed: salesWithPricing.length,
         duplicatesIgnored: duplicatesCount,
         message: duplicatesCount > 0 
-          ? `Successfully uploaded ${salesWithEnrichedSkus.length} sales records. ${duplicatesCount} duplicate order(s) were ignored.`
-          : `Successfully uploaded ${salesWithEnrichedSkus.length} sales records`
+          ? `Successfully uploaded ${salesWithPricing.length} sales records. ${duplicatesCount} duplicate order(s) were ignored.`
+          : `Successfully uploaded ${salesWithPricing.length} sales records`
       });
 
     } catch (error) {
