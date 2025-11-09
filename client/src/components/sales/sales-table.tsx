@@ -416,22 +416,18 @@ export default function SalesTable({
     try {
       const queryParams = new URLSearchParams();
       
-      // Use parentFilters (API-ready) instead of UI-mapped filters
-      if (parentFilters && typeof parentFilters === 'object') {
-        Object.entries(parentFilters).forEach(([key, value]) => {
+      // Merge parentFilters and extraExportParams, with extraExportParams taking precedence
+      const mergedFilters = { ...parentFilters, ...extraExportParams };
+      
+      // Build query string from merged filters
+      if (mergedFilters && typeof mergedFilters === 'object') {
+        Object.entries(mergedFilters).forEach(([key, value]) => {
           // Skip pagination and empty values
           if (value && typeof value === 'string' && key !== 'limit' && key !== 'offset') {
             queryParams.append(key, value);
           }
         });
       }
-      
-      // Add extra export parameters (for specific tab constraints)
-      Object.entries(extraExportParams).forEach(([key, value]) => {
-        if (value !== undefined && value !== null && value !== '') {
-          queryParams.append(key, value);
-        }
-      });
 
       const response = await fetch(`/api/sales/export?${queryParams}`);
       if (!response.ok) throw new Error('Export failed');
