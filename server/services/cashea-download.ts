@@ -2,6 +2,7 @@ import { z } from "zod";
 import { insertSaleSchema } from "@shared/schema";
 import type { IStorage } from "../storage";
 import fetch from "node-fetch";
+import { normalizeCanal } from "@shared/utils";
 
 export interface CasheaDownloadResult {
   success: boolean;
@@ -233,7 +234,7 @@ async function transformCasheaData(rawData: any[], storage: IStorage, portal: "C
       totalUsd: totalUsdValue,
       totalOrderUsd: totalOrderUsdValue,
       fecha,
-      canal: portal,
+      canal: normalizeCanal(portal) || portal,
       estadoEntrega: 'En proceso',
       orden: ordenes[i] ? String(ordenes[i]) : null,
       pagoInicialUsd: pagosIniciales[i] ? String(pagosIniciales[i]) : null,
