@@ -1509,6 +1509,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/sales/orders/export", async (req, res) => {
     try {
       const canal = req.query.canal && req.query.canal !== 'all' ? req.query.canal as string : undefined;
+      const canalMompox = req.query.canalMompox as string | undefined;
+      const canalBoxi = req.query.canalBoxi as string | undefined;
       const orden = req.query.orden as string | undefined;
       const startDate = req.query.startDate as string | undefined;
       const endDate = req.query.endDate as string | undefined;
@@ -1535,7 +1537,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const ordersResult = await storage.getOrdersForPayments({ 
         limit: 999999,
         offset: 0, 
-        canal, 
+        canal,
+        canalMompox,
+        canalBoxi,
         orden, 
         startDate, 
         endDate,

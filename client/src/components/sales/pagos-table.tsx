@@ -93,6 +93,7 @@ interface PagosTableProps {
     limit: number;
     offset: number;
   };
+  extraExportParams?: Record<string, string>;
   onFilterChange?: (filters: any) => void;
   onPageChange?: (newOffset: number) => void;
   onClearFilters?: () => void;
@@ -105,6 +106,7 @@ export default function PagosTable({
   offset,
   isLoading,
   filters,
+  extraExportParams = {},
   onFilterChange,
   onPageChange,
   onClearFilters,
@@ -191,6 +193,13 @@ export default function PagosTable({
       // When no specific estadoEntrega is selected, exclude Perdida by default
       queryParams.append('excludePerdida', 'true');
     }
+    
+    // Add extra export parameters (for Mompox/Boxi filtering)
+    Object.entries(extraExportParams).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        queryParams.append(key, value);
+      }
+    });
     
     window.location.href = `/api/sales/orders/export?${queryParams.toString()}`;
   };

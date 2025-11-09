@@ -132,6 +132,7 @@ export default function VentasMompox() {
       pagoInicialUsd: number;
       pagoFleteUsd: number;
       fleteAPagar: number;
+      fleteGratis: boolean;
       ordenPlusFlete: number;
       totalCuotas: number;
       totalPagado: number;
@@ -402,7 +403,7 @@ export default function VentasMompox() {
                   isLoading={isLoading}
                   filters={filters}
                   extraExportParams={{
-                    canal: 'ShopMom',
+                    canalMompox: 'true',
                     excludePendingManual: 'true',
                     excludePerdida: filters.estadoEntrega !== "Perdida" ? 'true' : undefined
                   }}
@@ -462,7 +463,7 @@ export default function VentasMompox() {
                   activeTab={activeTab}
                   filters={reservasFilters}
                   extraExportParams={{
-                    canal: 'ShopMom',
+                    canalMompox: 'true',
                     tipo: 'Reserva',
                     estadoEntrega: 'Pendiente',
                     excludePerdida: 'true'
@@ -485,6 +486,10 @@ export default function VentasMompox() {
                   offset={pagosFilters.offset}
                   isLoading={pagosLoading}
                   filters={pagosFilters}
+                  extraExportParams={{
+                    canalMompox: 'true',
+                    excludePerdida: 'true'
+                  }}
                   onFilterChange={handlePagosFilterChange}
                   onPageChange={handlePagosPageChange}
                   onClearFilters={handleClearPagosFilters}
