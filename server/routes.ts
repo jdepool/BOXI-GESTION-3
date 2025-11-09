@@ -1959,7 +1959,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           totalUsd: totalUsdValue,
           totalOrderUsd: row['Total'] ? String(row['Total']) : null, // Full order total from Shopify
           fecha,
-          canal: 'shopify',
+          canal: normalizeCanal('shopify') || 'Shopify',
           estadoPagoInicial: null,
           pagoInicialUsd: null,
           metodoPagoId: null,
@@ -2158,7 +2158,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           totalUsd: totalUsdValue,
           totalOrderUsd: row['Total'] ? String(row['Total']) : null, // Full order total from Shopify
           fecha,
-          canal: 'ShopMom', // *** KEY DIFFERENCE: Use ShopMom canal instead of shopify ***
+          canal: normalizeCanal('ShopMom') || 'ShopMom',
           estadoPagoInicial: null,
           pagoInicialUsd: null,
           metodoPagoId: null,
@@ -6524,7 +6524,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Order information - totalUsd will be set per product, totalOrderUsd is the overall order total
         totalOrderUsd: body.totalUsd ? body.totalUsd.toString() : null, // Store the total order amount from main form
         fecha: body.fecha ? new Date(body.fecha) : new Date(),
-        canal: body.canal,
+        canal: normalizeCanal(body.canal) || body.canal,
         estadoEntrega: body.estadoEntrega || "Pendiente", // Manual sales start as Pendiente
         orden: newOrderNumber,
         
