@@ -21,6 +21,7 @@ import crypto from "crypto";
 import fetch from "node-fetch";
 import { sendOrderConfirmationEmail, sendInternalAlert, type OrderEmailData, type InternalAlertData } from "./services/email-service";
 import { performCasheaDownload } from "./services/cashea-download";
+import { normalizeCanal } from "@shared/utils";
 
 // Helper function to normalize estadoEntrega casing
 // Prevents case-sensitivity bugs in status comparisons and database storage
@@ -2444,14 +2445,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Normalize canal to canonical casing for database storage
-      let canonicalCanal = canal;
-      if (canalLower === 'cashea') {
-        canonicalCanal = 'Cashea';
-      } else if (canalLower === 'cashea mp') {
-        canonicalCanal = 'Cashea MP';
-      } else if (canalLower === 'shopmom') {
-        canonicalCanal = 'ShopMom';
-      }
+      const canonicalCanal = normalizeCanal(canal) || canal;
 
       // Parse file (Excel or CSV)
       const salesData = parseFile(req.file.buffer, canonicalCanal, req.file.originalname);
