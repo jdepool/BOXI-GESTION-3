@@ -550,3 +550,238 @@ export async function sendInternalAlert(data: InternalAlertData, recipientEmail?
     throw error;
   }
 }
+
+export interface PaymentNotificationData {
+  montoUsd: number | null;
+  bancoReceptor: string;
+  referencia: string | null;
+  orden: string;
+  nombreCliente: string | null;
+  fechaPago: Date | null;
+  canal: string;
+  tipoPago: 'Inicial/Total' | 'Flete' | 'Cuota';
+}
+
+export function generatePaymentNotificationHTML(data: PaymentNotificationData): string {
+  const brandColor = '#1DB5A6';
+  
+  return `
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notificación de Pago</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background-color: ${brandColor};
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-radius: 8px 8px 0 0;
+        }
+        .content {
+            background-color: #f9f9f9;
+            padding: 30px;
+            border-radius: 0 0 8px 8px;
+        }
+        .payment-details {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 4px solid ${brandColor};
+        }
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 10px 0;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .detail-label {
+            font-weight: bold;
+            color: #555;
+        }
+        .highlight {
+            background-color: #fff3cd;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #ffc107;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+            color: #666;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1 style="color: white; margin: 10px 0;">💳 Notificación de Pago</h1>
+    </div>
+    
+    <div class="content">
+        <div class="highlight">
+            ⚠️ Se ha registrado un pago con ${data.bancoReceptor}
+        </div>
+        
+        <div class="payment-details">
+            <h3>📋 Detalles del Pago</h3>
+            
+            <div class="detail-row">
+                <span class="detail-label">Tipo de Pago:</span>
+                <span>${data.tipoPago}</span>
+            </div>
+            
+            <div class="detail-row">
+                <span class="detail-label">Monto USD:</span>
+                <span style="font-weight: bold; color: #28a745;">$${data.montoUsd ? data.montoUsd.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : 'N/A'}</span>
+            </div>
+            
+            <div class="detail-row">
+                <span class="detail-label">Banco Receptor:</span>
+                <span style="font-weight: bold;">${data.bancoReceptor}</span>
+            </div>
+            
+            <div class="detail-row">
+                <span class="detail-label">Referencia:</span>
+                <span>${data.referencia || 'N/A'}</span>
+            </div>
+            
+            <div class="detail-row">
+                <span class="detail-label">Número de Orden:</span>
+                <span>${data.orden}</span>
+            </div>
+            
+            <div class="detail-row">
+                <span class="detail-label">Nombre del Cliente:</span>
+                <span>${data.nombreCliente || 'N/A'}</span>
+            </div>
+            
+            <div class="detail-row">
+                <span class="detail-label">Fecha de Pago:</span>
+                <span>${data.fechaPago ? new Date(data.fechaPago).toLocaleDateString('es-ES', { 
+                    day: '2-digit', 
+                    month: 'long', 
+                    year: 'numeric' 
+                }) : 'N/A'}</span>
+            </div>
+        </div>
+    </div>
+    
+    <div class="footer">
+        <p>Este es un mensaje automático del sistema de gestión de ventas BoxiSleep.</p>
+    </div>
+</body>
+</html>
+  `.trim();
+}
+
+async function sendPaymentNotificationViaOutlook(data: PaymentNotificationData): Promise<boolean> {
+  const client = await getUncachableOutlookClient();
+  const emailContent = generatePaymentNotificationHTML(data);
+  
+  // TEST EMAIL - Use labradormariaeugenia@gmail.com for testing
+  const testEmail = 'labradormariaeugenia@gmail.com';
+  // const productionEmails = ['jose.gracia@boxisleep.com.co', 'santiago@boxisleep.com.co'];
+  
+  const message = {
+    subject: `Se ha registrado un pago con ${data.bancoReceptor}`,
+    body: {
+      contentType: 'HTML',
+      content: emailContent
+    },
+    toRecipients: [{
+      emailAddress: {
+        address: testEmail
+      }
+    }]
+  };
+
+  await client.api('/me/sendMail').post({
+    message: message
+  });
+
+  console.log(`📧 Payment notification sent via Outlook to ${testEmail} for order ${data.orden} (${data.bancoReceptor})`);
+  return true;
+}
+
+async function sendPaymentNotificationViaGodaddy(data: PaymentNotificationData): Promise<boolean> {
+  const godaddyEmail = process.env.GODADDY_EMAIL;
+  const godaddyPassword = process.env.GODADDY_PASSWORD;
+  
+  if (!godaddyEmail || !godaddyPassword) {
+    throw new Error('GoDaddy credentials not found in environment variables');
+  }
+
+  const transporter = nodemailer.createTransport({
+    host: 'smtpout.secureserver.net',
+    port: 465,
+    secure: true,
+    auth: {
+      user: godaddyEmail,
+      pass: godaddyPassword
+    }
+  });
+
+  const emailContent = generatePaymentNotificationHTML(data);
+  
+  // TEST EMAIL - Use labradormariaeugenia@gmail.com for testing
+  const testEmail = 'labradormariaeugenia@gmail.com';
+  // const productionEmails = ['jose.gracia@boxisleep.com.co', 'santiago@boxisleep.com.co'];
+
+  const mailOptions = {
+    from: `"Mompox Notificaciones" <${godaddyEmail}>`,
+    to: testEmail,
+    subject: `Se ha registrado un pago con ${data.bancoReceptor}`,
+    html: emailContent
+  };
+
+  await transporter.sendMail(mailOptions);
+  console.log(`📧 Payment notification sent via GoDaddy to ${testEmail} for order ${data.orden} (${data.bancoReceptor})`);
+  return true;
+}
+
+export async function sendPaymentNotification(data: PaymentNotificationData): Promise<boolean> {
+  try {
+    // Determine which email service to use based on canal
+    const mompoxChannels = ['Cashea MP', 'ShopMom', 'Manual MP', 'Tienda MP'];
+    const isMompoxChannel = mompoxChannels.includes(data.canal);
+    
+    if (isMompoxChannel) {
+      await sendPaymentNotificationViaGodaddy(data);
+    } else {
+      await sendPaymentNotificationViaOutlook(data);
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Error sending payment notification:', error);
+    // Don't throw - we don't want payment registration to fail if email fails
+    return false;
+  }
+}
+
+// Helper function to check if a bank name requires notification
+export function shouldNotifyPayment(bancoNombre: string | null): boolean {
+  if (!bancoNombre) return false;
+  
+  const bancoLower = bancoNombre.toLowerCase();
+  return bancoLower.includes('zelle') || 
+         bancoLower.includes('binance') || 
+         bancoLower.includes('paypal');
+}

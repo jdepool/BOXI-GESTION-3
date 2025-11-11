@@ -3,7 +3,7 @@ import express from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { db, withRetry } from "./db";
-import { sales, type Sale } from "@shared/schema";
+import { sales, bancos, type Sale } from "@shared/schema";
 import { eq } from "drizzle-orm";
 import { 
   insertSaleSchema, insertUploadHistorySchema, insertBancoSchema, insertTipoEgresoSchema, insertAutorizadorSchema,
@@ -19,7 +19,7 @@ import session from "express-session";
 import MemoryStore from "memorystore";
 import crypto from "crypto";
 import fetch from "node-fetch";
-import { sendOrderConfirmationEmail, sendInternalAlert, type OrderEmailData, type InternalAlertData } from "./services/email-service";
+import { sendOrderConfirmationEmail, sendInternalAlert, sendPaymentNotification, shouldNotifyPayment, type OrderEmailData, type InternalAlertData, type PaymentNotificationData } from "./services/email-service";
 import { performCasheaDownload } from "./services/cashea-download";
 import { normalizeCanal } from "@shared/utils";
 
@@ -3922,6 +3922,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
+      // Send internal payment notification for Zelle, Binance, or Paypal payments
+      if (finalSales.length > 0) {
+        const firstSale = finalSales[0];
+        if (firstSale.bancoReceptorInicial && firstSale.pagoInicialUsd) {
+          try {
+            // Get banco name from banco ID
+            const [banco] = await db.select().from(bancos).where(eq(bancos.id, firstSale.bancoReceptorInicial));
+            
+            if (banco && shouldNotifyPayment(banco.banco)) {
+              const notificationData: PaymentNotificationData = {
+                montoUsd: parseFloat(firstSale.pagoInicialUsd.toString()),
+                bancoReceptor: banco.banco,
+                referencia: firstSale.referenciaInicial,
+                orden: orderNumber,
+                nombreCliente: firstSale.nombre,
+                fechaPago: firstSale.fechaPagoInicial,
+                canal: firstSale.canal,
+                tipoPago: 'Inicial/Total'
+              };
+              
+              await sendPaymentNotification(notificationData);
+              console.log(`📧 Sent payment notification for order ${orderNumber} - ${banco.banco}`);
+            }
+          } catch (notificationError) {
+            console.error(`⚠️  Failed to send payment notification for order ${orderNumber}:`, notificationError);
+            // Don't fail the request if notification fails
+          }
+        }
+      }
+
       // Check if saldo reached $0 and auto-update to "A despachar"
       await checkAndAutoUpdateDeliveryStatus(orderNumber);
 
@@ -4014,6 +4044,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
           } catch (emailError) {
             console.error(`⚠️  Failed to send flete payment email for order ${orderNumber}:`, emailError);
             // Don't fail the request if email fails - just log it
+          }
+        }
+      }
+
+      // Send internal payment notification for Zelle, Binance, or Paypal payments
+      if (updatedSales.length > 0) {
+        const firstSale = updatedSales[0];
+        if (firstSale.bancoReceptorFlete && firstSale.pagoFleteUsd) {
+          try {
+            // Get banco name from banco ID
+            const [banco] = await db.select().from(bancos).where(eq(bancos.id, firstSale.bancoReceptorFlete));
+            
+            if (banco && shouldNotifyPayment(banco.banco)) {
+              const notificationData: PaymentNotificationData = {
+                montoUsd: parseFloat(firstSale.pagoFleteUsd.toString()),
+                bancoReceptor: banco.banco,
+                referencia: firstSale.referenciaFlete,
+                orden: orderNumber,
+                nombreCliente: firstSale.nombre,
+                fechaPago: firstSale.fechaFlete,
+                canal: firstSale.canal,
+                tipoPago: 'Flete'
+              };
+              
+              await sendPaymentNotification(notificationData);
+              console.log(`📧 Sent payment notification for order ${orderNumber} - ${banco.banco} (Flete)`);
+            }
+          } catch (notificationError) {
+            console.error(`⚠️  Failed to send payment notification for order ${orderNumber}:`, notificationError);
+            // Don't fail the request if notification fails
           }
         }
       }
@@ -7128,6 +7188,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
         } catch (emailError) {
           console.error(`⚠️  Failed to send installment payment email for order ${sale.orden}:`, emailError);
           // Don't fail the request if email fails - just log it
+        }
+      }
+
+      // Send internal payment notification for Zelle, Binance, or Paypal payments
+      if (installment.bancoReceptorCuota && installment.pagoCuotaUsd && sale.orden) {
+        try {
+          // Get banco name from banco ID
+          const [banco] = await db.select().from(bancos).where(eq(bancos.id, installment.bancoReceptorCuota));
+          
+          if (banco && shouldNotifyPayment(banco.banco)) {
+            const notificationData: PaymentNotificationData = {
+              montoUsd: parseFloat(installment.pagoCuotaUsd.toString()),
+              bancoReceptor: banco.banco,
+              referencia: installment.referencia,
+              orden: sale.orden,
+              nombreCliente: sale.nombre,
+              fechaPago: installment.fecha,
+              canal: sale.canal,
+              tipoPago: 'Cuota'
+            };
+            
+            await sendPaymentNotification(notificationData);
+            console.log(`📧 Sent payment notification for order ${sale.orden} - ${banco.banco} (Cuota #${installment.installmentNumber})`);
+          }
+        } catch (notificationError) {
+          console.error(`⚠️  Failed to send payment notification for installment:`, notificationError);
+          // Don't fail the request if notification fails
         }
       }
 
