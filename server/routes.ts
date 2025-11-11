@@ -6793,7 +6793,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             const installments = await storage.getInstallmentsByOrder(orden);
             const cuotasVerificadas = installments
               .filter(inst => inst.estadoVerificacion === 'Verificado')
-              .reduce((sum, inst) => sum + Number(inst.montoCuotaUsd || inst.cuotaAmount || 0), 0);
+              .reduce((sum, inst) => sum + Number(inst.montoCuotaUsd || 0), 0);
             
             const totalPagado = pagoInicialVerificado + fleteVerificado + cuotasVerificadas;
             const saldoPendiente = ordenPlusFlete - totalPagado;
