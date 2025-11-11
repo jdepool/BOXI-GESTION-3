@@ -853,7 +853,7 @@ async function checkAndAutoUpdateDeliveryStatus(orden: string): Promise<boolean>
     const installments = await withRetry(() => storage.getInstallmentsByOrder(orden));
     const cuotasVerificadas = installments
       .filter(inst => inst.estadoVerificacion === 'Verificado')
-      .reduce((sum, inst) => sum + Number(inst.montoCuotaUsd || 0), 0);
+      .reduce((sum, inst) => sum + Number(inst.pagoCuotaUsd || 0), 0);
     
     const totalVerificado = pagoInicialVerificado + fleteVerificado + cuotasVerificadas;
     const saldoPendiente = ordenPlusFlete - totalVerificado;
@@ -1887,19 +1887,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
               }
             }
             
-            // Get verified cuotas (use actual payment amounts)
+            // Get verified cuotas (use agreed payment amounts)
             const installments = await withRetry(() => storage.getInstallmentsByOrder(orden!));
             let cuotasVerificadas = 0;
             if (paymentType === 'Cuota') {
               // Include all previously verified cuotas PLUS the one being verified now
               cuotasVerificadas = installments
                 .filter(inst => inst.estadoVerificacion === 'Verificado' || inst.id === paymentId)
-                .reduce((sum, inst) => sum + Number(inst.montoCuotaUsd || 0), 0);
+                .reduce((sum, inst) => sum + Number(inst.pagoCuotaUsd || 0), 0);
             } else {
               // Just get previously verified cuotas
               cuotasVerificadas = installments
                 .filter(inst => inst.estadoVerificacion === 'Verificado')
-                .reduce((sum, inst) => sum + Number(inst.montoCuotaUsd || 0), 0);
+                .reduce((sum, inst) => sum + Number(inst.pagoCuotaUsd || 0), 0);
             }
             
             const totalVerificado = pagoInicialVerificado + fleteVerificado + cuotasVerificadas;
@@ -6860,7 +6860,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             const installments = await storage.getInstallmentsByOrder(orden);
             const cuotasVerificadas = installments
               .filter(inst => inst.estadoVerificacion === 'Verificado')
-              .reduce((sum, inst) => sum + Number(inst.montoCuotaUsd || 0), 0);
+              .reduce((sum, inst) => sum + Number(inst.pagoCuotaUsd || 0), 0);
             
             const totalPagado = pagoInicialVerificado + fleteVerificado + cuotasVerificadas;
             const saldoPendiente = ordenPlusFlete - totalPagado;
