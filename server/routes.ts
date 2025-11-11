@@ -817,6 +817,67 @@ const VALID_CREDENTIALS = {
   password: 'Boxisleep123'
 };
 
+/**
+ * Check if order balance is $0 and auto-update delivery status to "A despachar"
+ * This function is called after any payment modification (verification, edit, creation)
+ * @param orden - Order number to check
+ * @returns true if order was auto-updated, false otherwise
+ */
+async function checkAndAutoUpdateDeliveryStatus(orden: string): Promise<boolean> {
+  try {
+    const salesInOrder = await withRetry(() => storage.getSalesByOrderNumber(orden));
+    
+    if (salesInOrder.length === 0) {
+      return false;
+    }
+    
+    const firstSale = salesInOrder[0];
+    const totalOrderUsd = Number(firstSale.totalOrderUsd || 0);
+    const pagoFleteUsd = Number(firstSale.pagoFleteUsd || 0);
+    const fleteGratis = firstSale.fleteGratis || false;
+    
+    // For Cashea/Cashea MP: Orden a Pagar = 0 (customer paid Cashea directly)
+    // For other channels: Orden a Pagar = totalOrderUsd
+    const isCasheaOrder = firstSale.canal?.toLowerCase().includes('cashea') || false;
+    const ordenAPagar = isCasheaOrder ? 0 : totalOrderUsd;
+    const ordenPlusFlete = ordenAPagar + (fleteGratis ? 0 : pagoFleteUsd);
+    
+    // Calculate total verified payments
+    const pagoInicialVerificado = firstSale.estadoVerificacionInicial === 'Verificado' 
+      ? Number(firstSale.pagoInicialUsd || 0) : 0;
+    
+    const hasFletePayment = pagoFleteUsd > 0 && !fleteGratis;
+    const fleteVerificado = hasFletePayment && firstSale.estadoVerificacionFlete === 'Verificado' 
+      ? Number(firstSale.pagoFleteUsd || 0) : 0;
+    
+    const installments = await withRetry(() => storage.getInstallmentsByOrder(orden));
+    const cuotasVerificadas = installments
+      .filter(inst => inst.estadoVerificacion === 'Verificado')
+      .reduce((sum, inst) => sum + Number(inst.montoCuotaUsd || 0), 0);
+    
+    const totalVerificado = pagoInicialVerificado + fleteVerificado + cuotasVerificadas;
+    const saldoPendiente = ordenPlusFlete - totalVerificado;
+    
+    console.log(`Order ${orden} - A pagar + Flete: $${ordenPlusFlete}, Total Verificado: $${totalVerificado}, Pendiente: $${saldoPendiente}`);
+    
+    // Only auto-update if Pendiente is in range -1 to +1 and current status is "Pendiente" or "En proceso"
+    const currentStatus = firstSale.estadoEntrega?.toLowerCase() || '';
+    if (Math.abs(saldoPendiente) <= 1 && (currentStatus === 'pendiente' || currentStatus === 'en proceso')) {
+      const updatePromises = salesInOrder.map(sale => 
+        withRetry(() => storage.updateSaleDeliveryStatus(sale.id, 'A despachar'))
+      );
+      await Promise.all(updatePromises);
+      console.log(`✅ Auto-updated order ${orden} to "A despachar" (Pendiente = $${saldoPendiente.toFixed(2)})`);
+      return true;
+    }
+    
+    return false;
+  } catch (error) {
+    console.error(`Error in checkAndAutoUpdateDeliveryStatus for order ${orden}:`, error);
+    return false;
+  }
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
   
   // Configure session middleware
