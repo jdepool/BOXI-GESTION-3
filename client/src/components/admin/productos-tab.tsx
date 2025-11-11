@@ -552,9 +552,10 @@ export function ProductosTab() {
   const createComponentMutation = useMutation({
     mutationFn: ({ productoId, data }: { productoId: string; data: { componenteId: string; cantidad: number } }) =>
       apiRequest("POST", `/api/admin/productos/${productoId}/componentes`, data),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/productos', variables.productoId, 'componentes'] });
+    onSuccess: async (_, variables) => {
+      await queryClient.refetchQueries({ queryKey: ['/api/admin/productos', variables.productoId, 'componentes'] });
       setIsComponentDialogOpen(false);
+      setComponentFormData({ componenteId: "", cantidad: 1 });
       toast({ title: "Componente agregado exitosamente" });
     },
     onError: () => {
