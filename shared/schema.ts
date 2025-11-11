@@ -81,15 +81,15 @@ export const productosBackup = pgTable("productos_backup", {
 
 export const productosComponentes = pgTable("productos_componentes", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  skuProducto: text("sku_producto").notNull(),
-  skuComponente: text("sku_componente").notNull(),
+  productoId: varchar("producto_id").notNull().references(() => productos.id, { onDelete: "cascade", onUpdate: "cascade" }),
+  componenteId: varchar("componente_id").notNull().references(() => productos.id, { onDelete: "cascade", onUpdate: "cascade" }),
   cantidad: integer("cantidad").notNull().default(1),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => ({
-  skuProductoIdx: index("productos_componentes_sku_producto_idx").on(table.skuProducto),
-  skuComponenteIdx: index("productos_componentes_sku_componente_idx").on(table.skuComponente),
-  skuProductoComponenteUnique: unique("sku_producto_componente_unique").on(table.skuProducto, table.skuComponente),
+  productoIdIdx: index("productos_componentes_producto_id_idx").on(table.productoId),
+  componenteIdIdx: index("productos_componentes_componente_id_idx").on(table.componenteId),
+  productoComponenteUnique: unique("producto_componente_unique").on(table.productoId, table.componenteId),
 }));
 
 export const metodosPago = pgTable("metodos_pago", {
