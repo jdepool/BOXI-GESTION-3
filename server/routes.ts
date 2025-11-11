@@ -1783,7 +1783,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         } else if (paymentType === 'Cuota') {
           const installment = await withRetry(() => storage.getInstallmentById(paymentId));
           orden = installment?.orden || null;
-          currentPaymentAmount = Number(installment?.pagoCuotaUsd || 0); // Use agreed amount (Pago USD)
+          currentPaymentAmount = Number(installment?.montoCuotaUsd || 0); // Use actual payment amount
         }
 
         if (orden) {
@@ -1826,19 +1826,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
               }
             }
             
-            // Get verified cuotas (use agreed amounts - Pago USD)
+            // Get verified cuotas (use actual payment amounts)
             const installments = await withRetry(() => storage.getInstallmentsByOrder(orden!));
             let cuotasVerificadas = 0;
             if (paymentType === 'Cuota') {
               // Include all previously verified cuotas PLUS the one being verified now
               cuotasVerificadas = installments
                 .filter(inst => inst.estadoVerificacion === 'Verificado' || inst.id === paymentId)
-                .reduce((sum, inst) => sum + Number(inst.pagoCuotaUsd || 0), 0); // Use agreed amount (Pago USD)
+                .reduce((sum, inst) => sum + Number(inst.montoCuotaUsd || 0), 0);
             } else {
               // Just get previously verified cuotas
               cuotasVerificadas = installments
                 .filter(inst => inst.estadoVerificacion === 'Verificado')
-                .reduce((sum, inst) => sum + Number(inst.pagoCuotaUsd || 0), 0); // Use agreed amount (Pago USD)
+                .reduce((sum, inst) => sum + Number(inst.montoCuotaUsd || 0), 0);
             }
             
             const totalVerificado = pagoInicialVerificado + fleteVerificado + cuotasVerificadas;
