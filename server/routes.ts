@@ -1796,9 +1796,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
             const totalOrderUsd = Number(firstSale.totalOrderUsd || 0);
             const pagoFleteUsd = Number(firstSale.pagoFleteUsd || 0);
             const fleteGratis = firstSale.fleteGratis || false;
-            // For ALL orders (including Cashea): Saldo Pendiente = totalOrderUsd + flete - pagos verificados
-            // Note: For Cashea orders, totalOrderUsd is already set to 0 in the UI "Orden a Pagar" column
-            const ordenPlusFlete = totalOrderUsd + (fleteGratis ? 0 : pagoFleteUsd);
+            // For Cashea/Cashea MP: Orden a Pagar = 0 (customer paid Cashea directly)
+            // For other channels: Orden a Pagar = totalOrderUsd
+            const isCasheaOrder = firstSale.canal?.toLowerCase().includes('cashea') || false;
+            const ordenAPagar = isCasheaOrder ? 0 : totalOrderUsd;
+            const ordenPlusFlete = ordenAPagar + (fleteGratis ? 0 : pagoFleteUsd);
 
             // Calculate totalPagado (sum of all verified payments)
             // Note: We need to check old status from DB and include current payment being verified
@@ -6777,7 +6779,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
             const totalOrderUsd = Number(firstSale.totalOrderUsd || 0);
             const pagoFleteUsd = Number(firstSale.pagoFleteUsd || 0);
             const fleteGratis = firstSale.fleteGratis || false;
-            const ordenPlusFlete = totalOrderUsd + (fleteGratis ? 0 : pagoFleteUsd);
+            // For Cashea/Cashea MP: Orden a Pagar = 0 (customer paid Cashea directly)
+            // For other channels: Orden a Pagar = totalOrderUsd
+            const isCasheaOrder = firstSale.canal?.toLowerCase().includes('cashea') || false;
+            const ordenAPagar = isCasheaOrder ? 0 : totalOrderUsd;
+            const ordenPlusFlete = ordenAPagar + (fleteGratis ? 0 : pagoFleteUsd);
 
             // Calculate total verified payments
             const pagoInicialVerificado = firstSale.estadoVerificacionInicial === 'Verificado' ? Number(firstSale.pagoInicialUsd || 0) : 0;
