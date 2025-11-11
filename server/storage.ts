@@ -248,11 +248,11 @@ export interface IStorage {
   replaceProductos(productos: InsertProducto[]): Promise<{ created: number }>;
 
   // Productos Componentes
-  getProductoComponentes(skuProducto: string): Promise<ProductoComponente[]>;
-  createProductoComponente(componente: InsertProductoComponente): Promise<ProductoComponente>;
+  getProductoComponentes(productoId: string): Promise<Array<ProductoComponente & { skuProducto: string; skuComponente: string }>>;
+  createProductoComponente(componente: InsertProductoComponente): Promise<ProductoComponente & { skuProducto: string; skuComponente: string }>;
   deleteProductoComponente(id: string): Promise<boolean>;
-  deleteProductoComponentesBySku(skuProducto: string, skuComponente: string): Promise<boolean>;
-  replaceProductoComponentes(skuProducto: string, componentes: InsertProductoComponente[]): Promise<{ created: number }>;
+  deleteProductoComponentesByIds(productoId: string, componenteId: string): Promise<boolean>;
+  replaceProductoComponentes(productoId: string, componentes: InsertProductoComponente[]): Promise<{ created: number }>;
 
   // Métodos de Pago
   getMetodosPago(): Promise<MetodoPago[]>;
@@ -2476,21 +2476,55 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Productos Componentes methods
-  async getProductoComponentes(skuProducto: string): Promise<ProductoComponente[]> {
-    return await db
-      .select()
+  async getProductoComponentes(productoId: string): Promise<Array<ProductoComponente & { skuProducto: string; skuComponente: string }>> {
+    const productoAlias = alias(productos, 'producto');
+    const componenteAlias = alias(productos, 'componente');
+    
+    const results = await db
+      .select({
+        id: productosComponentes.id,
+        productoId: productosComponentes.productoId,
+        componenteId: productosComponentes.componenteId,
+        cantidad: productosComponentes.cantidad,
+        createdAt: productosComponentes.createdAt,
+        updatedAt: productosComponentes.updatedAt,
+        skuProducto: productoAlias.sku,
+        skuComponente: componenteAlias.sku,
+      })
       .from(productosComponentes)
-      .where(eq(productosComponentes.skuProducto, skuProducto))
+      .innerJoin(productoAlias, eq(productosComponentes.productoId, productoAlias.id))
+      .innerJoin(componenteAlias, eq(productosComponentes.componenteId, componenteAlias.id))
+      .where(eq(productosComponentes.productoId, productoId))
       .orderBy(productosComponentes.createdAt);
+    
+    return results;
   }
 
-  async createProductoComponente(componente: InsertProductoComponente): Promise<ProductoComponente> {
+  async createProductoComponente(componente: InsertProductoComponente): Promise<ProductoComponente & { skuProducto: string; skuComponente: string }> {
+    // Validate that both producto and componente exist
+    const [producto, componenteProducto] = await Promise.all([
+      db.select().from(productos).where(eq(productos.id, componente.productoId)).limit(1),
+      db.select().from(productos).where(eq(productos.id, componente.componenteId)).limit(1)
+    ]);
+    
+    if (!producto[0]) {
+      throw new Error(`Producto with ID ${componente.productoId} not found`);
+    }
+    if (!componenteProducto[0]) {
+      throw new Error(`Componente with ID ${componente.componenteId} not found`);
+    }
+    
     const [newComponente] = await db.insert(productosComponentes).values({
       ...componente,
       createdAt: new Date(),
       updatedAt: new Date(),
     }).returning();
-    return newComponente;
+    
+    return {
+      ...newComponente,
+      skuProducto: producto[0].sku || '',
+      skuComponente: componenteProducto[0].sku || '',
+    };
   }
 
   async deleteProductoComponente(id: string): Promise<boolean> {
@@ -2498,21 +2532,42 @@ export class DatabaseStorage implements IStorage {
     return (result.rowCount ?? 0) > 0;
   }
 
-  async deleteProductoComponentesBySku(skuProducto: string, skuComponente: string): Promise<boolean> {
+  async deleteProductoComponentesByIds(productoId: string, componenteId: string): Promise<boolean> {
     const result = await db
       .delete(productosComponentes)
       .where(
         and(
-          eq(productosComponentes.skuProducto, skuProducto),
-          eq(productosComponentes.skuComponente, skuComponente)
+          eq(productosComponentes.productoId, productoId),
+          eq(productosComponentes.componenteId, componenteId)
         )
       );
     return (result.rowCount ?? 0) > 0;
   }
 
-  async replaceProductoComponentes(skuProducto: string, componentes: InsertProductoComponente[]): Promise<{ created: number }> {
+  async replaceProductoComponentes(productoId: string, componentes: InsertProductoComponente[]): Promise<{ created: number }> {
+    // Validate that the producto exists
+    const [producto] = await db.select().from(productos).where(eq(productos.id, productoId)).limit(1);
+    if (!producto) {
+      throw new Error(`Producto with ID ${productoId} not found`);
+    }
+    
+    // Validate that all componente IDs exist
+    if (componentes.length > 0) {
+      const componenteIds = componentes.map(c => c.componenteId);
+      const foundComponentes = await db
+        .select({ id: productos.id })
+        .from(productos)
+        .where(inArray(productos.id, componenteIds));
+      
+      if (foundComponentes.length !== componenteIds.length) {
+        const foundIds = new Set(foundComponentes.map(c => c.id));
+        const missingIds = componenteIds.filter(id => !foundIds.has(id));
+        throw new Error(`Componentes with IDs ${missingIds.join(', ')} not found`);
+      }
+    }
+    
     // Delete existing components for this product
-    await db.delete(productosComponentes).where(eq(productosComponentes.skuProducto, skuProducto));
+    await db.delete(productosComponentes).where(eq(productosComponentes.productoId, productoId));
     
     // Insert new components
     if (componentes.length > 0) {
