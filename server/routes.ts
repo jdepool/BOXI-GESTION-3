@@ -7126,6 +7126,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Don't fail the request if email fails - just log it
         }
       }
+
+      // Check if saldo reached $0 and auto-update to "A despachar"
+      if (sale.orden) {
+        await checkAndAutoUpdateDeliveryStatus(sale.orden);
+      }
       
       res.status(201).json(installment);
     } catch (error) {
@@ -7269,6 +7274,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
             // Don't fail the request if email fails - just log it
           }
         }
+      }
+
+      // Check if saldo reached $0 and auto-update to "A despachar"
+      if (sale && sale.orden) {
+        await checkAndAutoUpdateDeliveryStatus(sale.orden);
       }
       
       res.json(installment);
