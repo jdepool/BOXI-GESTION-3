@@ -1,0 +1,70 @@
+Opción 3: Campo JSON de Componentes - Análisis Detallado
+Cómo Funciona
+Agregas un campo componentesSkus (tipo JSON) a la tabla sales:
+
+Ejemplo de registro en BD:
+
+orden: "51347869"
+product: "Sofá Mompox - Gris claro - Chaise + Corner + Ottoman + Single"
+sku: "SOF-COMBO-MOMPOX-GR-FULL"  (el combo completo)
+cantidad: 1
+totalUsd: "1290.00"
+componentesSkus: [
+  {"sku": "SOF-COR-GR", "nombre": "Corner", "cantidad": 1},
+  {"sku": "SOF-SIN-GR", "nombre": "Single", "cantidad": 1},
+  {"sku": "SOF-CHA-GR", "nombre": "Chaise", "cantidad": 1},
+  {"sku": "SOF-OTT-GR", "nombre": "Ottoman", "cantidad": 1}
+]
+
+Ventajas ✅
+Simplicidad: No necesitas tablas adicionales
+Flexibilidad total: Cada combo puede tener componentes diferentes sin estructura rígida
+Información completa: El registro mantiene tanto el SKU del combo como los individuales
+Facturación clara: Un solo registro = un solo precio
+Auditoría: Ves exactamente qué se vendió como paquete
+Desventajas ❌
+Consultas SQL complicadas: Buscar "todos los pedidos que incluyen SOF-COR-GR" requiere consultas JSON
+Reportes de inventario: Más difícil hacer queries directos por componente
+Performance: Consultas sobre JSON son más lentas que joins en tablas relacionales
+Validación: Más complejo asegurar que los SKUs componentes existan en productos
+Cómo se Vería en las Tablas
+Tabla Ventas (Lista de Ventas)
+Orden    | Producto                           | SKU                    | Cantidad | Total USD
+---------|-----------------------------------|------------------------|----------|----------
+51347869 | Sofá Mompox Gris (4 piezas) 📦    | SOF-COMBO-MOMPOX-GR   | 1        | $1,290
+
+El ícono 📦 indica que es un combo con componentes
+Al hacer clic, abre un popover/tooltip mostrando los componentes:
+Componentes:
+• Corner (SOF-COR-GR)
+• Single (SOF-SIN-GR)
+• Chaise (SOF-CHA-GR)
+• Ottoman (SOF-OTT-GR)
+
+Tabla Despacho
+Dos opciones:
+
+A) Vista de Combo (Simple):
+
+Orden    | Producto            | Componentes a Despachar
+---------|---------------------|------------------------
+51347869 | Sofá Mompox Gris    | ✓ Corner
+         |                     | ✓ Single
+         |                     | ✓ Chaise
+         |                     | ✓ Ottoman
+
+B) Vista Expandida (Más útil para bodega):
+
+Orden    | SKU Individual | Pieza   | Estado Despacho
+---------|----------------|---------|----------------
+51347869 | SOF-COR-GR     | Corner  | ⏸️ Pendiente
+51347869 | SOF-SIN-GR     | Single  | ⏸️ Pendiente
+51347869 | SOF-CHA-GR     | Chaise  | ⏸️ Pendiente
+51347869 | SOF-OTT-GR     | Ottoman | ⏸️ Pendiente
+
+Flujo de Trabajo Propuesto
+Al cargar Cashea: Sistema detecta combos por el nombre del producto
+Auto-población: Busca en productos los componentes y llena el JSON automáticamente
+Edición manual: Permite ajustar componentes si un pedido específico varió
+Despacho: Muestra checklist de componentes para verificar que todo se envió
+Inventario: Descuenta cada componente individualmente

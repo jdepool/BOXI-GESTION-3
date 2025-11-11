@@ -79,6 +79,19 @@ export const productosBackup = pgTable("productos_backup", {
   backedUpAt: timestamp("backed_up_at").defaultNow(),
 });
 
+export const productosComponentes = pgTable("productos_componentes", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  skuProducto: text("sku_producto").notNull(),
+  skuComponente: text("sku_componente").notNull(),
+  cantidad: integer("cantidad").notNull().default(1),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => ({
+  skuProductoIdx: index("productos_componentes_sku_producto_idx").on(table.skuProducto),
+  skuComponenteIdx: index("productos_componentes_sku_componente_idx").on(table.skuComponente),
+  skuProductoComponenteUnique: unique("sku_producto_componente_unique").on(table.skuProducto, table.skuComponente),
+}));
+
 export const metodosPago = pgTable("metodos_pago", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   nombre: text("nombre").notNull().unique(),
@@ -460,6 +473,12 @@ export const insertProductoSchema = createInsertSchema(productos).omit({
   updatedAt: true,
 });
 
+export const insertProductoComponenteSchema = createInsertSchema(productosComponentes).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 export const insertMetodoPagoSchema = createInsertSchema(metodosPago).omit({
   id: true,
   createdAt: true,
@@ -595,6 +614,8 @@ export type TipoEgreso = typeof tiposEgresos.$inferSelect;
 export type InsertTipoEgreso = z.infer<typeof insertTipoEgresoSchema>;
 export type Producto = typeof productos.$inferSelect;
 export type InsertProducto = z.infer<typeof insertProductoSchema>;
+export type ProductoComponente = typeof productosComponentes.$inferSelect;
+export type InsertProductoComponente = z.infer<typeof insertProductoComponenteSchema>;
 export type MetodoPago = typeof metodosPago.$inferSelect;
 export type InsertMetodoPago = z.infer<typeof insertMetodoPagoSchema>;
 export type Moneda = typeof monedas.$inferSelect;
