@@ -543,9 +543,15 @@ export function ProductosTab() {
     });
   };
 
-  const openComponentDialog = (producto: Producto) => {
+  const openComponentDialog = async (producto: Producto) => {
     setSelectedProductForComponents(producto);
     setComponentFormData({ componenteId: "", cantidad: 1 });
+    
+    // Prefetch components to ensure cache is populated for duplicate validation
+    await queryClient.ensureQueryData({
+      queryKey: ['/api/admin/productos', producto.id, 'componentes'],
+    });
+    
     setIsComponentDialogOpen(true);
   };
 
@@ -558,20 +564,30 @@ export function ProductosTab() {
       setComponentFormData({ componenteId: "", cantidad: 1 });
       toast({ title: "Componente agregado exitosamente" });
     },
-    onError: () => {
-      toast({ title: "Error al agregar componente", variant: "destructive" });
+    onError: (error: any) => {
+      const errorMessage = error?.message || error?.error || "Error desconocido";
+      toast({ 
+        title: "Error al agregar componente", 
+        description: errorMessage,
+        variant: "destructive" 
+      });
     },
   });
 
   const deleteComponentMutation = useMutation({
     mutationFn: ({ productoId, componenteId }: { productoId: string; componenteId: string }) =>
       apiRequest("DELETE", `/api/admin/productos/${productoId}/componentes/${componenteId}`),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/productos', variables.productoId, 'componentes'] });
+    onSuccess: async (_, variables) => {
+      await queryClient.refetchQueries({ queryKey: ['/api/admin/productos', variables.productoId, 'componentes'] });
       toast({ title: "Componente eliminado exitosamente" });
     },
-    onError: () => {
-      toast({ title: "Error al eliminar componente", variant: "destructive" });
+    onError: (error: any) => {
+      const errorMessage = error?.message || error?.error || "Error desconocido";
+      toast({ 
+        title: "Error al eliminar componente",
+        description: errorMessage,
+        variant: "destructive" 
+      });
     },
   });
 

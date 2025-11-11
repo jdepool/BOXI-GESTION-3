@@ -5070,10 +5070,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       const componente = await storage.createProductoComponente(validatedData);
       res.status(201).json(componente);
-    } catch (error) {
+    } catch (error: any) {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ error: "Invalid data", details: error.errors });
       }
+      
+      // Check for duplicate key violation (PostgreSQL error code 23505)
+      if (error.code === '23505' && error.constraint === 'producto_componente_unique') {
+        return res.status(409).json({ 
+          error: "Este componente ya existe en el producto. No se pueden agregar componentes duplicados." 
+        });
+      }
+      
       console.error("Create producto componente error:", error);
       res.status(500).json({ error: "Failed to create producto componente" });
     }
