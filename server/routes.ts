@@ -5050,10 +5050,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // PRODUCTOS COMPONENTES endpoints
-  app.get("/api/admin/productos/:sku/componentes", async (req, res) => {
+  app.get("/api/admin/productos/:productoId/componentes", async (req, res) => {
     try {
-      const { sku } = req.params;
-      const componentes = await storage.getProductoComponentes(sku);
+      const { productoId } = req.params;
+      const componentes = await storage.getProductoComponentes(productoId);
       res.json(componentes);
     } catch (error) {
       console.error("Get producto componentes error:", error);
@@ -5061,12 +5061,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post("/api/admin/productos/:sku/componentes", async (req, res) => {
+  app.post("/api/admin/productos/:productoId/componentes", async (req, res) => {
     try {
-      const { sku } = req.params;
+      const { productoId } = req.params;
       const validatedData = insertProductoComponenteSchema.parse({
         ...req.body,
-        skuProducto: sku
+        productoId
       });
       const componente = await storage.createProductoComponente(validatedData);
       res.status(201).json(componente);
@@ -5079,10 +5079,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.delete("/api/admin/productos/:sku/componentes/:componenteSku", async (req, res) => {
+  app.delete("/api/admin/productos/:productoId/componentes/:componenteId", async (req, res) => {
     try {
-      const { sku, componenteSku } = req.params;
-      const deleted = await storage.deleteProductoComponentesBySku(sku, componenteSku);
+      const { productoId, componenteId } = req.params;
+      const deleted = await storage.deleteProductoComponentesByIds(productoId, componenteId);
       if (!deleted) {
         return res.status(404).json({ error: "Producto componente not found" });
       }
@@ -5093,18 +5093,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/admin/productos/:sku/componentes", async (req, res) => {
+  app.put("/api/admin/productos/:productoId/componentes", async (req, res) => {
     try {
-      const { sku } = req.params;
+      const { productoId } = req.params;
       const componentes = z.array(insertProductoComponenteSchema).parse(req.body);
       
-      // Ensure all componentes have the correct skuProducto
-      const componentesWithSku = componentes.map(c => ({
+      // Ensure all componentes have the correct productoId
+      const componentesWithProductoId = componentes.map(c => ({
         ...c,
-        skuProducto: sku
+        productoId
       }));
       
-      const result = await storage.replaceProductoComponentes(sku, componentesWithSku);
+      const result = await storage.replaceProductoComponentes(productoId, componentesWithProductoId);
       res.json(result);
     } catch (error) {
       if (error instanceof z.ZodError) {
