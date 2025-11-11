@@ -56,7 +56,7 @@ function ProductoRow({
   
   // Fetch components only when expanded
   const { data: componentes = [], isLoading: isLoadingComponents } = useQuery<ProductoComponente[]>({
-    queryKey: ['/api/admin/productos', producto.id, 'componentes'],
+    queryKey: [`/api/admin/productos/${producto.id}/componentes`],
     enabled: isExpanded,
   });
 
@@ -549,7 +549,7 @@ export function ProductosTab() {
     
     // Prefetch components to ensure cache is populated for duplicate validation
     await queryClient.ensureQueryData({
-      queryKey: ['/api/admin/productos', producto.id, 'componentes'],
+      queryKey: [`/api/admin/productos/${producto.id}/componentes`],
     });
     
     setIsComponentDialogOpen(true);
@@ -559,7 +559,7 @@ export function ProductosTab() {
     mutationFn: ({ productoId, data }: { productoId: string; data: { componenteId: string; cantidad: number } }) =>
       apiRequest("POST", `/api/admin/productos/${productoId}/componentes`, data),
     onSuccess: async (_, variables) => {
-      await queryClient.refetchQueries({ queryKey: ['/api/admin/productos', variables.productoId, 'componentes'] });
+      await queryClient.refetchQueries({ queryKey: [`/api/admin/productos/${variables.productoId}/componentes`] });
       setIsComponentDialogOpen(false);
       setComponentFormData({ componenteId: "", cantidad: 1 });
       toast({ title: "Componente agregado exitosamente" });
@@ -578,7 +578,7 @@ export function ProductosTab() {
     mutationFn: ({ productoId, componenteId }: { productoId: string; componenteId: string }) =>
       apiRequest("DELETE", `/api/admin/productos/${productoId}/componentes/${componenteId}`),
     onSuccess: async (_, variables) => {
-      await queryClient.refetchQueries({ queryKey: ['/api/admin/productos', variables.productoId, 'componentes'] });
+      await queryClient.refetchQueries({ queryKey: [`/api/admin/productos/${variables.productoId}/componentes`] });
       toast({ title: "Componente eliminado exitosamente" });
     },
     onError: (error: any) => {
@@ -613,9 +613,7 @@ export function ProductosTab() {
 
     // Check for duplicate component SKU
     const existingComponents = queryClient.getQueryData<ProductoComponente[]>([
-      '/api/admin/productos',
-      selectedProductForComponents.id,
-      'componentes'
+      `/api/admin/productos/${selectedProductForComponents.id}/componentes`
     ]);
 
     if (existingComponents?.some(c => c.componenteId === componentFormData.componenteId)) {
