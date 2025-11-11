@@ -3918,6 +3918,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
+      // Check if saldo reached $0 and auto-update to "A despachar"
+      await checkAndAutoUpdateDeliveryStatus(orderNumber);
+
       res.json({ success: true, sales: finalSales });
     } catch (error) {
       console.error("Update pago inicial error:", error);
@@ -4010,6 +4013,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
         }
       }
+
+      // Check if saldo reached $0 and auto-update to "A despachar"
+      await checkAndAutoUpdateDeliveryStatus(orderNumber);
 
       res.json({ success: true, sales: updatedSales });
     } catch (error) {
