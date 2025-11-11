@@ -3644,13 +3644,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { saleId } = req.params;
       
-      // Define schema for allowed fields (devoluciones and cancelaciones)
+      // Define schema for allowed fields (devoluciones, cancelaciones, and notas)
       const updateSaleSchema = z.object({
         datosDevolucion: z.string().nullable().optional(),
         tipoDevolucion: z.string().nullable().optional(),
         finalizacionDevolucion: z.string().nullable().optional(),
         datosCancelacion: z.string().nullable().optional(),
         finalizacionCancelacion: z.string().nullable().optional(),
+        notas: z.string().nullable().optional(),
       }).strict(); // strict() ensures no other fields are allowed
 
       // Validate request body
@@ -3662,7 +3663,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      const { datosDevolucion, tipoDevolucion, finalizacionDevolucion, datosCancelacion, finalizacionCancelacion } = validationResult.data;
+      const { datosDevolucion, tipoDevolucion, finalizacionDevolucion, datosCancelacion, finalizacionCancelacion, notas } = validationResult.data;
 
       // Validate that sale exists
       const existingSale = await storage.getSaleById(saleId);
@@ -3686,6 +3687,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       if (finalizacionCancelacion !== undefined) {
         updateData.finalizacionCancelacion = finalizacionCancelacion;
+      }
+      if (notas !== undefined) {
+        updateData.notas = notas;
       }
 
       // Ensure at least one field is being updated
