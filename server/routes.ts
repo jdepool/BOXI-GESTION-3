@@ -1794,13 +1794,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
             // Calculate ordenPlusFlete (A pagar + Flete)
             const firstSale = salesInOrder[0];
             const totalOrderUsd = Number(firstSale.totalOrderUsd || 0);
-            const pagoInicialUsd = Number(firstSale.pagoInicialUsd || 0);
             const pagoFleteUsd = Number(firstSale.pagoFleteUsd || 0);
             const fleteGratis = firstSale.fleteGratis || false;
-            // For Cashea orders, use pagoInicialUsd; for others, use totalOrderUsd (matching Pagos table logic)
-            const isCasheaOrder = firstSale.canal === 'cashea';
-            const baseAmount = isCasheaOrder ? pagoInicialUsd : totalOrderUsd;
-            const ordenPlusFlete = baseAmount + (fleteGratis ? 0 : pagoFleteUsd);
+            // For ALL orders (including Cashea): Saldo Pendiente = totalOrderUsd + flete - pagos verificados
+            // Note: For Cashea orders, totalOrderUsd is already set to 0 in the UI "Orden a Pagar" column
+            const ordenPlusFlete = totalOrderUsd + (fleteGratis ? 0 : pagoFleteUsd);
 
             // Calculate totalPagado (sum of all verified payments)
             // Note: We need to check old status from DB and include current payment being verified
