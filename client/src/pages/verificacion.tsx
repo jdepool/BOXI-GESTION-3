@@ -66,6 +66,7 @@ interface VerificationPayment {
   montoUsd: number | null;
   referencia: string | null;
   bancoId: string | null;
+  bancoNombre: string | null;
   estadoVerificacion: string;
   notasVerificacion: string | null;
   fecha: Date | null;
@@ -546,7 +547,7 @@ export default function VerificacionPage() {
                         {payment.referencia || "-"}
                       </td>
                       <td className="p-2 text-xs" data-testid={`text-banco-${index}`}>
-                        {getBancoName(payment.bancoId)}
+                        {payment.bancoNombre || "-"}
                       </td>
                       <td className="p-2 text-xs" data-testid={`badge-estado-${index}`}>
                         <Badge className={getEstadoVerificacionBadgeClass(payment.estadoVerificacion)}>
