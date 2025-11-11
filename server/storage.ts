@@ -1,8 +1,8 @@
 import { 
-  sales, uploadHistory, users, bancos, bancosBackup, tiposEgresos, autorizadores, egresos, productos, productosBackup, metodosPago, monedas, categorias, canales, asesores, transportistas, estados, ciudades, seguimientoConfig, precios, preciosBackup, paymentInstallments, prospectos,
+  sales, uploadHistory, users, bancos, bancosBackup, tiposEgresos, autorizadores, egresos, productos, productosBackup, productosComponentes, metodosPago, monedas, categorias, canales, asesores, transportistas, estados, ciudades, seguimientoConfig, precios, preciosBackup, paymentInstallments, prospectos,
   type User, type InsertUser, type Sale, type InsertSale, type UploadHistory, type InsertUploadHistory,
   type Banco, type InsertBanco, type TipoEgreso, type InsertTipoEgreso, type Autorizador, type InsertAutorizador, type Egreso, type InsertEgreso,
-  type Producto, type InsertProducto, type MetodoPago, type InsertMetodoPago,
+  type Producto, type InsertProducto, type ProductoComponente, type InsertProductoComponente, type MetodoPago, type InsertMetodoPago,
   type Moneda, type InsertMoneda, type Categoria, type InsertCategoria,
   type Canal, type InsertCanal, type Asesor, type InsertAsesor, type Transportista, type InsertTransportista, type Estado, type InsertEstado, type Ciudad, type InsertCiudad, type SeguimientoConfig, type InsertSeguimientoConfig, type Precio, type InsertPrecio,
   type PaymentInstallment, type InsertPaymentInstallment,
@@ -246,6 +246,13 @@ export interface IStorage {
   backupProductos(): Promise<void>;
   restoreProductosFromBackup(): Promise<void>;
   replaceProductos(productos: InsertProducto[]): Promise<{ created: number }>;
+
+  // Productos Componentes
+  getProductoComponentes(skuProducto: string): Promise<ProductoComponente[]>;
+  createProductoComponente(componente: InsertProductoComponente): Promise<ProductoComponente>;
+  deleteProductoComponente(id: string): Promise<boolean>;
+  deleteProductoComponentesBySku(skuProducto: string, skuComponente: string): Promise<boolean>;
+  replaceProductoComponentes(skuProducto: string, componentes: InsertProductoComponente[]): Promise<{ created: number }>;
 
   // Métodos de Pago
   getMetodosPago(): Promise<MetodoPago[]>;
@@ -2466,6 +2473,58 @@ export class DatabaseStorage implements IStorage {
     }
     
     return { created: productosToInsert.length };
+  }
+
+  // Productos Componentes methods
+  async getProductoComponentes(skuProducto: string): Promise<ProductoComponente[]> {
+    return await db
+      .select()
+      .from(productosComponentes)
+      .where(eq(productosComponentes.skuProducto, skuProducto))
+      .orderBy(productosComponentes.createdAt);
+  }
+
+  async createProductoComponente(componente: InsertProductoComponente): Promise<ProductoComponente> {
+    const [newComponente] = await db.insert(productosComponentes).values({
+      ...componente,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }).returning();
+    return newComponente;
+  }
+
+  async deleteProductoComponente(id: string): Promise<boolean> {
+    const result = await db.delete(productosComponentes).where(eq(productosComponentes.id, id));
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  async deleteProductoComponentesBySku(skuProducto: string, skuComponente: string): Promise<boolean> {
+    const result = await db
+      .delete(productosComponentes)
+      .where(
+        and(
+          eq(productosComponentes.skuProducto, skuProducto),
+          eq(productosComponentes.skuComponente, skuComponente)
+        )
+      );
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  async replaceProductoComponentes(skuProducto: string, componentes: InsertProductoComponente[]): Promise<{ created: number }> {
+    // Delete existing components for this product
+    await db.delete(productosComponentes).where(eq(productosComponentes.skuProducto, skuProducto));
+    
+    // Insert new components
+    if (componentes.length > 0) {
+      const componentesToInsert = componentes.map(comp => ({
+        ...comp,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      }));
+      await db.insert(productosComponentes).values(componentesToInsert);
+    }
+    
+    return { created: componentes.length };
   }
 
   // Métodos de Pago methods
