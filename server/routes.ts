@@ -7,7 +7,7 @@ import { sales, type Sale } from "@shared/schema";
 import { eq } from "drizzle-orm";
 import { 
   insertSaleSchema, insertUploadHistorySchema, insertBancoSchema, insertTipoEgresoSchema, insertAutorizadorSchema,
-  insertProductoSchema, insertMetodoPagoSchema, insertMonedaSchema, insertCategoriaSchema,
+  insertProductoSchema, insertProductoComponenteSchema, insertMetodoPagoSchema, insertMonedaSchema, insertCategoriaSchema,
   insertEgresoSchema, insertPaymentInstallmentSchema, insertAsesorSchema, insertTransportistaSchema, insertEstadoSchema, insertCiudadSchema, insertPrecioSchema, insertProspectoSchema
 } from "@shared/schema";
 import { z } from "zod";
@@ -5046,6 +5046,72 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Download productos error:", error);
       res.status(500).json({ error: "Failed to download productos" });
+    }
+  });
+
+  // PRODUCTOS COMPONENTES endpoints
+  app.get("/api/admin/productos/:sku/componentes", async (req, res) => {
+    try {
+      const { sku } = req.params;
+      const componentes = await storage.getProductoComponentes(sku);
+      res.json(componentes);
+    } catch (error) {
+      console.error("Get producto componentes error:", error);
+      res.status(500).json({ error: "Failed to get producto componentes" });
+    }
+  });
+
+  app.post("/api/admin/productos/:sku/componentes", async (req, res) => {
+    try {
+      const { sku } = req.params;
+      const validatedData = insertProductoComponenteSchema.parse({
+        ...req.body,
+        skuProducto: sku
+      });
+      const componente = await storage.createProductoComponente(validatedData);
+      res.status(201).json(componente);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Invalid data", details: error.errors });
+      }
+      console.error("Create producto componente error:", error);
+      res.status(500).json({ error: "Failed to create producto componente" });
+    }
+  });
+
+  app.delete("/api/admin/productos/:sku/componentes/:componenteSku", async (req, res) => {
+    try {
+      const { sku, componenteSku } = req.params;
+      const deleted = await storage.deleteProductoComponentesBySku(sku, componenteSku);
+      if (!deleted) {
+        return res.status(404).json({ error: "Producto componente not found" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Delete producto componente error:", error);
+      res.status(500).json({ error: "Failed to delete producto componente" });
+    }
+  });
+
+  app.put("/api/admin/productos/:sku/componentes", async (req, res) => {
+    try {
+      const { sku } = req.params;
+      const componentes = z.array(insertProductoComponenteSchema).parse(req.body);
+      
+      // Ensure all componentes have the correct skuProducto
+      const componentesWithSku = componentes.map(c => ({
+        ...c,
+        skuProducto: sku
+      }));
+      
+      const result = await storage.replaceProductoComponentes(sku, componentesWithSku);
+      res.json(result);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Invalid data", details: error.errors });
+      }
+      console.error("Replace producto componentes error:", error);
+      res.status(500).json({ error: "Failed to replace producto componentes" });
     }
   });
 
