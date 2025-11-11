@@ -9,10 +9,220 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Edit, Trash2, Upload, RotateCcw, Download } from "lucide-react";
+import { Plus, Edit, Trash2, Upload, RotateCcw, Download, ChevronDown, ChevronRight, Package } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import type { Producto, Categoria } from "@shared/schema";
+
+interface ProductoComponente {
+  id: string;
+  productoId: string;
+  componenteId: string;
+  cantidad: number;
+  skuProducto: string;
+  skuComponente: string;
+}
+
+// Component to render each product row with expandable components
+function ProductoRow({ 
+  producto, 
+  isExpanded, 
+  onToggleExpand, 
+  onEdit, 
+  onDelete, 
+  onManageComponents,
+  onDeleteComponent,
+  getClasificacionNombre, 
+  getTipoColor,
+  isDeletingProduct,
+  isDeletingComponent
+}: { 
+  producto: Producto;
+  isExpanded: boolean;
+  onToggleExpand: () => void;
+  onEdit: () => void;
+  onDelete: () => void;
+  onManageComponents: () => void;
+  onDeleteComponent: (productoId: string, componenteId: string, componentCount: number) => void;
+  getClasificacionNombre: (id: string | null | undefined) => string | null;
+  getTipoColor: (tipo: string) => string;
+  isDeletingProduct: boolean;
+  isDeletingComponent: boolean;
+}) {
+  const marca = getClasificacionNombre(producto.marcaId);
+  const categoria = getClasificacionNombre(producto.categoriaId);
+  const subcategoria = getClasificacionNombre(producto.subcategoriaId);
+  const caracteristica = getClasificacionNombre(producto.caracteristicaId);
+  
+  // Fetch components only when expanded
+  const { data: componentes = [], isLoading: isLoadingComponents } = useQuery<ProductoComponente[]>({
+    queryKey: ['/api/admin/productos', producto.id, 'componentes'],
+    enabled: isExpanded,
+  });
+
+  const isCombo = categoria && categoria.toLowerCase().includes('combo');
+  const componentCount = componentes.length;
+
+  return (
+    <>
+      <TableRow key={producto.id} data-testid={`producto-row-${producto.id}`}>
+        <TableCell className="w-12">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onToggleExpand}
+            data-testid={`expand-producto-${producto.id}`}
+          >
+            {isExpanded ? (
+              <ChevronDown className="h-4 w-4" />
+            ) : (
+              <ChevronRight className="h-4 w-4" />
+            )}
+          </Button>
+        </TableCell>
+        <TableCell className="font-medium">
+          <div className="flex items-center gap-2">
+            {producto.nombre}
+            {isCombo && componentCount > 0 && (
+              <Badge variant="outline" className="bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300">
+                <Package className="h-3 w-3 mr-1" />
+                {componentCount} {componentCount === 1 ? 'componente' : 'componentes'}
+              </Badge>
+            )}
+          </div>
+        </TableCell>
+        <TableCell className="font-mono text-sm">{producto.sku || <span className="text-muted-foreground">-</span>}</TableCell>
+        <TableCell>
+          {marca ? (
+            <Badge variant="outline" className={getTipoColor("Marca")}>
+              {marca}
+            </Badge>
+          ) : (
+            <span className="text-muted-foreground text-sm">-</span>
+          )}
+        </TableCell>
+        <TableCell>
+          {categoria ? (
+            <Badge variant="outline" className={getTipoColor("Categoría")}>
+              {categoria}
+            </Badge>
+          ) : producto.categoria ? (
+            <Badge variant="outline" className="bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100">
+              {producto.categoria}
+            </Badge>
+          ) : (
+            <span className="text-muted-foreground text-sm">-</span>
+          )}
+        </TableCell>
+        <TableCell>
+          {subcategoria ? (
+            <Badge variant="outline" className={getTipoColor("Subcategoría")}>
+              {subcategoria}
+            </Badge>
+          ) : (
+            <span className="text-muted-foreground text-sm">-</span>
+          )}
+        </TableCell>
+        <TableCell>
+          {caracteristica ? (
+            <Badge variant="outline" className={getTipoColor("Característica")}>
+              {caracteristica}
+            </Badge>
+          ) : (
+            <span className="text-muted-foreground text-sm">-</span>
+          )}
+        </TableCell>
+        <TableCell>
+          <div className="flex space-x-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onEdit}
+              data-testid={`edit-producto-${producto.id}`}
+            >
+              <Edit className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onDelete}
+              disabled={isDeletingProduct}
+              data-testid={`delete-producto-${producto.id}`}
+            >
+              <Trash2 className="h-4 w-4 text-destructive" />
+            </Button>
+          </div>
+        </TableCell>
+      </TableRow>
+      
+      {isExpanded && (
+        <TableRow>
+          <TableCell colSpan={8} className="bg-muted/30 dark:bg-muted/10">
+            <div className="py-3 px-4">
+              <div className="flex items-center justify-between mb-3">
+                <h4 className="font-semibold text-sm flex items-center gap-2">
+                  <Package className="h-4 w-4" />
+                  Componentes del Producto
+                </h4>
+                <Button
+                  size="sm"
+                  onClick={onManageComponents}
+                  data-testid={`add-component-${producto.id}`}
+                >
+                  <Plus className="h-4 w-4 mr-1" />
+                  Agregar Componente
+                </Button>
+              </div>
+              
+              {isLoadingComponents ? (
+                <div className="text-center py-4 text-sm text-muted-foreground">
+                  Cargando componentes...
+                </div>
+              ) : componentes.length === 0 ? (
+                <div className="text-center py-4 text-sm text-muted-foreground">
+                  {isCombo 
+                    ? "Este combo no tiene componentes configurados. Agrega los SKUs que lo componen."
+                    : "Este producto no tiene componentes. Los productos simples auto-referencian con cantidad 1."}
+                </div>
+              ) : (
+                <div className="border rounded-md">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-[200px]">SKU Componente</TableHead>
+                        <TableHead className="w-[100px]">Cantidad</TableHead>
+                        <TableHead className="w-[80px]">Acciones</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {componentes.map((comp) => (
+                        <TableRow key={comp.id}>
+                          <TableCell className="font-mono text-sm">{comp.skuComponente}</TableCell>
+                          <TableCell>{comp.cantidad}</TableCell>
+                          <TableCell>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => onDeleteComponent(producto.id, comp.componenteId, componentes.length)}
+                              disabled={isDeletingComponent}
+                              data-testid={`delete-component-${comp.id}`}
+                            >
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+            </div>
+          </TableCell>
+        </TableRow>
+      )}
+    </>
+  );
+}
 
 export function ProductosTab() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -32,6 +242,13 @@ export function ProductosTab() {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [hasBackup, setHasBackup] = useState(false);
+  
+  // Component management state
+  const [expandedProducts, setExpandedProducts] = useState<Set<string>>(new Set());
+  const [isComponentDialogOpen, setIsComponentDialogOpen] = useState(false);
+  const [selectedProductForComponents, setSelectedProductForComponents] = useState<Producto | null>(null);
+  const [componentFormData, setComponentFormData] = useState({ componenteId: "", cantidad: 1 });
+  
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -313,6 +530,102 @@ export function ProductosTab() {
     }
   };
 
+  // Component management functions
+  const toggleProductExpansion = (productoId: string) => {
+    setExpandedProducts((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(productoId)) {
+        newSet.delete(productoId);
+      } else {
+        newSet.add(productoId);
+      }
+      return newSet;
+    });
+  };
+
+  const openComponentDialog = (producto: Producto) => {
+    setSelectedProductForComponents(producto);
+    setComponentFormData({ componenteId: "", cantidad: 1 });
+    setIsComponentDialogOpen(true);
+  };
+
+  const createComponentMutation = useMutation({
+    mutationFn: ({ productoId, data }: { productoId: string; data: { componenteId: string; cantidad: number } }) =>
+      apiRequest("POST", `/api/admin/productos/${productoId}/componentes`, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/productos', variables.productoId, 'componentes'] });
+      setIsComponentDialogOpen(false);
+      toast({ title: "Componente agregado exitosamente" });
+    },
+    onError: () => {
+      toast({ title: "Error al agregar componente", variant: "destructive" });
+    },
+  });
+
+  const deleteComponentMutation = useMutation({
+    mutationFn: ({ productoId, componenteId }: { productoId: string; componenteId: string }) =>
+      apiRequest("DELETE", `/api/admin/productos/${productoId}/componentes/${componenteId}`),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/productos', variables.productoId, 'componentes'] });
+      toast({ title: "Componente eliminado exitosamente" });
+    },
+    onError: () => {
+      toast({ title: "Error al eliminar componente", variant: "destructive" });
+    },
+  });
+
+  const handleComponentSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedProductForComponents) return;
+
+    if (!componentFormData.componenteId) {
+      toast({ title: "Selecciona un SKU componente", variant: "destructive" });
+      return;
+    }
+
+    if (componentFormData.cantidad < 1 || !Number.isInteger(componentFormData.cantidad)) {
+      toast({ title: "La cantidad debe ser un número entero mayor o igual a 1", variant: "destructive" });
+      return;
+    }
+
+    // Prevent selecting the same product as component
+    if (componentFormData.componenteId === selectedProductForComponents.id) {
+      toast({ title: "No puedes agregar el mismo producto como componente", variant: "destructive" });
+      return;
+    }
+
+    // Check for duplicate component SKU
+    const existingComponents = queryClient.getQueryData<ProductoComponente[]>([
+      '/api/admin/productos',
+      selectedProductForComponents.id,
+      'componentes'
+    ]);
+
+    if (existingComponents?.some(c => c.componenteId === componentFormData.componenteId)) {
+      toast({ 
+        title: "Componente duplicado", 
+        description: "Este SKU ya está agregado como componente",
+        variant: "destructive" 
+      });
+      return;
+    }
+
+    createComponentMutation.mutate({
+      productoId: selectedProductForComponents.id,
+      data: {
+        componenteId: componentFormData.componenteId,
+        cantidad: componentFormData.cantidad,
+      },
+    });
+  };
+
+  const handleDeleteComponent = (productoId: string, componenteId: string, currentComponentCount: number) => {
+    // Prevent deletion if it's the last component of a combo (not implemented - backend should handle)
+    if (window.confirm("¿Estás seguro de que quieres eliminar este componente?")) {
+      deleteComponentMutation.mutate({ productoId, componenteId });
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -586,6 +899,7 @@ export function ProductosTab() {
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-12"></TableHead>
               <TableHead>Producto</TableHead>
               <TableHead>SKU</TableHead>
               <TableHead>Marca</TableHead>
@@ -598,95 +912,101 @@ export function ProductosTab() {
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-8">
+                <TableCell colSpan={8} className="text-center py-8">
                   Cargando...
                 </TableCell>
               </TableRow>
             ) : (productos as Producto[]).length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                   No hay productos registrados. Usa "Subir Excel" o "Agregar Producto" para comenzar.
                 </TableCell>
               </TableRow>
             ) : (
-              (productos as Producto[]).map((producto: Producto) => {
-                const marca = getClasificacionNombre(producto.marcaId);
-                const categoria = getClasificacionNombre(producto.categoriaId);
-                const subcategoria = getClasificacionNombre(producto.subcategoriaId);
-                const caracteristica = getClasificacionNombre(producto.caracteristicaId);
-                
-                return (
-                  <TableRow key={producto.id} data-testid={`producto-row-${producto.id}`}>
-                    <TableCell className="font-medium">{producto.nombre}</TableCell>
-                    <TableCell className="font-mono text-sm">{producto.sku || <span className="text-muted-foreground">-</span>}</TableCell>
-                    <TableCell>
-                      {marca ? (
-                        <Badge variant="outline" className={getTipoColor("Marca")}>
-                          {marca}
-                        </Badge>
-                      ) : (
-                        <span className="text-muted-foreground text-sm">-</span>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      {categoria ? (
-                        <Badge variant="outline" className={getTipoColor("Categoría")}>
-                          {categoria}
-                        </Badge>
-                      ) : producto.categoria ? (
-                        <Badge variant="outline" className="bg-gray-100 text-gray-800">
-                          {producto.categoria}
-                        </Badge>
-                      ) : (
-                        <span className="text-muted-foreground text-sm">-</span>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      {subcategoria ? (
-                        <Badge variant="outline" className={getTipoColor("Subcategoría")}>
-                          {subcategoria}
-                        </Badge>
-                      ) : (
-                        <span className="text-muted-foreground text-sm">-</span>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      {caracteristica ? (
-                        <Badge variant="outline" className={getTipoColor("Característica")}>
-                          {caracteristica}
-                        </Badge>
-                      ) : (
-                        <span className="text-muted-foreground text-sm">-</span>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex space-x-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => openEditDialog(producto)}
-                          data-testid={`edit-producto-${producto.id}`}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => deleteMutation.mutate(producto.id)}
-                          disabled={deleteMutation.isPending}
-                          data-testid={`delete-producto-${producto.id}`}
-                        >
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                );
-              })
+              (productos as Producto[]).map((producto: Producto) => (
+                <ProductoRow
+                  key={producto.id}
+                  producto={producto}
+                  isExpanded={expandedProducts.has(producto.id)}
+                  onToggleExpand={() => toggleProductExpansion(producto.id)}
+                  onEdit={() => openEditDialog(producto)}
+                  onDelete={() => deleteMutation.mutate(producto.id)}
+                  onManageComponents={() => openComponentDialog(producto)}
+                  onDeleteComponent={handleDeleteComponent}
+                  getClasificacionNombre={getClasificacionNombre}
+                  getTipoColor={getTipoColor}
+                  isDeletingProduct={deleteMutation.isPending}
+                  isDeletingComponent={deleteComponentMutation.isPending}
+                />
+              ))
             )}
           </TableBody>
         </Table>
       </div>
+
+      {/* Component Management Dialog */}
+      <Dialog open={isComponentDialogOpen} onOpenChange={setIsComponentDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Agregar Componente</DialogTitle>
+            <DialogDescription>
+              Agrega un SKU componente a {selectedProductForComponents?.nombre}
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleComponentSubmit} className="space-y-4">
+            <div>
+              <Label htmlFor="componenteId">SKU Componente</Label>
+              <Select
+                value={componentFormData.componenteId}
+                onValueChange={(value) => setComponentFormData({ ...componentFormData, componenteId: value })}
+              >
+                <SelectTrigger id="componenteId" data-testid="select-componente-sku">
+                  <SelectValue placeholder="Selecciona un SKU" />
+                </SelectTrigger>
+                <SelectContent>
+                  {(productos as Producto[])
+                    .filter(p => p.id !== selectedProductForComponents?.id && p.sku)
+                    .map((p) => (
+                      <SelectItem key={p.id} value={p.id}>
+                        {p.sku} - {p.nombre}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label htmlFor="cantidad">Cantidad</Label>
+              <Input
+                id="cantidad"
+                type="number"
+                min="1"
+                step="1"
+                value={componentFormData.cantidad}
+                onChange={(e) => setComponentFormData({ ...componentFormData, cantidad: parseInt(e.target.value) || 1 })}
+                data-testid="input-componente-cantidad"
+              />
+            </div>
+
+            <div className="flex justify-end space-x-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsComponentDialogOpen(false)}
+              >
+                Cancelar
+              </Button>
+              <Button
+                type="submit"
+                disabled={createComponentMutation.isPending}
+                data-testid="submit-componente"
+              >
+                {createComponentMutation.isPending ? "Agregando..." : "Agregar"}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
