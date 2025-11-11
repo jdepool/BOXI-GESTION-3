@@ -3645,8 +3645,36 @@ export class DatabaseStorage implements IStorage {
       });
     }
 
+    // Post-processing: Resolve bancoId to bancoNombre for all payments
+    const uniqueBancoIds = new Set<string>();
+    payments.forEach(payment => {
+      if (payment.bancoId) {
+        uniqueBancoIds.add(payment.bancoId);
+      }
+    });
+
+    // Fetch all needed bancos in one query
+    let bancoMap = new Map<string, string>();
+    if (uniqueBancoIds.size > 0) {
+      const bancosList = await db
+        .select({
+          id: bancos.id,
+          banco: bancos.banco,
+        })
+        .from(bancos)
+        .where(inArray(bancos.id, Array.from(uniqueBancoIds)));
+      
+      bancoMap = new Map(bancosList.map(b => [b.id, b.banco]));
+    }
+
+    // Hydrate each payment with bancoNombre
+    const enrichedPayments = payments.map(payment => ({
+      ...payment,
+      bancoNombre: payment.bancoId ? (bancoMap.get(payment.bancoId) || '-') : '-',
+    }));
+
     // Sort by date (oldest first), then by orden (to group same-order payments)
-    const sortedPayments = payments.sort((a, b) => {
+    const sortedPayments = enrichedPayments.sort((a, b) => {
       // Payments without dates go to the end
       if (!a.fecha) return 1;
       if (!b.fecha) return -1;

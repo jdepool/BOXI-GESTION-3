@@ -1715,12 +1715,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Format data for Excel export
       const excelData = result.data.map(payment => ({
         'Orden': payment.orden,
+        'Nombre del Cliente': payment.nombre || '-',
         'Tipo de Pago': payment.tipoPago,
         'Fecha de Pago': payment.fecha ? new Date(payment.fecha).toLocaleDateString('es-ES') : '-',
         'Monto Bs': payment.montoBs ? `Bs ${payment.montoBs.toFixed(2)}` : '-',
         'Monto USD': payment.montoUsd ? `$${payment.montoUsd.toFixed(2)}` : '-',
         'Referencia': payment.referencia || '-',
-        'Banco': payment.bancoId || '-',
+        'Banco': payment.bancoNombre || '-',
         'Estado de Verificación': payment.estadoVerificacion,
         'Notas': payment.notasVerificacion || '-'
       }));
