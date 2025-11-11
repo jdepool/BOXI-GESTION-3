@@ -695,9 +695,8 @@ async function sendPaymentNotificationViaOutlook(data: PaymentNotificationData):
   const client = await getUncachableOutlookClient();
   const emailContent = generatePaymentNotificationHTML(data);
   
-  // TEST EMAIL - Use labradormariaeugenia@gmail.com for testing
-  const testEmail = 'labradormariaeugenia@gmail.com';
-  // const productionEmails = ['jose.gracia@boxisleep.com.co', 'santiago@boxisleep.com.co'];
+  // Production emails for internal notifications
+  const productionEmails = ['jose.gracia@boxisleep.com.co', 'santiago@boxisleep.com.co'];
   
   const message = {
     subject: `Se ha registrado un pago con ${data.bancoReceptor}`,
@@ -705,18 +704,18 @@ async function sendPaymentNotificationViaOutlook(data: PaymentNotificationData):
       contentType: 'HTML',
       content: emailContent
     },
-    toRecipients: [{
+    toRecipients: productionEmails.map(email => ({
       emailAddress: {
-        address: testEmail
+        address: email
       }
-    }]
+    }))
   };
 
   await client.api('/me/sendMail').post({
     message: message
   });
 
-  console.log(`📧 Payment notification sent via Outlook to ${testEmail} for order ${data.orden} (${data.bancoReceptor})`);
+  console.log(`📧 Payment notification sent via Outlook to ${productionEmails.join(', ')} for order ${data.orden} (${data.bancoReceptor})`);
   return true;
 }
 
@@ -740,19 +739,18 @@ async function sendPaymentNotificationViaGodaddy(data: PaymentNotificationData):
 
   const emailContent = generatePaymentNotificationHTML(data);
   
-  // TEST EMAIL - Use labradormariaeugenia@gmail.com for testing
-  const testEmail = 'labradormariaeugenia@gmail.com';
-  // const productionEmails = ['jose.gracia@boxisleep.com.co', 'santiago@boxisleep.com.co'];
+  // Production emails for internal notifications
+  const productionEmails = ['jose.gracia@boxisleep.com.co', 'santiago@boxisleep.com.co'];
 
   const mailOptions = {
     from: `"Mompox Notificaciones" <${godaddyEmail}>`,
-    to: testEmail,
+    to: productionEmails.join(', '),
     subject: `Se ha registrado un pago con ${data.bancoReceptor}`,
     html: emailContent
   };
 
   await transporter.sendMail(mailOptions);
-  console.log(`📧 Payment notification sent via GoDaddy to ${testEmail} for order ${data.orden} (${data.bancoReceptor})`);
+  console.log(`📧 Payment notification sent via GoDaddy to ${productionEmails.join(', ')} for order ${data.orden} (${data.bancoReceptor})`);
   return true;
 }
 
