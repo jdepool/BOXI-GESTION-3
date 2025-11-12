@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useWebSocket } from '@/contexts/WebSocketContext';
+import { queryClient } from '@/lib/queryClient';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,6 +25,10 @@ export function TrebleWebhookNotification() {
   const handleClose = () => {
     setIsOpen(false);
     clearLastTrebleWebhook();
+    
+    // Invalidate sales queries to refresh the data with updated addresses
+    queryClient.invalidateQueries({ queryKey: ['/api/sales'] });
+    queryClient.invalidateQueries({ queryKey: ['/api/sales/orders'] });
   };
 
   if (!lastTrebleWebhook) {
