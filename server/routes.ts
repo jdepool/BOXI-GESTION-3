@@ -2472,6 +2472,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log(`✅ Successfully updated ${updatedSales.length} product(s) for order ${orderNumber}`);
       
+      // Send WebSocket notification about the address update
+      const { broadcastWebSocketMessage } = await import('./websocket');
+      const updatedFields: string[] = [];
+      if (estado) updatedFields.push('Estado');
+      if (ciudad) updatedFields.push('Ciudad');
+      if (urbanizacion) updatedFields.push('Urbanización');
+      if (direccionUnificada) updatedFields.push('Dirección');
+      if (indicaciones) updatedFields.push('Indicaciones');
+      if (!addressesAreSame && direccionFacturacion) updatedFields.push('Dirección de Facturación');
+      
+      broadcastWebSocketMessage({
+        type: 'treble-webhook',
+        event: 'address-update',
+        data: {
+          orderNumber,
+          productsUpdated: updatedSales.length,
+          updatedFields,
+          estado: estado || null,
+          ciudad: ciudad || null,
+          urbanizacion: urbanizacion || null,
+          direccion: direccionUnificada || null,
+          indicaciones: indicaciones || null,
+          addressesAreSame,
+          timestamp: new Date().toISOString()
+        }
+      });
+      
       res.status(200).json({ 
         success: true, 
         message: "Address updated successfully",
@@ -8370,5 +8397,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   const httpServer = createServer(app);
+  
+  // Initialize WebSocket server
+  const { initializeWebSocket } = await import('./websocket');
+  initializeWebSocket(httpServer);
+  
   return httpServer;
 }

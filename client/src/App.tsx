@@ -4,6 +4,8 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/theme-provider";
+import { WebSocketProvider } from "@/contexts/WebSocketContext";
+import { TrebleWebhookNotification } from "@/components/notifications/TrebleWebhookNotification";
 import { useAuth } from "@/hooks/useAuth";
 import Sales from "@/pages/sales";
 import VentasMompox from "@/pages/ventas-mompox";
@@ -73,10 +75,13 @@ function App() {
   return (
     <ThemeProvider defaultTheme="dark" storageKey="boxisleep-ui-theme">
       <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          <Toaster />
-          <Router />
-        </TooltipProvider>
+        <WebSocketProvider>
+          <TooltipProvider>
+            <Toaster />
+            <TrebleWebhookNotification />
+            <Router />
+          </TooltipProvider>
+        </WebSocketProvider>
       </QueryClientProvider>
     </ThemeProvider>
   );
