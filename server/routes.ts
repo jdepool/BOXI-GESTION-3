@@ -8676,6 +8676,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Stock transfer between warehouses
+  const stockTransferSchema = z.object({
+    productoId: z.string().min(1, "Producto es requerido"),
+    almacenOrigenId: z.string().min(1, "Almacén origen es requerido"),
+    almacenDestinoId: z.string().min(1, "Almacén destino es requerido"),
+    cantidad: z.coerce.number().positive("La cantidad debe ser mayor a 0"),
+    fecha: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Fecha debe estar en formato YYYY-MM-DD"),
+    notas: z.string().optional(),
+  });
+
+  app.post("/api/inventario/transfer", async (req, res) => {
+    try {
+      const validation = stockTransferSchema.safeParse(req.body);
+      if (!validation.success) {
+        return res.status(400).json({ 
+          error: "Datos inválidos", 
+          details: validation.error.errors 
+        });
+      }
+
+      const result = await storage.createStockTransfer(validation.data);
+      
+      res.json({
+        success: true,
+        movimientoSalida: result.movimientoSalida,
+        movimientoEntrada: result.movimientoEntrada,
+        warning: result.warning,
+      });
+    } catch (error) {
+      console.error("Error creating stock transfer:", error);
+      res.status(500).json({ 
+        error: error instanceof Error ? error.message : "Error al crear transferencia" 
+      });
+    }
+  });
+
   // Movimientos de Inventario (Inventory movements)
   app.get("/api/inventario/movimientos", async (req, res) => {
     try {

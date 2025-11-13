@@ -815,9 +815,33 @@ function AnalisisSalidasTab() {
 function GestionarAlmacenesTab() {
   const { toast } = useToast();
   const [nombre, setNombre] = useState("");
+  
+  // Stock transfer states
+  const [selectedProducto, setSelectedProducto] = useState("");
+  const [almacenOrigen, setAlmacenOrigen] = useState("");
+  const [almacenDestino, setAlmacenDestino] = useState("");
+  const [cantidad, setCantidad] = useState("");
+  const [fechaTransfer, setFechaTransfer] = useState(new Date().toISOString().split('T')[0]);
+  const [notasTransfer, setNotasTransfer] = useState("");
 
   const { data: almacenes = [] } = useQuery({
     queryKey: ["/api/inventario/almacenes"],
+  });
+  
+  const { data: productos = [] } = useQuery({
+    queryKey: ["/api/productos"],
+  });
+  
+  const { data: transfers = [] } = useQuery({
+    queryKey: ["/api/inventario/movimientos", "transfers"],
+    queryFn: async () => {
+      const res = await fetch("/api/inventario/movimientos?tipo=transferencia_salida&limit=20");
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || "Failed to fetch transfers");
+      }
+      return res.json();
+    },
   });
 
   const createMutation = useMutation({
@@ -840,6 +864,41 @@ function GestionarAlmacenesTab() {
       });
     },
   });
+  
+  const transferMutation = useMutation({
+    mutationFn: async (data: any) => {
+      return await apiRequest("POST", "/api/inventario/transfer", data);
+    },
+    onSuccess: (data) => {
+      if (data.warning) {
+        toast({
+          title: "Transferencia completada con advertencia",
+          description: data.warning,
+        });
+      } else {
+        toast({
+          title: "Transferencia completada",
+          description: "El stock se ha transferido correctamente",
+        });
+      }
+      // Reset form
+      setSelectedProducto("");
+      setAlmacenOrigen("");
+      setAlmacenDestino("");
+      setCantidad("");
+      setNotasTransfer("");
+      queryClient.invalidateQueries({ queryKey: ["/api/inventario"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/inventario/dashboard"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/inventario/movimientos", "transfers"] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error en la transferencia",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -853,9 +912,185 @@ function GestionarAlmacenesTab() {
     }
     createMutation.mutate({ nombre, activo: true });
   };
+  
+  const handleTransferSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!selectedProducto || !almacenOrigen || !almacenDestino || !cantidad) {
+      toast({
+        title: "Error",
+        description: "Todos los campos son requeridos",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (almacenOrigen === almacenDestino) {
+      toast({
+        title: "Error",
+        description: "El almacén origen y destino deben ser diferentes",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    transferMutation.mutate({
+      productoId: selectedProducto,
+      almacenOrigenId: almacenOrigen,
+      almacenDestinoId: almacenDestino,
+      cantidad: parseFloat(cantidad),
+      fecha: fechaTransfer,
+      notas: notasTransfer || undefined,
+    });
+  };
 
   return (
     <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>Transferir Stock entre Almacenes</CardTitle>
+          <CardDescription>Mover productos de un almacén a otro</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleTransferSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="producto-transfer">Producto *</Label>
+              <Select value={selectedProducto} onValueChange={setSelectedProducto}>
+                <SelectTrigger id="producto-transfer" data-testid="select-producto-transfer">
+                  <SelectValue placeholder="Seleccione un producto" />
+                </SelectTrigger>
+                <SelectContent>
+                  {productos.map((p: any) => (
+                    <SelectItem key={p.id} value={p.id}>
+                      {p.sku} - {p.nombre}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="almacen-origen">Almacén Origen *</Label>
+                <Select value={almacenOrigen} onValueChange={setAlmacenOrigen}>
+                  <SelectTrigger id="almacen-origen" data-testid="select-almacen-origen">
+                    <SelectValue placeholder="Seleccione origen" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {almacenes.map((a: any) => (
+                      <SelectItem key={a.id} value={a.id} disabled={a.id === almacenDestino}>
+                        {a.nombre}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="almacen-destino">Almacén Destino *</Label>
+                <Select value={almacenDestino} onValueChange={setAlmacenDestino}>
+                  <SelectTrigger id="almacen-destino" data-testid="select-almacen-destino">
+                    <SelectValue placeholder="Seleccione destino" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {almacenes.map((a: any) => (
+                      <SelectItem key={a.id} value={a.id} disabled={a.id === almacenOrigen}>
+                        {a.nombre}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="cantidad-transfer">Cantidad *</Label>
+                <Input
+                  id="cantidad-transfer"
+                  type="number"
+                  min="1"
+                  step="1"
+                  value={cantidad}
+                  onChange={(e) => setCantidad(e.target.value)}
+                  placeholder="0"
+                  data-testid="input-cantidad-transfer"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="fecha-transfer">Fecha</Label>
+                <Input
+                  id="fecha-transfer"
+                  type="date"
+                  value={fechaTransfer}
+                  onChange={(e) => setFechaTransfer(e.target.value)}
+                  data-testid="input-fecha-transfer"
+                />
+              </div>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="notas-transfer">Notas (opcional)</Label>
+              <Input
+                id="notas-transfer"
+                value={notasTransfer}
+                onChange={(e) => setNotasTransfer(e.target.value)}
+                placeholder="Motivo de la transferencia..."
+                data-testid="input-notas-transfer"
+              />
+            </div>
+            
+            <Button 
+              type="submit" 
+              disabled={transferMutation.isPending}
+              data-testid="button-submit-transfer"
+            >
+              {transferMutation.isPending ? "Procesando..." : "Transferir Stock"}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+      
+      <Card>
+        <CardHeader>
+          <CardTitle>Historial de Transferencias</CardTitle>
+          <CardDescription>Últimas 20 transferencias realizadas</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="rounded-md border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Fecha</TableHead>
+                  <TableHead>Producto</TableHead>
+                  <TableHead>Desde</TableHead>
+                  <TableHead className="text-right">Cantidad</TableHead>
+                  <TableHead>Notas</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {transfers.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center">No hay transferencias registradas</TableCell>
+                  </TableRow>
+                ) : (
+                  transfers.map((transfer: any) => (
+                    <TableRow key={transfer.id} data-testid={`row-transfer-${transfer.id}`}>
+                      <TableCell>{transfer.fecha}</TableCell>
+                      <TableCell>{transfer.productoSku} - {transfer.productoNombre}</TableCell>
+                      <TableCell>{transfer.almacenNombre}</TableCell>
+                      <TableCell className="text-right">{transfer.cantidad}</TableCell>
+                      <TableCell className="text-sm text-muted-foreground">{transfer.notas || "-"}</TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
+      
       <div className="grid gap-6 md:grid-cols-2">
         <Card>
           <CardHeader>
