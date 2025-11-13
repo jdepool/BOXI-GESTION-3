@@ -8506,17 +8506,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Manual inventory entry - uses additive logic
+  // stockActual is treated as a delta (adds to existing)
+  // stockReservado and stockMinimo are direct sets (replace existing values)
   app.post("/api/inventario", async (req, res) => {
     try {
       const validation = insertInventarioSchema.safeParse(req.body);
       if (!validation.success) {
         return res.status(400).json({ error: "Invalid request data", details: validation.error.errors });
       }
-      const inventario = await storage.createInventario(validation.data);
+      
+      const { productoId, almacenId, stockActual, stockReservado, stockMinimo } = validation.data;
+      
+      // Use adjustInventarioStock for additive logic
+      const inventario = await storage.adjustInventarioStock({
+        productoId,
+        almacenId,
+        stockActualDelta: stockActual,  // Treats as addition
+        stockReservado,  // Direct set (optional)
+        stockMinimo,  // Direct set (optional)
+      });
+      
       res.json(inventario);
     } catch (error) {
-      console.error("Error creating inventario:", error);
-      res.status(500).json({ error: "Failed to create inventario" });
+      console.error("Error creating/updating inventario:", error);
+      res.status(500).json({ error: "Failed to create/update inventario" });
     }
   });
 
@@ -8601,16 +8615,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
             continue;
           }
 
-          // Call upsert
-          const result = await storage.upsertInventario({
+          // Check if record exists to track created vs updated
+          const existing = await storage.getInventarioByProductoAndAlmacen(productoId, almacenId);
+          
+          // Call adjustInventarioStock (adds stock instead of replacing)
+          // Provide explicit 0 defaults for omitted fields to satisfy NOT NULL constraints
+          await storage.adjustInventarioStock({
             productoId,
             almacenId,
-            stockActual: row.stockActual,
-            stockReservado: row.stockReservado,
-            stockMinimo: row.stockMinimo,
+            stockActualDelta: row.stockActual,  // Treats as addition
+            stockReservado: row.stockReservado ?? undefined,  // Direct set (undefined preserves existing)
+            stockMinimo: row.stockMinimo ?? undefined,  // Direct set (undefined preserves existing)
           });
 
-          if (result.wasCreated) {
+          if (!existing) {
             created++;
           } else {
             updated++;

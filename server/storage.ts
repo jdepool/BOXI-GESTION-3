@@ -466,6 +466,13 @@ export interface IStorage {
   getInventarioByProductoAndAlmacen(productoId: string, almacenId: string): Promise<Inventario | undefined>;
   createInventario(inventario: InsertInventario): Promise<Inventario>;
   updateInventario(id: string, inventario: Partial<InsertInventario>): Promise<Inventario | undefined>;
+  adjustInventarioStock(data: {
+    productoId: string;
+    almacenId: string;
+    stockActualDelta: number;
+    stockReservado?: number;
+    stockMinimo?: number;
+  }): Promise<Inventario>;
   updateInventarioStock(productoId: string, almacenId: string, stockActualDelta: number): Promise<Inventario | undefined>;
   deleteInventario(id: string): Promise<boolean>;
 
@@ -4041,6 +4048,7 @@ export class DatabaseStorage implements IStorage {
         stockActual: inventario.stockActual,
         stockReservado: inventario.stockReservado,
         stockMinimo: inventario.stockMinimo,
+        fechaActualizacion: inventario.fechaActualizacion,
         createdAt: inventario.createdAt,
         updatedAt: inventario.updatedAt,
         productoNombre: productos.nombre,
@@ -4082,35 +4090,90 @@ export class DatabaseStorage implements IStorage {
     return updatedInventario || undefined;
   }
 
-  async updateInventarioStock(productoId: string, almacenId: string, stockActualDelta: number): Promise<Inventario | undefined> {
-    // First, try to get existing inventory record
-    const existing = await this.getInventarioByProductoAndAlmacen(productoId, almacenId);
+  /**
+   * Adjust inventory stock with hybrid semantics:
+   * - stockActualDelta: ADDITIVE - adds to existing stock (for receiving shipments)
+   * - stockReservado: DIRECT SET - replaces existing value (for updating reservations)
+   * - stockMinimo: DIRECT SET - replaces existing value (for updating safety thresholds)
+   * 
+   * This method updates fechaActualizacion timestamp on every modification.
+   * If the record doesn't exist, it creates one with the provided values.
+   */
+  async adjustInventarioStock(data: {
+    productoId: string;
+    almacenId: string;
+    stockActualDelta: number;
+    stockReservado?: number;
+    stockMinimo?: number;
+  }): Promise<Inventario> {
+    // Validate inputs to prevent NaN/undefined propagation
+    if (!Number.isFinite(data.stockActualDelta)) {
+      throw new Error(`Invalid stockActualDelta: ${data.stockActualDelta}`);
+    }
+    if (data.stockActualDelta < 0) {
+      throw new Error(`Negative stockActualDelta not allowed: ${data.stockActualDelta}`);
+    }
+    if (data.stockReservado !== undefined) {
+      if (!Number.isFinite(data.stockReservado) || data.stockReservado < 0) {
+        throw new Error(`Invalid stockReservado: ${data.stockReservado}`);
+      }
+    }
+    if (data.stockMinimo !== undefined) {
+      if (!Number.isFinite(data.stockMinimo) || data.stockMinimo < 0) {
+        throw new Error(`Invalid stockMinimo: ${data.stockMinimo}`);
+      }
+    }
+    
+    const existing = await this.getInventarioByProductoAndAlmacen(data.productoId, data.almacenId);
+    const now = new Date();
     
     if (existing) {
-      // Update existing record
-      const [updatedInventario] = await db
+      // Update existing record: add delta to stockActual, directly set reserved/minimum if provided
+      const updateData: any = {
+        stockActual: sql`stock_actual + ${data.stockActualDelta}`,  // Use raw column name to avoid Drizzle self-reference error
+        fechaActualizacion: now,
+        updatedAt: now,
+      };
+      
+      if (data.stockReservado !== undefined) {
+        updateData.stockReservado = data.stockReservado;
+      }
+      
+      if (data.stockMinimo !== undefined) {
+        updateData.stockMinimo = data.stockMinimo;
+      }
+      
+      const [updated] = await db
         .update(inventario)
-        .set({
-          stockActual: sql`${inventario.stockActual} + ${stockActualDelta}`,
-          updatedAt: new Date(),
-        })
-        .where(and(eq(inventario.productoId, productoId), eq(inventario.almacenId, almacenId)))
+        .set(updateData)
+        .where(and(eq(inventario.productoId, data.productoId), eq(inventario.almacenId, data.almacenId)))
         .returning();
-      return updatedInventario || undefined;
+      return updated;
     } else {
-      // Create new record with the delta (allows negative stock for deficit tracking)
-      const [newInventario] = await db
+      // Create new record with delta as initial stock (delta + 0 = delta)
+      const [created] = await db
         .insert(inventario)
         .values({
-          productoId,
-          almacenId,
-          stockActual: stockActualDelta,
-          stockReservado: 0,
-          stockMinimo: 0,
+          productoId: data.productoId,
+          almacenId: data.almacenId,
+          stockActual: data.stockActualDelta,
+          stockReservado: data.stockReservado ?? 0,
+          stockMinimo: data.stockMinimo ?? 0,
+          fechaActualizacion: now,
         })
         .returning();
-      return newInventario;
+      return created;
     }
+  }
+
+  async updateInventarioStock(productoId: string, almacenId: string, stockActualDelta: number): Promise<Inventario | undefined> {
+    // Delegate to adjustInventarioStock for consistency
+    const result = await this.adjustInventarioStock({
+      productoId,
+      almacenId,
+      stockActualDelta,
+    });
+    return result || undefined;
   }
 
   async upsertInventario(data: {

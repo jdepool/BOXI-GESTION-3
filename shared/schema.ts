@@ -748,6 +748,7 @@ export const inventario = pgTable("inventario", {
   stockActual: integer("stock_actual").notNull().default(0),
   stockReservado: integer("stock_reservado").notNull().default(0),
   stockMinimo: integer("stock_minimo").notNull().default(0),
+  fechaActualizacion: timestamp("fecha_actualizacion").notNull().defaultNow(),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (table) => ({
@@ -804,8 +805,13 @@ export const insertAlmacenSchema = createInsertSchema(almacenes).omit({
 
 export const insertInventarioSchema = createInsertSchema(inventario).omit({
   id: true,
+  fechaActualizacion: true,
   createdAt: true,
   updatedAt: true,
+}).extend({
+  stockActual: z.coerce.number().min(0, "Stock actual debe ser mayor o igual a 0").default(0),  // Optional, defaults to 0 (no addition)
+  stockReservado: z.coerce.number().min(0, "Stock reservado debe ser mayor o igual a 0").optional(),
+  stockMinimo: z.coerce.number().min(0, "Stock mínimo debe ser mayor o igual a 0").optional(),
 });
 
 export const insertMovimientoInventarioSchema = createInsertSchema(movimientosInventario).omit({
