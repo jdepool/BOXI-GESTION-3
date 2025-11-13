@@ -8468,6 +8468,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get all productos for inventory management
+  app.get("/api/productos", async (req, res) => {
+    try {
+      const productos = await storage.getProductos();
+      res.json(productos);
+    } catch (error) {
+      console.error("Error fetching productos:", error);
+      res.status(500).json({ error: "Failed to fetch productos" });
+    }
+  });
+
   // Inventario (Stock levels)
   app.get("/api/inventario", async (req, res) => {
     try {
