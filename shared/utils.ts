@@ -11,6 +11,7 @@ export function normalizeCanal(canal: string | null | undefined): string | null 
     'manual': 'Manual',
     'manual mp': 'Manual MP',
     'tienda': 'Tienda',
+    'tienda mp': 'Tienda MP',
     'treble': 'Treble',
   };
   
