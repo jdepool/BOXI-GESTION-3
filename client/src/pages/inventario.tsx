@@ -86,9 +86,9 @@ function DashboardTab() {
   });
 
   const filteredInventory = inventory.filter((item: any) =>
-    item.sku?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.nombreProducto?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.nombreAlmacen?.toLowerCase().includes(searchTerm.toLowerCase())
+    item.productoSku?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    item.productoNombre?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    item.almacenNombre?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const getStatusBadge = (disponible: number, minimo: number) => {
@@ -102,8 +102,14 @@ function DashboardTab() {
   };
 
   const totalProducts = inventory.length;
-  const lowStock = inventory.filter((item: any) => item.stockDisponible > 0 && item.stockDisponible <= item.stockMinimo).length;
-  const outOfStock = inventory.filter((item: any) => item.stockDisponible <= 0).length;
+  const lowStock = inventory.filter((item: any) => {
+    const stockDisponible = item.stockActual - (item.stockReservado ?? 0);
+    return stockDisponible > 0 && stockDisponible <= item.stockMinimo;
+  }).length;
+  const outOfStock = inventory.filter((item: any) => {
+    const stockDisponible = item.stockActual - (item.stockReservado ?? 0);
+    return stockDisponible <= 0;
+  }).length;
 
   return (
     <div className="space-y-6">
@@ -183,18 +189,21 @@ function DashboardTab() {
                     <TableCell colSpan={8} className="text-center">No hay datos de inventario</TableCell>
                   </TableRow>
                 ) : (
-                  filteredInventory.map((item: any) => (
-                    <TableRow key={item.id} data-testid={`row-inventory-${item.id}`}>
-                      <TableCell className="font-medium">{item.sku}</TableCell>
-                      <TableCell>{item.nombreProducto}</TableCell>
-                      <TableCell>{item.nombreAlmacen}</TableCell>
-                      <TableCell className="text-right">{item.stockActual}</TableCell>
-                      <TableCell className="text-right">{item.stockReservado}</TableCell>
-                      <TableCell className="text-right font-bold">{item.stockDisponible}</TableCell>
-                      <TableCell className="text-right">{item.stockMinimo}</TableCell>
-                      <TableCell>{getStatusBadge(item.stockDisponible, item.stockMinimo)}</TableCell>
-                    </TableRow>
-                  ))
+                  filteredInventory.map((item: any) => {
+                    const stockDisponible = item.stockActual - (item.stockReservado ?? 0);
+                    return (
+                      <TableRow key={item.id} data-testid={`row-inventory-${item.id}`}>
+                        <TableCell className="font-medium">{item.productoSku}</TableCell>
+                        <TableCell>{item.productoNombre}</TableCell>
+                        <TableCell>{item.almacenNombre}</TableCell>
+                        <TableCell className="text-right">{item.stockActual}</TableCell>
+                        <TableCell className="text-right">{item.stockReservado ?? 0}</TableCell>
+                        <TableCell className="text-right font-bold">{stockDisponible}</TableCell>
+                        <TableCell className="text-right">{item.stockMinimo ?? 0}</TableCell>
+                        <TableCell>{getStatusBadge(stockDisponible, item.stockMinimo ?? 0)}</TableCell>
+                      </TableRow>
+                    );
+                  })
                 )}
               </TableBody>
             </Table>
