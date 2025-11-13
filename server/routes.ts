@@ -3456,7 +3456,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/sales/:saleId/fecha-despacho", async (req, res) => {
     try {
       const { saleId } = req.params;
-      const { fechaDespacho, almacenId } = req.body;
+      let { fechaDespacho, almacenId } = req.body;
 
       // Validate that sale exists
       const existingSale = await storage.getSaleById(saleId);
@@ -3470,19 +3470,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(500).json({ error: "Failed to update fecha despacho" });
       }
 
-      // If fechaDespacho is being set (not null) and there's an almacenId, deduct inventory
-      if (fechaDespacho && almacenId && updatedSale.orden) {
-        try {
-          // Also update the almacenDespachoId for this sale
-          await storage.updateSale(saleId, { almacenDespachoId: almacenId });
-          
-          // Deduct inventory for this specific order
-          await storage.deductInventoryForOrder(updatedSale.orden, almacenId, fechaDespacho);
-          console.log(`✅ Inventory deducted for order ${updatedSale.orden} from almacen ${almacenId}`);
-        } catch (inventoryError) {
-          console.error("Error deducting inventory:", inventoryError);
-          // Don't fail the request if inventory deduction fails - just log the error
-          // This allows the fechaDespacho to still be set even if there's an inventory issue
+      // If fechaDespacho is being set (not null), handle inventory deduction
+      if (fechaDespacho && updatedSale.orden) {
+        // If no almacenId provided, try to use the principal warehouse
+        if (!almacenId) {
+          const principalWarehouse = await storage.getPrincipalWarehouse();
+          if (principalWarehouse) {
+            almacenId = principalWarehouse.id;
+          } else {
+            console.warn(`⚠️ No almacenId provided and no principal warehouse configured. Skipping inventory deduction for order ${updatedSale.orden}`);
+          }
+        }
+
+        // Only deduct inventory if we have an almacenId (either provided or from principal warehouse)
+        if (almacenId) {
+          try {
+            // Also update the almacenDespachoId for this sale
+            await storage.updateSale(saleId, { almacenDespachoId: almacenId });
+            
+            // Deduct inventory for this specific order
+            await storage.deductInventoryForOrder(updatedSale.orden, almacenId, fechaDespacho);
+            console.log(`✅ Inventory deducted for order ${updatedSale.orden} from almacen ${almacenId}`);
+          } catch (inventoryError) {
+            console.error("Error deducting inventory:", inventoryError);
+            // Don't fail the request if inventory deduction fails - just log the error
+            // This allows the fechaDespacho to still be set even if there's an inventory issue
+          }
         }
       }
 
@@ -8465,6 +8478,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting almacen:", error);
       res.status(500).json({ error: "Failed to delete almacen" });
+    }
+  });
+
+  // Set/unset principal warehouse
+  app.post("/api/inventario/almacenes/:id/principal", async (req, res) => {
+    try {
+      const { isPrincipal } = req.body;
+      
+      if (typeof isPrincipal !== 'boolean') {
+        return res.status(400).json({ error: "isPrincipal must be a boolean" });
+      }
+
+      const almacen = await storage.setPrincipalWarehouse(req.params.id, isPrincipal);
+      
+      if (!almacen) {
+        return res.status(404).json({ error: "Almacen not found" });
+      }
+
+      res.json(almacen);
+    } catch (error) {
+      console.error("Error setting principal warehouse:", error);
+      
+      // Handle specific error cases
+      if (error instanceof Error) {
+        if (error.message.includes('inactive')) {
+          return res.status(400).json({ error: error.message });
+        }
+      }
+      
+      res.status(500).json({ error: "Failed to set principal warehouse" });
     }
   });
 
