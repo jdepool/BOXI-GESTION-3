@@ -456,6 +456,8 @@ export interface IStorage {
   createAlmacen(almacen: InsertAlmacen): Promise<Almacen>;
   updateAlmacen(id: string, almacen: Partial<InsertAlmacen>): Promise<Almacen | undefined>;
   deleteAlmacen(id: string): Promise<boolean>;
+  setPrincipalWarehouse(id: string, isPrincipal: boolean): Promise<Almacen | undefined>;
+  getPrincipalWarehouse(): Promise<Almacen | undefined>;
 
   // Inventario (Stock levels)
   getInventario(filters?: {
@@ -4013,6 +4015,58 @@ export class DatabaseStorage implements IStorage {
   async deleteAlmacen(id: string): Promise<boolean> {
     const result = await db.delete(almacenes).where(eq(almacenes.id, id));
     return (result.rowCount ?? 0) > 0;
+  }
+
+  async setPrincipalWarehouse(id: string, isPrincipal: boolean): Promise<Almacen | undefined> {
+    return await db.transaction(async (tx) => {
+      // Get the warehouse with FOR UPDATE lock
+      const [warehouse] = await tx
+        .select()
+        .from(almacenes)
+        .where(eq(almacenes.id, id))
+        .for('update');
+
+      // Warehouse not found
+      if (!warehouse) {
+        return undefined;
+      }
+
+      // When setting to principal, validate it's active
+      if (isPrincipal && !warehouse.activo) {
+        throw new Error('Cannot set inactive warehouse as principal');
+      }
+
+      // Short-circuit if state already matches
+      if (warehouse.esPrincipal === isPrincipal) {
+        return warehouse;
+      }
+
+      // If setting to principal, clear any existing principal first
+      if (isPrincipal) {
+        await tx
+          .update(almacenes)
+          .set({ esPrincipal: false, updatedAt: new Date() })
+          .where(eq(almacenes.esPrincipal, true));
+      }
+
+      // Update the target warehouse
+      const [updated] = await tx
+        .update(almacenes)
+        .set({ esPrincipal: isPrincipal, updatedAt: new Date() })
+        .where(eq(almacenes.id, id))
+        .returning();
+
+      return updated || undefined;
+    });
+  }
+
+  async getPrincipalWarehouse(): Promise<Almacen | undefined> {
+    const [warehouse] = await db
+      .select()
+      .from(almacenes)
+      .where(eq(almacenes.esPrincipal, true))
+      .limit(1);
+    return warehouse || undefined;
   }
 
   // Inventario (Stock levels)

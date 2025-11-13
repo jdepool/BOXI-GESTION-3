@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, pgSequence, text, varchar, decimal, timestamp, integer, boolean, index, unique, check, jsonb } from "drizzle-orm/pg-core";
+import { pgTable, pgSequence, text, varchar, decimal, timestamp, integer, boolean, index, unique, uniqueIndex, check, jsonb } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -736,9 +736,12 @@ export const almacenes = pgTable("almacenes", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   nombre: text("nombre").notNull().unique(),
   activo: boolean("activo").notNull().default(true),
+  esPrincipal: boolean("es_principal").notNull().default(false),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
-});
+}, (table) => [
+  uniqueIndex("almacenes_principal_unique").on(table.esPrincipal).where(sql`${table.esPrincipal} = true`),
+]);
 
 // Inventario (Stock levels per product per warehouse)
 export const inventario = pgTable("inventario", {
