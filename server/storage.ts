@@ -4110,9 +4110,7 @@ export class DatabaseStorage implements IStorage {
     if (!Number.isFinite(data.stockActualDelta)) {
       throw new Error(`Invalid stockActualDelta: ${data.stockActualDelta}`);
     }
-    if (data.stockActualDelta < 0) {
-      throw new Error(`Negative stockActualDelta not allowed: ${data.stockActualDelta}`);
-    }
+    // Note: Negative deltas are allowed for stock transfers and withdrawals
     if (data.stockReservado !== undefined) {
       if (!Number.isFinite(data.stockReservado) || data.stockReservado < 0) {
         throw new Error(`Invalid stockReservado: ${data.stockReservado}`);
@@ -4373,6 +4371,152 @@ export class DatabaseStorage implements IStorage {
   async deleteTransferencia(id: string): Promise<boolean> {
     const result = await db.delete(transferencias).where(eq(transferencias.id, id));
     return (result.rowCount ?? 0) > 0;
+  }
+
+  /**
+   * Create a stock transfer between warehouses
+   * This atomically (in a transaction):
+   * 1. Checks stock availability in source warehouse (warns but allows negative for deficit tracking)
+   * 2. Reduces stock from source warehouse
+   * 3. Increases stock in destination warehouse
+   * 4. Creates two movement records (salida and entrada) linked by transferId
+   * 
+   * Note: Allows negative stock as per business rules for deficit tracking.
+   */
+  async createStockTransfer(data: {
+    productoId: string;
+    almacenOrigenId: string;
+    almacenDestinoId: string;
+    cantidad: number;
+    fecha: string;
+    notas?: string;
+  }): Promise<{
+    movimientoSalida: MovimientoInventario;
+    movimientoEntrada: MovimientoInventario;
+    warning?: string;
+  }> {
+    // Validate quantity
+    if (data.cantidad <= 0) {
+      throw new Error('La cantidad debe ser mayor a 0');
+    }
+
+    // Validate source and destination are different
+    if (data.almacenOrigenId === data.almacenDestinoId) {
+      throw new Error('El almacén origen y destino deben ser diferentes');
+    }
+
+    // Check stock availability in source warehouse (warn but allow negative)
+    const sourceInventory = await this.getInventarioByProductoAndAlmacen(
+      data.productoId,
+      data.almacenOrigenId
+    );
+    
+    let warning: string | undefined;
+    if (sourceInventory) {
+      const availableStock = sourceInventory.stockActual - (sourceInventory.stockReservado ?? 0);
+      if (availableStock < data.cantidad) {
+        warning = `Advertencia: Stock disponible insuficiente en almacén origen (disponible: ${availableStock}, solicitado: ${data.cantidad}). La transferencia creará un déficit.`;
+      }
+    }
+
+    // Execute transfer in a transaction to ensure atomicity
+    return await db.transaction(async (tx) => {
+      // Generate a transfer ID to link both movements
+      const transferId = crypto.randomUUID();
+      const now = new Date();
+
+      // 1. Reduce stock from source warehouse
+      const existing = await tx
+        .select()
+        .from(inventario)
+        .where(
+          and(
+            eq(inventario.productoId, data.productoId),
+            eq(inventario.almacenId, data.almacenOrigenId)
+          )
+        );
+      
+      if (existing.length > 0) {
+        await tx
+          .update(inventario)
+          .set({
+            stockActual: sql`stock_actual - ${data.cantidad}`,
+            fechaActualizacion: now,
+            updatedAt: now,
+          })
+          .where(eq(inventario.id, existing[0].id));
+      } else {
+        // Create with negative stock (deficit)
+        await tx.insert(inventario).values({
+          productoId: data.productoId,
+          almacenId: data.almacenOrigenId,
+          stockActual: -data.cantidad,
+          stockReservado: 0,
+          stockMinimo: 0,
+        });
+      }
+
+      // 2. Increase stock in destination warehouse
+      const destExisting = await tx
+        .select()
+        .from(inventario)
+        .where(
+          and(
+            eq(inventario.productoId, data.productoId),
+            eq(inventario.almacenId, data.almacenDestinoId)
+          )
+        );
+      
+      if (destExisting.length > 0) {
+        await tx
+          .update(inventario)
+          .set({
+            stockActual: sql`stock_actual + ${data.cantidad}`,
+            fechaActualizacion: now,
+            updatedAt: now,
+          })
+          .where(eq(inventario.id, destExisting[0].id));
+      } else {
+        // Create new inventory record
+        await tx.insert(inventario).values({
+          productoId: data.productoId,
+          almacenId: data.almacenDestinoId,
+          stockActual: data.cantidad,
+          stockReservado: 0,
+          stockMinimo: 0,
+        });
+      }
+
+      // 3. Create salida movement for source warehouse
+      const [movimientoSalida] = await tx
+        .insert(movimientosInventario)
+        .values({
+          productoId: data.productoId,
+          almacenId: data.almacenOrigenId,
+          tipo: 'transferencia_salida',
+          cantidad: data.cantidad,
+          transferId,
+          fecha: data.fecha,
+          notas: data.notas || `Transferencia a almacén destino`,
+        })
+        .returning();
+
+      // 4. Create entrada movement for destination warehouse
+      const [movimientoEntrada] = await tx
+        .insert(movimientosInventario)
+        .values({
+          productoId: data.productoId,
+          almacenId: data.almacenDestinoId,
+          tipo: 'transferencia_entrada',
+          cantidad: data.cantidad,
+          transferId,
+          fecha: data.fecha,
+          notas: data.notas || `Transferencia desde almacén origen`,
+        })
+        .returning();
+
+      return { movimientoSalida, movimientoEntrada, warning };
+    });
   }
 
   // Automatic inventory deduction when order is dispatched
