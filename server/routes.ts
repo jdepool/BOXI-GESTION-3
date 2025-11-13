@@ -8511,6 +8511,113 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Bulk upload inventory
+  const uploadInventarioRowSchema = z.object({
+    sku: z.string().trim().min(1, "SKU es requerido"),
+    almacen: z.string().trim().min(1, "Almacén es requerido"),
+    stockActual: z.coerce.number().min(0, "Stock actual debe ser mayor o igual a 0"),
+    stockReservado: z.coerce.number().min(0).optional(),
+    stockMinimo: z.coerce.number().min(0).optional(),
+  });
+
+  const uploadInventarioSchema = z.object({
+    records: z.array(uploadInventarioRowSchema).min(1).max(1000, "Máximo 1000 registros por carga"),
+  });
+
+  app.post("/api/inventario/upload", async (req, res) => {
+    try {
+      const validation = uploadInventarioSchema.safeParse(req.body);
+      if (!validation.success) {
+        return res.status(400).json({ 
+          error: "Datos inválidos", 
+          details: validation.error.errors 
+        });
+      }
+
+      const { records } = validation.data;
+
+      // Prefetch all productos and almacenes to build lookup maps
+      const allProductos = await storage.getProductos();
+      const allAlmacenes = await storage.getAlmacenes();
+
+      const productoMap = new Map(
+        allProductos.map(p => [p.sku?.toLowerCase() || '', p.id])
+      );
+      const almacenMap = new Map(
+        allAlmacenes.map(a => [a.nombre.toLowerCase(), a.id])
+      );
+
+      let created = 0;
+      let updated = 0;
+      const failedRows: Array<{ rowIndex: number; sku: string; almacen: string; error: string }> = [];
+
+      // Process each row individually
+      for (let i = 0; i < records.length; i++) {
+        const row = records[i];
+        try {
+          // Lookup producto and almacen
+          const productoId = productoMap.get(row.sku.toLowerCase());
+          const almacenId = almacenMap.get(row.almacen.toLowerCase());
+
+          if (!productoId) {
+            failedRows.push({
+              rowIndex: i + 1,
+              sku: row.sku,
+              almacen: row.almacen,
+              error: `Producto con SKU "${row.sku}" no encontrado`,
+            });
+            continue;
+          }
+
+          if (!almacenId) {
+            failedRows.push({
+              rowIndex: i + 1,
+              sku: row.sku,
+              almacen: row.almacen,
+              error: `Almacén "${row.almacen}" no encontrado`,
+            });
+            continue;
+          }
+
+          // Call upsert
+          const result = await storage.upsertInventario({
+            productoId,
+            almacenId,
+            stockActual: row.stockActual,
+            stockReservado: row.stockReservado,
+            stockMinimo: row.stockMinimo,
+          });
+
+          if (result.wasCreated) {
+            created++;
+          } else {
+            updated++;
+          }
+        } catch (error) {
+          console.error(`Error processing row ${i + 1}:`, error);
+          failedRows.push({
+            rowIndex: i + 1,
+            sku: row.sku,
+            almacen: row.almacen,
+            error: error instanceof Error ? error.message : "Error desconocido",
+          });
+        }
+      }
+
+      res.json({
+        success: true,
+        created,
+        updated,
+        failedCount: failedRows.length,
+        failedRows,
+        totalProcessed: records.length,
+      });
+    } catch (error) {
+      console.error("Error uploading inventario:", error);
+      res.status(500).json({ error: "Error al procesar la carga de inventario" });
+    }
+  });
+
   // Movimientos de Inventario (Inventory movements)
   app.get("/api/inventario/movimientos", async (req, res) => {
     try {

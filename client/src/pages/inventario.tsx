@@ -8,11 +8,13 @@ import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import Sidebar from "@/components/layout/sidebar";
 import Header from "@/components/layout/header";
-import { Box, Package, TrendingDown, Warehouse, AlertTriangle } from "lucide-react";
+import { Box, Package, TrendingDown, Warehouse, AlertTriangle, Upload, FileSpreadsheet } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
+import * as XLSX from "xlsx";
 
 export default function Inventario() {
   return (
@@ -75,6 +77,9 @@ export default function Inventario() {
 
 function DashboardTab() {
   const [searchTerm, setSearchTerm] = useState("");
+  const [uploadOpen, setUploadOpen] = useState(false);
+  const [uploadTab, setUploadTab] = useState<"manual" | "excel">("manual");
+  const { toast } = useToast();
 
   const { data: inventory = [], isLoading } = useQuery({
     queryKey: ["/api/inventory/dashboard"],
@@ -138,13 +143,21 @@ function DashboardTab() {
           <CardDescription>Vista general del stock en todos los almacenes</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="mb-4">
+          <div className="mb-4 flex items-center justify-between gap-4">
             <Input
               placeholder="Buscar por SKU, producto o almacén..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               data-testid="input-search"
+              className="flex-1"
             />
+            <Button 
+              onClick={() => setUploadOpen(true)}
+              data-testid="button-cargar-inventario"
+            >
+              <Upload className="h-4 w-4 mr-2" />
+              Cargar Inventario
+            </Button>
           </div>
           <div className="rounded-md border">
             <Table>
@@ -188,7 +201,369 @@ function DashboardTab() {
           </div>
         </CardContent>
       </Card>
+
+      <CargarInventarioDialog 
+        open={uploadOpen} 
+        onOpenChange={setUploadOpen}
+        uploadTab={uploadTab}
+        setUploadTab={setUploadTab}
+      />
     </div>
+  );
+}
+
+function CargarInventarioDialog({ 
+  open, 
+  onOpenChange, 
+  uploadTab, 
+  setUploadTab 
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  uploadTab: "manual" | "excel";
+  setUploadTab: (tab: "manual" | "excel") => void;
+}) {
+  const { toast } = useToast();
+  
+  // Manual entry states
+  const [selectedProducto, setSelectedProducto] = useState("");
+  const [selectedAlmacen, setSelectedAlmacen] = useState("");
+  const [stockActual, setStockActual] = useState("");
+  const [stockReservado, setStockReservado] = useState("");
+  const [stockMinimo, setStockMinimo] = useState("");
+  
+  // Excel upload states
+  const [excelFile, setExcelFile] = useState<File | null>(null);
+  const [uploadSummary, setUploadSummary] = useState<{
+    created: number;
+    updated: number;
+    failedCount: number;
+    failedRows: Array<{ rowIndex: number; sku: string; almacen: string; error: string }>;
+  } | null>(null);
+  
+  // Fetch productos and almacenes
+  const { data: productos = [] } = useQuery({
+    queryKey: ["/api/productos"],
+  });
+  
+  const { data: almacenes = [] } = useQuery({
+    queryKey: ["/api/inventario/almacenes"],
+  });
+  
+  // Manual entry mutation
+  const manualMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const res = await apiRequest("/api/inventario/upload", "POST", {
+        records: [data]
+      });
+      return await res.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "Stock actualizado",
+        description: `${data.created} registros creados, ${data.updated} actualizados`,
+      });
+      // Reset form
+      setSelectedProducto("");
+      setSelectedAlmacen("");
+      setStockActual("");
+      setStockReservado("");
+      setStockMinimo("");
+      queryClient.invalidateQueries({ queryKey: ["/api/inventario"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/inventory/dashboard"] });
+      onOpenChange(false);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+  
+  // Excel upload mutation
+  const excelMutation = useMutation({
+    mutationFn: async (records: any[]) => {
+      const res = await apiRequest("/api/inventario/upload", "POST", { records });
+      return await res.json();
+    },
+    onSuccess: (data) => {
+      setUploadSummary(data);
+      queryClient.invalidateQueries({ queryKey: ["/api/inventario"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/inventory/dashboard"] });
+      setExcelFile(null);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error al procesar archivo",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+  
+  const handleManualSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    const producto = productos.find((p: any) => p.id === selectedProducto);
+    const almacen = almacenes.find((a: any) => a.id === selectedAlmacen);
+    
+    if (!producto || !almacen) {
+      toast({
+        title: "Error",
+        description: "Seleccione producto y almacén",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    manualMutation.mutate({
+      sku: producto.sku,
+      almacen: almacen.nombre,
+      stockActual: parseFloat(stockActual) || 0,
+      stockReservado: stockReservado ? parseFloat(stockReservado) : undefined,
+      stockMinimo: stockMinimo ? parseFloat(stockMinimo) : undefined,
+    });
+  };
+  
+  const handleExcelUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    setExcelFile(file);
+    setUploadSummary(null);
+    
+    try {
+      const data = await file.arrayBuffer();
+      const workbook = XLSX.read(data);
+      const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+      const jsonData: any[] = XLSX.utils.sheet_to_json(worksheet);
+      
+      // Map Excel columns to API format
+      const records = jsonData.map((row) => ({
+        sku: row["SKU"] || row["sku"] || "",
+        almacen: row["Almacén"] || row["Almacen"] || row["almacen"] || "",
+        stockActual: row["Stock Actual"] || row["Stock_Actual"] || row["stockActual"] || 0,
+        stockReservado: row["Stock Reservado"] || row["Stock_Reservado"] || row["stockReservado"],
+        stockMinimo: row["Stock Mínimo"] || row["Stock_Minimo"] || row["stockMinimo"],
+      }));
+      
+      if (records.length === 0) {
+        toast({
+          title: "Error",
+          description: "El archivo está vacío o no tiene el formato correcto",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      excelMutation.mutate(records);
+    } catch (error) {
+      toast({
+        title: "Error al leer archivo",
+        description: "Verifique que el archivo tenga el formato correcto",
+        variant: "destructive",
+      });
+    }
+  };
+  
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Cargar Inventario</DialogTitle>
+        </DialogHeader>
+        
+        <Tabs value={uploadTab} onValueChange={(v) => setUploadTab(v as "manual" | "excel")}>
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="manual" data-testid="tab-carga-manual">Carga Manual</TabsTrigger>
+            <TabsTrigger value="excel" data-testid="tab-importar-excel">
+              <FileSpreadsheet className="h-4 w-4 mr-2" />
+              Importar Excel
+            </TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="manual" className="space-y-4">
+            <form onSubmit={handleManualSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="producto">Producto *</Label>
+                <Select value={selectedProducto} onValueChange={setSelectedProducto}>
+                  <SelectTrigger id="producto" data-testid="select-producto">
+                    <SelectValue placeholder="Seleccione un producto" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {productos.map((p: any) => (
+                      <SelectItem key={p.id} value={p.id}>
+                        {p.sku} - {p.nombre}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="almacen">Almacén *</Label>
+                <Select value={selectedAlmacen} onValueChange={setSelectedAlmacen}>
+                  <SelectTrigger id="almacen" data-testid="select-almacen">
+                    <SelectValue placeholder="Seleccione un almacén" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {almacenes.map((a: any) => (
+                      <SelectItem key={a.id} value={a.id}>
+                        {a.nombre}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="grid grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="stockActual">Stock Actual *</Label>
+                  <Input
+                    id="stockActual"
+                    type="number"
+                    min="0"
+                    step="1"
+                    value={stockActual}
+                    onChange={(e) => setStockActual(e.target.value)}
+                    placeholder="0"
+                    data-testid="input-stock-actual"
+                    required
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="stockReservado">Stock Reservado</Label>
+                  <Input
+                    id="stockReservado"
+                    type="number"
+                    min="0"
+                    step="1"
+                    value={stockReservado}
+                    onChange={(e) => setStockReservado(e.target.value)}
+                    placeholder="0"
+                    data-testid="input-stock-reservado"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="stockMinimo">Stock Mínimo</Label>
+                  <Input
+                    id="stockMinimo"
+                    type="number"
+                    min="0"
+                    step="1"
+                    value={stockMinimo}
+                    onChange={(e) => setStockMinimo(e.target.value)}
+                    placeholder="0"
+                    data-testid="input-stock-minimo"
+                  />
+                </div>
+              </div>
+              
+              <div className="flex justify-end gap-2">
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => onOpenChange(false)}
+                  data-testid="button-cancelar-manual"
+                >
+                  Cancelar
+                </Button>
+                <Button 
+                  type="submit" 
+                  disabled={manualMutation.isPending}
+                  data-testid="button-guardar-manual"
+                >
+                  {manualMutation.isPending ? "Guardando..." : "Guardar"}
+                </Button>
+              </div>
+            </form>
+          </TabsContent>
+          
+          <TabsContent value="excel" className="space-y-4">
+            <div className="rounded-lg border p-4 bg-muted/50">
+              <h4 className="font-medium mb-2">Formato del archivo Excel</h4>
+              <p className="text-sm text-muted-foreground mb-2">El archivo debe contener las siguientes columnas:</p>
+              <ul className="text-sm text-muted-foreground list-disc list-inside space-y-1">
+                <li><strong>SKU</strong> (requerido): Código del producto</li>
+                <li><strong>Almacén</strong> (requerido): Nombre del almacén</li>
+                <li><strong>Stock Actual</strong> (requerido): Cantidad en stock</li>
+                <li><strong>Stock Reservado</strong> (opcional): Cantidad reservada</li>
+                <li><strong>Stock Mínimo</strong> (opcional): Cantidad mínima</li>
+              </ul>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="excelFile">Seleccionar archivo Excel</Label>
+              <Input
+                id="excelFile"
+                type="file"
+                accept=".xlsx,.xls"
+                onChange={handleExcelUpload}
+                data-testid="input-excel-file"
+              />
+            </div>
+            
+            {excelMutation.isPending && (
+              <div className="text-center py-4">
+                <p className="text-sm text-muted-foreground">Procesando archivo...</p>
+              </div>
+            )}
+            
+            {uploadSummary && (
+              <div className="space-y-3">
+                <div className="rounded-lg border p-4 bg-green-50 dark:bg-green-950">
+                  <h4 className="font-medium mb-2">Resultado de la carga</h4>
+                  <div className="grid grid-cols-3 gap-4 text-sm">
+                    <div>
+                      <p className="text-muted-foreground">Creados</p>
+                      <p className="text-lg font-bold">{uploadSummary.created}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Actualizados</p>
+                      <p className="text-lg font-bold">{uploadSummary.updated}</p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Errores</p>
+                      <p className="text-lg font-bold text-destructive">{uploadSummary.failedCount}</p>
+                    </div>
+                  </div>
+                </div>
+                
+                {uploadSummary.failedRows.length > 0 && (
+                  <div className="rounded-lg border p-4 bg-red-50 dark:bg-red-950">
+                    <h4 className="font-medium mb-2 text-destructive">Registros con errores</h4>
+                    <div className="space-y-2 max-h-48 overflow-y-auto">
+                      {uploadSummary.failedRows.map((row, idx) => (
+                        <div key={idx} className="text-sm p-2 bg-background rounded">
+                          <p><strong>Fila {row.rowIndex}:</strong> {row.sku} - {row.almacen}</p>
+                          <p className="text-destructive">{row.error}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                
+                <div className="flex justify-end">
+                  <Button 
+                    onClick={() => {
+                      setUploadSummary(null);
+                      onOpenChange(false);
+                    }}
+                    data-testid="button-cerrar-resumen"
+                  >
+                    Cerrar
+                  </Button>
+                </div>
+              </div>
+            )}
+          </TabsContent>
+        </Tabs>
+      </DialogContent>
+    </Dialog>
   );
 }
 

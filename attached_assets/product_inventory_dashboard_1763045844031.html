@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Product Inventory Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    html, body { width: 100%; margin: 0; padding: 0; min-height: 0; overflow-x: hidden; box-sizing: border-box; }
+    * { box-sizing: border-box; }
+  </style>
+  </head>
+  <body>
+    <header class="w-full border-b border-gray-200 bg-white px-4 md:px-6 lg:px-8">
+  <div class="flex items-center justify-between h-16">
+    <div class="inline-flex items-center gap-3">
+      <span class="inline-flex items-center justify-center h-8 w-8 rounded-md bg-gray-200 text-gray-600"><i class="fas fa-warehouse"></i></span>
+      <h1 class="text-lg font-semibold text-gray-900">SyncWare Hub</h1>
+    </div>
+    <div class="flex items-center gap-2">
+      <button class="inline-flex items-center justify-center rounded-md px-3 py-2 text-sm font-medium border border-gray-300 bg-white text-gray-700 hover:bg-gray-100">
+        <i class="fas fa-bell mr-2"></i>Notificaciones
+      </button>
+      <button class="inline-flex items-center justify-center rounded-md px-3 py-2 text-sm font-medium border border-gray-300 bg-white text-gray-700 hover:bg-gray-100">
+        <i class="fas fa-circle-user mr-2"></i>Usuario
+      </button>
+    </div>
+  </div>
+</header>
+
+<div class="w-full max-w-none bg-white px-4 md:px-6 lg:px-8 py-6">
+  <div class="mb-6">
+    <h2 class="text-2xl font-semibold text-gray-900">Panel de Inventario de Productos</h2>
+    <p class="text-sm text-gray-600">Visualiza y gestiona las existencias iniciales por almacén.</p>
+  </div>
+
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+    <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 text-gray-900 shadow-sm">
+      <div class="text-xs text-gray-500">Productos Totales</div>
+      <div class="mt-1 text-xl font-semibold">1.248</div>
+    </div>
+    <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 text-gray-900 shadow-sm">
+      <div class="text-xs text-gray-500">Bajo Mínimo</div>
+      <div class="mt-1 text-xl font-semibold">42</div>
+    </div>
+    <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 text-gray-900 shadow-sm">
+      <div class="text-xs text-gray-500">Sin Stock</div>
+      <div class="mt-1 text-xl font-semibold">8</div>
+    </div>
+    <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 text-gray-900 shadow-sm">
+      <div class="text-xs text-gray-500">Últ. Actualización</div>
+      <div class="mt-1 text-sm font-medium">27 jun 15:42</div>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+    <div>
+      <label class="mb-1 block text-sm font-medium text-gray-700">Buscar Producto</label>
+      <div class="relative">
+        <input type="text" class="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-400 pr-9" placeholder="Introduzca nombre o SKU">
+        <div class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"><i class="fas fa-search"></i></div>
+      </div>
+    </div>
+    <div>
+      <label class="mb-1 block text-sm font-medium text-gray-700">Almacén</label>
+      <select class="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-400">
+        <option>Todos</option>
+      </select>
+    </div>
+    <div class="flex items-end">
+      <button class="inline-flex items-center justify-center rounded-md px-4 py-2 text-sm font-medium border border-gray-300 bg-white text-gray-900 hover:bg-gray-100 w-full md:w-auto">
+        <i class="fas fa-filter mr-2"></i>Limpiar Filtros
+      </button>
+    </div>
+  </div>
+
+  <div class="mb-6 flex items-center justify-between">
+    <div class="flex items-center gap-2">
+      <button class="inline-flex items-center justify-center rounded-md px-4 py-2 text-sm font-medium border border-gray-300 bg-white text-gray-900 hover:bg-gray-100">
+        <i class="fas fa-upload mr-2"></i>Cargar Inventario
+      </button>
+      <button class="inline-flex items-center justify-center rounded-md px-4 py-2 text-sm font-medium border border-gray-300 bg-white text-gray-900 hover:bg-gray-100">
+        <i class="fas fa-minus mr-2"></i>Ver Salidas
+      </button>
+      <button class="inline-flex items-center justify-center rounded-md px-4 py-2 text-sm font-medium border border-gray-300 bg-white text-gray-900 hover:bg-gray-100">
+        <i class="fas fa-truck mr-2"></i>Transferencia entre Almacenes
+      </button>
+      <button class="inline-flex items-center justify-center rounded-md px-4 py-2 text-sm font-medium border border-gray-300 bg-white text-gray-900 hover:bg-gray-100">
+        <i class="fas fa-warehouse mr-2"></i>Gestionar Almacenes
+      </button>
+    </div>
+    <div class="inline-flex items-center gap-2 text-sm text-gray-600">
+      Mostrando 20 de 1.248
+    </div>
+  </div>
+
+  <div class="rounded-lg border border-gray-200 bg-white text-gray-900 shadow-sm">
+    <div class="overflow-x-auto">
+      <table class="w-full caption-bottom text-sm">
+        <thead class="bg-gray-50 border-b border-gray-200">
+          <tr class="border-b border-gray-200">
+            <th class="h-12 px-4 text-left align-middle font-medium text-gray-700">SKU</th>
+            <th class="h-12 px-4 text-left align-middle font-medium text-gray-700">Producto</th>
+            <th class="h-12 px-4 text-left align-middle font-medium text-gray-700">Almacén</th>
+            <th class="h-12 px-4 text-left align-middle font-medium text-gray-700">Stock Actual</th>
+            <th class="h-12 px-4 text-left align-middle font-medium text-gray-700">Reservado</th>
+            <th class="h-12 px-4 text-left align-middle font-medium text-gray-700">Disponible</th>
+            <th class="h-12 px-4 text-left align-middle font-medium text-gray-700">Estado</th>
+            <th class="h-12 px-4 text-left align-middle font-medium text-gray-700">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="border-b border-gray-200">
+            <td class="p-4 align-middle text-gray-600">SKU-001</td>
+            <td class="p-4 align-middle">Engrane Industrial 12 mm</td>
+            <td class="p-4 align-middle">Almacén Central</td>
+            <td class="p-4 align-middle font-medium">1.250</td>
+            <td class="p-4 align-middle">150</td>
+            <td class="p-4 align-middle font-medium">1.100</td>
+            <td class="p-4 align-middle"><span class="inline-flex items-center rounded-full border border-gray-200 px-2.5 py-0.5 text-xs font-semibold bg-gray-100 text-gray-700">Normal</span></td>
+            <td class="p-4 align-middle">
+              <div class="flex items-center gap-2">
+                <button class="inline-flex items-center justify-center rounded-md px-2 py-1 text-xs font-medium border border-gray-300 bg-white text-gray-700 hover:bg-gray-100"><i class="fas fa-eye"></i></button>
+                <button class="inline-flex items-center justify-center rounded-md px-2 py-1 text-xs font-medium border border-gray-300 bg-white text-gray-700 hover:bg-gray-100"><i class="fas fa-pen-to-square"></i></button>
+              </div>
+            </td>
+          </tr>
+          <tr class="border-b border-gray-200 bg-gray-50">
+            <td class="p-4 align-middle text-gray-600">SKU-002</td>
+            <td class="p-4 align-middle">Tornillo Acero Inox M8</td>
+            <td class="p-4 align-middle">Almacén Central</td>
+            <td class="p-4 align-middle font-medium text-gray-700">22</td>
+            <td class="p-4 align-middle">0</td>
+            <td class="p-4 align-middle font-medium text-gray-700">22</td>
+            <td class="p-4 align-middle"><span class="inline-flex items-center rounded-full border border-gray-300 px-2.5 py-0.5 text-xs font-semibold bg-gray-200 text-gray-800">Stock Bajo</span></td>
+            <td class="p-4 align-middle">
+              <div class="flex items-center gap-2">
+                <button class="inline-flex items-center justify-center rounded-md px-2 py-1 text-xs font-medium border border-gray-300 bg-white text-gray-700 hover:bg-gray-100"><i class="fas fa-eye"></i></button>
+                <button class="inline-flex items-center justify-center rounded-md px-2 py-1 text-xs font-medium border border-gray-300 bg-white text-gray-700 hover:bg-gray-100"><i class="fas fa-pen-to-square"></i></button>
+              </div>
+            </td>
+          </tr>
+          <tr class="border-b border-gray-200">
+            <td class="p-4 align-middle text-gray-600">SKU-003</td>
+            <td class="p-4 align-middle">Lámina Aluminio 5 mm</td>
+            <td class="p-4 align-middle">Sucursal A</td>
+            <td class="p-4 align-middle font-medium">0</td>
+            <td class="p-4 align-middle">0</td>
+            <td class="p-4 align-middle font-medium">0</td>
+            <td class="p-4 align-middle"><span class="inline-flex items-center rounded-full border border-gray-300 px-2.5 py-0.5 text-xs font-semibold bg-gray-300 text-gray-900">Sin Stock</span></td>
+            <td class="p-4 align-middle">
+              <div class="flex items-center gap-2">
+                <button class="inline-flex items-center justify-center rounded-md px-2 py-1 text-xs font-medium border border-gray-300 bg-white text-gray-700 hover:bg-gray-100"><i class="fas fa-eye"></i></button>
+                <button class="inline-flex items-center justify-center rounded-md px-2 py-1 text-xs font-medium border border-gray-300 bg-white text-gray-700 hover:bg-gray-100"><i class="fas fa-pen-to-square"></i></button>
+              </div>
+            </td>
+          </tr>
+          <tr class="border-b border-gray-200">
+            <td class="p-4 align-middle text-gray-600">SKU-004</td>
+            <td class="p-4 align-middle">Junta de Caucho 10 mm</td>
+            <td class="p-4 align-middle">Sucursal A</td>
+            <td class="p-4 align-middle font-medium">5.800</td>
+            <td class="p-4 align-middle">1.000</td>
+            <td class="p-4 align-middle font-medium">4.800</td>
+            <td class="p-4 align-middle"><span class="inline-flex items-center rounded-full border border-gray-200 px-2.5 py-0.5 text-xs font-semibold bg-gray-100 text-gray-700">Normal</span></td>
+            <td class="p-4 align-middle">
+              <div class="flex items-center gap-2">
+                <button class="inline-flex items-center justify-center rounded-md px-2 py-1 text-xs font-medium border border-gray-300 bg-white text-gray-700 hover:bg-gray-100"><i class="fas fa-eye"></i></button>
+                <button class="inline-flex items-center justify-center rounded-md px-2 py-1 text-xs font-medium border border-gray-300 bg-white text-gray-700 hover:bg-gray-100"><i class="fas fa-pen-to-square"></i></button>
+              </div>
+            </td>
+          </tr>
+          <tr class="border-b border-gray-200">
+            <td class="p-4 align-middle text-gray-600">SKU-005</td>
+            <td class="p-4 align-middle">Tubo Cobre 15 mm</td>
+            <td class="p-4 align-middle">Almacén Central</td>
+            <td class="p-4 align-middle font-medium">3.000</td>
+            <td class="p-4 align-middle">500</td>
+            <td class="p-4 align-middle font-medium">2.500</td>
+            <td class="p-4 align-middle"><span class="inline-flex items-center rounded-full border border-gray-200 px-2.5 py-0.5 text-xs font-semibold bg-gray-100 text-gray-700">Normal</span></td>
+            <td class="p-4 align-middle">
+              <div class="flex items-center gap-2">
+                <button class="inline-flex items-center justify-center rounded-md px-2 py-1 text-xs font-medium border border-gray-300 bg-white text-gray-700 hover:bg-gray-100"><i class="fas fa-eye"></i></button>
+                <button class="inline-flex items-center justify-center rounded-md px-2 py-1 text-xs font-medium border border-gray-300 bg-white text-gray-700 hover:bg-gray-100"><i class="fas fa-pen-to-square"></i></button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="flex items-center justify-between border-t border-gray-200 px-4 py-3">
+      <div class="text-sm text-gray-600">Página 1 de 63</div>
+      <div class="flex items-center gap-2">
+        <button class="inline-flex items-center justify-center rounded-md px-3 py-1 text-sm font-medium border border-gray-300 bg-white text-gray-700 hover:bg-gray-100"><i class="fas fa-arrow-left mr-2"></i>Anterior</button>
+        <span class="inline-flex items-center rounded-md border border-gray-200 bg-gray-100 px-3 py-1 text-sm font-medium text-gray-900">1</span>
+        <button class="inline-flex items-center justify-center rounded-md px-3 py-1 text-sm font-medium border border-gray-300 bg-white text-gray-700 hover:bg-gray-100">Siguiente<i class="fas fa-arrow-right ml-2"></i></button>
+      </div>
+    </div>
+  </div>
+</div>
+  </body>
+  </html>

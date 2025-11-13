@@ -4113,6 +4113,42 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
+  async upsertInventario(data: {
+    productoId: string;
+    almacenId: string;
+    stockActual: number;
+    stockReservado?: number;
+    stockMinimo?: number;
+  }): Promise<{ inventario: Inventario; wasCreated: boolean }> {
+    const existing = await this.getInventarioByProductoAndAlmacen(data.productoId, data.almacenId);
+    
+    if (existing) {
+      const [updated] = await db
+        .update(inventario)
+        .set({
+          stockActual: data.stockActual,
+          stockReservado: data.stockReservado ?? existing.stockReservado,
+          stockMinimo: data.stockMinimo ?? existing.stockMinimo,
+          updatedAt: new Date(),
+        })
+        .where(eq(inventario.id, existing.id))
+        .returning();
+      return { inventario: updated, wasCreated: false };
+    } else {
+      const [created] = await db
+        .insert(inventario)
+        .values({
+          productoId: data.productoId,
+          almacenId: data.almacenId,
+          stockActual: data.stockActual,
+          stockReservado: data.stockReservado ?? 0,
+          stockMinimo: data.stockMinimo ?? 0,
+        })
+        .returning();
+      return { inventario: created, wasCreated: true };
+    }
+  }
+
   async deleteInventario(id: string): Promise<boolean> {
     const result = await db.delete(inventario).where(eq(inventario.id, id));
     return (result.rowCount ?? 0) > 0;
