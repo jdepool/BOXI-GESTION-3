@@ -177,20 +177,30 @@ function DashboardTab() {
                   <TableHead className="text-right">Disponible</TableHead>
                   <TableHead className="text-right">Stock Mínimo</TableHead>
                   <TableHead>Estado</TableHead>
+                  <TableHead>Última Modificación</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {isLoading ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center">Cargando...</TableCell>
+                    <TableCell colSpan={9} className="text-center">Cargando...</TableCell>
                   </TableRow>
                 ) : filteredInventory.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center">No hay datos de inventario</TableCell>
+                    <TableCell colSpan={9} className="text-center">No hay datos de inventario</TableCell>
                   </TableRow>
                 ) : (
                   filteredInventory.map((item: any) => {
                     const stockDisponible = item.stockActual - (item.stockReservado ?? 0);
+                    const fechaMod = item.fechaActualizacion 
+                      ? new Date(item.fechaActualizacion).toLocaleString('es-VE', {
+                          year: 'numeric',
+                          month: '2-digit',
+                          day: '2-digit',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })
+                      : '-';
                     return (
                       <TableRow key={item.id} data-testid={`row-inventory-${item.id}`}>
                         <TableCell className="font-medium">{item.productoSku}</TableCell>
@@ -201,6 +211,7 @@ function DashboardTab() {
                         <TableCell className="text-right font-bold">{stockDisponible}</TableCell>
                         <TableCell className="text-right">{item.stockMinimo ?? 0}</TableCell>
                         <TableCell>{getStatusBadge(stockDisponible, item.stockMinimo ?? 0)}</TableCell>
+                        <TableCell className="text-sm text-muted-foreground" data-testid={`text-fecha-actualizacion-${item.id}`}>{fechaMod}</TableCell>
                       </TableRow>
                     );
                   })
@@ -259,6 +270,17 @@ function CargarInventarioDialog({
     queryKey: ["/api/inventario/almacenes"],
   });
   
+  // Fetch current inventory when both product and warehouse are selected
+  const { data: currentInventory } = useQuery({
+    queryKey: ["/api/inventario/current", selectedProducto, selectedAlmacen],
+    queryFn: async () => {
+      const res = await fetch(`/api/inventario?productoId=${selectedProducto}&almacenId=${selectedAlmacen}`);
+      if (!res.ok) throw new Error("Failed to fetch inventory");
+      return res.json();
+    },
+    enabled: !!selectedProducto && !!selectedAlmacen,
+  });
+  
   // Manual entry mutation
   const manualMutation = useMutation({
     mutationFn: async (data: any) => {
@@ -280,6 +302,7 @@ function CargarInventarioDialog({
       setStockMinimo("");
       queryClient.invalidateQueries({ queryKey: ["/api/inventario"] });
       queryClient.invalidateQueries({ queryKey: ["/api/inventario/dashboard"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/inventario/current"] });
       onOpenChange(false);
     },
     onError: (error: Error) => {
@@ -301,6 +324,7 @@ function CargarInventarioDialog({
       setUploadSummary(data);
       queryClient.invalidateQueries({ queryKey: ["/api/inventario"] });
       queryClient.invalidateQueries({ queryKey: ["/api/inventario/dashboard"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/inventario/current"] });
       setExcelFile(null);
     },
     onError: (error: Error) => {
@@ -427,9 +451,29 @@ function CargarInventarioDialog({
                 </Select>
               </div>
               
+              {currentInventory && currentInventory.length > 0 && (
+                <div className="p-4 bg-muted rounded-lg">
+                  <p className="text-sm font-medium mb-2">Stock Actual:</p>
+                  <div className="grid grid-cols-3 gap-4 text-sm">
+                    <div>
+                      <span className="text-muted-foreground">Stock Actual: </span>
+                      <span className="font-semibold" data-testid="text-current-stock-actual">{currentInventory[0].stockActual}</span>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Reservado: </span>
+                      <span className="font-semibold" data-testid="text-current-stock-reservado">{currentInventory[0].stockReservado ?? 0}</span>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Mínimo: </span>
+                      <span className="font-semibold" data-testid="text-current-stock-minimo">{currentInventory[0].stockMinimo ?? 0}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
               <div className="grid grid-cols-3 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="stockActual">Stock Actual *</Label>
+                  <Label htmlFor="stockActual">Agregar Stock *</Label>
                   <Input
                     id="stockActual"
                     type="number"
@@ -441,10 +485,13 @@ function CargarInventarioDialog({
                     data-testid="input-stock-actual"
                     required
                   />
+                  <p className="text-xs text-muted-foreground">
+                    Se sumará al stock actual
+                  </p>
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="stockReservado">Stock Reservado</Label>
+                  <Label htmlFor="stockReservado">Actualizar Reservado</Label>
                   <Input
                     id="stockReservado"
                     type="number"
@@ -452,13 +499,16 @@ function CargarInventarioDialog({
                     step="1"
                     value={stockReservado}
                     onChange={(e) => setStockReservado(e.target.value)}
-                    placeholder="0"
+                    placeholder="Opcional"
                     data-testid="input-stock-reservado"
                   />
+                  <p className="text-xs text-muted-foreground">
+                    Reemplaza el valor actual
+                  </p>
                 </div>
                 
                 <div className="space-y-2">
-                  <Label htmlFor="stockMinimo">Stock Mínimo</Label>
+                  <Label htmlFor="stockMinimo">Actualizar Mínimo</Label>
                   <Input
                     id="stockMinimo"
                     type="number"
@@ -466,9 +516,12 @@ function CargarInventarioDialog({
                     step="1"
                     value={stockMinimo}
                     onChange={(e) => setStockMinimo(e.target.value)}
-                    placeholder="0"
+                    placeholder="Opcional"
                     data-testid="input-stock-minimo"
                   />
+                  <p className="text-xs text-muted-foreground">
+                    Reemplaza el valor actual
+                  </p>
                 </div>
               </div>
               
@@ -493,15 +546,26 @@ function CargarInventarioDialog({
           </TabsContent>
           
           <TabsContent value="excel" className="space-y-4">
+            <div className="rounded-lg border p-4 bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800">
+              <h4 className="font-medium mb-2 text-blue-900 dark:text-blue-100">📌 Importante: Carga Aditiva de Inventario</h4>
+              <p className="text-sm text-blue-800 dark:text-blue-200">
+                <strong>Stock Actual</strong> se suma al valor existente. Si el producto ya tiene 10 unidades y carga 5, 
+                el resultado será 15 unidades (no 5).
+              </p>
+              <p className="text-sm text-blue-800 dark:text-blue-200 mt-1">
+                <strong>Stock Reservado y Stock Mínimo</strong> reemplazan el valor existente si se especifican.
+              </p>
+            </div>
+            
             <div className="rounded-lg border p-4 bg-muted/50">
               <h4 className="font-medium mb-2">Formato del archivo Excel</h4>
               <p className="text-sm text-muted-foreground mb-2">El archivo debe contener las siguientes columnas:</p>
               <ul className="text-sm text-muted-foreground list-disc list-inside space-y-1">
                 <li><strong>SKU</strong> (requerido): Código del producto</li>
                 <li><strong>Almacén</strong> (requerido): Nombre del almacén</li>
-                <li><strong>Stock Actual</strong> (requerido): Cantidad en stock</li>
-                <li><strong>Stock Reservado</strong> (opcional): Cantidad reservada</li>
-                <li><strong>Stock Mínimo</strong> (opcional): Cantidad mínima</li>
+                <li><strong>Stock Actual</strong> (requerido): Cantidad a agregar (se suma al actual)</li>
+                <li><strong>Stock Reservado</strong> (opcional): Nueva cantidad reservada (reemplaza el valor actual)</li>
+                <li><strong>Stock Mínimo</strong> (opcional): Nuevo stock mínimo (reemplaza el valor actual)</li>
               </ul>
             </div>
             
