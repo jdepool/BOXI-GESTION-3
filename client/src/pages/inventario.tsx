@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import Sidebar from "@/components/layout/sidebar";
 import Header from "@/components/layout/header";
-import { Box, Package, TrendingDown, Warehouse, AlertTriangle, Upload, FileSpreadsheet } from "lucide-react";
+import { Box, Package, TrendingDown, Warehouse, AlertTriangle, Upload, FileSpreadsheet, Star } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import * as XLSX from "xlsx";
@@ -864,6 +864,28 @@ function GestionarAlmacenesTab() {
       });
     },
   });
+
+  const setPrincipalMutation = useMutation({
+    mutationFn: async ({ id, isPrincipal }: { id: string; isPrincipal: boolean }) => {
+      return apiRequest("POST", `/api/inventario/almacenes/${id}/principal`, { isPrincipal });
+    },
+    onSuccess: (data, variables) => {
+      toast({
+        title: variables.isPrincipal ? "Almacén Principal configurado" : "Almacén desmarcado como principal",
+        description: variables.isPrincipal 
+          ? `${data.nombre} ha sido configurado como almacén principal` 
+          : `${data.nombre} ya no es el almacén principal`,
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/inventario/almacenes"] });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
   
   const transferMutation = useMutation({
     mutationFn: async (data: any) => {
@@ -1123,7 +1145,9 @@ function GestionarAlmacenesTab() {
         <Card>
           <CardHeader>
             <CardTitle>Almacenes Activos</CardTitle>
-            <CardDescription>Lista de almacenes registrados</CardDescription>
+            <CardDescription>
+              Lista de almacenes registrados. El almacén principal se usa para deducir inventario automáticamente al despachar órdenes.
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
@@ -1138,9 +1162,26 @@ function GestionarAlmacenesTab() {
                   >
                     <Warehouse className="h-4 w-4 text-muted-foreground" />
                     <span className="flex-1">{alm.nombre}</span>
-                    <Badge variant={alm.activo ? "default" : "secondary"}>
+                    {alm.esPrincipal && (
+                      <Badge variant="default" className="gap-1" data-testid={`badge-principal-${alm.id}`}>
+                        <Star className="h-3 w-3 fill-current" />
+                        Principal
+                      </Badge>
+                    )}
+                    <Badge variant={alm.activo ? "outline" : "secondary"}>
                       {alm.activo ? "Activo" : "Inactivo"}
                     </Badge>
+                    {!alm.esPrincipal && alm.activo && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setPrincipalMutation.mutate({ id: alm.id, isPrincipal: true })}
+                        disabled={setPrincipalMutation.isPending}
+                        data-testid={`button-set-principal-${alm.id}`}
+                      >
+                        {setPrincipalMutation.isPending ? "..." : <Star className="h-4 w-4" />}
+                      </Button>
+                    )}
                   </div>
                 ))
               )}
