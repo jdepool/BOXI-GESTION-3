@@ -82,7 +82,7 @@ function DashboardTab() {
   const { toast } = useToast();
 
   const { data: inventory = [], isLoading } = useQuery({
-    queryKey: ["/api/inventory/dashboard"],
+    queryKey: ["/api/inventario/dashboard"],
   });
 
   const filteredInventory = inventory.filter((item: any) =>
@@ -270,7 +270,7 @@ function CargarInventarioDialog({
       setStockReservado("");
       setStockMinimo("");
       queryClient.invalidateQueries({ queryKey: ["/api/inventario"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/inventory/dashboard"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/inventario/dashboard"] });
       onOpenChange(false);
     },
     onError: (error: Error) => {
@@ -291,7 +291,7 @@ function CargarInventarioDialog({
     onSuccess: (data) => {
       setUploadSummary(data);
       queryClient.invalidateQueries({ queryKey: ["/api/inventario"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/inventory/dashboard"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/inventario/dashboard"] });
       setExcelFile(null);
     },
     onError: (error: Error) => {
@@ -574,12 +574,12 @@ function RegistrarDespachoTab() {
   const [almacenId, setAlmacenId] = useState("");
 
   const { data: almacenes = [] } = useQuery({
-    queryKey: ["/api/inventory/almacenes"],
+    queryKey: ["/api/inventario/almacenes"],
   });
 
   const despachoMutation = useMutation({
     mutationFn: async (data: any) => {
-      return apiRequest("/api/inventory/dispatch", "POST", data);
+      return apiRequest("/api/inventario/dispatch", "POST", data);
     },
     onSuccess: () => {
       toast({
@@ -589,8 +589,8 @@ function RegistrarDespachoTab() {
       setOrderNumber("");
       setFecha("");
       setAlmacenId("");
-      queryClient.invalidateQueries({ queryKey: ["/api/inventory/dashboard"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/inventory/movements"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/inventario/dashboard"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/inventario/movements"] });
     },
     onError: (error: Error) => {
       toast({
@@ -678,7 +678,7 @@ function RegistrarDespachoTab() {
 
 function AnalisisSalidasTab() {
   const { data: movements = [], isLoading } = useQuery({
-    queryKey: ["/api/inventory/movements"],
+    queryKey: ["/api/inventario/movements"],
   });
 
   const salidas = movements.filter((m: any) => 
@@ -744,12 +744,12 @@ function GestionarAlmacenesTab() {
   const [nombre, setNombre] = useState("");
 
   const { data: almacenes = [] } = useQuery({
-    queryKey: ["/api/inventory/almacenes"],
+    queryKey: ["/api/inventario/almacenes"],
   });
 
   const createMutation = useMutation({
     mutationFn: async (data: any) => {
-      return apiRequest("/api/inventory/almacenes", "POST", data);
+      return apiRequest("/api/inventario/almacenes", "POST", data);
     },
     onSuccess: () => {
       toast({
@@ -757,7 +757,7 @@ function GestionarAlmacenesTab() {
         description: "El almacén ha sido creado exitosamente",
       });
       setNombre("");
-      queryClient.invalidateQueries({ queryKey: ["/api/inventory/almacenes"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/inventario/almacenes"] });
     },
     onError: (error: Error) => {
       toast({
