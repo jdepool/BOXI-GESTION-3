@@ -253,7 +253,7 @@ function CargarInventarioDialog({
   // Manual entry mutation
   const manualMutation = useMutation({
     mutationFn: async (data: any) => {
-      const res = await apiRequest("/api/inventario/upload", "POST", {
+      const res = await apiRequest("POST", "/api/inventario/upload", {
         records: [data]
       });
       return await res.json();
@@ -285,7 +285,7 @@ function CargarInventarioDialog({
   // Excel upload mutation
   const excelMutation = useMutation({
     mutationFn: async (records: any[]) => {
-      const res = await apiRequest("/api/inventario/upload", "POST", { records });
+      const res = await apiRequest("POST", "/api/inventario/upload", { records });
       return await res.json();
     },
     onSuccess: (data) => {
@@ -579,7 +579,7 @@ function RegistrarDespachoTab() {
 
   const despachoMutation = useMutation({
     mutationFn: async (data: any) => {
-      return apiRequest("/api/inventario/dispatch", "POST", data);
+      return apiRequest("POST", "/api/inventario/dispatch", data);
     },
     onSuccess: () => {
       toast({
@@ -749,7 +749,7 @@ function GestionarAlmacenesTab() {
 
   const createMutation = useMutation({
     mutationFn: async (data: any) => {
-      return apiRequest("/api/inventario/almacenes", "POST", data);
+      return apiRequest("POST", "/api/inventario/almacenes", data);
     },
     onSuccess: () => {
       toast({
