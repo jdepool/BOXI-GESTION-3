@@ -1,12 +1,14 @@
 import { 
   sales, uploadHistory, users, bancos, bancosBackup, tiposEgresos, autorizadores, egresos, productos, productosBackup, productosComponentes, metodosPago, monedas, categorias, canales, asesores, transportistas, estados, ciudades, seguimientoConfig, precios, preciosBackup, paymentInstallments, prospectos,
+  almacenes, inventario, movimientosInventario, transferencias,
   type User, type InsertUser, type Sale, type InsertSale, type UploadHistory, type InsertUploadHistory,
   type Banco, type InsertBanco, type TipoEgreso, type InsertTipoEgreso, type Autorizador, type InsertAutorizador, type Egreso, type InsertEgreso,
   type Producto, type InsertProducto, type ProductoComponente, type InsertProductoComponente, type MetodoPago, type InsertMetodoPago,
   type Moneda, type InsertMoneda, type Categoria, type InsertCategoria,
   type Canal, type InsertCanal, type Asesor, type InsertAsesor, type Transportista, type InsertTransportista, type Estado, type InsertEstado, type Ciudad, type InsertCiudad, type SeguimientoConfig, type InsertSeguimientoConfig, type Precio, type InsertPrecio,
   type PaymentInstallment, type InsertPaymentInstallment,
-  type Prospecto, type InsertProspecto
+  type Prospecto, type InsertProspecto,
+  type Almacen, type InsertAlmacen, type Inventario, type InsertInventario, type MovimientoInventario, type InsertMovimientoInventario, type Transferencia, type InsertTransferencia
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, asc, count, sum, avg, and, gte, lte, or, ne, like, ilike, isNotNull, isNull, sql, inArray } from "drizzle-orm";
@@ -443,6 +445,57 @@ export interface IStorage {
     estadoVerificacion?: string;
     notasVerificacion?: string;
   }): Promise<any>;
+
+  // ========================================
+  // INVENTORY MANAGEMENT METHODS
+  // ========================================
+
+  // Almacenes (Warehouses)
+  getAlmacenes(): Promise<Almacen[]>;
+  getAlmacenById(id: string): Promise<Almacen | undefined>;
+  createAlmacen(almacen: InsertAlmacen): Promise<Almacen>;
+  updateAlmacen(id: string, almacen: Partial<InsertAlmacen>): Promise<Almacen | undefined>;
+  deleteAlmacen(id: string): Promise<boolean>;
+
+  // Inventario (Stock levels)
+  getInventario(filters?: {
+    productoId?: string;
+    almacenId?: string;
+    search?: string; // Search by product name or SKU
+  }): Promise<Array<Inventario & { productoNombre: string; productoSku: string | null; almacenNombre: string }>>;
+  getInventarioByProductoAndAlmacen(productoId: string, almacenId: string): Promise<Inventario | undefined>;
+  createInventario(inventario: InsertInventario): Promise<Inventario>;
+  updateInventario(id: string, inventario: Partial<InsertInventario>): Promise<Inventario | undefined>;
+  updateInventarioStock(productoId: string, almacenId: string, stockActualDelta: number): Promise<Inventario | undefined>;
+  deleteInventario(id: string): Promise<boolean>;
+
+  // Movimientos de Inventario (Inventory movements)
+  getMovimientosInventario(filters?: {
+    productoId?: string;
+    almacenId?: string;
+    tipo?: string;
+    ordenRelacionada?: string;
+    startDate?: string;
+    endDate?: string;
+    limit?: number;
+    offset?: number;
+  }): Promise<Array<MovimientoInventario & { productoNombre: string; productoSku: string | null; almacenNombre: string }>>;
+  createMovimientoInventario(movimiento: InsertMovimientoInventario): Promise<MovimientoInventario>;
+
+  // Transferencias (Stock transfers)
+  getTransferencias(filters?: {
+    productoId?: string;
+    almacenOrigen?: string;
+    almacenDestino?: string;
+    estado?: string;
+  }): Promise<Array<Transferencia & { productoNombre: string; productoSku: string | null; almacenOrigenNombre: string; almacenDestinoNombre: string }>>;
+  getTransferenciaById(id: string): Promise<Transferencia | undefined>;
+  createTransferencia(transferencia: InsertTransferencia): Promise<Transferencia>;
+  updateTransferencia(id: string, transferencia: Partial<InsertTransferencia>): Promise<Transferencia | undefined>;
+  deleteTransferencia(id: string): Promise<boolean>;
+
+  // Automatic inventory deduction when order is dispatched
+  deductInventoryForOrder(orderNumber: string, almacenId: string, fechaDespacho: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -3920,6 +3973,389 @@ export class DatabaseStorage implements IStorage {
 
     // Format with leading zeros (e.g., 2 -> "P-0002")
     return `P-${nextNumber.toString().padStart(4, '0')}`;
+  }
+
+  // ========================================
+  // INVENTORY MANAGEMENT IMPLEMENTATIONS
+  // ========================================
+
+  // Almacenes (Warehouses)
+  async getAlmacenes(): Promise<Almacen[]> {
+    return await db.select().from(almacenes).orderBy(asc(almacenes.nombre));
+  }
+
+  async getAlmacenById(id: string): Promise<Almacen | undefined> {
+    const [almacen] = await db.select().from(almacenes).where(eq(almacenes.id, id));
+    return almacen || undefined;
+  }
+
+  async createAlmacen(insertAlmacen: InsertAlmacen): Promise<Almacen> {
+    const [almacen] = await db.insert(almacenes).values(insertAlmacen).returning();
+    return almacen;
+  }
+
+  async updateAlmacen(id: string, updateData: Partial<InsertAlmacen>): Promise<Almacen | undefined> {
+    const [almacen] = await db
+      .update(almacenes)
+      .set({ ...updateData, updatedAt: new Date() })
+      .where(eq(almacenes.id, id))
+      .returning();
+    return almacen || undefined;
+  }
+
+  async deleteAlmacen(id: string): Promise<boolean> {
+    const result = await db.delete(almacenes).where(eq(almacenes.id, id));
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  // Inventario (Stock levels)
+  async getInventario(filters?: {
+    productoId?: string;
+    almacenId?: string;
+    search?: string;
+  }): Promise<Array<Inventario & { productoNombre: string; productoSku: string | null; almacenNombre: string }>> {
+    const whereConditions = [];
+
+    if (filters?.productoId) {
+      whereConditions.push(eq(inventario.productoId, filters.productoId));
+    }
+
+    if (filters?.almacenId) {
+      whereConditions.push(eq(inventario.almacenId, filters.almacenId));
+    }
+
+    if (filters?.search) {
+      whereConditions.push(
+        or(
+          ilike(productos.nombre, `%${filters.search}%`),
+          ilike(productos.sku, `%${filters.search}%`)
+        )
+      );
+    }
+
+    const result = await db
+      .select({
+        id: inventario.id,
+        productoId: inventario.productoId,
+        almacenId: inventario.almacenId,
+        stockActual: inventario.stockActual,
+        stockReservado: inventario.stockReservado,
+        stockMinimo: inventario.stockMinimo,
+        createdAt: inventario.createdAt,
+        updatedAt: inventario.updatedAt,
+        productoNombre: productos.nombre,
+        productoSku: productos.sku,
+        almacenNombre: almacenes.nombre,
+      })
+      .from(inventario)
+      .leftJoin(productos, eq(inventario.productoId, productos.id))
+      .leftJoin(almacenes, eq(inventario.almacenId, almacenes.id))
+      .where(whereConditions.length > 0 ? and(...whereConditions) : undefined)
+      .orderBy(asc(productos.nombre));
+
+    return result.map(row => ({
+      ...row,
+      productoNombre: row.productoNombre || '',
+      almacenNombre: row.almacenNombre || '',
+    }));
+  }
+
+  async getInventarioByProductoAndAlmacen(productoId: string, almacenId: string): Promise<Inventario | undefined> {
+    const [result] = await db
+      .select()
+      .from(inventario)
+      .where(and(eq(inventario.productoId, productoId), eq(inventario.almacenId, almacenId)));
+    return result || undefined;
+  }
+
+  async createInventario(insertInventario: InsertInventario): Promise<Inventario> {
+    const [newInventario] = await db.insert(inventario).values(insertInventario).returning();
+    return newInventario;
+  }
+
+  async updateInventario(id: string, updateData: Partial<InsertInventario>): Promise<Inventario | undefined> {
+    const [updatedInventario] = await db
+      .update(inventario)
+      .set({ ...updateData, updatedAt: new Date() })
+      .where(eq(inventario.id, id))
+      .returning();
+    return updatedInventario || undefined;
+  }
+
+  async updateInventarioStock(productoId: string, almacenId: string, stockActualDelta: number): Promise<Inventario | undefined> {
+    // First, try to get existing inventory record
+    const existing = await this.getInventarioByProductoAndAlmacen(productoId, almacenId);
+    
+    if (existing) {
+      // Update existing record
+      const [updatedInventario] = await db
+        .update(inventario)
+        .set({
+          stockActual: sql`${inventario.stockActual} + ${stockActualDelta}`,
+          updatedAt: new Date(),
+        })
+        .where(and(eq(inventario.productoId, productoId), eq(inventario.almacenId, almacenId)))
+        .returning();
+      return updatedInventario || undefined;
+    } else {
+      // Create new record with the delta (allows negative stock for deficit tracking)
+      const [newInventario] = await db
+        .insert(inventario)
+        .values({
+          productoId,
+          almacenId,
+          stockActual: stockActualDelta,
+          stockReservado: 0,
+          stockMinimo: 0,
+        })
+        .returning();
+      return newInventario;
+    }
+  }
+
+  async deleteInventario(id: string): Promise<boolean> {
+    const result = await db.delete(inventario).where(eq(inventario.id, id));
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  // Movimientos de Inventario (Inventory movements)
+  async getMovimientosInventario(filters?: {
+    productoId?: string;
+    almacenId?: string;
+    tipo?: string;
+    ordenRelacionada?: string;
+    startDate?: string;
+    endDate?: string;
+    limit?: number;
+    offset?: number;
+  }): Promise<Array<MovimientoInventario & { productoNombre: string; productoSku: string | null; almacenNombre: string }>> {
+    const whereConditions = [];
+
+    if (filters?.productoId) {
+      whereConditions.push(eq(movimientosInventario.productoId, filters.productoId));
+    }
+
+    if (filters?.almacenId) {
+      whereConditions.push(eq(movimientosInventario.almacenId, filters.almacenId));
+    }
+
+    if (filters?.tipo) {
+      whereConditions.push(eq(movimientosInventario.tipo, filters.tipo));
+    }
+
+    if (filters?.ordenRelacionada) {
+      whereConditions.push(eq(movimientosInventario.ordenRelacionada, filters.ordenRelacionada));
+    }
+
+    if (filters?.startDate) {
+      whereConditions.push(gte(movimientosInventario.fecha, filters.startDate));
+    }
+
+    if (filters?.endDate) {
+      whereConditions.push(lte(movimientosInventario.fecha, filters.endDate));
+    }
+
+    const result = await db
+      .select({
+        id: movimientosInventario.id,
+        productoId: movimientosInventario.productoId,
+        almacenId: movimientosInventario.almacenId,
+        tipo: movimientosInventario.tipo,
+        cantidad: movimientosInventario.cantidad,
+        ordenRelacionada: movimientosInventario.ordenRelacionada,
+        transferId: movimientosInventario.transferId,
+        fecha: movimientosInventario.fecha,
+        notas: movimientosInventario.notas,
+        createdAt: movimientosInventario.createdAt,
+        productoNombre: productos.nombre,
+        productoSku: productos.sku,
+        almacenNombre: almacenes.nombre,
+      })
+      .from(movimientosInventario)
+      .leftJoin(productos, eq(movimientosInventario.productoId, productos.id))
+      .leftJoin(almacenes, eq(movimientosInventario.almacenId, almacenes.id))
+      .where(whereConditions.length > 0 ? and(...whereConditions) : undefined)
+      .orderBy(desc(movimientosInventario.fecha), desc(movimientosInventario.createdAt))
+      .limit(filters?.limit || 1000)
+      .offset(filters?.offset || 0);
+
+    return result.map(row => ({
+      ...row,
+      productoNombre: row.productoNombre || '',
+      almacenNombre: row.almacenNombre || '',
+    }));
+  }
+
+  async createMovimientoInventario(movimiento: InsertMovimientoInventario): Promise<MovimientoInventario> {
+    const [newMovimiento] = await db.insert(movimientosInventario).values(movimiento).returning();
+    return newMovimiento;
+  }
+
+  // Transferencias (Stock transfers)
+  async getTransferencias(filters?: {
+    productoId?: string;
+    almacenOrigen?: string;
+    almacenDestino?: string;
+    estado?: string;
+  }): Promise<Array<Transferencia & { productoNombre: string; productoSku: string | null; almacenOrigenNombre: string; almacenDestinoNombre: string }>> {
+    const whereConditions = [];
+
+    if (filters?.productoId) {
+      whereConditions.push(eq(transferencias.productoId, filters.productoId));
+    }
+
+    if (filters?.almacenOrigen) {
+      whereConditions.push(eq(transferencias.almacenOrigen, filters.almacenOrigen));
+    }
+
+    if (filters?.almacenDestino) {
+      whereConditions.push(eq(transferencias.almacenDestino, filters.almacenDestino));
+    }
+
+    if (filters?.estado) {
+      whereConditions.push(eq(transferencias.estado, filters.estado));
+    }
+
+    const almacenesOrigen = alias(almacenes, 'almacenesOrigen');
+    const almacenesDestino = alias(almacenes, 'almacenesDestino');
+
+    const result = await db
+      .select({
+        id: transferencias.id,
+        productoId: transferencias.productoId,
+        almacenOrigen: transferencias.almacenOrigen,
+        almacenDestino: transferencias.almacenDestino,
+        cantidad: transferencias.cantidad,
+        estado: transferencias.estado,
+        fechaSolicitud: transferencias.fechaSolicitud,
+        fechaRecepcion: transferencias.fechaRecepcion,
+        notas: transferencias.notas,
+        createdAt: transferencias.createdAt,
+        updatedAt: transferencias.updatedAt,
+        productoNombre: productos.nombre,
+        productoSku: productos.sku,
+        almacenOrigenNombre: almacenesOrigen.nombre,
+        almacenDestinoNombre: almacenesDestino.nombre,
+      })
+      .from(transferencias)
+      .leftJoin(productos, eq(transferencias.productoId, productos.id))
+      .leftJoin(almacenesOrigen, eq(transferencias.almacenOrigen, almacenesOrigen.id))
+      .leftJoin(almacenesDestino, eq(transferencias.almacenDestino, almacenesDestino.id))
+      .where(whereConditions.length > 0 ? and(...whereConditions) : undefined)
+      .orderBy(desc(transferencias.fechaSolicitud));
+
+    return result.map(row => ({
+      ...row,
+      productoNombre: row.productoNombre || '',
+      almacenOrigenNombre: row.almacenOrigenNombre || '',
+      almacenDestinoNombre: row.almacenDestinoNombre || '',
+    }));
+  }
+
+  async getTransferenciaById(id: string): Promise<Transferencia | undefined> {
+    const [transferencia] = await db.select().from(transferencias).where(eq(transferencias.id, id));
+    return transferencia || undefined;
+  }
+
+  async createTransferencia(insertTransferencia: InsertTransferencia): Promise<Transferencia> {
+    const [transferencia] = await db.insert(transferencias).values(insertTransferencia).returning();
+    return transferencia;
+  }
+
+  async updateTransferencia(id: string, updateData: Partial<InsertTransferencia>): Promise<Transferencia | undefined> {
+    const [transferencia] = await db
+      .update(transferencias)
+      .set({ ...updateData, updatedAt: new Date() })
+      .where(eq(transferencias.id, id))
+      .returning();
+    return transferencia || undefined;
+  }
+
+  async deleteTransferencia(id: string): Promise<boolean> {
+    const result = await db.delete(transferencias).where(eq(transferencias.id, id));
+    return (result.rowCount ?? 0) > 0;
+  }
+
+  // Automatic inventory deduction when order is dispatched
+  async deductInventoryForOrder(orderNumber: string, almacenId: string, fechaDespacho: string): Promise<void> {
+    // Get all products for this order
+    const orderSales = await db
+      .select()
+      .from(sales)
+      .where(eq(sales.orden, orderNumber));
+
+    // For each product in the order, deduct inventory and create movement record
+    for (const sale of orderSales) {
+      const cantidadVendida = sale.cantidad;
+      
+      // Get product ID from SKU
+      const [producto] = await db
+        .select()
+        .from(productos)
+        .where(eq(productos.sku, sale.sku || ''));
+      
+      if (!producto) {
+        console.warn(`Product not found for SKU: ${sale.sku} in order ${orderNumber}`);
+        continue;
+      }
+
+      // Check if this product is a combo (has components)
+      const componentes = await db
+        .select({
+          componenteId: productosComponentes.componenteId,
+          cantidad: productosComponentes.cantidad,
+        })
+        .from(productosComponentes)
+        .where(eq(productosComponentes.productoId, producto.id));
+
+      if (componentes.length > 0) {
+        // This is a combo product - aggregate components by ID to handle duplicates
+        const componentMap = new Map<string, number>();
+        for (const comp of componentes) {
+          const existing = componentMap.get(comp.componenteId) || 0;
+          componentMap.set(comp.componenteId, existing + (cantidadVendida * comp.cantidad));
+        }
+
+        // Deduct inventory for each unique component
+        for (const [componenteId, cantidadTotal] of componentMap.entries()) {
+          try {
+            // Update inventory stock for component (reduce by quantity)
+            await this.updateInventarioStock(componenteId, almacenId, -cantidadTotal);
+
+            // Create movement record for component
+            await this.createMovimientoInventario({
+              productoId: componenteId,
+              almacenId: almacenId,
+              tipo: 'despacho_automatico',
+              cantidad: cantidadTotal,
+              ordenRelacionada: orderNumber,
+              fecha: fechaDespacho,
+              notas: `Despacho automático de orden ${orderNumber} (componente de ${sale.sku})`,
+            });
+          } catch (error) {
+            console.error(`Failed to deduct inventory for component ${componenteId}:`, error);
+          }
+        }
+      } else {
+        // This is a simple product - deduct inventory directly
+        try {
+          await this.updateInventarioStock(producto.id, almacenId, -cantidadVendida);
+
+          // Create movement record
+          await this.createMovimientoInventario({
+            productoId: producto.id,
+            almacenId: almacenId,
+            tipo: 'despacho_automatico',
+            cantidad: cantidadVendida,
+            ordenRelacionada: orderNumber,
+            fecha: fechaDespacho,
+            notas: `Despacho automático de orden ${orderNumber}`,
+          });
+        } catch (error) {
+          console.error(`Failed to deduct inventory for product ${producto.id}:`, error);
+        }
+      }
+    }
   }
 }
 

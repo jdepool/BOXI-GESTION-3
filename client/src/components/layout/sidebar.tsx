@@ -20,6 +20,12 @@ const navigationItems = [
     label: "Despachos",
   },
   {
+    href: "/inventario",
+    icon: "fas fa-boxes",
+    label: "Inventario",
+    testId: "nav-inventario",
+  },
+  {
     href: "/devoluciones",
     icon: "fas fa-undo",
     label: "Devoluciones/Cancelaciones",

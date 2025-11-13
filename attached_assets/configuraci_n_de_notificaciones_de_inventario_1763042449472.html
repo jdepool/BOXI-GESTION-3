@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Configuración de Notificaciones de Inventario</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    html, body { width: 100%; margin: 0; padding: 0; min-height: 0; overflow-x: hidden; box-sizing: border-box; }
+    * { box-sizing: border-box; }
+  </style>
+  </head>
+  <body>
+    <div class="w-full max-w-none px-4 md:px-6 lg:px-8">
+  <header class="flex items-center justify-between border-b border-gray-200 py-6">
+    <div class="flex items-center gap-3">
+      <span class="text-2xl font-bold text-gray-900">SyncWare Hub</span>
+    </div>
+    <nav class="flex items-center gap-4 text-sm text-gray-700">
+      <span>Inventario</span>
+      <span class="text-gray-400">/</span>
+      <span>Notificaciones</span>
+    </nav>
+  </header>
+
+  <main class="py-8">
+    <div class="grid gap-6 lg:grid-cols-3">
+      <div class="lg:col-span-2 space-y-6">
+        <!-- Configuración Global -->
+        <div class="rounded-lg border border-gray-200 bg-white shadow-sm">
+          <div class="p-6 border-b border-gray-200 flex items-center justify-between">
+            <h2 class="text-lg font-semibold text-gray-900">Configuración Global de Alertas</h2>
+          </div>
+          <div class="p-6 space-y-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">Umbral de inventario bajo</label>
+              <div class="flex items-center gap-3">
+                <input type="number" class="flex h-10 w-24 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-400" value="10">
+                <span class="text-sm text-gray-600">unidades</span>
+              </div>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-sm text-gray-700">Activar notificaciones por correo</span>
+              <button type="button" role="switch" class="peer inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border-2 border-gray-300 bg-gray-900 transition-colors"><span class="pointer-events-none block h-5 w-5 translate-x-5 rounded-full bg-white shadow-lg ring-0 transition-transform"></span></button>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-sm text-gray-700">Activar notificaciones in-app</span>
+              <button type="button" role="switch" class="peer inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border-2 border-gray-300 bg-gray-200 transition-colors"><span class="pointer-events-none block h-5 w-5 rounded-full bg-white shadow-lg ring-0 transition-transform translate-x-0"></span></button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Configuración por Producto -->
+        <div class="rounded-lg border border-gray-200 bg-white shadow-sm">
+          <div class="p-6 border-b border-gray-200 flex items-center justify-between">
+            <h2 class="text-lg font-semibold text-gray-900">Alertas por Producto</h2>
+            <button class="inline-flex items-center justify-center rounded-md px-3 py-2 text-sm font-medium border border-gray-300 bg-white text-gray-900 hover:bg-gray-100"><i class="fas fa-plus mr-2"></a>Agregar</button>
+          </div>
+          <div class="w-full overflow-auto">
+            <table class="w-full caption-bottom text-sm">
+              <thead class="border-b border-gray-200">
+                <tr class="border-b border-gray-200">
+                  <th class="h-12 px-4 text-left align-middle font-medium text-gray-700">Producto</th>
+                  <th class="h-12 px-4 text-left align-middle font-medium text-gray-700">Umbral</th>
+                  <th class="h-12 px-4 align-middle font-medium text-gray-700 text-center">Estado</th>
+                  <th class="h-12 px-4 align-middle font-medium text-gray-700 text-right">Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="border-b border-gray-200">
+                  <td class="p-4 align-middle">Laptop Dell XPS</td>
+                  <td class="p-4 align-middle">5</td>
+                  <td class="p-4 align-middle text-center"><span class="inline-flex items-center rounded-full border border-gray-200 px-2.5 py-0.5 text-xs font-semibold bg-gray-200 text-gray-800">Activo</span></td>
+                  <td class="p-4 align-middle text-right">
+                    <button class="px-2 py-1 text-xs border border-gray-300 rounded bg-white hover:bg-gray-100 text-gray-700"><i class="fas fa-pen-to-square"></i></button>
+                  </td>
+                </tr>
+                <tr class="border-b border-gray-200">
+                  <td class="p-4 align-middle">Mouse Logitech</td>
+                  <td class="p-4 align-middle">20</td>
+                  <td class="p-4 align-middle text-center"><span class="inline-flex items-center rounded-full border border-gray-200 px-2.5 py-0.5 text-xs font-semibold bg-gray-200 text-gray-800">Activo</span></td>
+                  <td class="p-4 align-middle text-right">
+                    <button class="px-2 py-1 text-xs border border-gray-300 rounded bg-white hover:bg-gray-100 text-gray-700"><i class="fas fa-pen-to-square"></i></button>
+                  </td>
+                </tr>
+                <tr class="border-b border-gray-200">
+                  <td class="p-4 align-middle">Teclado Mecánico</td>
+                  <td class="p-4 align-middle">8</td>
+                  <td class="p-4 align-middle text-center"><span class="inline-flex items-center rounded-full border border-gray-200 px-2.5 py-0.5 text-xs font-semibold bg-gray-100 text-gray-700">Inactivo</span></td>
+                  <td class="p-4 align-middle text-right">
+                    <button class="px-2 py-1 text-xs border border-gray-300 rounded bg-white hover:bg-gray-100 text-gray-700"><i class="fas fa-pen-to-square"></i></button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Indicadores Visuales -->
+        <div class="rounded-lg border border-gray-200 bg-white shadow-sm">
+          <div class="p-6 border-b border-gray-200 flex items-center justify-between">
+            <h2 class="text-lg font-semibold text-gray-900">Indicadores Visuales</h2>
+          </div>
+          <div class="p-6 grid gap-4 md:grid-cols-3">
+            <div class="p-4 rounded-md border border-gray-200 bg-gray-50 flex items-center justify-between">
+              <div>
+                <p class="text-sm text-gray-600">Crítico</p>
+                <p class="text-2xl font-semibold text-gray-900">3</p>
+              </div>
+              <span class="inline-flex items-center rounded-full border border-gray-200 px-2.5 py-0.5 text-xs font-semibold bg-gray-900 text-white">Rojo</span>
+            </div>
+            <div class="p-4 rounded-md border border-gray-200 bg-gray-50 flex items-center justify-between">
+              <div>
+                <p class="text-sm text-gray-600">Advertencia</p>
+                <p class="text-2xl font-semibold text-gray-900">12</p>
+              </div>
+              <span class="inline-flex items-center rounded-full border border-gray-200 px-2.5 py-0.5 text-xs font-semibold bg-gray-300 text-gray-800">Amarillo</span>
+            </div>
+            <div class="p-4 rounded-md border border-gray-200 bg-gray-50 flex items-center justify-between">
+              <div>
+                <p class="text-sm text-gray-600">Sin alertas</p>
+                <p class="text-2xl font-semibold text-gray-900">45</p>
+              </div>
+              <span class="inline-flex items-center rounded-full border border-gray-200 px-2.5 py-0.5 text-xs font-semibold bg-gray-200 text-gray-800">Gris</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <aside class="space-y-6">
+        <!-- Opciones de Canal -->
+        <div class="rounded-lg border border-gray-200 bg-white shadow-sm">
+          <div class="p-6 border-b border-gray-200">
+            <h2 class="text-base font-semibold text-gray-900">Canales de Notificación</h2>
+          </div>
+          <div class="p-6 space-y-4">
+            <div class="flex items-center justify-between">
+              <span class="text-sm text-gray-700">Correo electrónico</span>
+              <input type="checkbox" class="h-4 w-4 rounded border-gray-300 text-gray-900 focus:ring-2 focus:ring-gray-400" checked>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-sm text-gray-700">Notificación push</span>
+              <input type="checkbox" class="h-4 w-4 rounded border-gray-300 text-gray-900 focus:ring-2 focus:ring-gray-400">
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-sm text-gray-700">SMS</span>
+              <input type="checkbox" class="h-4 w-4 rounded border-gray-300 text-gray-900 focus:ring-2 focus:ring-gray-400">
+            </div>
+          </div>
+        </div>
+
+        <!-- Histórico de Alertas -->
+        <div class="rounded-lg border border-gray-200 bg-white shadow-sm">
+          <div class="p-4 border-b border-gray-200 flex items-center justify-between">
+            <h3 class="text-base font-semibold text-gray-900">Histórico de Alertas</h3>
+            <button class="inline-flex items-center justify-center text-sm text-gray-600 hover:text-gray-900">Ver todo</button>
+          </div>
+          <div class="p-4 space-y-3">
+            <div class="flex items-start gap-3">
+              <i class="fas fa-exclamation-circle text-gray-500 mt-1"></i>
+              <div class="flex-1">
+                <p class="text-sm text-gray-700 font-medium">Inventario bajo</p>
+                <p class="text-xs text-gray-500">Laptop Dell XPS - Q1</p>
+                <p class="text-xs text-gray-400">Hace 2 horas</p>
+              </div>
+            </div>
+            <div class="flex items-start gap-3">
+              <i class="fas fa-exclamation-circle text-gray-500 mt-1"></i>
+              <div class="flex-1">
+                <p class="text-sm text-gray-700 font-medium">Stock crítico</p>
+                <p class="text-xs text-gray-500">Mouse Logitech - Q2</p>
+                <p class="text-xs text-gray-400">Ayer</p>
+              </div>
+            </div>
+            <div class="flex items-start gap-3">
+              <i class="fas fa-exclamation-circle text-gray-500 mt-1"></i>
+              <div class="flex-1">
+                <p class="text-sm text-gray-700 font-medium">Agotado</p>
+                <p class="text-xs text-gray-500">Teclado Mecánico - Q3</p>
+                <p class="text-xs text-gray-400">Hace 3 días</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </main>
+</div>
+  </body>
+  </html>

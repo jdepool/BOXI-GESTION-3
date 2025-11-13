@@ -10,6 +10,7 @@ import { useAuth } from "@/hooks/useAuth";
 import Sales from "@/pages/sales";
 import VentasMompox from "@/pages/ventas-mompox";
 import Despachos from "@/pages/despachos";
+import Inventario from "@/pages/inventario";
 import DevolucionesCancelaciones from "@/pages/devoluciones-cancelaciones";
 import Verificacion from "@/pages/verificacion";
 import Egresos from "@/pages/egresos";
@@ -41,6 +42,9 @@ function Router() {
       </Route>
       <Route path="/despachos">
         <ProtectedRoute component={Despachos} />
+      </Route>
+      <Route path="/inventario">
+        <ProtectedRoute component={Inventario} />
       </Route>
       <Route path="/devoluciones">
         <ProtectedRoute component={DevolucionesCancelaciones} />

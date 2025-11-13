@@ -8,7 +8,8 @@ import { eq } from "drizzle-orm";
 import { 
   insertSaleSchema, insertUploadHistorySchema, insertBancoSchema, insertTipoEgresoSchema, insertAutorizadorSchema,
   insertProductoSchema, insertProductoComponenteSchema, insertMetodoPagoSchema, insertMonedaSchema, insertCategoriaSchema,
-  insertEgresoSchema, insertPaymentInstallmentSchema, insertAsesorSchema, insertTransportistaSchema, insertEstadoSchema, insertCiudadSchema, insertPrecioSchema, insertProspectoSchema
+  insertEgresoSchema, insertPaymentInstallmentSchema, insertAsesorSchema, insertTransportistaSchema, insertEstadoSchema, insertCiudadSchema, insertPrecioSchema, insertProspectoSchema,
+  insertAlmacenSchema, insertInventarioSchema, insertMovimientoInventarioSchema, insertTransferenciaSchema
 } from "@shared/schema";
 import { z } from "zod";
 import multer from "multer";
@@ -3455,7 +3456,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/sales/:saleId/fecha-despacho", async (req, res) => {
     try {
       const { saleId } = req.params;
-      const { fechaDespacho } = req.body;
+      const { fechaDespacho, almacenId } = req.body;
 
       // Validate that sale exists
       const existingSale = await storage.getSaleById(saleId);
@@ -3467,6 +3468,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (!updatedSale) {
         return res.status(500).json({ error: "Failed to update fecha despacho" });
+      }
+
+      // If fechaDespacho is being set (not null) and there's an almacenId, deduct inventory
+      if (fechaDespacho && almacenId && updatedSale.orden) {
+        try {
+          // Also update the almacenDespachoId for this sale
+          await storage.updateSale(saleId, { almacenDespachoId: almacenId });
+          
+          // Deduct inventory for this specific order
+          await storage.deductInventoryForOrder(updatedSale.orden, almacenId, fechaDespacho);
+          console.log(`✅ Inventory deducted for order ${updatedSale.orden} from almacen ${almacenId}`);
+        } catch (inventoryError) {
+          console.error("Error deducting inventory:", inventoryError);
+          // Don't fail the request if inventory deduction fails - just log the error
+          // This allows the fechaDespacho to still be set even if there's an inventory issue
+        }
       }
 
       res.json({ success: true, sale: updatedSale });
@@ -8393,6 +8410,272 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       console.error("Error correcting SKUs:", error);
       res.status(500).json({ error: "Failed to correct SKUs" });
+    }
+  });
+
+  // ========================================
+  // INVENTORY MANAGEMENT ROUTES
+  // ========================================
+
+  // Almacenes (Warehouses)
+  app.get("/api/inventario/almacenes", async (req, res) => {
+    try {
+      const almacenes = await storage.getAlmacenes();
+      res.json(almacenes);
+    } catch (error) {
+      console.error("Error fetching almacenes:", error);
+      res.status(500).json({ error: "Failed to fetch almacenes" });
+    }
+  });
+
+  app.post("/api/inventario/almacenes", async (req, res) => {
+    try {
+      const validation = insertAlmacenSchema.safeParse(req.body);
+      if (!validation.success) {
+        return res.status(400).json({ error: "Invalid request data", details: validation.error.errors });
+      }
+      const almacen = await storage.createAlmacen(validation.data);
+      res.json(almacen);
+    } catch (error) {
+      console.error("Error creating almacen:", error);
+      res.status(500).json({ error: "Failed to create almacen" });
+    }
+  });
+
+  app.put("/api/inventario/almacenes/:id", async (req, res) => {
+    try {
+      const almacen = await storage.updateAlmacen(req.params.id, req.body);
+      if (!almacen) {
+        return res.status(404).json({ error: "Almacen not found" });
+      }
+      res.json(almacen);
+    } catch (error) {
+      console.error("Error updating almacen:", error);
+      res.status(500).json({ error: "Failed to update almacen" });
+    }
+  });
+
+  app.delete("/api/inventario/almacenes/:id", async (req, res) => {
+    try {
+      const success = await storage.deleteAlmacen(req.params.id);
+      if (!success) {
+        return res.status(404).json({ error: "Almacen not found" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting almacen:", error);
+      res.status(500).json({ error: "Failed to delete almacen" });
+    }
+  });
+
+  // Inventario (Stock levels)
+  app.get("/api/inventario", async (req, res) => {
+    try {
+      const { productoId, almacenId, search } = req.query;
+      const inventario = await storage.getInventario({
+        productoId: productoId as string | undefined,
+        almacenId: almacenId as string | undefined,
+        search: search as string | undefined,
+      });
+      res.json(inventario);
+    } catch (error) {
+      console.error("Error fetching inventario:", error);
+      res.status(500).json({ error: "Failed to fetch inventario" });
+    }
+  });
+
+  app.post("/api/inventario", async (req, res) => {
+    try {
+      const validation = insertInventarioSchema.safeParse(req.body);
+      if (!validation.success) {
+        return res.status(400).json({ error: "Invalid request data", details: validation.error.errors });
+      }
+      const inventario = await storage.createInventario(validation.data);
+      res.json(inventario);
+    } catch (error) {
+      console.error("Error creating inventario:", error);
+      res.status(500).json({ error: "Failed to create inventario" });
+    }
+  });
+
+  app.put("/api/inventario/:id", async (req, res) => {
+    try {
+      const inventario = await storage.updateInventario(req.params.id, req.body);
+      if (!inventario) {
+        return res.status(404).json({ error: "Inventario not found" });
+      }
+      res.json(inventario);
+    } catch (error) {
+      console.error("Error updating inventario:", error);
+      res.status(500).json({ error: "Failed to update inventario" });
+    }
+  });
+
+  // Movimientos de Inventario (Inventory movements)
+  app.get("/api/inventario/movimientos", async (req, res) => {
+    try {
+      const { productoId, almacenId, tipo, ordenRelacionada, startDate, endDate, limit, offset } = req.query;
+      const movimientos = await storage.getMovimientosInventario({
+        productoId: productoId as string | undefined,
+        almacenId: almacenId as string | undefined,
+        tipo: tipo as string | undefined,
+        ordenRelacionada: ordenRelacionada as string | undefined,
+        startDate: startDate as string | undefined,
+        endDate: endDate as string | undefined,
+        limit: limit ? parseInt(limit as string) : undefined,
+        offset: offset ? parseInt(offset as string) : undefined,
+      });
+      res.json(movimientos);
+    } catch (error) {
+      console.error("Error fetching movimientos:", error);
+      res.status(500).json({ error: "Failed to fetch movimientos" });
+    }
+  });
+
+  app.post("/api/inventario/movimientos", async (req, res) => {
+    try {
+      const validation = insertMovimientoInventarioSchema.safeParse(req.body);
+      if (!validation.success) {
+        return res.status(400).json({ error: "Invalid request data", details: validation.error.errors });
+      }
+      
+      // Create the movement
+      const movimiento = await storage.createMovimientoInventario(validation.data);
+      
+      // Update inventory stock based on movement type
+      const stockDelta = validation.data.tipo === 'entrada' || validation.data.tipo === 'transferencia_entrada'
+        ? validation.data.cantidad
+        : -validation.data.cantidad;
+      
+      await storage.updateInventarioStock(validation.data.productoId, validation.data.almacenId, stockDelta);
+      
+      res.json(movimiento);
+    } catch (error) {
+      console.error("Error creating movimiento:", error);
+      res.status(500).json({ error: "Failed to create movimiento" });
+    }
+  });
+
+  // Transferencias (Stock transfers)
+  app.get("/api/inventario/transferencias", async (req, res) => {
+    try {
+      const { productoId, almacenOrigen, almacenDestino, estado } = req.query;
+      const transferencias = await storage.getTransferencias({
+        productoId: productoId as string | undefined,
+        almacenOrigen: almacenOrigen as string | undefined,
+        almacenDestino: almacenDestino as string | undefined,
+        estado: estado as string | undefined,
+      });
+      res.json(transferencias);
+    } catch (error) {
+      console.error("Error fetching transferencias:", error);
+      res.status(500).json({ error: "Failed to fetch transferencias" });
+    }
+  });
+
+  app.post("/api/inventario/transferencias", async (req, res) => {
+    try {
+      const validation = insertTransferenciaSchema.safeParse(req.body);
+      if (!validation.success) {
+        return res.status(400).json({ error: "Invalid request data", details: validation.error.errors });
+      }
+      
+      const transferencia = await storage.createTransferencia(validation.data);
+      
+      // If auto-confirm is enabled, immediately process the transfer
+      if (req.body.autoConfirm) {
+        // Deduct from origin warehouse
+        await storage.updateInventarioStock(validation.data.productoId, validation.data.almacenOrigen, -validation.data.cantidad);
+        await storage.createMovimientoInventario({
+          productoId: validation.data.productoId,
+          almacenId: validation.data.almacenOrigen,
+          tipo: 'transferencia_salida',
+          cantidad: validation.data.cantidad,
+          transferId: transferencia.id,
+          fecha: new Date().toISOString().split('T')[0],
+          notas: `Transferencia a ${req.body.almacenDestinoNombre || 'otro almacén'}`,
+        });
+
+        // Add to destination warehouse
+        await storage.updateInventarioStock(validation.data.productoId, validation.data.almacenDestino, validation.data.cantidad);
+        await storage.createMovimientoInventario({
+          productoId: validation.data.productoId,
+          almacenId: validation.data.almacenDestino,
+          tipo: 'transferencia_entrada',
+          cantidad: validation.data.cantidad,
+          transferId: transferencia.id,
+          fecha: new Date().toISOString().split('T')[0],
+          notas: `Transferencia desde ${req.body.almacenOrigenNombre || 'otro almacén'}`,
+        });
+
+        // Mark transfer as verified
+        await storage.updateTransferencia(transferencia.id, {
+          estado: 'verificado',
+          fechaRecepcion: new Date(),
+        });
+      }
+      
+      res.json(transferencia);
+    } catch (error) {
+      console.error("Error creating transferencia:", error);
+      res.status(500).json({ error: "Failed to create transferencia" });
+    }
+  });
+
+  app.put("/api/inventario/transferencias/:id", async (req, res) => {
+    try {
+      const transferencia = await storage.getTransferenciaById(req.params.id);
+      if (!transferencia) {
+        return res.status(404).json({ error: "Transferencia not found" });
+      }
+
+      // If verifying the transfer, process the stock movements
+      if (req.body.estado === 'verificado' && transferencia.estado === 'pendiente') {
+        // Deduct from origin warehouse
+        await storage.updateInventarioStock(transferencia.productoId, transferencia.almacenOrigen, -transferencia.cantidad);
+        await storage.createMovimientoInventario({
+          productoId: transferencia.productoId,
+          almacenId: transferencia.almacenOrigen,
+          tipo: 'transferencia_salida',
+          cantidad: transferencia.cantidad,
+          transferId: transferencia.id,
+          fecha: new Date().toISOString().split('T')[0],
+          notas: `Transferencia verificada`,
+        });
+
+        // Add to destination warehouse
+        await storage.updateInventarioStock(transferencia.productoId, transferencia.almacenDestino, transferencia.cantidad);
+        await storage.createMovimientoInventario({
+          productoId: transferencia.productoId,
+          almacenId: transferencia.almacenDestino,
+          tipo: 'transferencia_entrada',
+          cantidad: transferencia.cantidad,
+          transferId: transferencia.id,
+          fecha: new Date().toISOString().split('T')[0],
+          notas: `Transferencia verificada`,
+        });
+
+        req.body.fechaRecepcion = new Date();
+      }
+
+      const updated = await storage.updateTransferencia(req.params.id, req.body);
+      res.json(updated);
+    } catch (error) {
+      console.error("Error updating transferencia:", error);
+      res.status(500).json({ error: "Failed to update transferencia" });
+    }
+  });
+
+  app.delete("/api/inventario/transferencias/:id", async (req, res) => {
+    try {
+      const success = await storage.deleteTransferencia(req.params.id);
+      if (!success) {
+        return res.status(404).json({ error: "Transferencia not found" });
+      }
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting transferencia:", error);
+      res.status(500).json({ error: "Failed to delete transferencia" });
     }
   });
 

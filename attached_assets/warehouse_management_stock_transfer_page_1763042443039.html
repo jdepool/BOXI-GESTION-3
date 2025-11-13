@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Warehouse Management & Stock Transfer Page</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    html, body { width: 100%; margin: 0; padding: 0; min-height: 0; overflow-x: hidden; box-sizing: border-box; }
+    * { box-sizing: border-box; }
+  </style>
+  </head>
+  <body>
+    <header class="w-full border-b border-gray-200 bg-white">
+  <div class="w-full max-w-none px-4 md:px-6 lg:px-8 flex items-center justify-between py-4">
+    <div class="flex items-center space-x-3">
+      <div class="bg-gray-200 rounded-md w-8 h-8 flex items-center justify-center">
+        <i class="fas fa-warehouse text-gray-600"></i>
+      </div>
+      <h1 class="text-xl font-semibold text-gray-900">SyncWare Hub</h1>
+    </div>
+    <nav class="flex items-center space-x-4 text-sm text-gray-600">
+      <a href="#" class="hover:text-gray-900">Inventario</a>
+      <a href="#" class="hover:text-gray-900">Registrar Salida</a>
+      <a href="#" class="hover:text-gray-900">Revisar Salidas</a>
+      <span class="font-medium text-gray-900">Gestión de Almacenes</span>
+    </nav>
+  </div>
+</header>
+
+<div class="w-full max-w-none px-4 md:px-6 lg:px-8">
+  <div class="py-6 flex items-center justify-between">
+    <div>
+      <h2 class="text-2xl font-bold text-gray-900">Gestión de Almacenes</h2>
+      <p class="text-gray-600 text-sm">Crea almacenes, gestiona existencias y verifica recepciones de transferencias en una sola vista.</p>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <!-- Formulario para Crear Almacén -->
+    <div class="rounded-lg border border-gray-200 bg-white shadow-sm">
+      <div class="p-6 border-b border-gray-200">
+        <h3 class="text-lg font-semibold text-gray-900">Crear Almacén</h3>
+        <p class="text-sm text-gray-600">Define un nuevo almacén con nombre único.</p>
+      </div>
+      <div class="p-6 space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Nombre del Almacén</label>
+          <input type="text" class="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-400" placeholder="Ej. Almacén Norte">
+        </div>
+        <button class="inline-flex items-center justify-center rounded-md px-4 py-2 text-sm font-medium border border-gray-300 bg-white text-gray-900 hover:bg-gray-100">
+          <i class="fas fa-plus mr-2"></i>Crear
+        </button>
+        <div class="shrink-0 bg-gray-200 h-[1px] w-full my-4"></div>
+        <div>
+          <h4 class="text-sm font-medium text-gray-900 mb-3">Almacenes Existentes</h4>
+          <div class="space-y-2">
+            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-md border border-gray-200">
+              <span class="text-sm font-medium text-gray-900">Almacén Norte</span>
+              <button class="text-gray-500 hover:text-gray-700"><i class="fas fa-pen-to-square text-xs"></i></button>
+            </div>
+            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-md border border-gray-200">
+              <span class="text-sm font-medium text-gray-900">Almacén Sur</span>
+              <button class="text-gray-500 hover:text-gray-700"><i class="fas fa-pen-to-square text-xs"></i></button>
+            </div>
+            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-md border border-gray-200">
+              <span class="text-sm font-medium text-gray-900">Almacén Central</span>
+              <button class="text-gray-500 hover:text-gray-700"><i class="fas fa-pen-to-square text-xs"></i></button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Transferencia de Stock -->
+    <div class="rounded-lg border border-gray-200 bg-white shadow-sm">
+      <div class="p-6 border-b border-gray-200">
+        <h3 class="text-lg font-semibold text-gray-900">Transferencia de Stock</h3>
+        <p class="text-sm text-gray-600">Mueve inventario entre almacenes y verifica recepción.</p>
+      </div>
+      <div class="p-6 space-y-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Origen</label>
+            <select class="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-400">
+              <option>Seleccionar origen</option>
+              <option>Almacén Norte</option>
+              <option>Almacén Sur</option>
+              <option>Almacén Central</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Destino</label>
+            <select class="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-400">
+              <option>Seleccionar destino</option>
+              <option>Almacén Norte</option>
+              <option>Almacén Sur</option>
+              <option>Almacén Central</option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Producto</label>
+          <select class="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-400">
+            <option>Seleccionar producto</option>
+            <option>Widget A</option>
+            <option>Widget B</option>
+            <option>Gadget Pro</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Cantidad</label>
+          <input type="number" class="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-400" placeholder="Introduce cantidad">
+        </div>
+        <div class="flex items-start space-x-2 mt-2">
+          <input type="checkbox" class="h-4 w-4 rounded border-gray-300 text-gray-900 focus:ring-2 focus:ring-gray-400">
+          <label class="text-sm text-gray-700">Verificar recepción</label>
+        </div>
+        <button class="inline-flex items-center justify-center rounded-md px-4 py-2 text-sm font-medium border border-gray-300 bg-gray-900 text-white hover:bg-gray-800">
+          <i class="fas fa-arrow-right mr-2"></i>Transferir
+        </button>
+
+        <div class="pt-4">
+          <h4 class="text-sm font-medium text-gray-900 mb-2">Pendiente de Verificación</h4>
+          <div class="space-y-2 text-sm">
+            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-md border border-gray-200">
+              <div>
+                <span class="font-medium text-gray-900">Widget A</span>
+                <span class="text-gray-600 ml-2">x50 → Norte → Sur</span>
+              </div>
+              <button class="text-gray-500 hover:text-gray-700"><i class="fas fa-check text-xs"></i></button>
+            </div>
+            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-md border border-gray-200">
+              <div>
+                <span class="font-medium text-gray-900">Gadget Pro</span>
+                <span class="text-gray-600 ml-2">x20 → Central → Norte</span>
+              </div>
+              <button class="text-gray-500 hover:text-gray-700"><i class="fas fa-check text-xs"></i></button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="py-8"></div>
+  </body>
+  </html>

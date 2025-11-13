@@ -269,6 +269,8 @@ export const sales = pgTable("sales", {
   asesorId: varchar("asesor_id"),
   // Transportista asignado
   transportistaId: varchar("transportista_id"),
+  // Almacen de despacho (warehouse fulfillment tracking for inventory)
+  almacenDespachoId: varchar("almacen_despacho_id"),
   // Shipping tracking
   nroGuia: varchar("nro_guia", { length: 100 }),
   fechaDespacho: varchar("fecha_despacho", { length: 10 }),
@@ -724,3 +726,117 @@ export const insertProspectoSchema = createInsertSchema(prospectos).omit({
 
 export type Prospecto = typeof prospectos.$inferSelect;
 export type InsertProspecto = z.infer<typeof insertProspectoSchema>;
+
+// ========================================
+// INVENTORY MANAGEMENT TABLES
+// ========================================
+
+// Almacenes (Warehouses)
+export const almacenes = pgTable("almacenes", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  nombre: text("nombre").notNull().unique(),
+  activo: boolean("activo").notNull().default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Inventario (Stock levels per product per warehouse)
+export const inventario = pgTable("inventario", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  productoId: varchar("producto_id").notNull().references(() => productos.id, { onDelete: "restrict", onUpdate: "cascade" }),
+  almacenId: varchar("almacen_id").notNull().references(() => almacenes.id, { onDelete: "restrict", onUpdate: "cascade" }),
+  stockActual: integer("stock_actual").notNull().default(0),
+  stockReservado: integer("stock_reservado").notNull().default(0),
+  stockMinimo: integer("stock_minimo").notNull().default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => ({
+  productoAlmacenUnique: unique("producto_almacen_unique").on(table.productoId, table.almacenId),
+  productoIdIdx: index("inventario_producto_id_idx").on(table.productoId),
+  almacenIdIdx: index("inventario_almacen_id_idx").on(table.almacenId),
+}));
+
+// Movimientos de Inventario (Inventory transactions/movements)
+export const movimientosInventario = pgTable("movimientos_inventario", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  productoId: varchar("producto_id").notNull().references(() => productos.id, { onDelete: "restrict", onUpdate: "cascade" }),
+  almacenId: varchar("almacen_id").notNull().references(() => almacenes.id, { onDelete: "restrict", onUpdate: "cascade" }),
+  tipo: text("tipo").notNull(), // entrada, salida, transferencia_salida, transferencia_entrada, despacho_automatico
+  cantidad: integer("cantidad").notNull(),
+  ordenRelacionada: text("orden_relacionada"),
+  transferId: varchar("transfer_id"),
+  fecha: varchar("fecha", { length: 10 }).notNull(), // YYYY-MM-DD
+  notas: text("notas"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => ({
+  tipoCheck: check("tipo_check", sql`${table.tipo} IN ('entrada', 'salida', 'transferencia_salida', 'transferencia_entrada', 'despacho_automatico')`),
+  ordenRelacionadaIdx: index("movimientos_orden_relacionada_idx").on(table.ordenRelacionada),
+  fechaIdx: index("movimientos_fecha_idx").on(table.fecha),
+  productoIdIdx: index("movimientos_producto_id_idx").on(table.productoId),
+  almacenIdIdx: index("movimientos_almacen_id_idx").on(table.almacenId),
+}));
+
+// Transferencias (Stock transfers between warehouses)
+export const transferencias = pgTable("transferencias", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  productoId: varchar("producto_id").notNull().references(() => productos.id, { onDelete: "restrict", onUpdate: "cascade" }),
+  almacenOrigen: varchar("almacen_origen").notNull().references(() => almacenes.id, { onDelete: "restrict", onUpdate: "cascade" }),
+  almacenDestino: varchar("almacen_destino").notNull().references(() => almacenes.id, { onDelete: "restrict", onUpdate: "cascade" }),
+  cantidad: integer("cantidad").notNull(),
+  estado: text("estado").notNull().default("pendiente"), // pendiente, verificado, rechazado
+  fechaSolicitud: timestamp("fecha_solicitud").defaultNow().notNull(),
+  fechaRecepcion: timestamp("fecha_recepcion"),
+  notas: text("notas"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => ({
+  estadoCheck: check("estado_check", sql`${table.estado} IN ('pendiente', 'verificado', 'rechazado')`),
+  productoEstadoIdx: index("transferencias_producto_estado_idx").on(table.productoId, table.estado),
+  fechaSolicitudIdx: index("transferencias_fecha_solicitud_idx").on(table.fechaSolicitud),
+}));
+
+// Insert schemas for inventory tables
+export const insertAlmacenSchema = createInsertSchema(almacenes).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertInventarioSchema = createInsertSchema(inventario).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertMovimientoInventarioSchema = createInsertSchema(movimientosInventario).omit({
+  id: true,
+  createdAt: true,
+}).extend({
+  fecha: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Fecha debe estar en formato YYYY-MM-DD"),
+});
+
+export const insertTransferenciaSchema = createInsertSchema(transferencias).omit({
+  id: true,
+  fechaSolicitud: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  fechaRecepcion: z.preprocess(
+    (val) => {
+      if (val === "" || val === null || val === undefined) return undefined;
+      if (typeof val === "string") return new Date(val);
+      return val;
+    },
+    z.date().nullable().optional()
+  ),
+});
+
+// Types for inventory tables
+export type Almacen = typeof almacenes.$inferSelect;
+export type InsertAlmacen = z.infer<typeof insertAlmacenSchema>;
+export type Inventario = typeof inventario.$inferSelect;
+export type InsertInventario = z.infer<typeof insertInventarioSchema>;
+export type MovimientoInventario = typeof movimientosInventario.$inferSelect;
+export type InsertMovimientoInventario = z.infer<typeof insertMovimientoInventarioSchema>;
+export type Transferencia = typeof transferencias.$inferSelect;
+export type InsertTransferencia = z.infer<typeof insertTransferenciaSchema>;

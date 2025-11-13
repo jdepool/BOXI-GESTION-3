@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Record Dispatch Page</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    html, body { width: 100%; margin: 0; padding: 0; min-height: 0; overflow-x: hidden; box-sizing: border-box; }
+    * { box-sizing: border-box; }
+  </style>
+  </head>
+  <body>
+    <div class="w-full max-w-none px-4 md:px-6 lg:px-8">
+  <header class="border-b border-gray-200 bg-white">
+    <div class="flex items-center justify-between py-4">
+      <div class="flex items-center space-x-4">
+        <button class="inline-flex items-center justify-center rounded-md px-4 py-2 text-sm font-medium border border-gray-300 bg-white text-gray-900 hover:bg-gray-100">
+          <i class="fas fa-bars mr-2"></i>
+        </button>
+        <h1 class="text-xl font-semibold text-gray-900">SyncWare Hub</h1>
+      </div>
+      <div class="flex items-center space-x-2">
+        <span class="text-sm text-gray-600">Usuario</span>
+        <span class="relative flex h-8 w-8 shrink-0 overflow-hidden rounded-full bg-gray-200 border border-gray-300">
+          <span class="flex h-full w-full items-center justify-center text-gray-600 text-xs">U</span>
+        </span>
+      </div>
+    </div>
+  </header>
+
+  <main class="py-6">
+    <div class="mb-6 flex items-center justify-between">
+      <div>
+        <h2 class="text-2xl font-semibold text-gray-900">Registrar Despacho</h2>
+        <p class="text-sm text-gray-600 mt-1">Registra la salida de productos y actualiza automáticamente el inventario</p>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div class="lg:col-span-2">
+        <div class="rounded-lg border border-gray-200 bg-white text-gray-900 shadow-sm">
+          <div class="p-6">
+            <h3 class="text-lg font-medium mb-4">Detalles del Despacho</h3>
+            
+            <div class="space-y-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Número de Orden</label>
+                <input type="text" class="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-400" placeholder="Ingrese número de orden">
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Fecha de Despacho</label>
+                  <input type="date" class="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-400">
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Almacén</label>
+                  <select class="flex h-10 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-400">
+                    <option>Seleccione almacén</option>
+                    <option>Almacén Principal</option>
+                    <option>Almacén Secundario</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Notas (Opcional)</label>
+                <textarea class="flex min-h-[80px] w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-gray-400" placeholder="Ingrese notas adicionales"></textarea>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-6 rounded-lg border border-gray-200 bg-white text-gray-900 shadow-sm">
+          <div class="p-6">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="text-lg font-medium">Productos</h3>
+              <button class="inline-flex items-center justify-center rounded-md px-3 py-2 text-sm font-medium border border-gray-300 bg-white text-gray-900 hover:bg-gray-100">
+                <i class="fas fa-plus mr-2"></i>
+                Agregar Producto
+              </button>
+            </div>
+
+            <div class="w-full overflow-auto">
+              <table class="w-full caption-bottom text-sm">
+                <thead class="border-b border-gray-200">
+                  <tr class="border-b border-gray-200">
+                    <th class="h-12 px-4 text-left align-middle font-medium text-gray-700">Producto</th>
+                    <th class="h-12 px-4 text-left align-middle font-medium text-gray-700">Cantidad</th>
+                    <th class="h-12 px-4 text-left align-middle font-medium text-gray-700">Disponible</th>
+                    <th class="h-12 px-4 text-left align-middle font-medium text-gray-700">Acción</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr class="border-b border-gray-200">
+                    <td class="p-4 align-middle">
+                      <select class="flex h-9 w-full rounded-md border border-gray-300 bg-white px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-gray-400">
+                        <option>Seleccione producto</option>
+                      </select>
+                    </td>
+                    <td class="p-4 align-middle">
+                      <input type="number" class="flex h-9 w-20 rounded-md border border-gray-300 bg-white px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-gray-400" placeholder="0">
+                    </td>
+                    <td class="p-4 align-middle">
+                      <span class="text-sm text-gray-600">0</span>
+                    </td>
+                    <td class="p-4 align-middle">
+                      <button class="inline-flex items-center justify-center rounded-md px-2 py-1 text-sm font-medium border border-gray-300 bg-white text-gray-900 hover:bg-gray-100">
+                        <i class="fas fa-trash"></i>
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="mt-4 flex justify-end space-x-3">
+              <button class="inline-flex items-center justify-center rounded-md px-4 py-2 text-sm font-medium border border-gray-300 bg-white text-gray-900 hover:bg-gray-100">
+                Cancelar
+              </button>
+              <button class="inline-flex items-center justify-center rounded-md px-4 py-2 text-sm font-medium border border-gray-300 bg-gray-900 text-white hover:bg-gray-800">
+                Guardar Despacho
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="rounded-lg border border-gray-200 bg-white text-gray-900 shadow-sm">
+          <div class="p-6">
+            <h3 class="text-lg font-medium mb-4">Resumen del Despacho</h3>
+            <div class="space-y-3">
+              <div class="flex justify-between text-sm">
+                <span class="text-gray-600">Número de Orden:</span>
+                <span class="font-medium">-</span>
+              </div>
+              <div class="flex justify-between text-sm">
+                <span class="text-gray-600">Almacén:</span>
+                <span class="font-medium">-</span>
+              </div>
+              <div class="flex justify-between text-sm">
+                <span class="text-gray-600">Fecha de Despacho:</span>
+                <span class="font-medium">-</span>
+              </div>
+              <div class="shrink-0 bg-gray-200 h-[1px] w-full my-4"></div>
+              <div class="flex justify-between text-sm">
+                <span class="text-gray-600">Total Productos:</span>
+                <span class="font-medium">0</span>
+              </div>
+              <div class="flex justify-between text-sm">
+                <span class="text-gray-600">Estado:</span>
+                <span class="inline-flex items-center rounded-full border border-gray-200 px-2.5 py-0.5 text-xs font-semibold bg-gray-100 text-gray-700">Borrador</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-6 rounded-lg border border-gray-200 bg-white text-gray-900 shadow-sm">
+          <div class="p-4">
+            <div class="flex items-start space-x-3">
+              <i class="fas fa-info-circle text-gray-500 mt-0.5"></i>
+              <div class="text-sm text-gray-600">
+                Este despacho será registrado y los niveles de inventario se actualizarán automáticamente al guardar.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+  </body>
+  </html>
