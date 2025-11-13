@@ -92,12 +92,12 @@ function DashboardTab() {
   );
 
   const getStatusBadge = (disponible: number, minimo: number) => {
-    if (disponible <= 0) {
-      return <Badge variant="destructive" data-testid={`badge-sin-stock`}>Sin Stock</Badge>;
+    if (disponible === 0) {
+      return <Badge variant="destructive" data-testid="badge-sin-existencia">Sin Existencia</Badge>;
     } else if (disponible <= minimo) {
-      return <Badge className="bg-amber-500" data-testid={`badge-stock-bajo`}>Stock Bajo</Badge>;
+      return <Badge className="bg-yellow-500 dark:bg-yellow-600" data-testid="badge-critico">Crítico</Badge>;
     } else {
-      return <Badge className="bg-green-600" data-testid={`badge-normal`}>Normal</Badge>;
+      return <Badge className="bg-green-600 dark:bg-green-700" data-testid="badge-activo">Activo</Badge>;
     }
   };
 
