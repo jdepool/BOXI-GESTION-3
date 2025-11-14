@@ -5134,14 +5134,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
           nombresInFile.add(data.nombre.toLowerCase());
         }
         
-        // Check for duplicate SKUs within file
-        if (data.sku && skusInFile.has(data.sku)) {
+        // SKU is required for idempotent imports (to match existing products)
+        if (!data.sku || data.sku.trim() === '') {
+          additionalErrors.push({
+            row: row.row,
+            error: `SKU is required - products without SKU cannot be matched on future imports`
+          });
+          hasError = true;
+        } else if (skusInFile.has(data.sku)) {
+          // Check for duplicate SKUs within file
           additionalErrors.push({
             row: row.row,
             error: `Duplicate SKU "${data.sku}" found in file`
           });
           hasError = true;
-        } else if (data.sku) {
+        } else {
           skusInFile.add(data.sku);
         }
         
@@ -5168,19 +5175,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ...additionalErrors
       ];
 
-      // Replace all productos with new data (delete all, then insert)
-      const { created } = await storage.replaceProductos(validProductos);
+      // Upsert productos (update existing by SKU, insert new ones)
+      const { created, updated, missingSKUs } = await storage.replaceProductos(validProductos);
 
-      console.log('[Upload Productos] Completed. Created:', created, 'Total rows:', parsedRows.length, 'Total errors:', allErrors.length);
+      console.log('[Upload Productos] Completed. Created:', created, 'Updated:', updated, 'Missing SKUs:', missingSKUs.length, 'Total rows:', parsedRows.length, 'Total errors:', allErrors.length);
 
       // Return results with detailed statistics
       res.json({
         success: true,
         created,
+        updated,
         total: parsedRows.length,
         errors: allErrors.length,
         errorMessages: allErrors.length > 0 ? allErrors.map(e => `Fila ${e.row}: ${e.error}`).slice(0, 20) : undefined,
         inserted: created,
+        missingSKUs: missingSKUs.length > 0 ? missingSKUs : undefined,
         details: {
           validRows: validRows.length,
           invalidRows: invalidRows.length,

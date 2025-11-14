@@ -248,7 +248,7 @@ export interface IStorage {
   deleteProducto(id: string): Promise<boolean>;
   backupProductos(): Promise<void>;
   restoreProductosFromBackup(): Promise<void>;
-  replaceProductos(productos: InsertProducto[]): Promise<{ created: number }>;
+  replaceProductos(productos: InsertProducto[]): Promise<{ created: number; updated: number; missingSKUs: string[] }>;
 
   // Productos Componentes
   getProductoComponentes(productoId: string): Promise<Array<ProductoComponente & { skuProducto: string; skuComponente: string }>>;
@@ -2519,23 +2519,105 @@ export class DatabaseStorage implements IStorage {
     await db.delete(productosBackup);
   }
 
-  async replaceProductos(productosData: InsertProducto[]): Promise<{ created: number }> {
-    // Delete all existing productos
-    await db.delete(productos);
-    
-    // Insert all new productos with position tracking
-    const productosToInsert = productosData.map((producto, index) => ({
-      ...producto,
-      position: index,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    }));
-    
-    if (productosToInsert.length > 0) {
-      await db.insert(productos).values(productosToInsert);
-    }
-    
-    return { created: productosToInsert.length };
+  async replaceProductos(productosData: InsertProducto[]): Promise<{ created: number; updated: number; missingSKUs: string[] }> {
+    return await db.transaction(async (tx) => {
+      let created = 0;
+      let updated = 0;
+
+      // Get all existing productos indexed by SKU and nombre for fast lookup
+      const existingProductos = await tx.select().from(productos);
+      const existingBySKU = new Map(
+        existingProductos
+          .filter(p => p.sku)
+          .map(p => [p.sku!, p])
+      );
+      const existingByNombre = new Map(
+        existingProductos.map(p => [p.nombre.toLowerCase(), p])
+      );
+
+      // Track which SKUs are in the import and which existing SKUs were updated
+      const importedSKUs = new Set<string>();
+      const updatedExistingSKUs = new Set<string>();
+
+      // Process each producto from the import
+      for (let index = 0; index < productosData.length; index++) {
+        const productoData = productosData[index];
+        const sku = productoData.sku;
+
+        if (sku) {
+          importedSKUs.add(sku);
+        }
+
+        // Try to match by SKU first, then by nombre (for SKU renames)
+        let existing = sku ? existingBySKU.get(sku) : undefined;
+        if (!existing) {
+          existing = existingByNombre.get(productoData.nombre.toLowerCase());
+        }
+
+        if (existing) {
+          // Track the existing SKU before updating (for missingSKUs calculation)
+          const oldSku = existing.sku;
+          if (oldSku) {
+            updatedExistingSKUs.add(oldSku);
+          }
+
+          // Update existing producto (preserve ID and createdAt, update all other fields)
+          const { id, createdAt, ...fieldsToUpdate } = productoData as any;
+          
+          const updateData = {
+            ...fieldsToUpdate,
+            position: index,
+            updatedAt: new Date(),
+          };
+
+          // Always update to ensure all fields are refreshed from the import
+          await tx.update(productos)
+            .set(updateData)
+            .where(eq(productos.id, existing.id));
+          updated++;
+
+          // Update lookup maps to reflect changes (especially for SKU renames)
+          // Remove old entries
+          if (oldSku) {
+            existingBySKU.delete(oldSku);
+          }
+          const oldNombre = existing.nombre.toLowerCase();
+          existingByNombre.delete(oldNombre);
+
+          // Add new entries with updated values
+          const newSku = productoData.sku;
+          if (newSku) {
+            existingBySKU.set(newSku, {
+              ...existing,
+              ...updateData,
+            });
+          }
+          const newNombre = productoData.nombre.toLowerCase();
+          existingByNombre.set(newNombre, {
+            ...existing,
+            ...updateData,
+          });
+        } else {
+          // Insert new producto
+          await tx.insert(productos).values({
+            ...productoData,
+            position: index,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          });
+          created++;
+        }
+      }
+
+      // Find productos that exist in DB but not in the import (missing SKUs)
+      // Exclude SKUs that were updated (including renamed SKUs)
+      const missingSKUs = existingProductos
+        .filter(p => p.sku && !importedSKUs.has(p.sku) && !updatedExistingSKUs.has(p.sku))
+        .map(p => p.sku!)
+        .sort();
+
+      return { created, updated, missingSKUs };
+    });
   }
 
   // Productos Componentes methods
