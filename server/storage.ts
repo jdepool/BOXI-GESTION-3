@@ -2678,6 +2678,11 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteProductoComponentesByIds(productoId: string, componenteId: string): Promise<boolean> {
+    // Defensive check: prevent deletion of self-references
+    if (productoId === componenteId) {
+      throw new Error("Cannot delete self-reference component");
+    }
+    
     const result = await db
       .delete(productosComponentes)
       .where(

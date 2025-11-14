@@ -5289,6 +5289,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete("/api/admin/productos/:productoId/componentes/:componenteId", async (req, res) => {
     try {
       const { productoId, componenteId } = req.params;
+      
+      // Prevent deletion of self-references
+      if (productoId === componenteId) {
+        return res.status(400).json({ 
+          error: "No se puede eliminar la auto-referencia del producto",
+          details: "Los productos individuales deben mantener su auto-referencia para consultas consistentes"
+        });
+      }
+      
       const deleted = await storage.deleteProductoComponentesByIds(productoId, componenteId);
       if (!deleted) {
         return res.status(404).json({ error: "Producto componente not found" });

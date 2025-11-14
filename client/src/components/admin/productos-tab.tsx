@@ -43,7 +43,7 @@ function ProductoRow({
   onEdit: () => void;
   onDelete: () => void;
   onManageComponents: () => void;
-  onDeleteComponent: (productoId: string, componenteId: string, componentCount: number) => void;
+  onDeleteComponent: (productoId: string, componenteId: string) => void;
   getClasificacionNombre: (id: string | null | undefined) => string | null;
   getTipoColor: (tipo: string) => string;
   isDeletingProduct: boolean;
@@ -215,7 +215,7 @@ function ProductoRow({
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                onClick={() => onDeleteComponent(producto.id, comp.componenteId, componentes.length)}
+                                onClick={() => onDeleteComponent(producto.id, comp.componenteId)}
                                 disabled={isDeletingComponent || isSelfReference}
                                 data-testid={`delete-component-${comp.id}`}
                                 title={isSelfReference ? "No se puede eliminar la auto-referencia" : "Eliminar componente"}
@@ -648,8 +648,7 @@ export function ProductosTab() {
     });
   };
 
-  const handleDeleteComponent = (productoId: string, componenteId: string, currentComponentCount: number) => {
-    // Prevent deletion if it's the last component of a combo (not implemented - backend should handle)
+  const handleDeleteComponent = (productoId: string, componenteId: string) => {
     if (window.confirm("¿Estás seguro de que quieres eliminar este componente?")) {
       deleteComponentMutation.mutate({ productoId, componenteId });
     }
