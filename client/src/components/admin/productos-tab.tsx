@@ -61,7 +61,8 @@ function ProductoRow({
   });
 
   const isCombo = categoria && categoria.toLowerCase().includes('combo');
-  const componentCount = componentes.length;
+  const realComponents = componentes.filter(c => c.componenteId !== producto.id);
+  const componentCount = realComponents.length;
 
   return (
     <>
@@ -182,7 +183,7 @@ function ProductoRow({
                 <div className="text-center py-4 text-sm text-muted-foreground">
                   {isCombo 
                     ? "Este combo no tiene componentes configurados. Agrega los SKUs que lo componen."
-                    : "Este producto no tiene componentes. Los productos simples auto-referencian con cantidad 1."}
+                    : "Este producto individual no tiene componentes registrados."}
                 </div>
               ) : (
                 <div className="border rounded-md">
@@ -195,23 +196,36 @@ function ProductoRow({
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {componentes.map((comp) => (
-                        <TableRow key={comp.id}>
-                          <TableCell className="font-mono text-sm">{comp.skuComponente}</TableCell>
-                          <TableCell>{comp.cantidad}</TableCell>
-                          <TableCell>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => onDeleteComponent(producto.id, comp.componenteId, componentes.length)}
-                              disabled={isDeletingComponent}
-                              data-testid={`delete-component-${comp.id}`}
-                            >
-                              <Trash2 className="h-4 w-4 text-destructive" />
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))}
+                      {componentes.map((comp) => {
+                        const isSelfReference = comp.componenteId === producto.id;
+                        return (
+                          <TableRow key={comp.id}>
+                            <TableCell className="font-mono text-sm">
+                              <div className="flex items-center gap-2">
+                                {comp.skuComponente}
+                                {isSelfReference && (
+                                  <Badge variant="secondary" className="text-xs">
+                                    Auto-ref
+                                  </Badge>
+                                )}
+                              </div>
+                            </TableCell>
+                            <TableCell>{comp.cantidad}</TableCell>
+                            <TableCell>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => onDeleteComponent(producto.id, comp.componenteId, componentes.length)}
+                                disabled={isDeletingComponent || isSelfReference}
+                                data-testid={`delete-component-${comp.id}`}
+                                title={isSelfReference ? "No se puede eliminar la auto-referencia" : "Eliminar componente"}
+                              >
+                                <Trash2 className="h-4 w-4 text-destructive" />
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
                     </TableBody>
                   </Table>
                 </div>
