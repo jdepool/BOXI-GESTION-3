@@ -2018,7 +2018,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return {
           nombre: String(row['Billing Name'] || ''),
           cedula: null, // Shopify doesn't have cedula field
-          telefono: row['Billing Phone'] ? String(row['Billing Phone']) : null,
+          telefono: row['Shipping Phone'] || row['Billing Phone'] ? String(row['Shipping Phone'] || row['Billing Phone']) : null,
           email: row.Email ? String(row.Email) : null,
           totalUsd: totalUsdValue,
           totalOrderUsd: row['Total'] ? String(row['Total']) : null, // Full order total from Shopify
@@ -2217,7 +2217,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return {
           nombre: String(row['Billing Name'] || ''),
           cedula: null, // Shopify doesn't have cedula field
-          telefono: row['Billing Phone'] ? String(row['Billing Phone']) : null,
+          telefono: row['Shipping Phone'] || row['Billing Phone'] ? String(row['Shipping Phone'] || row['Billing Phone']) : null,
           email: row.Email ? String(row.Email) : null,
           totalUsd: totalUsdValue,
           totalOrderUsd: row['Total'] ? String(row['Total']) : null, // Full order total from Shopify
