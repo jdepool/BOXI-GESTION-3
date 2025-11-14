@@ -179,6 +179,7 @@ function transformShopifyWebhookToCSV(shopifyOrder: any) {
     'Billing Address2': shopifyOrder.billing_address?.address2,
     
     // Shipping info (same for all line items)
+    'Shipping Phone': shopifyOrder.shipping_address?.phone,
     'Shipping Country': shopifyOrder.shipping_address?.country,
     'Shipping Province name': shopifyOrder.shipping_address?.province,
     'Shipping City': shopifyOrder.shipping_address?.city,
