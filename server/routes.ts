@@ -8954,6 +8954,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ==================== MAINTENANCE ENDPOINTS ====================
+  
+  // One-time endpoint to populate self-referencing components for individual products
+  app.post("/api/maintenance/populate-self-components", async (req, res) => {
+    try {
+      console.log("🔧 Starting self-component population...");
+      
+      // Get all products
+      const allProductos = await storage.getProductos();
+      console.log(`📦 Found ${allProductos.length} total products`);
+      
+      // Get all existing components
+      const existingComponents = await storage.getProductoComponentes();
+      const productosWithComponents = new Set(existingComponents.map(c => c.productoId));
+      console.log(`✅ ${productosWithComponents.size} products already have components`);
+      
+      // Find products without components
+      const productosWithoutComponents = allProductos.filter(p => !productosWithComponents.has(p.id));
+      console.log(`🔍 Found ${productosWithoutComponents.length} products without components`);
+      
+      // Create self-referencing components
+      let created = 0;
+      const errors: { sku: string; error: string }[] = [];
+      
+      for (const producto of productosWithoutComponents) {
+        try {
+          await storage.createProductoComponente({
+            productoId: producto.id,
+            componenteId: producto.id,
+            cantidad: 1,
+          });
+          created++;
+          console.log(`✅ Created self-component for ${producto.sku}`);
+        } catch (error) {
+          const errorMsg = error instanceof Error ? error.message : String(error);
+          errors.push({ sku: producto.sku || 'UNKNOWN', error: errorMsg });
+          console.error(`❌ Failed to create self-component for ${producto.sku}:`, errorMsg);
+        }
+      }
+      
+      console.log(`🎉 Completed! Created ${created} self-components`);
+      
+      res.json({
+        success: true,
+        totalProductos: allProductos.length,
+        productosWithComponents: productosWithComponents.size,
+        productosWithoutComponents: productosWithoutComponents.length,
+        created,
+        errors,
+      });
+    } catch (error) {
+      console.error("Error populating self-components:", error);
+      res.status(500).json({ 
+        error: "Failed to populate self-components",
+        details: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+
   const httpServer = createServer(app);
   
   // Initialize WebSocket server
