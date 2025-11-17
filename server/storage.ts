@@ -3751,6 +3751,26 @@ export class DatabaseStorage implements IStorage {
 
     // Process Cuota payments
     // Need to join with sales to get nombre and canal for display
+    // Build cuotas where conditions with same filters as sales
+    const cuotasWhereConditions = [];
+    
+    // Apply estado_entrega filter if provided
+    if (filters?.estadoEntrega && filters.estadoEntrega.length > 0) {
+      cuotasWhereConditions.push(
+        or(...filters.estadoEntrega.map(status => eq(sales.estadoEntrega, status)))
+      );
+    }
+    
+    // Apply search filter to cuotas - search by orden OR nombre
+    if (filters?.search) {
+      cuotasWhereConditions.push(
+        or(
+          ilike(paymentInstallments.orden, `%${filters.search}%`),
+          ilike(sales.nombre, `%${filters.search}%`)
+        )
+      );
+    }
+    
     let cuotasQuery = db
       .select({
         installmentId: paymentInstallments.id,
@@ -3772,9 +3792,7 @@ export class DatabaseStorage implements IStorage {
       })
       .from(paymentInstallments)
       .leftJoin(sales, eq(paymentInstallments.saleId, sales.id))
-      .where(
-        filters?.orden ? eq(paymentInstallments.orden, filters.orden) : undefined
-      );
+      .where(cuotasWhereConditions.length > 0 ? and(...cuotasWhereConditions) : undefined);
 
     const cuotasData = await cuotasQuery;
 
