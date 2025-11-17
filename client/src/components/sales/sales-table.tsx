@@ -176,13 +176,15 @@ export default function SalesTable({
   // Debounced search for orden and nombre (300ms for faster response)
   const { inputValue: searchInput, debouncedValue: debouncedSearch, setInputValue: setSearchInput } = useDebouncedSearch(parentFilters?.search || "", 300);
   
-  // Sync search input with parent filters (bidirectional sync)
+  // Sync search input with parent filters when parent changes externally (e.g., clear filters)
+  // Only update if searchInput differs from parent AND debouncedSearch matches parent
+  // This prevents interrupting user typing while allowing external filter updates
   useEffect(() => {
     const parentSearch = parentFilters?.search || "";
-    if (searchInput !== parentSearch) {
+    if (searchInput !== parentSearch && debouncedSearch === parentSearch) {
       setSearchInput(parentSearch);
     }
-  }, [parentFilters?.search]);
+  }, [parentFilters?.search, searchInput, debouncedSearch, setSearchInput]);
   
   // Update filter when debounced value changes
   useEffect(() => {
