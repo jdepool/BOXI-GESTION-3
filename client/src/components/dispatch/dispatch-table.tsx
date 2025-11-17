@@ -602,7 +602,7 @@ export default function DispatchTable({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todos los tipos</SelectItem>
-                  <SelectItem value="Inmediata">Inmediata</SelectItem>
+                  <SelectItem value="Inmediato">Inmediato</SelectItem>
                   <SelectItem value="Reserva">Reserva</SelectItem>
                 </SelectContent>
               </Select>
@@ -784,9 +784,9 @@ export default function DispatchTable({
                       </td>
                       
                       <td className="p-2 min-w-[100px] text-xs">
-                        {sale.tipo === "Inmediata" ? (
+                        {sale.tipo === "Inmediato" ? (
                           <Badge className="bg-blue-500 hover:bg-blue-600 text-white text-xs">
-                            Inmediata
+                            Inmediato
                           </Badge>
                         ) : sale.tipo === "Reserva" ? (
                           <Badge className="bg-purple-500 hover:bg-purple-600 text-white text-xs">
