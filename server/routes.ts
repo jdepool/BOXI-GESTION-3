@@ -3,8 +3,8 @@ import express from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { db, withRetry } from "./db";
-import { sales, bancos, type Sale } from "@shared/schema";
-import { eq } from "drizzle-orm";
+import { sales, bancos, guestTokens, auditLogs, type Sale } from "@shared/schema";
+import { eq, desc, and, gte, lte } from "drizzle-orm";
 import { 
   insertSaleSchema, insertUploadHistorySchema, insertBancoSchema, insertTipoEgresoSchema, insertAutorizadorSchema,
   insertProductoSchema, insertProductoComponenteSchema, insertMetodoPagoSchema, insertMonedaSchema, insertCategoriaSchema,
@@ -8945,6 +8945,223 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting transferencia:", error);
       res.status(500).json({ error: "Failed to delete transferencia" });
+    }
+  });
+
+  // ==================== GUEST ACCESS MANAGEMENT ====================
+  
+  // Import guest auth utilities
+  const { validateGuestToken, requireGuestScope, generateGuestToken } = await import("./guest-auth");
+  const { logAction, calculateFieldChanges } = await import("./audit-logger");
+  
+  // Generate new guest token (admin only)
+  app.post("/api/admin/guest-tokens", async (req, res) => {
+    try {
+      const { scopes, expiresAt } = req.body;
+      
+      // Validate scopes
+      if (!scopes || typeof scopes !== 'object') {
+        return res.status(400).json({ error: "Invalid scopes" });
+      }
+      
+      // Get current user ID
+      const userId = (req.user as any)?.id;
+      if (!userId) {
+        return res.status(401).json({ error: "Not authenticated" });
+      }
+      
+      // Create token record in database
+      const [tokenRecord] = await db.insert(guestTokens).values({
+        token: "pending", // Will be updated with actual JWT
+        scopes,
+        expiresAt: expiresAt ? new Date(expiresAt) : null,
+        isRevoked: false,
+        issuedBy: userId,
+      }).returning();
+      
+      // Generate JWT with token ID and scopes
+      const jwtToken = generateGuestToken(tokenRecord.id, scopes);
+      
+      // Update token record with actual JWT
+      await db.update(guestTokens)
+        .set({ token: jwtToken })
+        .where(eq(guestTokens.id, tokenRecord.id));
+      
+      // Generate shareable URL
+      const baseUrl = process.env.REPLIT_DEV_DOMAIN
+        ? `https://${process.env.REPLIT_DEV_DOMAIN}`
+        : `http://localhost:${process.env.PORT || 5000}`;
+      
+      const guestUrl = `${baseUrl}/guest?token=${jwtToken}`;
+      
+      res.json({
+        id: tokenRecord.id,
+        token: jwtToken,
+        url: guestUrl,
+        scopes,
+        expiresAt: tokenRecord.expiresAt,
+        createdAt: tokenRecord.createdAt,
+      });
+    } catch (error) {
+      console.error("Error creating guest token:", error);
+      res.status(500).json({ error: "Failed to create guest token" });
+    }
+  });
+  
+  // Get all guest tokens (admin only)
+  app.get("/api/admin/guest-tokens", async (req, res) => {
+    try {
+      const tokens = await db
+        .select({
+          id: guestTokens.id,
+          scopes: guestTokens.scopes,
+          expiresAt: guestTokens.expiresAt,
+          isRevoked: guestTokens.isRevoked,
+          createdAt: guestTokens.createdAt,
+        })
+        .from(guestTokens)
+        .orderBy(desc(guestTokens.createdAt));
+      
+      res.json(tokens);
+    } catch (error) {
+      console.error("Error fetching guest tokens:", error);
+      res.status(500).json({ error: "Failed to fetch guest tokens" });
+    }
+  });
+  
+  // Revoke guest token (admin only)
+  app.patch("/api/admin/guest-tokens/:id/revoke", async (req, res) => {
+    try {
+      const [updated] = await db
+        .update(guestTokens)
+        .set({ isRevoked: true, updatedAt: new Date() })
+        .where(eq(guestTokens.id, req.params.id))
+        .returning();
+      
+      if (!updated) {
+        return res.status(404).json({ error: "Token not found" });
+      }
+      
+      res.json({ success: true, token: updated });
+    } catch (error) {
+      console.error("Error revoking guest token:", error);
+      res.status(500).json({ error: "Failed to revoke token" });
+    }
+  });
+  
+  // Get audit logs (admin only)
+  app.get("/api/admin/audit-logs", async (req, res) => {
+    try {
+      const { actorType, entityType, startDate, endDate, limit = 100 } = req.query;
+      
+      let query = db.select().from(auditLogs);
+      
+      // Apply filters
+      const conditions = [];
+      if (actorType) conditions.push(eq(auditLogs.actorType, actorType as string));
+      if (entityType) conditions.push(eq(auditLogs.entityType, entityType as string));
+      if (startDate) conditions.push(gte(auditLogs.createdAt, new Date(startDate as string)));
+      if (endDate) conditions.push(lte(auditLogs.createdAt, new Date(endDate as string)));
+      
+      if (conditions.length > 0) {
+        query = query.where(and(...conditions)) as any;
+      }
+      
+      const logs = await query
+        .orderBy(desc(auditLogs.createdAt))
+        .limit(Number(limit));
+      
+      res.json(logs);
+    } catch (error) {
+      console.error("Error fetching audit logs:", error);
+      res.status(500).json({ error: "Failed to fetch audit logs" });
+    }
+  });
+  
+  // ==================== GUEST ENDPOINTS ====================
+  
+  // Update sale fecha despacho (guest access with despacho scope)
+  app.patch("/api/guest/sales/:id", validateGuestToken, requireGuestScope("despacho", "fechaDespacho"), async (req, res) => {
+    try {
+      const { fechaDespacho } = req.body;
+      
+      // Only allow fechaDespacho to be updated
+      if (Object.keys(req.body).length !== 1 || !fechaDespacho) {
+        return res.status(400).json({ error: "Only fechaDespacho can be updated" });
+      }
+      
+      // Get current sale data
+      const currentSale = await storage.getSaleById(req.params.id);
+      if (!currentSale) {
+        return res.status(404).json({ error: "Sale not found" });
+      }
+      
+      // Update sale
+      const updated = await storage.updateSale(req.params.id, { fechaDespacho });
+      
+      // Log the action (only if both exist)
+      if (currentSale && updated) {
+        await logAction({
+          req,
+          entityType: "sale",
+          entityId: req.params.id,
+          action: "update",
+          fieldChanges: calculateFieldChanges(currentSale as Record<string, any>, updated as Record<string, any>, ["fechaDespacho"]),
+        });
+      }
+      
+      res.json(updated);
+    } catch (error) {
+      console.error("Error updating sale fecha despacho:", error);
+      res.status(500).json({ error: "Failed to update sale" });
+    }
+  });
+  
+  // Get inventario with guest access
+  app.get("/api/guest/inventario", validateGuestToken, requireGuestScope("inventario"), async (req, res) => {
+    try {
+      const inventario = await storage.getInventario(req.query);
+      res.json(inventario);
+    } catch (error) {
+      console.error("Error fetching inventario:", error);
+      res.status(500).json({ error: "Failed to fetch inventario" });
+    }
+  });
+  
+  // Update inventario (guest access with inventario scope - excludes costs/prices)
+  app.patch("/api/guest/inventario/:id", validateGuestToken, requireGuestScope("inventario"), async (req, res) => {
+    try {
+      // Block cost and price updates
+      if (req.body.costoUnitario !== undefined || req.body.precio !== undefined) {
+        return res.status(403).json({ error: "Cannot update costs or prices" });
+      }
+      
+      // Get current inventario data for audit logging
+      const allInventario = await storage.getInventario({ limit: 999999 });
+      const current = allInventario.data.find((inv: any) => inv.id === req.params.id);
+      
+      if (!current) {
+        return res.status(404).json({ error: "Inventario not found" });
+      }
+      
+      // Update inventario
+      const updated = await storage.updateInventario(req.params.id, req.body);
+      
+      // Log the action (only if current exists)
+      if (current && updated) {
+        await logAction({
+          req,
+          entityType: "inventario",
+          entityId: req.params.id,
+          action: "update",
+          fieldChanges: calculateFieldChanges(current as Record<string, any>, updated as Record<string, any>),
+        });
+      }
+      
+      res.json(updated);
+    } catch (error) {
+      console.error("Error updating inventario:", error);
+      res.status(500).json({ error: "Failed to update inventario" });
     }
   });
 
