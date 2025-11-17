@@ -70,7 +70,8 @@ export function GuestAccessTab() {
   // Generate token mutation
   const generateTokenMutation = useMutation<{ token: string }, Error, GuestScope>({
     mutationFn: async (scopes: GuestScope) => {
-      return await apiRequest("/api/admin/guest-tokens", "POST", scopes) as Promise<{ token: string }>;
+      const res = await apiRequest("/api/admin/guest-tokens", "POST", scopes);
+      return res.json();
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/guest-tokens"] });
