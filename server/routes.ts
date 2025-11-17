@@ -9091,6 +9091,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // ==================== GUEST ENDPOINTS ====================
   
+  // Get sales with guest access (despacho scope)
+  app.get("/api/guest/sales", validateGuestToken, requireGuestScope("despacho"), async (req, res) => {
+    try {
+      const { search } = req.query;
+      const query: any = {};
+      
+      if (search) {
+        query.search = search as string;
+      }
+      
+      // Get all sales
+      const salesData = await storage.getSales(query);
+      
+      // Return only necessary fields for despacho view
+      const filteredSales = {
+        data: salesData.data.map((sale: any) => ({
+          id: sale.id,
+          orden: sale.orden,
+          nombre: sale.nombre,
+          fechaDespacho: sale.fechaDespacho,
+          estadoEntrega: sale.estadoEntrega,
+        })),
+        meta: salesData.meta
+      };
+      
+      res.json(filteredSales);
+    } catch (error) {
+      console.error("Error fetching sales for guest:", error);
+      res.status(500).json({ error: "Failed to fetch sales" });
+    }
+  });
+  
   // Update sale fecha despacho (guest access with despacho scope)
   app.patch("/api/guest/sales/:id", validateGuestToken, requireGuestScope("despacho", "fechaDespacho"), async (req, res) => {
     try {
