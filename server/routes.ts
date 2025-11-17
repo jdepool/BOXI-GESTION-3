@@ -2433,8 +2433,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         direccionDespachoIgualFacturacion: addressesAreSame ? 'true' : 'false',
       };
 
-      // If addresses are different, add billing address
-      if (!addressesAreSame && direccionFacturacion) {
+      // If addresses are the same, copy shipping data to billing fields
+      // This ensures the Despacho table can display the address (it checks direccionFacturacionPais first)
+      if (addressesAreSame) {
+        addressData.direccionFacturacionPais = 'Venezuela';
+        addressData.direccionFacturacionEstado = estado || null;
+        addressData.direccionFacturacionCiudad = ciudad || null;
+        addressData.direccionFacturacionDireccion = direccionUnificada || null;
+        addressData.direccionFacturacionUrbanizacion = urbanizacion || null;
+        addressData.direccionFacturacionReferencia = indicaciones || null;
+      } 
+      // If addresses are different, add separate billing address
+      else if (direccionFacturacion) {
         addressData.direccionFacturacionPais = 'Venezuela';
         addressData.direccionFacturacionEstado = estado || null;
         addressData.direccionFacturacionCiudad = ciudad || null;
