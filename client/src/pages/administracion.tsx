@@ -87,7 +87,7 @@ export default function Administracion() {
             CORREGIR SKUs
           </TabsTrigger>
           <TabsTrigger value="guest-access" className="text-xs">
-            ACCESO DE INVITADOS
+            ACCESOS
           </TabsTrigger>
         </TabsList>
 

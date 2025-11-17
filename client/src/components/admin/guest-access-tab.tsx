@@ -52,7 +52,7 @@ export function GuestAccessTab() {
   
   // Audit log filters
   const [auditFilters, setAuditFilters] = useState({
-    entityType: "",
+    entityType: "all",
     startDate: "",
     endDate: "",
   });
@@ -368,14 +368,14 @@ export function GuestAccessTab() {
               <Select
                 value={auditFilters.entityType}
                 onValueChange={(value) =>
-                  setAuditFilters((prev) => ({ ...prev, entityType: value }))
+                  setAuditFilters((prev) => ({ ...prev, entityType: value === "all" ? "" : value }))
                 }
               >
                 <SelectTrigger data-testid="select-entity-type">
                   <SelectValue placeholder="Todos" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todos</SelectItem>
+                  <SelectItem value="all">Todos</SelectItem>
                   <SelectItem value="sale">Ventas</SelectItem>
                   <SelectItem value="inventario">Inventario</SelectItem>
                 </SelectContent>
@@ -405,7 +405,7 @@ export function GuestAccessTab() {
             </div>
             <Button
               variant="outline"
-              onClick={() => setAuditFilters({ entityType: "", startDate: "", endDate: "" })}
+              onClick={() => setAuditFilters({ entityType: "all", startDate: "", endDate: "" })}
               data-testid="button-clear-filters"
             >
               <Filter className="h-4 w-4 mr-2" />
