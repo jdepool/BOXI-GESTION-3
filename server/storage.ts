@@ -49,6 +49,7 @@ export interface IStorage {
   getCasheaOrders(limit?: number): Promise<Sale[]>;
   getOrdersWithAddresses(limit?: number, offset?: number, filters?: {
     canal?: string;
+    tipo?: string;
     estadoEntrega?: string;
     transportistaId?: string;
     sku?: string;
@@ -1155,6 +1156,7 @@ export class DatabaseStorage implements IStorage {
     offset: number = 0, 
     filters?: {
       canal?: string;
+      tipo?: string;
       estadoEntrega?: string;
       transportistaId?: string;
       sku?: string;
@@ -1185,6 +1187,10 @@ export class DatabaseStorage implements IStorage {
     // Apply other filters
     if (filters?.canal) {
       conditions.push(ilike(sales.canal, filters.canal));
+    }
+    
+    if (filters?.tipo) {
+      conditions.push(eq(sales.tipo, filters.tipo));
     }
     
     if (filters?.transportistaId) {

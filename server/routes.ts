@@ -1019,6 +1019,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Extract filter parameters
       const filters: {
         canal?: string;
+        tipo?: string;
         estadoEntrega?: string;
         transportistaId?: string;
         sku?: string;
@@ -1028,6 +1029,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } = {};
       
       if (req.query.canal) filters.canal = req.query.canal as string;
+      if (req.query.tipo) filters.tipo = req.query.tipo as string;
       if (req.query.estadoEntrega) filters.estadoEntrega = req.query.estadoEntrega as string;
       if (req.query.transportistaId) filters.transportistaId = req.query.transportistaId as string;
       if (req.query.sku) filters.sku = req.query.sku as string;
