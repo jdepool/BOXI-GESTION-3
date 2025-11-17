@@ -86,6 +86,7 @@ export default function DispatchTable({
 
   const filters = {
     canal: parentFilters?.canal || "",
+    tipo: parentFilters?.tipo || "",
     estadoEntrega: parentFilters?.estadoEntrega || "",
     transportistaId: parentFilters?.transportistaId || "",
     sku: parentFilters?.sku || "",
@@ -97,6 +98,7 @@ export default function DispatchTable({
   // Check if any filters are active
   const hasActiveFilters = !!(
     parentFilters?.canal || 
+    parentFilters?.tipo ||
     parentFilters?.estadoEntrega || 
     parentFilters?.transportistaId || 
     parentFilters?.sku ||
@@ -108,6 +110,7 @@ export default function DispatchTable({
   // Count active filters for badge
   const activeFilterCount = [
     parentFilters?.canal,
+    parentFilters?.tipo,
     parentFilters?.estadoEntrega,
     parentFilters?.transportistaId,
     parentFilters?.sku,
@@ -583,6 +586,23 @@ export default function DispatchTable({
                         {canal.nombre}
                       </SelectItem>
                     ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <label className="text-sm font-medium mb-1 block">Tipo:</label>
+              <Select 
+                value={filters.tipo || "all"} 
+                onValueChange={(value) => handleFilterChange('tipo', value)}
+              >
+                <SelectTrigger className="w-40" data-testid="filter-tipo">
+                  <SelectValue placeholder="Todos los tipos" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos los tipos</SelectItem>
+                  <SelectItem value="Inmediata">Inmediata</SelectItem>
+                  <SelectItem value="Reserva">Reserva</SelectItem>
                 </SelectContent>
               </Select>
             </div>
