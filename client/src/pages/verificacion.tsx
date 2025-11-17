@@ -89,27 +89,27 @@ export default function VerificacionPage() {
   const [endDate, setEndDate] = useState("");
   const [selectedBanco, setSelectedBanco] = useState("all");
   const [estadoFilter, setEstadoFilter] = useState("all");
-  const [ordenFilter, setOrdenFilter] = useState("");
+  const [searchFilter, setSearchFilter] = useState("");
   const [tipoPagoFilter, setTipoPagoFilter] = useState("all");
   
-  // Debounced order filter - local state for immediate UI updates
-  const [ordenInputValue, setOrdenInputValue] = useState("");
+  // Debounced search filter - local state for immediate UI updates
+  const [searchInputValue, setSearchInputValue] = useState("");
   
   // Pagination
   const [limit] = useState(20);
   const [offset, setOffset] = useState(0);
 
-  // Debounce order filter - trigger filter update 500ms after user stops typing
+  // Debounce search filter - trigger filter update 500ms after user stops typing
   useEffect(() => {
     const timeoutId = setTimeout(() => {
-      if (ordenInputValue !== ordenFilter) {
-        setOrdenFilter(ordenInputValue);
+      if (searchInputValue !== searchFilter) {
+        setSearchFilter(searchInputValue);
         setOffset(0); // Reset to first page when filter changes
       }
     }, 500);
 
     return () => clearTimeout(timeoutId);
-  }, [ordenInputValue]);
+  }, [searchInputValue]);
 
   const { data, isLoading } = useQuery<{ data: VerificationPayment[]; total: number }>({
     queryKey: [
@@ -118,7 +118,7 @@ export default function VerificacionPage() {
       endDate,
       selectedBanco,
       estadoFilter,
-      ordenFilter,
+      searchFilter,
       tipoPagoFilter,
       limit,
       offset,
@@ -129,7 +129,7 @@ export default function VerificacionPage() {
       if (endDate) params.append("endDate", endDate);
       if (selectedBanco && selectedBanco !== "all") params.append("bancoId", selectedBanco);
       if (estadoFilter && estadoFilter !== "all") params.append("estadoVerificacion", estadoFilter);
-      if (ordenFilter) params.append("orden", ordenFilter);
+      if (searchFilter) params.append("search", searchFilter);
       if (tipoPagoFilter && tipoPagoFilter !== "all") params.append("tipoPago", tipoPagoFilter);
       params.append("limit", limit.toString());
       params.append("offset", offset.toString());
@@ -214,8 +214,8 @@ export default function VerificacionPage() {
     setEndDate("");
     setSelectedBanco("all");
     setEstadoFilter("all");
-    setOrdenFilter("");
-    setOrdenInputValue("");
+    setSearchFilter("");
+    setSearchInputValue("");
     setTipoPagoFilter("all");
     setOffset(0);
   };
@@ -227,7 +227,7 @@ export default function VerificacionPage() {
       if (endDate) queryParams.append("endDate", endDate);
       if (selectedBanco && selectedBanco !== "all") queryParams.append("bancoId", selectedBanco);
       if (estadoFilter && estadoFilter !== "all") queryParams.append("estadoVerificacion", estadoFilter);
-      if (ordenFilter) queryParams.append("orden", ordenFilter);
+      if (searchFilter) queryParams.append("search", searchFilter);
       if (tipoPagoFilter && tipoPagoFilter !== "all") queryParams.append("tipoPago", tipoPagoFilter);
 
       const url = `/api/sales/verification-payments/export${queryParams.toString() ? `?${queryParams.toString()}` : ""}`;
@@ -365,13 +365,13 @@ export default function VerificacionPage() {
                   </Select>
                 </div>
                 <div>
-                  <label className="text-sm font-medium mb-1 block">Orden:</label>
+                  <label className="text-sm font-medium mb-1 block">Buscar:</label>
                   <Input
-                    placeholder="Buscar orden..."
-                    value={ordenInputValue}
-                    onChange={(e) => setOrdenInputValue(e.target.value)}
-                    className="w-40"
-                    data-testid="input-orden"
+                    placeholder="Buscar por orden o nombre"
+                    value={searchInputValue}
+                    onChange={(e) => setSearchInputValue(e.target.value)}
+                    className="w-60"
+                    data-testid="input-buscar"
                   />
                 </div>
                 <div>

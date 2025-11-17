@@ -1705,13 +1705,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // GET /api/sales/verification-payments - Get all payments flattened for verification
   app.get("/api/sales/verification-payments", async (req, res) => {
     try {
-      const { startDate, endDate, bancoId, orden, tipoPago, estadoVerificacion, estadoEntrega, limit, offset } = req.query;
+      const { startDate, endDate, bancoId, search, tipoPago, estadoVerificacion, estadoEntrega, limit, offset } = req.query;
 
       const result = await storage.getVerificationPayments({
         startDate: startDate as string,
         endDate: endDate as string,
         bancoId: bancoId as string,
-        orden: orden as string,
+        search: search as string,
         tipoPago: tipoPago as string,
         estadoVerificacion: estadoVerificacion as string,
         estadoEntrega: estadoEntrega ? (estadoEntrega as string).split(',') : undefined,
@@ -1734,13 +1734,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // GET /api/sales/verification-payments/export - Export verification payments to Excel
   app.get("/api/sales/verification-payments/export", async (req, res) => {
     try {
-      const { startDate, endDate, bancoId, orden, tipoPago, estadoVerificacion, estadoEntrega } = req.query;
+      const { startDate, endDate, bancoId, search, tipoPago, estadoVerificacion, estadoEntrega } = req.query;
 
       const result = await storage.getVerificationPayments({
         startDate: startDate as string,
         endDate: endDate as string,
         bancoId: bancoId as string,
-        orden: orden as string,
+        search: search as string,
         tipoPago: tipoPago as string,
         estadoVerificacion: estadoVerificacion as string,
         estadoEntrega: estadoEntrega ? (estadoEntrega as string).split(',') : undefined,

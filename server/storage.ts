@@ -434,7 +434,7 @@ export interface IStorage {
     startDate?: string;
     endDate?: string;
     bancoId?: string;
-    orden?: string;
+    search?: string;
     tipoPago?: string;
     estadoVerificacion?: string;
     limit?: number;
@@ -3574,7 +3574,7 @@ export class DatabaseStorage implements IStorage {
     startDate?: string;
     endDate?: string;
     bancoId?: string;
-    orden?: string;
+    search?: string;
     tipoPago?: string;
     estadoVerificacion?: string;
     estadoEntrega?: string[];
@@ -3594,9 +3594,14 @@ export class DatabaseStorage implements IStorage {
       );
     }
     
-    // Order filter
-    if (filters?.orden) {
-      whereConditions.push(eq(sales.orden, filters.orden));
+    // Search filter - search by orden OR nombre
+    if (filters?.search) {
+      whereConditions.push(
+        or(
+          ilike(sales.orden, `%${filters.search}%`),
+          ilike(sales.nombre, `%${filters.search}%`)
+        )
+      );
     }
 
     let salesQuery = db
