@@ -8957,7 +8957,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Generate new guest token (admin only)
   app.post("/api/admin/guest-tokens", async (req, res) => {
     try {
-      const { scopes, expiresAt } = req.body;
+      // The scopes are sent directly in the body, not nested under a "scopes" key
+      const scopes = req.body;
+      const expiresAt = req.body.expiresAt;
       
       console.log("Received guest token request:", { scopes, expiresAt, body: req.body });
       
@@ -8971,6 +8973,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!scopes.despacho && !scopes.inventario) {
         return res.status(400).json({ error: "At least one scope must be provided" });
       }
+      
+      // Remove expiresAt from scopes object if it exists
+      delete scopes.expiresAt;
       
       // Get current user ID
       const userId = (req.user as any)?.id;
