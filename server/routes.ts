@@ -9104,16 +9104,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get all sales
       const salesData = await storage.getSales(query);
       
+      // Check structure of salesData
+      console.log("Guest sales data structure:", { 
+        hasData: !!salesData?.data, 
+        isArray: Array.isArray(salesData),
+        type: typeof salesData 
+      });
+      
+      // Handle different return structures from getSales
+      const salesArray = Array.isArray(salesData) ? salesData : (salesData?.data || []);
+      
       // Return only necessary fields for despacho view
       const filteredSales = {
-        data: salesData.data.map((sale: any) => ({
+        data: salesArray.map((sale: any) => ({
           id: sale.id,
           orden: sale.orden,
           nombre: sale.nombre,
           fechaDespacho: sale.fechaDespacho,
           estadoEntrega: sale.estadoEntrega,
         })),
-        meta: salesData.meta
+        meta: salesData?.meta
       };
       
       res.json(filteredSales);
