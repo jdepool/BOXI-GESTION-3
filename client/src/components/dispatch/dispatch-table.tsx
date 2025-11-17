@@ -708,6 +708,7 @@ export default function DispatchTable({
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[150px] sticky left-[100px] bg-muted z-20 border-r border-border shadow-[2px_0_5px_rgba(0,0,0,0.1)]">Estado Venta/Entrega</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[150px] sticky left-[250px] bg-muted z-20 border-r border-border shadow-[2px_0_5px_rgba(0,0,0,0.1)]">Fecha Compromiso Entrega</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[100px]">Canal</th>
+                    <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[100px]">Tipo</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[200px]">Nombre</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[150px]">Teléfono</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[120px]">Cédula</th>
@@ -779,6 +780,20 @@ export default function DispatchTable({
                         <Badge className={`${getChannelBadgeClass(sale.canal)} text-white text-xs`}>
                           {sale.canal.charAt(0).toUpperCase() + sale.canal.slice(1)}
                         </Badge>
+                      </td>
+                      
+                      <td className="p-2 min-w-[100px] text-xs">
+                        {sale.tipo === "Inmediata" ? (
+                          <Badge className="bg-blue-500 hover:bg-blue-600 text-white text-xs">
+                            Inmediata
+                          </Badge>
+                        ) : sale.tipo === "Reserva" ? (
+                          <Badge className="bg-purple-500 hover:bg-purple-600 text-white text-xs">
+                            Reserva
+                          </Badge>
+                        ) : (
+                          <span className="text-muted-foreground">—</span>
+                        )}
                       </td>
                       
                       <td className="p-2 min-w-[200px] text-xs">
