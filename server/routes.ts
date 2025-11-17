@@ -8955,7 +8955,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const { logAction, calculateFieldChanges } = await import("./audit-logger");
   
   // Generate new guest token (admin only)
-  app.post("/api/admin/guest-tokens", async (req, res) => {
+  app.post("/api/admin/guest-tokens", requireAuth, async (req, res) => {
     try {
       // The scopes are sent directly in the body, not nested under a "scopes" key
       const scopes = req.body;
@@ -9022,7 +9022,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Get all guest tokens (admin only)
-  app.get("/api/admin/guest-tokens", async (req, res) => {
+  app.get("/api/admin/guest-tokens", requireAuth, async (req, res) => {
     try {
       const tokens = await db
         .select({
@@ -9043,8 +9043,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Revoke guest token (admin only)
-  app.patch("/api/admin/guest-tokens/:id/revoke", async (req, res) => {
+  // Revoke guest token (admin only) - DELETE route
+  app.delete("/api/admin/guest-tokens/:id", requireAuth, async (req, res) => {
     try {
       const [updated] = await db
         .update(guestTokens)
@@ -9064,7 +9064,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Get audit logs (admin only)
-  app.get("/api/admin/audit-logs", async (req, res) => {
+  app.get("/api/admin/audit-logs", requireAuth, async (req, res) => {
     try {
       const { actorType, entityType, startDate, endDate, limit = 100 } = req.query;
       
