@@ -42,6 +42,7 @@ interface DispatchTableProps {
   isLoading: boolean;
   filters?: {
     canal?: string;
+    tipo?: string;
     estadoEntrega?: string;
     transportistaId?: string;
     sku?: string;
