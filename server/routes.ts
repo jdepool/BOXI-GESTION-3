@@ -8959,9 +8959,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { scopes, expiresAt } = req.body;
       
+      console.log("Received guest token request:", { scopes, expiresAt, body: req.body });
+      
       // Validate scopes
-      if (!scopes || typeof scopes !== 'object') {
+      if (!scopes || typeof scopes !== 'object' || Array.isArray(scopes)) {
+        console.log("Scope validation failed:", { scopes, type: typeof scopes, isArray: Array.isArray(scopes) });
         return res.status(400).json({ error: "Invalid scopes" });
+      }
+      
+      // Ensure at least one scope is provided
+      if (!scopes.despacho && !scopes.inventario) {
+        return res.status(400).json({ error: "At least one scope must be provided" });
       }
       
       // Get current user ID
@@ -9017,6 +9025,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           scopes: guestTokens.scopes,
           expiresAt: guestTokens.expiresAt,
           isRevoked: guestTokens.isRevoked,
+          issuedBy: guestTokens.issuedBy,
           createdAt: guestTokens.createdAt,
         })
         .from(guestTokens)
