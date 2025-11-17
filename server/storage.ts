@@ -1036,11 +1036,22 @@ export class DatabaseStorage implements IStorage {
         let totalPagado = 0; // Por verificar payments
         let totalVerificado = 0; // Verificado payments
         
+        // For Cashea/Cashea MP orders: Only count Flete payments (customer already paid order to Cashea)
+        // For other channels: Count all payment types (Inicial, Flete, Cuotas)
+        const paymentFilters: any = {
+          orden: order.orden!,
+          limit: 9999
+        };
+        
+        // Add tipoPago filter only for Cashea orders
+        if (order.isCasheaOrder) {
+          paymentFilters.tipoPago = 'Flete';
+        }
+        
         // Get payments "Por verificar" for this order (only complete payments with USD + Banco + Referencia)
         const porVerificarPayments = await this.getVerificationPayments({
-          orden: order.orden!,
+          ...paymentFilters,
           estadoVerificacion: 'Por verificar',
-          limit: 9999
         });
         
         // Sum all "Por verificar" payments (already filtered for complete payments)
@@ -1050,9 +1061,8 @@ export class DatabaseStorage implements IStorage {
         
         // Get payments "Verificado" for this order (only complete payments with USD + Banco + Referencia)
         const verificadoPayments = await this.getVerificationPayments({
-          orden: order.orden!,
+          ...paymentFilters,
           estadoVerificacion: 'Verificado',
-          limit: 9999
         });
         
         // Sum all "Verificado" payments (already filtered for complete payments)
