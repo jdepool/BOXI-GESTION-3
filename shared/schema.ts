@@ -350,6 +350,35 @@ export const uploadHistory = pgTable("upload_history", {
   uploadedAt: timestamp("uploaded_at").defaultNow(),
 });
 
+// Guest access tokens for third-party limited access
+export const guestTokens = pgTable("guest_tokens", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  token: text("token").notNull().unique(), // JWT token
+  scopes: jsonb("scopes").notNull(), // { despacho: ["fechaDespacho"], inventario: ["full"] }
+  expiresAt: timestamp("expires_at"), // Null for indefinite
+  isRevoked: boolean("is_revoked").notNull().default(false),
+  issuedBy: varchar("issued_by").notNull(), // User ID who created token
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+// Audit log for tracking guest user actions
+export const auditLogs = pgTable("audit_logs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  actorType: text("actor_type").notNull(), // "user" or "guest"
+  actorId: varchar("actor_id").notNull(), // User ID or Guest Token ID
+  entityType: text("entity_type").notNull(), // "sale", "inventario", etc.
+  entityId: varchar("entity_id").notNull(), // ID of the entity modified
+  action: text("action").notNull(), // "update", "create", "delete"
+  fieldChanges: jsonb("field_changes"), // { field: { before: X, after: Y } }
+  ipAddress: text("ip_address"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => ({
+  actorIdIdx: index("audit_logs_actor_id_idx").on(table.actorId),
+  entityIdIdx: index("audit_logs_entity_id_idx").on(table.entityId),
+  createdAtIdx: index("audit_logs_created_at_idx").on(table.createdAt),
+}));
+
 export const casheaAutomationConfig = pgTable("cashea_automation_config", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   portal: text("portal").notNull().default("Cashea"), // "Cashea" or "Cashea MP"
@@ -454,6 +483,17 @@ export const insertSaleSchema = createInsertSchema(sales).omit({
 export const insertUploadHistorySchema = createInsertSchema(uploadHistory).omit({
   id: true,
   uploadedAt: true,
+});
+
+export const insertGuestTokenSchema = createInsertSchema(guestTokens).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertAuditLogSchema = createInsertSchema(auditLogs).omit({
+  id: true,
+  createdAt: true,
 });
 
 // Admin schemas
@@ -604,6 +644,10 @@ export type Sale = typeof sales.$inferSelect;
 export type InsertSale = z.infer<typeof insertSaleSchema>;
 export type UploadHistory = typeof uploadHistory.$inferSelect;
 export type InsertUploadHistory = z.infer<typeof insertUploadHistorySchema>;
+export type GuestToken = typeof guestTokens.$inferSelect;
+export type InsertGuestToken = z.infer<typeof insertGuestTokenSchema>;
+export type AuditLog = typeof auditLogs.$inferSelect;
+export type InsertAuditLog = z.infer<typeof insertAuditLogSchema>;
 export type CasheaAutomationConfig = typeof casheaAutomationConfig.$inferSelect;
 export type InsertCasheaAutomationConfig = z.infer<typeof insertCasheaAutomationConfigSchema>;
 export type CasheaAutomaticDownload = typeof casheaAutomaticDownloads.$inferSelect;
