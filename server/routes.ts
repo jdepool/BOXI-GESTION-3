@@ -9131,8 +9131,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Update inventario (guest access with inventario scope - excludes costs/prices)
   app.patch("/api/guest/inventario/:id", validateGuestToken, requireGuestScope("inventario"), async (req, res) => {
     try {
-      // Block cost and price updates
-      if (req.body.costoUnitario !== undefined || req.body.precio !== undefined) {
+      // SECURITY: Strip out cost and price fields from request body to prevent unauthorized updates
+      // This prevents malicious clients from bypassing client-side restrictions
+      const { costoUnitario, precio, ...allowedFields } = req.body;
+      
+      // Reject request if attempting to update restricted fields
+      if (costoUnitario !== undefined || precio !== undefined) {
         return res.status(403).json({ error: "Cannot update costs or prices" });
       }
       
@@ -9144,8 +9148,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Inventario not found" });
       }
       
-      // Update inventario
-      const updated = await storage.updateInventario(req.params.id, req.body);
+      // Update inventario with only allowed fields
+      const updated = await storage.updateInventario(req.params.id, allowedFields);
       
       // Log the action (only if current exists)
       if (current && updated) {

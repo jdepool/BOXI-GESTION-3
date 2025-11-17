@@ -20,6 +20,8 @@ import ReportePerdidas from "@/pages/reportes-perdidas";
 import ReporteProspectosPerdidos from "@/pages/reportes-prospectos-perdidos";
 import Administracion from "@/pages/administracion";
 import Login from "@/pages/login";
+import GuestDespacho from "@/pages/guest-despacho";
+import GuestInventario from "@/pages/guest-inventario";
 import NotFound from "@/pages/not-found";
 
 function ProtectedRoute({ component: Component }: { component: () => JSX.Element }) {
@@ -70,6 +72,8 @@ function Router() {
       <Route path="/administracion">
         <ProtectedRoute component={Administracion} />
       </Route>
+      <Route path="/guest/despacho" component={GuestDespacho} />
+      <Route path="/guest/inventario" component={GuestInventario} />
       <Route component={NotFound} />
     </Switch>
   );

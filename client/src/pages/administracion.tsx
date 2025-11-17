@@ -18,6 +18,7 @@ import { SeguimientoConfigTab } from "../components/admin/seguimiento-config-tab
 import { PreciosCostosTab } from "../components/admin/precios-costos-tab";
 import { EstadosCiudadesTab } from "../components/admin/estados-ciudades-tab";
 import { CorregirSkusTab } from "../components/admin/corregir-skus-tab";
+import { GuestAccessTab } from "../components/admin/guest-access-tab";
 
 export default function Administracion() {
   const [activeTab, setActiveTab] = useState("bancos");
@@ -85,6 +86,9 @@ export default function Administracion() {
           <TabsTrigger value="corregir-skus" className="text-xs">
             CORREGIR SKUs
           </TabsTrigger>
+          <TabsTrigger value="guest-access" className="text-xs">
+            ACCESO DE INVITADOS
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="bancos" className="space-y-4">
@@ -145,6 +149,10 @@ export default function Administracion() {
 
         <TabsContent value="corregir-skus" className="space-y-4">
           <CorregirSkusTab />
+        </TabsContent>
+
+        <TabsContent value="guest-access" className="space-y-4">
+          <GuestAccessTab />
         </TabsContent>
       </Tabs>
     </div>
