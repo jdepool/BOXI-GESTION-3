@@ -3,8 +3,8 @@ import express from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { db, withRetry } from "./db";
-import { sales, bancos, guestTokens, auditLogs, type Sale } from "@shared/schema";
-import { eq, desc, and, gte, lte } from "drizzle-orm";
+import { sales, bancos, guestTokens, auditLogs, transportistas, type Sale } from "@shared/schema";
+import { eq, desc, and, gte, lte, or, ilike } from "drizzle-orm";
 import { 
   insertSaleSchema, insertUploadHistorySchema, insertBancoSchema, insertTipoEgresoSchema, insertAutorizadorSchema,
   insertProductoSchema, insertProductoComponenteSchema, insertMetodoPagoSchema, insertMonedaSchema, insertCategoriaSchema,
@@ -9095,52 +9095,66 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/guest/sales", validateGuestToken, requireGuestScope("despacho"), async (req, res) => {
     try {
       const { search } = req.query;
-      const query: any = {};
       
-      if (search) {
-        query.search = search as string;
+      // Build query conditions
+      const conditions = [];
+      
+      // Search filter (orden, nombre)
+      if (search && typeof search === 'string' && search.trim()) {
+        const searchTerm = `%${search.trim()}%`;
+        conditions.push(
+          or(
+            ilike(sales.orden, searchTerm),
+            ilike(sales.nombre, searchTerm)
+          )
+        );
       }
       
-      // Get all sales
-      const salesData = await storage.getSales(query);
+      const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
       
-      // Check structure of salesData
-      console.log("Guest sales data structure:", { 
-        hasData: !!salesData?.data, 
-        isArray: Array.isArray(salesData),
-        type: typeof salesData 
-      });
+      // Query sales with transportista join
+      const salesData = await db
+        .select({
+          id: sales.id,
+          orden: sales.orden,
+          nombre: sales.nombre,
+          product: sales.product,
+          sku: sales.sku,
+          transportistaNombre: transportistas.nombre,
+          nroGuia: sales.nroGuia,
+          fechaDespacho: sales.fechaDespacho,
+          despachado: sales.despachado,
+          estadoEntrega: sales.estadoEntrega,
+        })
+        .from(sales)
+        .leftJoin(transportistas, eq(sales.transportistaId, transportistas.id))
+        .where(whereClause)
+        .orderBy(desc(sales.fecha));
       
-      // Handle different return structures from getSales
-      const salesArray = Array.isArray(salesData) ? salesData : (salesData?.data || []);
-      
-      // Return only necessary fields for despacho view
-      const filteredSales = {
-        data: salesArray.map((sale: any) => ({
-          id: sale.id,
-          orden: sale.orden,
-          nombre: sale.nombre,
-          fechaDespacho: sale.fechaDespacho,
-          estadoEntrega: sale.estadoEntrega,
-        })),
-        meta: salesData?.meta
-      };
-      
-      res.json(filteredSales);
+      // Return data in expected format
+      res.json({ data: salesData });
     } catch (error) {
       console.error("Error fetching sales for guest:", error);
       res.status(500).json({ error: "Failed to fetch sales" });
     }
   });
   
-  // Update sale fecha despacho (guest access with despacho scope)
+  // Update sale fecha despacho and/or despachado (guest access with despacho scope)
   app.patch("/api/guest/sales/:id", validateGuestToken, requireGuestScope("despacho", "fechaDespacho"), async (req, res) => {
     try {
-      const { fechaDespacho } = req.body;
+      const { fechaDespacho, despachado } = req.body;
       
-      // Only allow fechaDespacho to be updated
-      if (Object.keys(req.body).length !== 1 || !fechaDespacho) {
-        return res.status(400).json({ error: "Only fechaDespacho can be updated" });
+      // Only allow fechaDespacho and despachado to be updated
+      const allowedFields = ['fechaDespacho', 'despachado'];
+      const providedFields = Object.keys(req.body);
+      const invalidFields = providedFields.filter(field => !allowedFields.includes(field));
+      
+      if (invalidFields.length > 0) {
+        return res.status(400).json({ error: `Only fechaDespacho and despachado can be updated. Invalid fields: ${invalidFields.join(', ')}` });
+      }
+      
+      if (providedFields.length === 0) {
+        return res.status(400).json({ error: "No fields provided to update" });
       }
       
       // Get current sale data
@@ -9149,8 +9163,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Sale not found" });
       }
       
+      // Build update object with only provided fields
+      const updateData: any = {};
+      if (fechaDespacho !== undefined) {
+        updateData.fechaDespacho = fechaDespacho;
+      }
+      if (despachado !== undefined) {
+        updateData.despachado = despachado;
+      }
+      
       // Update sale
-      const updated = await storage.updateSale(req.params.id, { fechaDespacho });
+      const updated = await storage.updateSale(req.params.id, updateData);
       
       // Log the action (only if both exist)
       if (currentSale && updated) {
@@ -9159,13 +9182,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           entityType: "sale",
           entityId: req.params.id,
           action: "update",
-          fieldChanges: calculateFieldChanges(currentSale as Record<string, any>, updated as Record<string, any>, ["fechaDespacho"]),
+          fieldChanges: calculateFieldChanges(currentSale as Record<string, any>, updated as Record<string, any>, providedFields),
         });
       }
       
       res.json(updated);
     } catch (error) {
-      console.error("Error updating sale fecha despacho:", error);
+      console.error("Error updating sale:", error);
       res.status(500).json({ error: "Failed to update sale" });
     }
   });

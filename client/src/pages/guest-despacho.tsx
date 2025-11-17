@@ -4,6 +4,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
@@ -11,14 +12,19 @@ import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient } from "@/lib/queryClient";
-import { AlertCircle, Calendar, Shield } from "lucide-react";
+import { Calendar, Shield } from "lucide-react";
 import { format } from "date-fns";
 
 type Sale = {
   id: string;
   orden: string;
   nombre: string;
+  product: string;
+  sku: string | null;
+  transportistaNombre: string | null;
+  nroGuia: string | null;
   fechaDespacho: string | null;
+  despachado: boolean;
   estadoEntrega: string;
 };
 
@@ -67,19 +73,19 @@ export default function GuestDespacho() {
   });
 
   // Update fecha despacho mutation
-  const updateFechaDespachoMutation = useMutation({
-    mutationFn: async ({ id, fechaDespacho }: { id: string; fechaDespacho: string }) => {
+  const updateSaleMutation = useMutation({
+    mutationFn: async ({ id, updates }: { id: string; updates: { fechaDespacho?: string; despachado?: boolean } }) => {
       const response = await fetch(`/api/guest/sales/${id}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${token}`,
         },
-        body: JSON.stringify({ fechaDespacho }),
+        body: JSON.stringify(updates),
       });
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error || "Failed to update fecha despacho");
+        throw new Error(error.error || "Failed to update sale");
       }
       return response.json();
     },
@@ -87,7 +93,7 @@ export default function GuestDespacho() {
       queryClient.invalidateQueries({ queryKey: ["/api/guest/sales"] });
       toast({
         title: "Actualizado",
-        description: "La fecha de despacho ha sido actualizada exitosamente.",
+        description: "Los datos han sido actualizados exitosamente.",
       });
       setSelectedSale(null);
       setNewFechaDespacho("");
@@ -95,7 +101,7 @@ export default function GuestDespacho() {
     onError: (error: any) => {
       toast({
         title: "Error",
-        description: error.message || "No se pudo actualizar la fecha de despacho",
+        description: error.message || "No se pudo actualizar",
         variant: "destructive",
       });
     },
@@ -108,9 +114,16 @@ export default function GuestDespacho() {
 
   const handleSaveFechaDespacho = () => {
     if (!selectedSale) return;
-    updateFechaDespachoMutation.mutate({
+    updateSaleMutation.mutate({
       id: selectedSale.id,
-      fechaDespacho: newFechaDespacho,
+      updates: { fechaDespacho: newFechaDespacho },
+    });
+  };
+
+  const handleToggleDespachado = (sale: Sale) => {
+    updateSaleMutation.mutate({
+      id: sale.id,
+      updates: { despachado: !sale.despachado },
     });
   };
 
@@ -125,7 +138,7 @@ export default function GuestDespacho() {
         <Shield className="h-4 w-4" />
         <AlertTitle>Modo Invitado - Despacho</AlertTitle>
         <AlertDescription>
-          Estás usando acceso de invitado con permisos limitados. Solo puedes editar la fecha de despacho.
+          Estás usando acceso de invitado con permisos limitados. Puedes editar la fecha de despacho y marcar órdenes como despachadas.
         </AlertDescription>
       </Alert>
 
@@ -148,44 +161,63 @@ export default function GuestDespacho() {
               No se encontraron ventas
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Orden</TableHead>
-                  <TableHead>Nombre</TableHead>
-                  <TableHead>Estado Entrega</TableHead>
-                  <TableHead>Fecha Despacho</TableHead>
-                  <TableHead className="text-right">Acciones</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {salesData.data.map((sale) => (
-                  <TableRow key={sale.id}>
-                    <TableCell data-testid={`text-orden-${sale.id}`}>{sale.orden}</TableCell>
-                    <TableCell data-testid={`text-nombre-${sale.id}`}>{sale.nombre}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline" data-testid={`badge-estado-${sale.id}`}>
-                        {sale.estadoEntrega}
-                      </Badge>
-                    </TableCell>
-                    <TableCell data-testid={`text-fecha-${sale.id}`}>
-                      {sale.fechaDespacho ? format(new Date(sale.fechaDespacho), "dd/MM/yyyy") : "-"}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleEditFechaDespacho(sale)}
-                        data-testid={`button-edit-fecha-${sale.id}`}
-                      >
-                        <Calendar className="h-4 w-4 mr-2" />
-                        Editar Fecha
-                      </Button>
-                    </TableCell>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Orden</TableHead>
+                    <TableHead>Nombre</TableHead>
+                    <TableHead>Producto</TableHead>
+                    <TableHead>SKU</TableHead>
+                    <TableHead>Transportista</TableHead>
+                    <TableHead>Nro. Guía</TableHead>
+                    <TableHead>Estado Entrega</TableHead>
+                    <TableHead>Fecha Despacho</TableHead>
+                    <TableHead className="text-center">DESPACHADO</TableHead>
+                    <TableHead className="text-right">Acciones</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {salesData.data.map((sale) => (
+                    <TableRow key={sale.id}>
+                      <TableCell data-testid={`text-orden-${sale.id}`}>{sale.orden}</TableCell>
+                      <TableCell data-testid={`text-nombre-${sale.id}`}>{sale.nombre}</TableCell>
+                      <TableCell data-testid={`text-product-${sale.id}`}>{sale.product}</TableCell>
+                      <TableCell data-testid={`text-sku-${sale.id}`}>{sale.sku || "-"}</TableCell>
+                      <TableCell data-testid={`text-transportista-${sale.id}`}>{sale.transportistaNombre || "-"}</TableCell>
+                      <TableCell data-testid={`text-nroguia-${sale.id}`}>{sale.nroGuia || "-"}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline" data-testid={`badge-estado-${sale.id}`}>
+                          {sale.estadoEntrega}
+                        </Badge>
+                      </TableCell>
+                      <TableCell data-testid={`text-fecha-${sale.id}`}>
+                        {sale.fechaDespacho ? format(new Date(sale.fechaDespacho), "dd/MM/yyyy") : "-"}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <Checkbox
+                          checked={sale.despachado}
+                          onCheckedChange={() => handleToggleDespachado(sale)}
+                          disabled={updateSaleMutation.isPending}
+                          data-testid={`checkbox-despachado-${sale.id}`}
+                        />
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleEditFechaDespacho(sale)}
+                          data-testid={`button-edit-fecha-${sale.id}`}
+                        >
+                          <Calendar className="h-4 w-4 mr-2" />
+                          Editar Fecha
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           )}
         </CardContent>
       </Card>
@@ -227,10 +259,10 @@ export default function GuestDespacho() {
             </Button>
             <Button
               onClick={handleSaveFechaDespacho}
-              disabled={updateFechaDespachoMutation.isPending}
+              disabled={updateSaleMutation.isPending}
               data-testid="button-save"
             >
-              {updateFechaDespachoMutation.isPending ? "Guardando..." : "Guardar"}
+              {updateSaleMutation.isPending ? "Guardando..." : "Guardar"}
             </Button>
           </DialogFooter>
         </DialogContent>

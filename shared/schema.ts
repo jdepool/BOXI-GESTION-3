@@ -274,6 +274,7 @@ export const sales = pgTable("sales", {
   // Shipping tracking
   nroGuia: varchar("nro_guia", { length: 100 }),
   fechaDespacho: varchar("fecha_despacho", { length: 10 }),
+  despachado: boolean("despachado").default(false),
   fechaCliente: varchar("fecha_cliente", { length: 10 }),
   fechaDevolucion: varchar("fecha_devolucion", { length: 10 }),
   datosDevolucion: text("datos_devolucion"),
