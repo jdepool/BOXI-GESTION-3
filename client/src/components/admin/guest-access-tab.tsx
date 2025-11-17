@@ -70,7 +70,7 @@ export function GuestAccessTab() {
   // Generate token mutation
   const generateTokenMutation = useMutation<{ token: string }, Error, GuestScope>({
     mutationFn: async (scopes: GuestScope) => {
-      const res = await apiRequest("/api/admin/guest-tokens", "POST", scopes);
+      const res = await apiRequest("POST", "/api/admin/guest-tokens", scopes);
       return res.json();
     },
     onSuccess: (data) => {
@@ -103,7 +103,7 @@ export function GuestAccessTab() {
   // Revoke token mutation
   const revokeTokenMutation = useMutation({
     mutationFn: async (tokenId: string) => {
-      await apiRequest(`/api/admin/guest-tokens/${tokenId}`, "DELETE");
+      await apiRequest("DELETE", `/api/admin/guest-tokens/${tokenId}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/admin/guest-tokens"] });
