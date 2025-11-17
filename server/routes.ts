@@ -1185,7 +1185,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Asesor
         'Asesor': sale.asesorId,
         
-        // Billing Address
+        // Billing Address - always show what's in DB
         'País (Facturación)': sale.direccionFacturacionPais || '',
         'Estado (Facturación)': sale.direccionFacturacionEstado || '',
         'Ciudad (Facturación)': sale.direccionFacturacionCiudad || '',
@@ -1193,26 +1193,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         'Urbanización (Facturación)': sale.direccionFacturacionUrbanizacion || '',
         'Referencia (Facturación)': sale.direccionFacturacionReferencia || '',
         
-        // Shipping Address
-        'Despacho Igual a Facturación': sale.direccionDespachoIgualFacturacion === "true" ? 'Sí' : 'No',
-        'País (Despacho)': sale.direccionDespachoIgualFacturacion === "true" 
-          ? sale.direccionFacturacionPais || '' 
-          : sale.direccionDespachoPais || '',
-        'Estado (Despacho)': sale.direccionDespachoIgualFacturacion === "true" 
-          ? sale.direccionFacturacionEstado || '' 
-          : sale.direccionDespachoEstado || '',
-        'Ciudad (Despacho)': sale.direccionDespachoIgualFacturacion === "true" 
-          ? sale.direccionFacturacionCiudad || '' 
-          : sale.direccionDespachoCiudad || '',
-        'Dirección (Despacho)': sale.direccionDespachoIgualFacturacion === "true" 
-          ? sale.direccionFacturacionDireccion || '' 
-          : sale.direccionDespachoDireccion || '',
-        'Urbanización (Despacho)': sale.direccionDespachoIgualFacturacion === "true" 
-          ? sale.direccionFacturacionUrbanizacion || '' 
-          : sale.direccionDespachoUrbanizacion || '',
-        'Referencia (Despacho)': sale.direccionDespachoIgualFacturacion === "true" 
-          ? sale.direccionFacturacionReferencia || '' 
-          : sale.direccionDespachoReferencia || '',
+        // Shipping Address - always show what's in DB
+        'Despacho Igual a Facturación': sale.direccionDespachoIgualFacturacion === true || sale.direccionDespachoIgualFacturacion === "true" ? 'Sí' : 'No',
+        'País (Despacho)': sale.direccionDespachoPais || '',
+        'Estado (Despacho)': sale.direccionDespachoEstado || '',
+        'Ciudad (Despacho)': sale.direccionDespachoCiudad || '',
+        'Dirección (Despacho)': sale.direccionDespachoDireccion || '',
+        'Urbanización (Despacho)': sale.direccionDespachoUrbanizacion || '',
+        'Referencia (Despacho)': sale.direccionDespachoReferencia || '',
         
           // Notas
           'Notas': sale.notas || '',
@@ -1294,7 +1282,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Asesor
           'Asesor': sale.asesorId,
           
-          // Billing Address
+          // Billing Address - always show what's in DB
           'País (Facturación)': sale.direccionFacturacionPais || '',
           'Estado (Facturación)': sale.direccionFacturacionEstado || '',
           'Ciudad (Facturación)': sale.direccionFacturacionCiudad || '',
@@ -1302,26 +1290,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
           'Urbanización (Facturación)': sale.direccionFacturacionUrbanizacion || '',
           'Referencia (Facturación)': sale.direccionFacturacionReferencia || '',
           
-          // Shipping Address
-          'Despacho Igual a Facturación': sale.direccionDespachoIgualFacturacion === "true" ? 'Sí' : 'No',
-          'País (Despacho)': sale.direccionDespachoIgualFacturacion === "true" 
-            ? sale.direccionFacturacionPais || '' 
-            : sale.direccionDespachoPais || '',
-          'Estado (Despacho)': sale.direccionDespachoIgualFacturacion === "true" 
-            ? sale.direccionFacturacionEstado || '' 
-            : sale.direccionDespachoEstado || '',
-          'Ciudad (Despacho)': sale.direccionDespachoIgualFacturacion === "true" 
-            ? sale.direccionFacturacionCiudad || '' 
-            : sale.direccionDespachoCiudad || '',
-          'Dirección (Despacho)': sale.direccionDespachoIgualFacturacion === "true" 
-            ? sale.direccionFacturacionDireccion || '' 
-            : sale.direccionDespachoDireccion || '',
-          'Urbanización (Despacho)': sale.direccionDespachoIgualFacturacion === "true" 
-            ? sale.direccionFacturacionUrbanizacion || '' 
-            : sale.direccionDespachoUrbanizacion || '',
-          'Referencia (Despacho)': sale.direccionDespachoIgualFacturacion === "true" 
-            ? sale.direccionFacturacionReferencia || '' 
-            : sale.direccionDespachoReferencia || '',
+          // Shipping Address - always show what's in DB
+          'Despacho Igual a Facturación': sale.direccionDespachoIgualFacturacion === true || sale.direccionDespachoIgualFacturacion === "true" ? 'Sí' : 'No',
+          'País (Despacho)': sale.direccionDespachoPais || '',
+          'Estado (Despacho)': sale.direccionDespachoEstado || '',
+          'Ciudad (Despacho)': sale.direccionDespachoCiudad || '',
+          'Dirección (Despacho)': sale.direccionDespachoDireccion || '',
+          'Urbanización (Despacho)': sale.direccionDespachoUrbanizacion || '',
+          'Referencia (Despacho)': sale.direccionDespachoReferencia || '',
           
           // Notas
           'Notas': sale.notas || '',
@@ -1352,55 +1328,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const result = await storage.getOrdersWithAddresses(10000, 0);
 
       // Convert to Excel format
-      const worksheet = XLSX.utils.json_to_sheet(result.data.map(sale => ({
-        'Número de Orden': sale.orden,
-        'Nombre': sale.nombre,
-        'Cédula': sale.cedula,
-        'Teléfono': sale.telefono,
-        'Correo': sale.email,
-        'Producto': sale.product,
-        'Cantidad': sale.cantidad,
-        'Canal': sale.canal,
-        'Estado de Entrega': sale.estadoEntrega,
-        'Fecha': new Date(sale.fecha).toLocaleDateString('es-ES'),
-        'Total USD': sale.totalUsd,
+      const worksheet = XLSX.utils.json_to_sheet(result.data.map(sale => {
+        // Handle direccionDespachoIgualFacturacion as both boolean and string
+        const isSameAddress = sale.direccionDespachoIgualFacturacion === true || 
+                              sale.direccionDespachoIgualFacturacion === "true";
         
-        // Shipping fields
-        'Nro Guía': sale.nroGuia || '',
-        'Fecha Despacho': sale.fechaDespacho ? (() => {
-          const [year, month, day] = sale.fechaDespacho.split('-');
-          return `${day}/${month}/${year}`;
-        })() : '',
-        
-        // Billing Address
-        'País (Facturación)': sale.direccionFacturacionPais || '',
-        'Estado (Facturación)': sale.direccionFacturacionEstado || '',
-        'Ciudad (Facturación)': sale.direccionFacturacionCiudad || '',
-        'Dirección (Facturación)': sale.direccionFacturacionDireccion || '',
-        'Urbanización (Facturación)': sale.direccionFacturacionUrbanizacion || '',
-        'Referencia (Facturación)': sale.direccionFacturacionReferencia || '',
-        
-        // Shipping Address
-        'Despacho Igual a Facturación': sale.direccionDespachoIgualFacturacion === "true" ? 'Sí' : 'No',
-        'País (Despacho)': sale.direccionDespachoIgualFacturacion === "true" 
-          ? sale.direccionFacturacionPais || '' 
-          : sale.direccionDespachoPais || '',
-        'Estado (Despacho)': sale.direccionDespachoIgualFacturacion === "true" 
-          ? sale.direccionFacturacionEstado || '' 
-          : sale.direccionDespachoEstado || '',
-        'Ciudad (Despacho)': sale.direccionDespachoIgualFacturacion === "true" 
-          ? sale.direccionFacturacionCiudad || '' 
-          : sale.direccionDespachoCiudad || '',
-        'Dirección (Despacho)': sale.direccionDespachoIgualFacturacion === "true" 
-          ? sale.direccionFacturacionDireccion || '' 
-          : sale.direccionDespachoDireccion || '',
-        'Urbanización (Despacho)': sale.direccionDespachoIgualFacturacion === "true" 
-          ? sale.direccionFacturacionUrbanizacion || '' 
-          : sale.direccionDespachoUrbanizacion || '',
-        'Referencia (Despacho)': sale.direccionDespachoIgualFacturacion === "true" 
-          ? sale.direccionFacturacionReferencia || '' 
-          : sale.direccionDespachoReferencia || '',
-      })));
+        return {
+          'Número de Orden': sale.orden,
+          'Nombre': sale.nombre,
+          'Cédula': sale.cedula,
+          'Teléfono': sale.telefono,
+          'Correo': sale.email,
+          'Producto': sale.product,
+          'Cantidad': sale.cantidad,
+          'Canal': sale.canal,
+          'Estado de Entrega': sale.estadoEntrega,
+          'Fecha': new Date(sale.fecha).toLocaleDateString('es-ES'),
+          'Total USD': sale.totalUsd,
+          
+          // Shipping fields
+          'Nro Guía': sale.nroGuia || '',
+          'Fecha Despacho': sale.fechaDespacho ? (() => {
+            const [year, month, day] = sale.fechaDespacho.split('-');
+            return `${day}/${month}/${year}`;
+          })() : '',
+          
+          // Billing Address - always show what's in DB
+          'País (Facturación)': sale.direccionFacturacionPais || '',
+          'Estado (Facturación)': sale.direccionFacturacionEstado || '',
+          'Ciudad (Facturación)': sale.direccionFacturacionCiudad || '',
+          'Dirección (Facturación)': sale.direccionFacturacionDireccion || '',
+          'Urbanización (Facturación)': sale.direccionFacturacionUrbanizacion || '',
+          'Referencia (Facturación)': sale.direccionFacturacionReferencia || '',
+          
+          // Shipping Address - always show what's in DB
+          'Despacho Igual a Facturación': isSameAddress ? 'Sí' : 'No',
+          'País (Despacho)': sale.direccionDespachoPais || '',
+          'Estado (Despacho)': sale.direccionDespachoEstado || '',
+          'Ciudad (Despacho)': sale.direccionDespachoCiudad || '',
+          'Dirección (Despacho)': sale.direccionDespachoDireccion || '',
+          'Urbanización (Despacho)': sale.direccionDespachoUrbanizacion || '',
+          'Referencia (Despacho)': sale.direccionDespachoReferencia || '',
+        };
+      }));
 
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, 'Despachos');
