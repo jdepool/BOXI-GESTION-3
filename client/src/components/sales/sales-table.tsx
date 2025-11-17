@@ -25,7 +25,6 @@ import { cn } from "@/lib/utils";
 import { getSeguimientoStatusOrden } from "@/lib/seguimiento-utils";
 import { getChannelBadgeClass } from "@/lib/channelBadges";
 import { filterCanalesByProductLine, type ProductLine } from "@/lib/canalFilters";
-import { useDebouncedSearch } from "@/hooks/use-debounced-search";
 import type { Sale, SeguimientoConfig } from "@shared/schema";
 import type { QuickMessage } from "@/components/ui/auto-expanding-textarea";
 import { NotesDisplay } from "@/components/shared/notes-display";
@@ -173,25 +172,24 @@ export default function SalesTable({
   const [seguimientoDialogOpen, setSeguimientoDialogOpen] = useState(false);
   const [selectedSaleForSeguimiento, setSelectedSaleForSeguimiento] = useState<Sale | null>(null);
   
-  // Debounced search for orden and nombre (300ms for faster response)
-  const { inputValue: searchInput, debouncedValue: debouncedSearch, setInputValue: setSearchInput } = useDebouncedSearch(parentFilters?.search || "", 300);
-  
-  // Sync search input with parent filters when parent changes externally (e.g., clear filters)
-  // Only update if searchInput differs from parent AND debouncedSearch matches parent
-  // This prevents interrupting user typing while allowing external filter updates
+  // Debounced search - local state for immediate UI updates
+  const [searchInputValue, setSearchInputValue] = useState(parentFilters?.search || "");
+
+  // Debounce search filter - trigger API call 500ms after user stops typing
   useEffect(() => {
-    const parentSearch = parentFilters?.search || "";
-    if (searchInput !== parentSearch && debouncedSearch === parentSearch) {
-      setSearchInput(parentSearch);
-    }
-  }, [parentFilters?.search, searchInput, debouncedSearch, setSearchInput]);
-  
-  // Update filter when debounced value changes
+    const timeoutId = setTimeout(() => {
+      if (searchInputValue !== parentFilters?.search) {
+        handleFilterChange('search', searchInputValue);
+      }
+    }, 500);
+
+    return () => clearTimeout(timeoutId);
+  }, [searchInputValue]);
+
+  // Sync input value when parent filter changes (e.g., on clear filters)
   useEffect(() => {
-    if (debouncedSearch !== (parentFilters?.search || "")) {
-      handleFilterChange('search', debouncedSearch);
-    }
-  }, [debouncedSearch]);
+    setSearchInputValue(parentFilters?.search || "");
+  }, [parentFilters?.search]);
   
   const filters = {
     canal: parentFilters?.canal || "",
@@ -627,8 +625,8 @@ export default function SalesTable({
                   <Input 
                     type="text"
                     placeholder="Buscar por orden o nombre"
-                    value={searchInput}
-                    onChange={(e) => setSearchInput(e.target.value)}
+                    value={searchInputValue}
+                    onChange={(e) => setSearchInputValue(e.target.value)}
                     className="w-60"
                     data-testid="input-filter-buscar"
                   />
