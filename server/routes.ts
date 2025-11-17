@@ -9173,8 +9173,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get inventario with guest access
   app.get("/api/guest/inventario", validateGuestToken, requireGuestScope("inventario"), async (req, res) => {
     try {
-      const inventario = await storage.getInventario(req.query);
-      res.json(inventario);
+      const { search } = req.query;
+      const inventario = await storage.getInventario(search ? { search: search as string } : {});
+      
+      // Return data in expected format with only necessary fields (excluding costs/prices)
+      const filteredInventario = {
+        data: inventario.map((item: any) => ({
+          id: item.id,
+          almacen: item.almacenNombre,
+          producto: item.productoNombre,
+          stockActual: item.stockActual,
+          stockReservado: item.stockReservado,
+          stockMinimo: item.stockMinimo,
+          // Exclude costoUnitario and precio from response
+        }))
+      };
+      
+      res.json(filteredInventario);
     } catch (error) {
       console.error("Error fetching inventario:", error);
       res.status(500).json({ error: "Failed to fetch inventario" });
