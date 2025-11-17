@@ -835,6 +835,7 @@ async function checkAndAutoUpdateDeliveryStatus(orden: string): Promise<boolean>
     
     const firstSale = salesInOrder[0];
     const totalOrderUsd = Number(firstSale.totalOrderUsd || 0);
+    const fleteAPagar = Number(firstSale.fleteAPagar || 0);
     const pagoFleteUsd = Number(firstSale.pagoFleteUsd || 0);
     const fleteGratis = firstSale.fleteGratis || false;
     
@@ -842,7 +843,7 @@ async function checkAndAutoUpdateDeliveryStatus(orden: string): Promise<boolean>
     // For other channels: Orden a Pagar = totalOrderUsd
     const isCasheaOrder = firstSale.canal?.toLowerCase().includes('cashea') || false;
     const ordenAPagar = isCasheaOrder ? 0 : totalOrderUsd;
-    const ordenPlusFlete = ordenAPagar + (fleteGratis ? 0 : pagoFleteUsd);
+    const ordenPlusFlete = ordenAPagar + (fleteGratis ? 0 : fleteAPagar);
     
     // Calculate total verified payments
     const pagoInicialVerificado = firstSale.estadoVerificacionInicial === 'Verificado' 
@@ -1827,13 +1828,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
             // Calculate ordenPlusFlete (A pagar + Flete)
             const firstSale = salesInOrder[0];
             const totalOrderUsd = Number(firstSale.totalOrderUsd || 0);
+            const fleteAPagar = Number(firstSale.fleteAPagar || 0);
             const pagoFleteUsd = Number(firstSale.pagoFleteUsd || 0);
             const fleteGratis = firstSale.fleteGratis || false;
             // For Cashea/Cashea MP: Orden a Pagar = 0 (customer paid Cashea directly)
             // For other channels: Orden a Pagar = totalOrderUsd
             const isCasheaOrder = firstSale.canal?.toLowerCase().includes('cashea') || false;
             const ordenAPagar = isCasheaOrder ? 0 : totalOrderUsd;
-            const ordenPlusFlete = ordenAPagar + (fleteGratis ? 0 : pagoFleteUsd);
+            const ordenPlusFlete = ordenAPagar + (fleteGratis ? 0 : fleteAPagar);
 
             // Calculate totalPagado (sum of all verified payments)
             // Note: We need to check old status from DB and include current payment being verified
@@ -6954,13 +6956,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
           if (salesInOrder.length > 0) {
             const firstSale = salesInOrder[0];
             const totalOrderUsd = Number(firstSale.totalOrderUsd || 0);
+            const fleteAPagar = Number(firstSale.fleteAPagar || 0);
             const pagoFleteUsd = Number(firstSale.pagoFleteUsd || 0);
             const fleteGratis = firstSale.fleteGratis || false;
             // For Cashea/Cashea MP: Orden a Pagar = 0 (customer paid Cashea directly)
             // For other channels: Orden a Pagar = totalOrderUsd
             const isCasheaOrder = firstSale.canal?.toLowerCase().includes('cashea') || false;
             const ordenAPagar = isCasheaOrder ? 0 : totalOrderUsd;
-            const ordenPlusFlete = ordenAPagar + (fleteGratis ? 0 : pagoFleteUsd);
+            const ordenPlusFlete = ordenAPagar + (fleteGratis ? 0 : fleteAPagar);
 
             // Calculate total verified payments
             const pagoInicialVerificado = firstSale.estadoVerificacionInicial === 'Verificado' ? Number(firstSale.pagoInicialUsd || 0) : 0;
