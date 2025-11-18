@@ -685,7 +685,7 @@ export class DatabaseStorage implements IStorage {
     const withConditions = conditions.length > 0 
       ? queryBuilder.where(and(...conditions))
       : queryBuilder;
-    const withOrder = withConditions.orderBy(desc(sales.fecha));
+    const withOrder = withConditions.orderBy(desc(sales.fecha), desc(sales.orden));
     const withLimit = filters?.limit ? withOrder.limit(filters.limit) : withOrder;
     const finalQuery = filters?.offset ? withLimit.offset(filters.offset) : withLimit;
     
