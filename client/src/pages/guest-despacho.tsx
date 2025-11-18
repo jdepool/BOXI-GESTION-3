@@ -21,6 +21,7 @@ type Sale = {
   nombre: string;
   product: string;
   sku: string | null;
+  cantidad: number;
   transportistaNombre: string | null;
   nroGuia: string | null;
   fechaDespacho: string | null;
@@ -169,6 +170,7 @@ export default function GuestDespacho() {
                     <TableHead>Nombre</TableHead>
                     <TableHead>Producto</TableHead>
                     <TableHead>SKU</TableHead>
+                    <TableHead>Cantidad</TableHead>
                     <TableHead>Transportista</TableHead>
                     <TableHead>Nro. Guía</TableHead>
                     <TableHead>Estado Entrega</TableHead>
@@ -184,6 +186,7 @@ export default function GuestDespacho() {
                       <TableCell data-testid={`text-nombre-${sale.id}`}>{sale.nombre}</TableCell>
                       <TableCell data-testid={`text-product-${sale.id}`}>{sale.product}</TableCell>
                       <TableCell data-testid={`text-sku-${sale.id}`}>{sale.sku || "-"}</TableCell>
+                      <TableCell data-testid={`text-cantidad-${sale.id}`}>{sale.cantidad}</TableCell>
                       <TableCell data-testid={`text-transportista-${sale.id}`}>{sale.transportistaNombre || "-"}</TableCell>
                       <TableCell data-testid={`text-nroguia-${sale.id}`}>{sale.nroGuia || "-"}</TableCell>
                       <TableCell>

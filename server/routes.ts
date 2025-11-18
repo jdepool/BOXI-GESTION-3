@@ -9097,6 +9097,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           nombre: sales.nombre,
           product: sales.product,
           sku: sales.sku,
+          cantidad: sales.cantidad,
           transportistaNombre: transportistas.nombre,
           nroGuia: sales.nroGuia,
           fechaDespacho: sales.fechaDespacho,
