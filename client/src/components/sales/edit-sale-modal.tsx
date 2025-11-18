@@ -15,7 +15,7 @@ import { Save, User, Package, Plus, Trash2, Pencil } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { filterCanalesByProductLine, detectProductLine } from "@/lib/canalFilters";
-import { parseLocalDate } from "@/lib/date-utils";
+import { parseLocalDate, formatLocalDate } from "@/lib/date-utils";
 import type { Sale } from "@shared/schema";
 import ProductDialog, { ProductFormData } from "./product-dialog";
 
@@ -96,16 +96,36 @@ export default function EditSaleModal({ open, onOpenChange, sale }: EditSaleModa
       // Load all products from the order
       if (orderProducts.length > 0) {
         const productsData: ProductFormData[] = orderProducts.map(item => {
-          // Convert fechaEntrega to yyyy-MM-dd string
+          // Convert fechaEntrega to yyyy-MM-dd string, avoiding timezone shifts
           let fechaEntregaStr = "";
           if (item.fechaEntrega) {
-            // If it's already a yyyy-MM-dd string, use it directly
-            if (typeof item.fechaEntrega === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(item.fechaEntrega)) {
-              fechaEntregaStr = item.fechaEntrega;
-            } else {
-              // It's a Date object or timestamp - convert to Date and format
-              const fecha = new Date(item.fechaEntrega);
-              fechaEntregaStr = format(fecha, 'yyyy-MM-dd');
+            const value = item.fechaEntrega;
+            
+            // Case 1: Already a yyyy-MM-dd string
+            if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
+              fechaEntregaStr = value;
+            }
+            // Case 2: ISO timestamp string (e.g., "2024-11-18T00:00:00.000Z")
+            else if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}T/.test(value)) {
+              // Extract yyyy-MM-dd portion without timezone conversion
+              fechaEntregaStr = value.substring(0, 10);
+            }
+            // Case 3: Date object (shouldn't happen after JSON serialization, but handle it)
+            else if (value instanceof Date) {
+              // Format using local time components to avoid timezone shifts
+              fechaEntregaStr = formatLocalDate(value);
+            }
+            // Fallback: try to parse any other format
+            else {
+              try {
+                const fechaStr = value.toString();
+                // If it starts with yyyy-MM-dd, extract that portion
+                if (/^\d{4}-\d{2}-\d{2}/.test(fechaStr)) {
+                  fechaEntregaStr = fechaStr.substring(0, 10);
+                }
+              } catch (e) {
+                console.warn('Failed to parse fechaEntrega:', value);
+              }
             }
           }
           
