@@ -64,6 +64,15 @@ function normalizeEstadoEntrega(status: string | null | undefined): string | nul
   return statusMap[normalized] || status; // Return original if not found in map
 }
 
+// Helper function to format Date as yyyy-MM-dd using local time components
+// CRITICAL: Prevents timezone bugs - never use toISOString() for date-only values
+function formatLocalDate(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
 // Configure multer for file uploads
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -6871,7 +6880,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           let fechaEntrega = product.fechaEntrega ? new Date(product.fechaEntrega) : baseSaleData.fechaEntrega;
           if (!fechaEntrega && baseSaleData.tipo === 'Inmediato') {
             const calculatedDate = calculateDeliveryDate(
-              baseSaleData.fecha.toISOString().split('T')[0],
+              formatLocalDate(baseSaleData.fecha),
               'Inmediato',
               baseSaleData.direccionDespachoCiudad
             );
