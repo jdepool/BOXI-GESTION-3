@@ -842,7 +842,16 @@ export default function SalesTable({
                                   !sale.fechaEntrega && "text-amber-500"
                                 )} />
                                 {sale.fechaEntrega 
-                                  ? format(new Date(sale.fechaEntrega), "dd/MM/yyyy")
+                                  ? (() => {
+                                      // Extract date part from ISO timestamp to avoid timezone shifts
+                                      const dateStr = sale.fechaEntrega.toString();
+                                      const match = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})/);
+                                      if (match) {
+                                        const [, year, month, day] = match;
+                                        return `${day}/${month}/${year}`;
+                                      }
+                                      return format(new Date(sale.fechaEntrega), "dd/MM/yyyy");
+                                    })()
                                   : "Seleccionar fecha"
                                 }
                               </Button>
@@ -851,7 +860,16 @@ export default function SalesTable({
                               <Calendar
                                 mode="single"
                                 selected={sale.fechaEntrega 
-                                  ? new Date(sale.fechaEntrega) 
+                                  ? (() => {
+                                      // Parse date as local to avoid timezone shifts
+                                      const dateStr = sale.fechaEntrega.toString();
+                                      const match = dateStr.match(/^(\d{4})-(\d{2})-(\d{2})/);
+                                      if (match) {
+                                        const [, year, month, day] = match;
+                                        return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+                                      }
+                                      return new Date(sale.fechaEntrega);
+                                    })()
                                   : undefined
                                 }
                                 onSelect={(date) => handleFechaEntregaChange(sale.id, date || null)}
