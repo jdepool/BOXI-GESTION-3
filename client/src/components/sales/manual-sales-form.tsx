@@ -41,6 +41,7 @@ const manualSaleSchema = z.object({
   montoUsd: z.string().optional(),
   montoBs: z.string().optional(),
   referencia: z.string().optional(),
+  pideFactura: z.boolean().default(false),
   direccionDespachoIgualFacturacion: z.boolean().default(true),
   direccionDespachoPais: z.string().min(1, "País de despacho es requerido"),
   direccionDespachoEstado: z.string().min(1, "Estado de despacho es requerido"),
@@ -90,6 +91,7 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
       referencia: "",
       montoUsd: "",
       montoBs: "",
+      pideFactura: false,
       direccionFacturacionPais: "Venezuela",
       direccionFacturacionEstado: "",
       direccionFacturacionCiudad: "",
@@ -109,6 +111,7 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
     },
   });
 
+  const watchCanal = form.watch("canal");
   const watchDespachoIgual = form.watch("direccionDespachoIgualFacturacion");
   const watchDespachoPais = form.watch("direccionDespachoPais");
   const watchDespachoEstado = form.watch("direccionDespachoEstado");
@@ -191,6 +194,16 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
       form.setValue("direccionFacturacionReferencia", watchDespachoReferencia);
     }
   }, [watchDespachoIgual, watchDespachoPais, watchDespachoEstado, watchDespachoCiudad, watchDespachoDireccion, watchDespachoUrbanizacion, watchDespachoReferencia, form]);
+
+  // Auto-check "Pide factura" for Cashea and Cashea MP orders
+  useEffect(() => {
+    if (watchCanal === "Cashea" || watchCanal === "Cashea MP") {
+      form.setValue("pideFactura", true);
+    } else if (watchCanal) {
+      // Only reset to false if a different canal is explicitly selected
+      form.setValue("pideFactura", false);
+    }
+  }, [watchCanal, form]);
 
   const handleSaveProduct = (product: ProductFormData, index?: number) => {
     if (index !== undefined) {
@@ -638,9 +651,30 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
           </CardContent>
         </Card>
 
-        {/* Same Address Checkbox */}
+        {/* Factura and Address Checkboxes */}
         <Card>
-          <CardContent className="pt-6">
+          <CardContent className="pt-6 space-y-4">
+            <FormField
+              control={form.control}
+              name="pideFactura"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                      data-testid="checkbox-pide-factura"
+                    />
+                  </FormControl>
+                  <div className="space-y-1 leading-none">
+                    <FormLabel>
+                      Pide factura
+                    </FormLabel>
+                  </div>
+                </FormItem>
+              )}
+            />
+            
             <FormField
               control={form.control}
               name="direccionDespachoIgualFacturacion"

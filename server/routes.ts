@@ -1420,7 +1420,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/sales/order/:orderNumber", async (req, res) => {
     try {
       const { orderNumber } = req.params;
-      const { nombre, cedula, telefono, email, canal, totalUsd, products } = req.body;
+      const { nombre, cedula, telefono, email, canal, totalUsd, pideFactura, products } = req.body;
 
       // Check if order exists
       const existingSales = await storage.getSalesByOrderNumber(orderNumber);
@@ -1481,6 +1481,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           direccionDespachoUrbanizacion: existingSales[0].direccionDespachoUrbanizacion,
           direccionDespachoReferencia: existingSales[0].direccionDespachoReferencia,
           // Preserve other fields
+          pideFactura: pideFactura !== undefined ? pideFactura : existingSales[0].pideFactura,
           metodoPagoId: existingSales[0].metodoPagoId,
           bancoReceptorInicial: existingSales[0].bancoReceptorInicial,
           referenciaInicial: existingSales[0].referenciaInicial,
@@ -6831,6 +6832,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         estadoPagoInicial: body.estadoPagoInicial || "pendiente",
         pagoInicialUsd: (body.pagoInicialUsd !== undefined && body.pagoInicialUsd !== null) ? String(body.pagoInicialUsd) : null,
         factura: null,
+        pideFactura: body.pideFactura || false,
         referenciaInicial: body.referenciaInicial || null,
         montoInicialBs: body.montoInicialBs || null,
         montoInicialUsd: body.montoInicialUsd || null,

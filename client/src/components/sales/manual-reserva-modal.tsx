@@ -42,6 +42,7 @@ const manualReservaSchema = z.object({
     message: "Email inválido"
   }),
   totalUsd: z.string().min(1, "Total Orden USD es requerido"),
+  pideFactura: z.boolean().default(false),
   direccionDespachoIgualFacturacion: z.boolean().default(true),
   direccionDespachoPais: z.string().min(1, "País de despacho es requerido"),
   direccionDespachoEstado: z.string().min(1, "Estado de despacho es requerido"),
@@ -79,6 +80,7 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess, convert
       telefono: "",
       email: "",
       totalUsd: "",
+      pideFactura: false,
       direccionFacturacionPais: "Venezuela",
       direccionFacturacionEstado: "",
       direccionFacturacionCiudad: "",
@@ -98,6 +100,7 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess, convert
     },
   });
 
+  const watchCanal = form.watch("canal");
   const watchDespachoIgual = form.watch("direccionDespachoIgualFacturacion");
   const watchDespachoPais = form.watch("direccionDespachoPais");
   const watchDespachoEstado = form.watch("direccionDespachoEstado");
@@ -176,6 +179,16 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess, convert
       form.setValue("direccionFacturacionReferencia", watchDespachoReferencia);
     }
   }, [watchDespachoIgual, watchDespachoPais, watchDespachoEstado, watchDespachoCiudad, watchDespachoDireccion, watchDespachoUrbanizacion, watchDespachoReferencia, form]);
+
+  // Auto-check "Pide factura" for Cashea and Cashea MP orders
+  useEffect(() => {
+    if (watchCanal === "Cashea" || watchCanal === "Cashea MP") {
+      form.setValue("pideFactura", true);
+    } else if (watchCanal) {
+      // Only reset to false if a different canal is explicitly selected
+      form.setValue("pideFactura", false);
+    }
+  }, [watchCanal, form]);
 
   const handleSaveProduct = (product: ProductFormData, index?: number) => {
     if (index !== undefined) {
@@ -714,7 +727,28 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess, convert
 
             {/* Same Address Checkbox */}
             <Card>
-              <CardContent className="pt-6">
+              <CardContent className="pt-6 space-y-4">
+                <FormField
+                  control={form.control}
+                  name="pideFactura"
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                          data-testid="checkbox-pide-factura-reserva"
+                        />
+                      </FormControl>
+                      <div className="space-y-1 leading-none">
+                        <FormLabel>
+                          Pide factura
+                        </FormLabel>
+                      </div>
+                    </FormItem>
+                  )}
+                />
+                
                 <FormField
                   control={form.control}
                   name="direccionDespachoIgualFacturacion"

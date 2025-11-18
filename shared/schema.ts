@@ -224,6 +224,7 @@ export const sales = pgTable("sales", {
   bancoReceptorInicial: varchar("banco_receptor_inicial"),
   orden: text("orden"),
   factura: text("factura"),
+  pideFactura: boolean("pide_factura").default(false),
   referenciaInicial: text("referencia_inicial"),
   montoInicialBs: decimal("monto_inicial_bs", { precision: 15, scale: 2 }),
   montoInicialUsd: decimal("monto_inicial_usd", { precision: 15, scale: 2 }),

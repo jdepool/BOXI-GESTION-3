@@ -11,6 +11,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Save, User, Package, Plus, Trash2, Pencil } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -25,6 +26,7 @@ const editSaleSchema = z.object({
   telefono: z.string().optional(),
   email: z.string().email().optional().or(z.literal("")),
   canal: z.string().optional(),
+  pideFactura: z.boolean().default(false),
   totalUsd: z.string().min(1, "Total USD es requerido"),
 });
 
@@ -54,6 +56,7 @@ export default function EditSaleModal({ open, onOpenChange, sale }: EditSaleModa
       telefono: "",
       email: "",
       canal: "",
+      pideFactura: false,
       totalUsd: "",
     },
   });
@@ -90,6 +93,7 @@ export default function EditSaleModal({ open, onOpenChange, sale }: EditSaleModa
         telefono: sale.telefono || "",
         email: sale.email || "",
         canal: matchingCanal?.nombre || sale.canal || "",
+        pideFactura: sale.pideFactura || false,
         totalUsd: sale.totalOrderUsd?.toString() || sale.totalUsd?.toString() || "",
       });
 
@@ -153,6 +157,18 @@ export default function EditSaleModal({ open, onOpenChange, sale }: EditSaleModa
     const total = products.reduce((sum, p) => sum + (p.totalUsd || 0), 0);
     form.setValue("totalUsd", total.toFixed(2));
   }, [products, form]);
+
+  // Auto-check pideFactura for Cashea and Cashea MP channels
+  useEffect(() => {
+    const subscription = form.watch((value, { name }) => {
+      if (name === 'canal') {
+        const canal = value.canal?.toLowerCase() || '';
+        const shouldCheck = canal === 'cashea' || canal === 'cashea mp';
+        form.setValue('pideFactura', shouldCheck);
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, [form]);
 
   const handleSaveProduct = (product: ProductFormData, index?: number) => {
     if (index !== undefined) {
@@ -346,6 +362,27 @@ export default function EditSaleModal({ open, onOpenChange, sale }: EditSaleModa
                           </SelectContent>
                         </Select>
                         <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="pideFactura"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-start space-x-3 space-y-0 md:col-span-2">
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                            data-testid="checkbox-pide-factura-edit"
+                          />
+                        </FormControl>
+                        <div className="space-y-1 leading-none">
+                          <FormLabel>
+                            Pide factura
+                          </FormLabel>
+                        </div>
                       </FormItem>
                     )}
                   />

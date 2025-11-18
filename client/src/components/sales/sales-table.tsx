@@ -671,6 +671,7 @@ export default function SalesTable({
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[120px]">Telefono</th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[160px]">Email</th>
                 <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[100px]">Especial</th>
+                <th className="text-center p-2 text-xs font-medium text-muted-foreground min-w-[80px]">Factura</th>
                 {showDeliveryDateColumn && (
                   <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[130px]">Fecha Compromiso Entrega</th>
                 )}
@@ -692,7 +693,7 @@ export default function SalesTable({
                   <td colSpan={
                     (showDeliveryDateColumn ? 1 : 0) + 
                     (showSeguimientoColumns ? 1 : 0) + 
-                    (activeTab === "lista" ? 25 : 24) -
+                    (activeTab === "lista" ? 26 : 25) -
                     ((activeTab === "manual" || activeTab === "reservas") ? 4 : 0)
                   } className="text-center p-8 text-muted-foreground">
                     No hay datos disponibles
@@ -820,6 +821,11 @@ export default function SalesTable({
                         <Badge className="bg-blue-500 hover:bg-blue-600 text-white text-xs">
                           {sale.medidaEspecial}
                         </Badge>
+                      )}
+                    </td>
+                    <td className="p-2 min-w-[80px] text-center text-xs">
+                      {sale.pideFactura && (
+                        <span className="text-green-600 dark:text-green-400 font-bold">✓</span>
                       )}
                     </td>
                     {showDeliveryDateColumn && (
