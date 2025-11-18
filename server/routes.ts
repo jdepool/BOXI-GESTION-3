@@ -6886,7 +6886,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               'Inmediato',
               baseSaleData.direccionDespachoCiudad
             );
-            fechaEntrega = calculatedDate ? new Date(calculatedDate) : null;
+            fechaEntrega = calculatedDate ? parseLocalDate(calculatedDate) : null;
           }
           
           const saleData = {
