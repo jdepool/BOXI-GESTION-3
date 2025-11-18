@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -10,12 +10,14 @@ import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient } from "@/lib/queryClient";
-import { Shield, Package } from "lucide-react";
+import { Shield, Package, Upload, X, FileSpreadsheet } from "lucide-react";
+import * as XLSX from "xlsx";
 
 type Inventario = {
   id: string;
   almacen: string;
   producto: string;
+  sku: string | null;
   stockActual: number;
   stockReservado: number;
   stockMinimo: number;
@@ -23,17 +25,29 @@ type Inventario = {
   precio: number | null;
 };
 
+type UploadResult = {
+  success: boolean;
+  created: number;
+  updated: number;
+  failed: number;
+  failedRows: Array<{ rowIndex: number; sku: string; almacen: string; error: string }>;
+  totalProcessed: number;
+};
+
 export default function GuestInventario() {
   const [, navigate] = useLocation();
   const { toast } = useToast();
   const [token, setToken] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [productoFilter, setProductoFilter] = useState("");
+  const [skuFilter, setSkuFilter] = useState("");
   const [selectedInventario, setSelectedInventario] = useState<Inventario | null>(null);
   const [formData, setFormData] = useState({
     stockActual: 0,
     stockReservado: 0,
     stockMinimo: 0,
   });
+  const [uploadResult, setUploadResult] = useState<UploadResult | null>(null);
+  const [showUploadResult, setShowUploadResult] = useState(false);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -50,14 +64,17 @@ export default function GuestInventario() {
     setToken(tokenParam);
   }, [navigate, toast]);
 
-  // Fetch inventario data using guest token
+  // Fetch inventario data using guest token with filters
   const { data: inventarioData, isLoading } = useQuery<{ data: Inventario[] }>({
-    queryKey: ["/api/guest/inventario", { search: searchQuery }],
+    queryKey: ["/api/guest/inventario", { producto: productoFilter, sku: skuFilter }],
     enabled: !!token,
     queryFn: async () => {
       const url = new URL("/api/guest/inventario", window.location.origin);
-      if (searchQuery) {
-        url.searchParams.set("search", searchQuery);
+      if (productoFilter) {
+        url.searchParams.set("producto", productoFilter);
+      }
+      if (skuFilter) {
+        url.searchParams.set("sku", skuFilter);
       }
       const response = await fetch(url.toString(), {
         headers: {
@@ -105,6 +122,50 @@ export default function GuestInventario() {
     },
   });
 
+  // Upload inventario mutation
+  const uploadInventarioMutation = useMutation({
+    mutationFn: async (records: any[]) => {
+      const response = await fetch("/api/guest/inventario/upload", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+        },
+        body: JSON.stringify({ records }),
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to upload inventario");
+      }
+      return response.json();
+    },
+    onSuccess: (data: UploadResult) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/guest/inventario"] });
+      setUploadResult(data);
+      setShowUploadResult(true);
+      
+      if (data.failed === 0) {
+        toast({
+          title: "Carga Exitosa",
+          description: `${data.created} registros creados, ${data.updated} actualizados`,
+        });
+      } else {
+        toast({
+          title: "Carga Completada con Errores",
+          description: `${data.failed} de ${data.totalProcessed} registros fallaron`,
+          variant: "destructive",
+        });
+      }
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "No se pudo cargar el archivo",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleEditInventario = (inventario: Inventario) => {
     setSelectedInventario(inventario);
     setFormData({
@@ -120,6 +181,48 @@ export default function GuestInventario() {
       id: selectedInventario.id,
       data: formData,
     });
+  };
+
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const data = new Uint8Array(e.target?.result as ArrayBuffer);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+        const jsonData: any[] = XLSX.utils.sheet_to_json(worksheet);
+
+        // Transform to expected format
+        const records = jsonData.map(row => ({
+          sku: row.SKU || row.sku || '',
+          almacen: row.Almacen || row.almacen || row.Almacén || '',
+          stockActual: parseInt(row['Stock Actual'] || row.stockActual || row.stock_actual || '0'),
+          stockReservado: parseInt(row['Stock Reservado'] || row.stockReservado || row.stock_reservado || '0'),
+          stockMinimo: parseInt(row['Stock Minimo'] || row['Stock Mínimo'] || row.stockMinimo || row.stock_minimo || '0'),
+        }));
+
+        uploadInventarioMutation.mutate(records);
+      } catch (error) {
+        toast({
+          title: "Error",
+          description: "No se pudo leer el archivo Excel",
+          variant: "destructive",
+        });
+      }
+    };
+    reader.readAsArrayBuffer(file);
+    
+    // Reset file input
+    event.target.value = '';
+  };
+
+  const clearFilters = () => {
+    setProductoFilter("");
+    setSkuFilter("");
   };
 
   if (!token) {
@@ -138,16 +241,72 @@ export default function GuestInventario() {
       </Alert>
 
       <Card>
-        <CardContent className="pt-6">
-          <div className="mb-4">
-            <Label>Buscar por Producto o Almacén</Label>
-            <Input
-              placeholder="Buscar..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              data-testid="input-search-inventario"
-            />
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle>Inventario</CardTitle>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => document.getElementById('excel-upload')?.click()}
+                disabled={uploadInventarioMutation.isPending}
+                data-testid="button-upload-excel"
+              >
+                <Upload className="h-4 w-4 mr-2" />
+                {uploadInventarioMutation.isPending ? "Subiendo..." : "Cargar Excel"}
+              </Button>
+              <input
+                id="excel-upload"
+                type="file"
+                accept=".xlsx,.xls"
+                onChange={handleFileUpload}
+                className="hidden"
+              />
+            </div>
           </div>
+        </CardHeader>
+        <CardContent>
+          {/* Filters */}
+          <div className="mb-4 grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div>
+              <Label>Filtrar por Producto</Label>
+              <Input
+                placeholder="Nombre del producto..."
+                value={productoFilter}
+                onChange={(e) => setProductoFilter(e.target.value)}
+                data-testid="input-filter-producto"
+              />
+            </div>
+            <div>
+              <Label>Filtrar por SKU</Label>
+              <Input
+                placeholder="SKU..."
+                value={skuFilter}
+                onChange={(e) => setSkuFilter(e.target.value)}
+                data-testid="input-filter-sku"
+              />
+            </div>
+            <div className="flex items-end">
+              <Button
+                variant="outline"
+                onClick={clearFilters}
+                disabled={!productoFilter && !skuFilter}
+                data-testid="button-clear-filters"
+              >
+                <X className="h-4 w-4 mr-2" />
+                Limpiar Filtros
+              </Button>
+            </div>
+          </div>
+
+          {/* Excel Format Hint */}
+          <Alert className="mb-4">
+            <FileSpreadsheet className="h-4 w-4" />
+            <AlertTitle>Formato del Excel</AlertTitle>
+            <AlertDescription>
+              El archivo debe tener las columnas: <strong>SKU</strong>, <strong>Almacen</strong>, <strong>Stock Actual</strong>, <strong>Stock Reservado</strong> (opcional), <strong>Stock Minimo</strong> (opcional)
+            </AlertDescription>
+          </Alert>
 
           {isLoading ? (
             <div className="text-center py-8">Cargando...</div>
@@ -156,40 +315,44 @@ export default function GuestInventario() {
               No se encontró inventario
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Almacén</TableHead>
-                  <TableHead>Producto</TableHead>
-                  <TableHead>Stock Actual</TableHead>
-                  <TableHead>Stock Reservado</TableHead>
-                  <TableHead>Stock Mínimo</TableHead>
-                  <TableHead className="text-right">Acciones</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {inventarioData.data.map((item) => (
-                  <TableRow key={item.id}>
-                    <TableCell data-testid={`text-almacen-${item.id}`}>{item.almacen}</TableCell>
-                    <TableCell data-testid={`text-producto-${item.id}`}>{item.producto}</TableCell>
-                    <TableCell data-testid={`text-stock-actual-${item.id}`}>{item.stockActual}</TableCell>
-                    <TableCell data-testid={`text-stock-reservado-${item.id}`}>{item.stockReservado}</TableCell>
-                    <TableCell data-testid={`text-stock-minimo-${item.id}`}>{item.stockMinimo}</TableCell>
-                    <TableCell className="text-right">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleEditInventario(item)}
-                        data-testid={`button-edit-inventario-${item.id}`}
-                      >
-                        <Package className="h-4 w-4 mr-2" />
-                        Editar Stock
-                      </Button>
-                    </TableCell>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Almacén</TableHead>
+                    <TableHead>Producto</TableHead>
+                    <TableHead>SKU</TableHead>
+                    <TableHead>Stock Actual</TableHead>
+                    <TableHead>Stock Reservado</TableHead>
+                    <TableHead>Stock Mínimo</TableHead>
+                    <TableHead className="text-right">Acciones</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {inventarioData.data.map((item) => (
+                    <TableRow key={item.id}>
+                      <TableCell data-testid={`text-almacen-${item.id}`}>{item.almacen}</TableCell>
+                      <TableCell data-testid={`text-producto-${item.id}`}>{item.producto}</TableCell>
+                      <TableCell data-testid={`text-sku-${item.id}`}>{item.sku || "-"}</TableCell>
+                      <TableCell data-testid={`text-stock-actual-${item.id}`}>{item.stockActual}</TableCell>
+                      <TableCell data-testid={`text-stock-reservado-${item.id}`}>{item.stockReservado}</TableCell>
+                      <TableCell data-testid={`text-stock-minimo-${item.id}`}>{item.stockMinimo}</TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleEditInventario(item)}
+                          data-testid={`button-edit-inventario-${item.id}`}
+                        >
+                          <Package className="h-4 w-4 mr-2" />
+                          Editar Stock
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           )}
         </CardContent>
       </Card>
@@ -209,6 +372,10 @@ export default function GuestInventario() {
               <div>
                 <Label>Producto</Label>
                 <Input value={selectedInventario.producto} disabled />
+              </div>
+              <div>
+                <Label>SKU</Label>
+                <Input value={selectedInventario.sku || "-"} disabled />
               </div>
               <div>
                 <Label>Stock Actual</Label>
@@ -258,6 +425,72 @@ export default function GuestInventario() {
               data-testid="button-save"
             >
               {updateInventarioMutation.isPending ? "Guardando..." : "Guardar"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Upload Result Dialog */}
+      <Dialog open={showUploadResult} onOpenChange={setShowUploadResult}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Resultado de la Carga</DialogTitle>
+          </DialogHeader>
+          {uploadResult && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-3 gap-4">
+                <Card>
+                  <CardContent className="pt-6 text-center">
+                    <div className="text-2xl font-bold text-green-600">{uploadResult.created}</div>
+                    <div className="text-sm text-muted-foreground">Creados</div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="pt-6 text-center">
+                    <div className="text-2xl font-bold text-blue-600">{uploadResult.updated}</div>
+                    <div className="text-sm text-muted-foreground">Actualizados</div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="pt-6 text-center">
+                    <div className="text-2xl font-bold text-red-600">{uploadResult.failed}</div>
+                    <div className="text-sm text-muted-foreground">Fallidos</div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {uploadResult.failedRows && uploadResult.failedRows.length > 0 && (
+                <div>
+                  <h3 className="font-semibold mb-2">Errores:</h3>
+                  <div className="border rounded-lg overflow-hidden">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Fila</TableHead>
+                          <TableHead>SKU</TableHead>
+                          <TableHead>Almacén</TableHead>
+                          <TableHead>Error</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {uploadResult.failedRows.map((row, index) => (
+                          <TableRow key={index}>
+                            <TableCell>{row.rowIndex}</TableCell>
+                            <TableCell>{row.sku}</TableCell>
+                            <TableCell>{row.almacen}</TableCell>
+                            <TableCell className="text-red-600">{row.error}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+          <DialogFooter>
+            <Button onClick={() => setShowUploadResult(false)} data-testid="button-close-result">
+              Cerrar
             </Button>
           </DialogFooter>
         </DialogContent>

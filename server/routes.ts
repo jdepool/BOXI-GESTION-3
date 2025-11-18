@@ -9196,8 +9196,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get inventario with guest access
   app.get("/api/guest/inventario", validateGuestToken, requireGuestScope("inventario"), async (req, res) => {
     try {
-      const { search } = req.query;
-      const inventario = await storage.getInventario(search ? { search: search as string } : {});
+      const { search, producto, sku } = req.query;
+      
+      // Build filters based on provided query parameters
+      const filters: any = {};
+      if (search) filters.search = search as string;
+      if (producto) filters.producto = producto as string;
+      if (sku) filters.sku = sku as string;
+      
+      const inventario = await storage.getInventario(filters);
       
       // Return data in expected format with only necessary fields (excluding costs/prices)
       const filteredInventario = {
@@ -9205,6 +9212,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           id: item.id,
           almacen: item.almacenNombre,
           producto: item.productoNombre,
+          sku: item.sku,
           stockActual: item.stockActual,
           stockReservado: item.stockReservado,
           stockMinimo: item.stockMinimo,
@@ -9257,6 +9265,162 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error updating inventario:", error);
       res.status(500).json({ error: "Failed to update inventario" });
+    }
+  });
+
+  // Bulk upload inventario (guest access with inventario scope)
+  app.post("/api/guest/inventario/upload", validateGuestToken, requireGuestScope("inventario"), async (req, res) => {
+    try {
+      // SECURITY: Explicitly reject any records containing restricted fields
+      if (req.body.records && Array.isArray(req.body.records)) {
+        const hasRestrictedFields = req.body.records.some((record: any) => 
+          record.costoUnitario !== undefined || 
+          record.precio !== undefined ||
+          record.costo_unitario !== undefined ||
+          record.price !== undefined
+        );
+        
+        if (hasRestrictedFields) {
+          return res.status(403).json({ 
+            error: "No se permiten campos de costo o precio en la carga de inventario" 
+          });
+        }
+      }
+
+      const uploadInventarioRowSchema = z.object({
+        sku: z.string().trim().min(1, "SKU es requerido"),
+        almacen: z.string().trim().min(1, "Almacén es requerido"),
+        stockActual: z.coerce.number().min(0, "Stock actual debe ser mayor o igual a 0"),
+        stockReservado: z.coerce.number().min(0).optional(),
+        stockMinimo: z.coerce.number().min(0).optional(),
+      }).strict(); // Use strict mode to reject any extra fields
+
+      const uploadInventarioSchema = z.object({
+        records: z.array(uploadInventarioRowSchema).min(1).max(1000, "Máximo 1000 registros por carga"),
+      });
+
+      const validation = uploadInventarioSchema.safeParse(req.body);
+      if (!validation.success) {
+        return res.status(400).json({ 
+          error: "Datos inválidos", 
+          details: validation.error.errors 
+        });
+      }
+
+      const { records } = validation.data;
+
+      // Prefetch all productos and almacenes to build lookup maps
+      const allProductos = await storage.getProductos();
+      const allAlmacenes = await storage.getAlmacenes();
+
+      const productoMap = new Map(
+        allProductos.map(p => [p.sku?.toLowerCase() || '', p.id])
+      );
+      const almacenMap = new Map(
+        allAlmacenes.map(a => [a.nombre.toLowerCase(), a.id])
+      );
+
+      let created = 0;
+      let updated = 0;
+      const failedRows: Array<{ rowIndex: number; sku: string; almacen: string; error: string }> = [];
+
+      // Process each row individually
+      for (let i = 0; i < records.length; i++) {
+        const row = records[i];
+        try {
+          // SECURITY: Explicitly extract only allowed fields (defense in depth)
+          const { sku, almacen, stockActual, stockReservado, stockMinimo } = row;
+          
+          // Lookup producto and almacen
+          const productoId = productoMap.get(sku.toLowerCase());
+          const almacenId = almacenMap.get(almacen.toLowerCase());
+
+          if (!productoId) {
+            failedRows.push({
+              rowIndex: i + 1,
+              sku,
+              almacen,
+              error: `Producto con SKU "${sku}" no encontrado`,
+            });
+            continue;
+          }
+
+          if (!almacenId) {
+            failedRows.push({
+              rowIndex: i + 1,
+              sku,
+              almacen,
+              error: `Almacén "${almacen}" no encontrado`,
+            });
+            continue;
+          }
+
+          // Check if inventario record exists
+          const existingInventario = await storage.getInventarioByProductoAlmacen(productoId, almacenId);
+
+          if (existingInventario) {
+            // Update existing record - ONLY allowed fields
+            await storage.updateInventario(existingInventario.id, {
+              stockActual,
+              stockReservado: stockReservado ?? existingInventario.stockReservado,
+              stockMinimo: stockMinimo ?? existingInventario.stockMinimo,
+            });
+            updated++;
+
+            // Log the update
+            await logAction({
+              req,
+              entityType: "inventario",
+              entityId: existingInventario.id,
+              action: "bulk_update",
+              fieldChanges: {
+                stockActual: { before: existingInventario.stockActual, after: stockActual },
+              },
+            });
+          } else {
+            // Create new record - ONLY allowed fields
+            await storage.createInventario({
+              productoId,
+              almacenId,
+              stockActual,
+              stockReservado: stockReservado ?? 0,
+              stockMinimo: stockMinimo ?? 0,
+            });
+            created++;
+
+            // Log the creation
+            await logAction({
+              req,
+              entityType: "inventario",
+              entityId: `${productoId}-${almacenId}`,
+              action: "bulk_create",
+              fieldChanges: {
+                stockActual: { before: null, after: stockActual },
+              },
+            });
+          }
+        } catch (error) {
+          const errorMsg = error instanceof Error ? error.message : String(error);
+          failedRows.push({
+            rowIndex: i + 1,
+            sku: row.sku,
+            almacen: row.almacen,
+            error: errorMsg,
+          });
+        }
+      }
+
+      res.json({
+        success: true,
+        created,
+        updated,
+        failed: failedRows.length,
+        failedRows,
+        totalProcessed: records.length,
+      });
+    } catch (error) {
+      console.error("Error uploading inventario:", error);
+      res.status(500).json({ error: "Error al procesar la carga de inventario" });
     }
   });
 
