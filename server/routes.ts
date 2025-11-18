@@ -8989,9 +8989,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         expiresAt: tokenRecord.expiresAt,
         createdAt: tokenRecord.createdAt,
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error creating guest token:", error);
-      res.status(500).json({ error: "Failed to create guest token" });
+      console.error("Error details:", { message: error.message, code: error.code, stack: error.stack });
+      res.status(500).json({ 
+        error: "Failed to create guest token",
+        details: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
     }
   });
   
