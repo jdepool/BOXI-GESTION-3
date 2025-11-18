@@ -22,7 +22,7 @@ import crypto from "crypto";
 import fetch from "node-fetch";
 import { sendOrderConfirmationEmail, sendInternalAlert, sendPaymentNotification, shouldNotifyPayment, type OrderEmailData, type InternalAlertData, type PaymentNotificationData } from "./services/email-service";
 import { performCasheaDownload } from "./services/cashea-download";
-import { normalizeCanal } from "@shared/utils";
+import { normalizeCanal, calculateDeliveryDate } from "@shared/utils";
 
 // Helper function to normalize estadoEntrega casing
 // Prevents case-sensitivity bugs in status comparisons and database storage
@@ -2000,6 +2000,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Use existing Shopify mapping logic from parseFile function
         const totalUsdValue = String(row['Lineitem price'] || '0');
         
+        // Determine tipo (Reserva or Inmediato)
+        const tipo = String(row['Lineitem name'] || '').toUpperCase().includes('RESERVA') ? 'Reserva' : 'Inmediato';
+        const ciudad = row['Shipping City'] ? String(row['Shipping City']) : null;
+        
         return {
           nombre: String(row['Billing Name'] || ''),
           cedula: null, // Shopify doesn't have cedula field
@@ -2034,7 +2038,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Shipping address mapping  
           direccionDespachoPais: row['Shipping Country'] ? String(row['Shipping Country']) : null,
           direccionDespachoEstado: row['Shipping Province name'] ? String(row['Shipping Province name']) : null,
-          direccionDespachoCiudad: row['Shipping City'] ? String(row['Shipping City']) : null,
+          direccionDespachoCiudad: ciudad,
           direccionDespachoDireccion: row['Shipping Address1'] ? String(row['Shipping Address1']) : null,
           direccionDespachoUrbanizacion: row['Shipping Address2'] ? String(row['Shipping Address2']) : null,
           direccionDespachoReferencia: null,
@@ -2048,8 +2052,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           fleteGratis: false,
           notas: null,
           // Auto-detect RESERVA products and set tipo accordingly
-          tipo: String(row['Lineitem name'] || '').toUpperCase().includes('RESERVA') ? 'Reserva' : 'Inmediato',
-          fechaEntrega: undefined,
+          tipo,
+          // Calculate delivery date for Inmediato sales (Caracas: +2 days, Others: +4 days)
+          fechaEntrega: calculateDeliveryDate(fecha, tipo, ciudad),
         };
       });
 
@@ -2199,6 +2204,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Use existing Shopify mapping logic from parseFile function
         const totalUsdValue = String(row['Lineitem price'] || '0');
         
+        // Determine tipo (Reserva or Inmediato)
+        const tipo = String(row['Lineitem name'] || '').toUpperCase().includes('RESERVA') ? 'Reserva' : 'Inmediato';
+        const ciudad = row['Shipping City'] ? String(row['Shipping City']) : null;
+        
         return {
           nombre: String(row['Billing Name'] || ''),
           cedula: null, // Shopify doesn't have cedula field
@@ -2233,7 +2242,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Shipping address mapping  
           direccionDespachoPais: row['Shipping Country'] ? String(row['Shipping Country']) : null,
           direccionDespachoEstado: row['Shipping Province name'] ? String(row['Shipping Province name']) : null,
-          direccionDespachoCiudad: row['Shipping City'] ? String(row['Shipping City']) : null,
+          direccionDespachoCiudad: ciudad,
           direccionDespachoDireccion: row['Shipping Address1'] ? String(row['Shipping Address1']) : null,
           direccionDespachoUrbanizacion: row['Shipping Address2'] ? String(row['Shipping Address2']) : null,
           direccionDespachoReferencia: null,
@@ -2247,8 +2256,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           fleteGratis: false,
           notas: null,
           // Auto-detect RESERVA products and set tipo accordingly
-          tipo: String(row['Lineitem name'] || '').toUpperCase().includes('RESERVA') ? 'Reserva' : 'Inmediato',
-          fechaEntrega: undefined,
+          tipo,
+          // Calculate delivery date for Inmediato sales (Caracas: +2 days, Others: +4 days)
+          fechaEntrega: calculateDeliveryDate(fecha, tipo, ciudad),
         };
       });
 
