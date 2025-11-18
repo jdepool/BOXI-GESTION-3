@@ -21,6 +21,17 @@ The application utilizes a React 18 and TypeScript frontend, Wouter for routing,
 ## Technical Implementations
 The backend is an Express.js and TypeScript RESTful API, using PostgreSQL with Drizzle ORM. Authentication is handled by basic username/password with PostgreSQL session storage. Date-only fields are stored as `YYYY-MM-DD` strings to prevent timezone issues. Canal values are normalized during upload for consistency. The order search system employs dual modes (`search`, `ordenExacto`, `orden`) to prevent historical order confusion, especially in payment modals. A dual email system sends order confirmations using GoDaddy SMTP for Mompox sales and Microsoft Outlook via Graph API for Boxi sales. Real-time notifications are implemented via WebSocket connections with automatic reconnection logic.
 
+**CRITICAL Date Parsing Pattern**: When performing date calculations or arithmetic (adding days, comparing dates, etc.), NEVER use `new Date("YYYY-MM-DD")` directly as it interprets the string as UTC midnight, causing timezone shifts (e.g., "2024-11-18" becomes Nov 17 8pm in GMT-4, resulting in off-by-one errors). Instead, manually parse yyyy-MM-dd strings as local dates:
+```typescript
+// ❌ WRONG - causes timezone bugs
+const date = new Date("2024-11-18"); // Interpreted as UTC midnight
+
+// ✅ CORRECT - parse as local date
+const parts = "2024-11-18".split('-');
+const date = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+```
+This pattern is implemented in `calculateDeliveryDate` (shared/utils.ts), `formatLocalDate`, and `parseLocalDate` utilities (client/src/lib/date-utils.ts). Always use these utilities or follow this pattern for any date calculations to prevent off-by-one day errors.
+
 **Treble-Boxi Webhook Address Logic**: When the webhook receives address data with `misma_dir_fact` not containing "No" (addresses are the same), it populates BOTH `direccionDespacho*` and `direccionFacturacion*` fields with identical data. This mirrors the manual form behavior and ensures the Despacho table displays addresses correctly (since it checks `direccionFacturacionPais` first). When addresses differ, only the respective field sets are populated.
 
 **Payment Calculation Logic**: Critical business rule for balance calculations: use `fleteAPagar` (amount customer owes) NOT `pagoFleteUsd` (amount customer paid) when calculating `ordenPlusFlete`. This ensures `saldoPendiente` correctly reflects outstanding balance. The formula `ordenPlusFlete = ordenAPagar + (fleteGratis ? 0 : fleteAPagar)` is implemented in checkAndAutoUpdateDeliveryStatus function, payment verification endpoint, and bank reconciliation auto-verification loop.
