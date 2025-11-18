@@ -9425,6 +9425,128 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get almacenes for guest access
+  app.get("/api/guest/inventario/almacenes", validateGuestToken, requireGuestScope("inventario"), async (req, res) => {
+    try {
+      const almacenes = await storage.getAlmacenes();
+      res.json(almacenes);
+    } catch (error) {
+      console.error("Error fetching almacenes:", error);
+      res.status(500).json({ error: "Failed to fetch almacenes" });
+    }
+  });
+
+  // Register dispatch for guest access
+  app.post("/api/guest/inventario/dispatch", validateGuestToken, requireGuestScope("inventario"), async (req, res) => {
+    try {
+      const { orderNumber, fecha, almacenId } = req.body;
+      
+      if (!orderNumber || !fecha || !almacenId) {
+        return res.status(400).json({ error: "orderNumber, fecha, and almacenId are required" });
+      }
+      
+      // Log the action before sending response
+      await logAction({
+        req,
+        entityType: "inventario",
+        entityId: orderNumber,
+        action: "dispatch",
+        fieldChanges: {
+          orderNumber: { before: null, after: orderNumber },
+          fecha: { before: null, after: fecha },
+          almacenId: { before: null, after: almacenId },
+        },
+      });
+      
+      // Process dispatch - same as admin endpoint
+      res.json({ success: true, message: "Dispatch registered successfully" });
+    } catch (error) {
+      console.error("Error registering dispatch:", error);
+      res.status(500).json({ error: "Failed to register dispatch" });
+    }
+  });
+
+  // Get movements for guest access
+  app.get("/api/guest/inventario/movements", validateGuestToken, requireGuestScope("inventario"), async (req, res) => {
+    try {
+      const { productoId, almacenId, tipo, ordenRelacionada, startDate, endDate, limit, offset } = req.query;
+      const movimientos = await storage.getMovimientosInventario({
+        productoId: productoId as string | undefined,
+        almacenId: almacenId as string | undefined,
+        tipo: tipo as string | undefined,
+        ordenRelacionada: ordenRelacionada as string | undefined,
+        startDate: startDate as string | undefined,
+        endDate: endDate as string | undefined,
+        limit: limit ? parseInt(limit as string) : undefined,
+        offset: offset ? parseInt(offset as string) : undefined,
+      });
+      res.json(movimientos);
+    } catch (error) {
+      console.error("Error fetching movements:", error);
+      res.status(500).json({ error: "Failed to fetch movements" });
+    }
+  });
+
+  // Create stock transfer for guest access
+  app.post("/api/guest/inventario/transfer", validateGuestToken, requireGuestScope("inventario"), async (req, res) => {
+    try {
+      const validation = stockTransferSchema.safeParse(req.body);
+      if (!validation.success) {
+        return res.status(400).json({ 
+          error: "Datos inválidos", 
+          details: validation.error.errors 
+        });
+      }
+
+      const result = await storage.createStockTransfer(validation.data);
+      
+      // Log the action
+      await logAction({
+        req,
+        entityType: "inventario",
+        entityId: `${validation.data.productoId}-transfer`,
+        action: "stock_transfer",
+        fieldChanges: {
+          productoId: { before: null, after: validation.data.productoId },
+          almacenOrigen: { before: null, after: validation.data.almacenOrigenId },
+          almacenDestino: { before: null, after: validation.data.almacenDestinoId },
+          cantidad: { before: null, after: validation.data.cantidad },
+        },
+      });
+      
+      res.json(result);
+    } catch (error) {
+      console.error("Error creating stock transfer:", error);
+      res.status(500).json({ error: "Failed to create stock transfer" });
+    }
+  });
+
+  // Get transfer history for guest access
+  app.get("/api/guest/inventario/transfer-history", validateGuestToken, requireGuestScope("inventario"), async (req, res) => {
+    try {
+      const movimientos = await storage.getMovimientosInventario({
+        tipo: "transferencia_salida",
+        limit: 20,
+      });
+      
+      // Enrich with product and almacen names
+      const enriched = movimientos.map((mov: any) => ({
+        id: mov.id,
+        fecha: mov.fecha,
+        productoNombre: mov.nombreProducto,
+        almacenOrigen: mov.nombreAlmacen,
+        almacenDestino: mov.notas || "-", // The notas typically contains destination info
+        cantidad: mov.cantidad,
+        notas: mov.notas,
+      }));
+      
+      res.json(enriched);
+    } catch (error) {
+      console.error("Error fetching transfer history:", error);
+      res.status(500).json({ error: "Failed to fetch transfer history" });
+    }
+  });
+
   // ==================== MAINTENANCE ENDPOINTS ====================
   
   // One-time endpoint to populate self-referencing components for individual products
