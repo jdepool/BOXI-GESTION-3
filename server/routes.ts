@@ -9241,8 +9241,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Get current inventario data for audit logging
-      const allInventario = await storage.getInventario({ limit: 999999 });
-      const current = allInventario.data.find((inv: any) => inv.id === req.params.id);
+      const allInventario = await storage.getInventario({});
+      const current = allInventario.find((inv: any) => inv.id === req.params.id);
       
       if (!current) {
         return res.status(404).json({ error: "Inventario not found" });
@@ -9357,7 +9357,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
 
           // Check if inventario record exists
-          const existingInventario = await storage.getInventarioByProductoAlmacen(productoId, almacenId);
+          const existingInventario = await storage.getInventarioByProductoAndAlmacen(productoId, almacenId);
 
           if (existingInventario) {
             // Update existing record - ONLY allowed fields
@@ -9373,7 +9373,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               req,
               entityType: "inventario",
               entityId: existingInventario.id,
-              action: "bulk_update",
+              action: "update",
               fieldChanges: {
                 stockActual: { before: existingInventario.stockActual, after: stockActual },
               },
@@ -9394,7 +9394,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               req,
               entityType: "inventario",
               entityId: `${productoId}-${almacenId}`,
-              action: "bulk_create",
+              action: "create",
               fieldChanges: {
                 stockActual: { before: null, after: stockActual },
               },
@@ -9450,7 +9450,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         req,
         entityType: "inventario",
         entityId: orderNumber,
-        action: "dispatch",
+        action: "create",
         fieldChanges: {
           orderNumber: { before: null, after: orderNumber },
           fecha: { before: null, after: fecha },
@@ -9505,7 +9505,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         req,
         entityType: "inventario",
         entityId: `${validation.data.productoId}-transfer`,
-        action: "stock_transfer",
+        action: "create",
         fieldChanges: {
           productoId: { before: null, after: validation.data.productoId },
           almacenOrigen: { before: null, after: validation.data.almacenOrigenId },
