@@ -3657,19 +3657,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Update sale devoluciones, cancelaciones, and despachado fields
+  // Update sale devoluciones, cancelaciones, and notas fields
+  // NOTE: despachado checkbox can ONLY be updated by guest users with Despacho scope
   app.patch("/api/sales/:saleId", async (req, res) => {
     try {
       const { saleId } = req.params;
       
-      // Define schema for allowed fields (devoluciones, cancelaciones, despachado, and notas)
+      // Define schema for allowed fields (devoluciones, cancelaciones, and notas)
       const updateSaleSchema = z.object({
         datosDevolucion: z.string().nullable().optional(),
         tipoDevolucion: z.string().nullable().optional(),
         finalizacionDevolucion: z.string().nullable().optional(),
         datosCancelacion: z.string().nullable().optional(),
         finalizacionCancelacion: z.string().nullable().optional(),
-        despachado: z.boolean().optional(),
         notas: z.string().nullable().optional(),
       }).strict(); // strict() ensures no other fields are allowed
 
@@ -3682,7 +3682,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      const { datosDevolucion, tipoDevolucion, finalizacionDevolucion, datosCancelacion, finalizacionCancelacion, despachado, notas } = validationResult.data;
+      const { datosDevolucion, tipoDevolucion, finalizacionDevolucion, datosCancelacion, finalizacionCancelacion, notas } = validationResult.data;
 
       // Validate that sale exists
       const existingSale = await storage.getSaleById(saleId);
@@ -3707,9 +3707,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (finalizacionCancelacion !== undefined) {
         updateData.finalizacionCancelacion = finalizacionCancelacion;
       }
-      if (despachado !== undefined) {
-        updateData.despachado = despachado;
-      }
       if (notas !== undefined) {
         updateData.notas = notas;
       }
@@ -3723,40 +3720,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (!updatedSale) {
         return res.status(500).json({ error: "Failed to update sale" });
-      }
-
-      // If despachado is being set to true (was false before), handle inventory deduction
-      if (despachado === true && existingSale.despachado !== true && updatedSale.orden) {
-        // Get almacenId from the sale, or use principal warehouse
-        let almacenId = existingSale.almacenDespachoId;
-        
-        if (!almacenId) {
-          const principalWarehouse = await storage.getPrincipalWarehouse();
-          if (principalWarehouse) {
-            almacenId = principalWarehouse.id;
-            // Update almacenDespachoId for this sale
-            await storage.updateSale(saleId, { almacenDespachoId: almacenId });
-          } else {
-            console.warn(`⚠️ No almacenDespachoId and no principal warehouse configured. Skipping inventory deduction for order ${updatedSale.orden}`);
-          }
-        }
-
-        // Only deduct inventory if we have an almacenId
-        if (almacenId) {
-          try {
-            // Use current date if fechaDespacho is not set, format as YYYY-MM-DD
-            const fechaDespachoStr = updatedSale.fechaDespacho 
-              ? new Date(updatedSale.fechaDespacho).toISOString().split('T')[0]
-              : new Date().toISOString().split('T')[0];
-            
-            // Deduct inventory for this specific order
-            await storage.deductInventoryForOrder(updatedSale.orden, almacenId, fechaDespachoStr);
-            console.log(`✅ Inventory deducted for order ${updatedSale.orden} from almacen ${almacenId} (despachado checkbox)`);
-          } catch (inventoryError) {
-            console.error("Error deducting inventory:", inventoryError);
-            // Don't fail the request if inventory deduction fails - just log the error
-          }
-        }
       }
 
       res.json({ 
