@@ -6,6 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { format, parse } from "date-fns";
 import { cn } from "@/lib/utils";
 import { filterCanalesByProductLine, type ProductLine } from "@/lib/canalFilters";
+import { calculateDefaultDeliveryDate } from "@/lib/date-utils";
 
 // Helper function to safely parse YYYY-MM-DD as local date
 const parseLocalDate = (dateString: string) => {
@@ -117,6 +118,14 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
   const watchDespachoUrbanizacion = form.watch("direccionDespachoUrbanizacion");
   const watchDespachoReferencia = form.watch("direccionDespachoReferencia");
   const watchFacturacionEstado = form.watch("direccionFacturacionEstado");
+  const watchFecha = form.watch("fecha");
+
+  // Calculate default delivery date for Inmediato sales (ManualSalesForm is always Inmediato)
+  const defaultDeliveryDate = calculateDefaultDeliveryDate(
+    watchFecha || new Date().toISOString().split('T')[0],
+    'Inmediato',
+    watchDespachoCiudad || ''
+  );
 
   // Use estados/ciudades hook for both despacho and facturacion addresses
   const { estados, ciudades: ciudadesDespacho } = useEstadosCiudades(watchDespachoEstado);
@@ -843,6 +852,7 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
         product={editingProduct?.product}
         index={editingProduct?.index}
         productLine={productLine}
+        defaultFechaEntrega={defaultDeliveryDate}
       />
     </Form>
   );

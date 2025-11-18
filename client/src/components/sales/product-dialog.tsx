@@ -45,9 +45,10 @@ interface ProductDialogProps {
   product?: ProductFormData;
   index?: number;
   productLine?: ProductLine;
+  defaultFechaEntrega?: string; // Pre-filled delivery date for Inmediato sales
 }
 
-export default function ProductDialog({ isOpen, onClose, onSave, product, index, productLine = 'boxi' }: ProductDialogProps) {
+export default function ProductDialog({ isOpen, onClose, onSave, product, index, productLine = 'boxi', defaultFechaEntrega }: ProductDialogProps) {
   const isEditMode = product !== undefined;
   const form = useForm<ProductFormData>({
     resolver: zodResolver(productFormSchema),
@@ -90,13 +91,13 @@ export default function ProductDialog({ isOpen, onClose, onSave, product, index,
         sku: "",
         cantidad: 1,
         totalUsd: "" as any,
-        fechaEntrega: "",
+        fechaEntrega: defaultFechaEntrega || "", // Use default date for Inmediato sales
         esObsequio: false,
         hasMedidaEspecial: false,
         medidaEspecial: "",
       });
     }
-  }, [isOpen, product, form]);
+  }, [isOpen, product, form, defaultFechaEntrega]);
 
   const handleSubmit = (data: ProductFormData) => {
     onSave(data, index);

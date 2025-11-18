@@ -18,3 +18,34 @@ export const formatLocalDate = (date: Date): string => {
   const day = String(date.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
 };
+
+// Calculate default delivery commitment date for Inmediato sales
+// Caracas: +2 days, Other cities: +4 days, Reservas: undefined
+export const calculateDefaultDeliveryDate = (
+  orderDate: string | Date,
+  tipo: string,
+  ciudad: string
+): string | undefined => {
+  // Only pre-fill for Inmediato sales
+  if (tipo !== 'Inmediato') {
+    return undefined;
+  }
+
+  // Parse the order date
+  const baseDate = typeof orderDate === 'string' 
+    ? parseLocalDate(orderDate) 
+    : orderDate;
+  
+  if (!baseDate) {
+    return undefined;
+  }
+
+  // Calculate days to add based on ciudad
+  const daysToAdd = ciudad === 'Caracas' ? 2 : 4;
+
+  // Create new date with added days
+  const deliveryDate = new Date(baseDate);
+  deliveryDate.setDate(deliveryDate.getDate() + daysToAdd);
+
+  return formatLocalDate(deliveryDate);
+};
