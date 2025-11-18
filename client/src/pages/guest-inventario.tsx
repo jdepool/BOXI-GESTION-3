@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient } from "@/lib/queryClient";
@@ -23,6 +24,7 @@ type Inventario = {
   stockMinimo: number;
   costoUnitario: number | null;
   precio: number | null;
+  fechaActualizacion?: string | null;
 };
 
 type UploadResult = {
@@ -225,6 +227,16 @@ export default function GuestInventario() {
     setSkuFilter("");
   };
 
+  const getStatusBadge = (disponible: number, minimo: number) => {
+    if (disponible === 0) {
+      return <Badge variant="destructive" data-testid="badge-sin-existencia">Sin Existencia</Badge>;
+    } else if (disponible <= minimo) {
+      return <Badge className="bg-yellow-500 dark:bg-yellow-600" data-testid="badge-critico">Crítico</Badge>;
+    } else {
+      return <Badge className="bg-green-600 dark:bg-green-700" data-testid="badge-activo">Activo</Badge>;
+    }
+  };
+
   if (!token) {
     return null;
   }
@@ -319,37 +331,66 @@ export default function GuestInventario() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Almacén</TableHead>
-                    <TableHead>Producto</TableHead>
                     <TableHead>SKU</TableHead>
-                    <TableHead>Stock Actual</TableHead>
-                    <TableHead>Stock Reservado</TableHead>
-                    <TableHead>Stock Mínimo</TableHead>
-                    <TableHead className="text-right">Acciones</TableHead>
+                    <TableHead>Producto</TableHead>
+                    <TableHead>Almacén</TableHead>
+                    <TableHead className="text-right">Stock Actual</TableHead>
+                    <TableHead className="text-right">Reservado</TableHead>
+                    <TableHead className="text-right">Disponible</TableHead>
+                    <TableHead className="text-right">Stock Mínimo</TableHead>
+                    <TableHead>Estado</TableHead>
+                    <TableHead>Última Modificación</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {inventarioData.data.map((item) => (
-                    <TableRow key={item.id}>
-                      <TableCell data-testid={`text-almacen-${item.id}`}>{item.almacen}</TableCell>
-                      <TableCell data-testid={`text-producto-${item.id}`}>{item.producto}</TableCell>
-                      <TableCell data-testid={`text-sku-${item.id}`}>{item.sku || "-"}</TableCell>
-                      <TableCell data-testid={`text-stock-actual-${item.id}`}>{item.stockActual}</TableCell>
-                      <TableCell data-testid={`text-stock-reservado-${item.id}`}>{item.stockReservado}</TableCell>
-                      <TableCell data-testid={`text-stock-minimo-${item.id}`}>{item.stockMinimo}</TableCell>
-                      <TableCell className="text-right">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleEditInventario(item)}
-                          data-testid={`button-edit-inventario-${item.id}`}
-                        >
-                          <Package className="h-4 w-4 mr-2" />
-                          Editar Stock
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  {inventarioData.data.map((item) => {
+                    const stockDisponible = item.stockActual - (item.stockReservado ?? 0);
+                    const fechaMod = item.fechaActualizacion 
+                      ? new Date(item.fechaActualizacion).toLocaleString('es-VE', {
+                          year: 'numeric',
+                          month: '2-digit',
+                          day: '2-digit',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })
+                      : '-';
+                    return (
+                      <TableRow 
+                        key={item.id}
+                        className="cursor-pointer hover:bg-muted/50"
+                        onClick={() => handleEditInventario(item)}
+                        data-testid={`row-inventario-${item.id}`}
+                      >
+                        <TableCell className="font-medium" data-testid={`text-sku-${item.id}`}>
+                          {item.sku || "-"}
+                        </TableCell>
+                        <TableCell data-testid={`text-producto-${item.id}`}>
+                          {item.producto}
+                        </TableCell>
+                        <TableCell data-testid={`text-almacen-${item.id}`}>
+                          {item.almacen}
+                        </TableCell>
+                        <TableCell className="text-right" data-testid={`text-stock-actual-${item.id}`}>
+                          {item.stockActual}
+                        </TableCell>
+                        <TableCell className="text-right" data-testid={`text-stock-reservado-${item.id}`}>
+                          {item.stockReservado ?? 0}
+                        </TableCell>
+                        <TableCell className="text-right font-bold" data-testid={`text-disponible-${item.id}`}>
+                          {stockDisponible}
+                        </TableCell>
+                        <TableCell className="text-right" data-testid={`text-stock-minimo-${item.id}`}>
+                          {item.stockMinimo ?? 0}
+                        </TableCell>
+                        <TableCell data-testid={`badge-estado-${item.id}`}>
+                          {getStatusBadge(stockDisponible, item.stockMinimo ?? 0)}
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground" data-testid={`text-fecha-actualizacion-${item.id}`}>
+                          {fechaMod}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
             </div>

@@ -9216,6 +9216,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           stockActual: item.stockActual,
           stockReservado: item.stockReservado,
           stockMinimo: item.stockMinimo,
+          fechaActualizacion: item.fechaActualizacion,
           // Exclude costoUnitario and precio from response
         }))
       };
