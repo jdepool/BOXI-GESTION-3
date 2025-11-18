@@ -3441,7 +3441,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put("/api/sales/:saleId/fecha-despacho", async (req, res) => {
     try {
       const { saleId } = req.params;
-      let { fechaDespacho, almacenId } = req.body;
+      const { fechaDespacho, almacenId } = req.body;
 
       // Validate that sale exists
       const existingSale = await storage.getSaleById(saleId);
@@ -3455,33 +3455,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(500).json({ error: "Failed to update fecha despacho" });
       }
 
-      // If fechaDespacho is being set (not null), handle inventory deduction
-      if (fechaDespacho && updatedSale.orden) {
-        // If no almacenId provided, try to use the principal warehouse
-        if (!almacenId) {
-          const principalWarehouse = await storage.getPrincipalWarehouse();
-          if (principalWarehouse) {
-            almacenId = principalWarehouse.id;
-          } else {
-            console.warn(`⚠️ No almacenId provided and no principal warehouse configured. Skipping inventory deduction for order ${updatedSale.orden}`);
-          }
-        }
-
-        // Only deduct inventory if we have an almacenId (either provided or from principal warehouse)
-        if (almacenId) {
-          try {
-            // Also update the almacenDespachoId for this sale
-            await storage.updateSale(saleId, { almacenDespachoId: almacenId });
-            
-            // Deduct inventory for this specific order
-            await storage.deductInventoryForOrder(updatedSale.orden, almacenId, fechaDespacho);
-            console.log(`✅ Inventory deducted for order ${updatedSale.orden} from almacen ${almacenId}`);
-          } catch (inventoryError) {
-            console.error("Error deducting inventory:", inventoryError);
-            // Don't fail the request if inventory deduction fails - just log the error
-            // This allows the fechaDespacho to still be set even if there's an inventory issue
-          }
-        }
+      // If almacenId is provided, store it for when despachado checkbox is checked
+      if (almacenId && fechaDespacho) {
+        await storage.updateSale(saleId, { almacenDespachoId: almacenId });
       }
 
       res.json({ success: true, sale: updatedSale });
@@ -3681,18 +3657,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Update sale devoluciones and cancelaciones fields
+  // Update sale devoluciones, cancelaciones, and despachado fields
   app.patch("/api/sales/:saleId", async (req, res) => {
     try {
       const { saleId } = req.params;
       
-      // Define schema for allowed fields (devoluciones, cancelaciones, and notas)
+      // Define schema for allowed fields (devoluciones, cancelaciones, despachado, and notas)
       const updateSaleSchema = z.object({
         datosDevolucion: z.string().nullable().optional(),
         tipoDevolucion: z.string().nullable().optional(),
         finalizacionDevolucion: z.string().nullable().optional(),
         datosCancelacion: z.string().nullable().optional(),
         finalizacionCancelacion: z.string().nullable().optional(),
+        despachado: z.boolean().optional(),
         notas: z.string().nullable().optional(),
       }).strict(); // strict() ensures no other fields are allowed
 
@@ -3705,7 +3682,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
 
-      const { datosDevolucion, tipoDevolucion, finalizacionDevolucion, datosCancelacion, finalizacionCancelacion, notas } = validationResult.data;
+      const { datosDevolucion, tipoDevolucion, finalizacionDevolucion, datosCancelacion, finalizacionCancelacion, despachado, notas } = validationResult.data;
 
       // Validate that sale exists
       const existingSale = await storage.getSaleById(saleId);
@@ -3730,6 +3707,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (finalizacionCancelacion !== undefined) {
         updateData.finalizacionCancelacion = finalizacionCancelacion;
       }
+      if (despachado !== undefined) {
+        updateData.despachado = despachado;
+      }
       if (notas !== undefined) {
         updateData.notas = notas;
       }
@@ -3743,6 +3723,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (!updatedSale) {
         return res.status(500).json({ error: "Failed to update sale" });
+      }
+
+      // If despachado is being set to true (was false before), handle inventory deduction
+      if (despachado === true && existingSale.despachado !== true && updatedSale.orden) {
+        // Get almacenId from the sale, or use principal warehouse
+        let almacenId = existingSale.almacenDespachoId;
+        
+        if (!almacenId) {
+          const principalWarehouse = await storage.getPrincipalWarehouse();
+          if (principalWarehouse) {
+            almacenId = principalWarehouse.id;
+            // Update almacenDespachoId for this sale
+            await storage.updateSale(saleId, { almacenDespachoId: almacenId });
+          } else {
+            console.warn(`⚠️ No almacenDespachoId and no principal warehouse configured. Skipping inventory deduction for order ${updatedSale.orden}`);
+          }
+        }
+
+        // Only deduct inventory if we have an almacenId
+        if (almacenId) {
+          try {
+            // Use current date if fechaDespacho is not set, format as YYYY-MM-DD
+            const fechaDespachoStr = updatedSale.fechaDespacho 
+              ? new Date(updatedSale.fechaDespacho).toISOString().split('T')[0]
+              : new Date().toISOString().split('T')[0];
+            
+            // Deduct inventory for this specific order
+            await storage.deductInventoryForOrder(updatedSale.orden, almacenId, fechaDespachoStr);
+            console.log(`✅ Inventory deducted for order ${updatedSale.orden} from almacen ${almacenId} (despachado checkbox)`);
+          } catch (inventoryError) {
+            console.error("Error deducting inventory:", inventoryError);
+            // Don't fail the request if inventory deduction fails - just log the error
+          }
+        }
       }
 
       res.json({ 
@@ -9174,6 +9188,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Update sale
       const updated = await storage.updateSale(req.params.id, updateData);
+      
+      // If despachado is being set to true (was false before), handle inventory deduction
+      if (despachado === true && currentSale.despachado !== true && updated && updated.orden) {
+        // Get almacenId from the sale, or use principal warehouse
+        let almacenId = currentSale.almacenDespachoId;
+        
+        if (!almacenId) {
+          const principalWarehouse = await storage.getPrincipalWarehouse();
+          if (principalWarehouse) {
+            almacenId = principalWarehouse.id;
+            // Update almacenDespachoId for this sale
+            await storage.updateSale(req.params.id, { almacenDespachoId: almacenId });
+          } else {
+            console.warn(`⚠️ No almacenDespachoId and no principal warehouse configured. Skipping inventory deduction for order ${updated.orden}`);
+          }
+        }
+
+        // Only deduct inventory if we have an almacenId
+        if (almacenId) {
+          try {
+            // Use current date if fechaDespacho is not set, format as YYYY-MM-DD
+            const fechaDespachoStr = updated.fechaDespacho
+              ? new Date(updated.fechaDespacho).toISOString().split('T')[0]
+              : new Date().toISOString().split('T')[0];
+            
+            // Deduct inventory for this specific order
+            await storage.deductInventoryForOrder(updated.orden, almacenId, fechaDespachoStr);
+            console.log(`✅ Inventory deducted for order ${updated.orden} from almacen ${almacenId} (guest despachado checkbox)`);
+          } catch (inventoryError) {
+            console.error("Error deducting inventory:", inventoryError);
+            // Don't fail the request if inventory deduction fails - just log the error
+          }
+        }
+      }
       
       // Log the action (only if both exist)
       if (currentSale && updated) {
