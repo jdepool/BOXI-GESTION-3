@@ -4,6 +4,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { CalendarIcon } from "lucide-react";
 import { format, parse } from "date-fns";
 import { cn } from "@/lib/utils";
+import { parseLocalDate } from "@/lib/date-utils";
 
 interface DateRangePickerProps {
   startDate?: string;
@@ -11,18 +12,6 @@ interface DateRangePickerProps {
   onStartDateChange: (date: string) => void;
   onEndDateChange: (date: string) => void;
 }
-
-const parseLocalDate = (dateString: string): Date | undefined => {
-  if (!dateString) return undefined;
-  
-  // Parse yyyy-MM-dd as local date, not UTC
-  // This prevents the "day before" timezone bug
-  const [year, month, day] = dateString.split('-').map(Number);
-  if (!year || !month || !day) return undefined;
-  
-  // Month is 0-indexed in JavaScript Date
-  return new Date(year, month - 1, day);
-};
 
 export function DateRangePicker({ 
   startDate, 

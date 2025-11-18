@@ -15,6 +15,7 @@ import { Save, User, Package, Plus, Trash2, Pencil } from "lucide-react";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { filterCanalesByProductLine, detectProductLine } from "@/lib/canalFilters";
+import { parseLocalDate } from "@/lib/date-utils";
 import type { Sale } from "@shared/schema";
 import ProductDialog, { ProductFormData } from "./product-dialog";
 
@@ -95,11 +96,17 @@ export default function EditSaleModal({ open, onOpenChange, sale }: EditSaleModa
       // Load all products from the order
       if (orderProducts.length > 0) {
         const productsData: ProductFormData[] = orderProducts.map(item => {
-          // Convert fechaEntrega timestamp to yyyy-MM-dd string
+          // Convert fechaEntrega to yyyy-MM-dd string
           let fechaEntregaStr = "";
           if (item.fechaEntrega) {
-            const fecha = new Date(item.fechaEntrega);
-            fechaEntregaStr = format(fecha, 'yyyy-MM-dd');
+            // If it's already a yyyy-MM-dd string, use it directly
+            if (typeof item.fechaEntrega === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(item.fechaEntrega)) {
+              fechaEntregaStr = item.fechaEntrega;
+            } else {
+              // It's a Date object or timestamp - convert to Date and format
+              const fecha = new Date(item.fechaEntrega);
+              fechaEntregaStr = format(fecha, 'yyyy-MM-dd');
+            }
           }
           
           return {

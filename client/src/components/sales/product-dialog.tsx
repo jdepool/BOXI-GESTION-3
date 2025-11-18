@@ -15,19 +15,7 @@ import { CalendarIcon, Package } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { type ProductLine } from "@/lib/canalFilters";
-
-// Helper to parse yyyy-MM-dd strings as local dates (prevents timezone bug)
-const parseLocalDate = (dateString: string): Date | undefined => {
-  if (!dateString) return undefined;
-  
-  // Parse yyyy-MM-dd as local date, not UTC
-  // This prevents the "day before" timezone bug
-  const [year, month, day] = dateString.split('-').map(Number);
-  if (!year || !month || !day) return undefined;
-  
-  // Month is 0-indexed in JavaScript Date
-  return new Date(year, month - 1, day);
-};
+import { parseLocalDate } from "@/lib/date-utils";
 
 const productFormSchema = z.object({
   producto: z.string().min(1, "Producto es requerido"),
