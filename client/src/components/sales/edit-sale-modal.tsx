@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { format } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -93,15 +94,25 @@ export default function EditSaleModal({ open, onOpenChange, sale }: EditSaleModa
 
       // Load all products from the order
       if (orderProducts.length > 0) {
-        const productsData: ProductFormData[] = orderProducts.map(item => ({
-          producto: item.product,
-          sku: item.sku || "",
-          cantidad: item.cantidad,
-          totalUsd: parseFloat(item.totalUsd?.toString() || "0"),
-          esObsequio: item.esObsequio || false,
-          hasMedidaEspecial: !!item.medidaEspecial,
-          medidaEspecial: item.medidaEspecial || "",
-        }));
+        const productsData: ProductFormData[] = orderProducts.map(item => {
+          // Convert fechaEntrega timestamp to yyyy-MM-dd string
+          let fechaEntregaStr = "";
+          if (item.fechaEntrega) {
+            const fecha = new Date(item.fechaEntrega);
+            fechaEntregaStr = format(fecha, 'yyyy-MM-dd');
+          }
+          
+          return {
+            producto: item.product,
+            sku: item.sku || "",
+            cantidad: item.cantidad,
+            totalUsd: parseFloat(item.totalUsd?.toString() || "0"),
+            fechaEntrega: fechaEntregaStr,
+            esObsequio: item.esObsequio || false,
+            hasMedidaEspecial: !!item.medidaEspecial,
+            medidaEspecial: item.medidaEspecial || "",
+          };
+        });
         setProducts(productsData);
       } else {
         // Reset products if no order products returned

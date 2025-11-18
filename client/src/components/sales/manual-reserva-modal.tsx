@@ -42,7 +42,6 @@ const manualReservaSchema = z.object({
     message: "Email inválido"
   }),
   totalUsd: z.string().min(1, "Total Orden USD es requerido"),
-  fechaEntrega: z.date({ required_error: "Fecha de entrega es requerida" }),
   direccionDespachoIgualFacturacion: z.boolean().default(true),
   direccionDespachoPais: z.string().min(1, "País de despacho es requerido"),
   direccionDespachoEstado: z.string().min(1, "Estado de despacho es requerido"),
@@ -93,7 +92,6 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess, convert
       direccionDespachoDireccion: "",
       direccionDespachoUrbanizacion: "",
       direccionDespachoReferencia: "",
-      fechaEntrega: undefined,
       canal: "", // No default - force user selection
       asesorId: "", // No default - force user selection
       products: [],
@@ -134,7 +132,6 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess, convert
         telefono: convertingProspecto.telefono || "",
         email: convertingProspecto.email || "",
         totalUsd: "0",
-        fechaEntrega: convertingProspecto.fechaEntrega ? new Date(convertingProspecto.fechaEntrega) : undefined,
         direccionFacturacionPais: convertingProspecto.direccionFacturacionPais || "Venezuela",
         direccionFacturacionEstado: convertingProspecto.direccionFacturacionEstado || "",
         direccionFacturacionCiudad: convertingProspecto.direccionFacturacionCiudad || "",
@@ -218,8 +215,6 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess, convert
       // Convert form data to proper API format
       const formattedData = {
         ...data,
-        // Convert fechaEntrega to ISO string if provided
-        fechaEntrega: data.fechaEntrega?.toISOString() || undefined,
         // Ensure empty string fields are converted to null for API
         cedula: data.cedula || null,
         telefono: data.telefono || null,
@@ -398,43 +393,6 @@ export default function ManualReservaModal({ isOpen, onClose, onSuccess, convert
 
                         />
                       </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="fechaEntrega"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Fecha de Entrega *</FormLabel>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              variant="outline"
-                              className={cn(
-                                "w-full justify-start text-left font-normal",
-                                !field.value && "text-muted-foreground"
-                              )}
-                              data-testid="input-fecha-entrega"
-                            >
-                              <CalendarIcon className="mr-2 h-4 w-4" />
-                              {field.value ? format(field.value, "dd/MM/yyyy") : "Seleccionar fecha"}
-                            </Button>
-                          </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={field.value}
-                            onSelect={field.onChange}
-                            disabled={(date) => date < new Date(new Date().setHours(0,0,0,0) - 24*60*60*1000)}
-                            initialFocus
-                          />
-                        </PopoverContent>
-                      </Popover>
                       <FormMessage />
                     </FormItem>
                   )}

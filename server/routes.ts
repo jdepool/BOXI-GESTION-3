@@ -1451,6 +1451,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           esObsequio: product.esObsequio || false,
           medidaEspecial: product.medidaEspecial || null,
           fecha: existingSales[0].fecha,
+          // Use product-specific fechaEntrega if provided, otherwise preserve from existing
+          fechaEntrega: product.fechaEntrega ? new Date(product.fechaEntrega) : existingSales[0].fechaEntrega,
           estadoEntrega: existingSales[0].estadoEntrega,
           tipo: existingSales[0].tipo,
           // Preserve addresses
@@ -6868,6 +6870,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             medidaEspecial: product.hasMedidaEspecial && product.medidaEspecial && product.medidaEspecial.trim()
               ? product.medidaEspecial.trim()
               : null,
+            // Product-specific fecha entrega (overrides baseSaleData if provided)
+            fechaEntrega: product.fechaEntrega ? new Date(product.fechaEntrega) : baseSaleData.fechaEntrega,
           };
           const newSale = await storage.createSale(saleData);
           createdSales.push(newSale);
