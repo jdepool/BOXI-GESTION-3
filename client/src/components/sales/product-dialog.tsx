@@ -15,7 +15,7 @@ import { CalendarIcon, Package } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { type ProductLine } from "@/lib/canalFilters";
-import { parseLocalDate } from "@/lib/date-utils";
+import { parseLocalDate, formatLocalDate } from "@/lib/date-utils";
 
 const productFormSchema = z.object({
   producto: z.string().min(1, "Producto es requerido"),
@@ -227,8 +227,8 @@ export default function ProductDialog({ isOpen, onClose, onSave, product, index,
                         selected={field.value ? parseLocalDate(field.value) : undefined}
                         onSelect={(date) => {
                           if (date) {
-                            // Format as yyyy-MM-dd in local timezone
-                            field.onChange(format(date, 'yyyy-MM-dd'));
+                            // Format as yyyy-MM-dd using local time components (prevents timezone bug)
+                            field.onChange(formatLocalDate(date));
                           }
                         }}
                         initialFocus
