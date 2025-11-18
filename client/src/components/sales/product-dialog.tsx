@@ -9,20 +9,14 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
-import { CalendarIcon, Package } from "lucide-react";
-import { format } from "date-fns";
-import { cn } from "@/lib/utils";
+import { Package } from "lucide-react";
 import { type ProductLine } from "@/lib/canalFilters";
-import { parseLocalDate, formatLocalDate } from "@/lib/date-utils";
 
 const productFormSchema = z.object({
   producto: z.string().min(1, "Producto es requerido"),
   sku: z.string().optional(),
   cantidad: z.coerce.number().int().min(1, "Cantidad debe ser al menos 1"),
   totalUsd: z.coerce.number().min(0, "Total US$ debe ser mayor o igual a 0"),
-  fechaEntrega: z.string().min(1, "Fecha de entrega es requerida"),
   esObsequio: z.boolean().default(false),
   hasMedidaEspecial: z.boolean().default(false),
   medidaEspecial: z.string().max(10, "Máximo 10 caracteres").optional(),
@@ -45,10 +39,9 @@ interface ProductDialogProps {
   product?: ProductFormData;
   index?: number;
   productLine?: ProductLine;
-  defaultFechaEntrega?: string; // Pre-filled delivery date for Inmediato sales
 }
 
-export default function ProductDialog({ isOpen, onClose, onSave, product, index, productLine = 'boxi', defaultFechaEntrega }: ProductDialogProps) {
+export default function ProductDialog({ isOpen, onClose, onSave, product, index, productLine = 'boxi' }: ProductDialogProps) {
   const isEditMode = product !== undefined;
   const form = useForm<ProductFormData>({
     resolver: zodResolver(productFormSchema),
@@ -57,7 +50,6 @@ export default function ProductDialog({ isOpen, onClose, onSave, product, index,
       sku: "",
       cantidad: 1,
       totalUsd: "" as any,
-      fechaEntrega: "",
       esObsequio: false,
       hasMedidaEspecial: false,
       medidaEspecial: "",
@@ -91,13 +83,12 @@ export default function ProductDialog({ isOpen, onClose, onSave, product, index,
         sku: "",
         cantidad: 1,
         totalUsd: "" as any,
-        fechaEntrega: defaultFechaEntrega || "", // Use default date for Inmediato sales
         esObsequio: false,
         hasMedidaEspecial: false,
         medidaEspecial: "",
       });
     }
-  }, [isOpen, product, form, defaultFechaEntrega]);
+  }, [isOpen, product, form]);
 
   const handleSubmit = (data: ProductFormData) => {
     onSave(data, index);
@@ -193,49 +184,6 @@ export default function ProductDialog({ isOpen, onClose, onSave, product, index,
                       data-testid="input-total-usd"
                     />
                   </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="fechaEntrega"
-              render={({ field }) => (
-                <FormItem className="!mb-8">
-                  <FormLabel>Fecha Compromiso Entrega *</FormLabel>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <FormControl>
-                        <Button
-                          variant="outline"
-                          className={cn(
-                            "w-full justify-start text-left font-normal",
-                            !field.value && "text-muted-foreground"
-                          )}
-                          data-testid="select-fecha-entrega-producto"
-                        >
-                          <CalendarIcon className="mr-2 h-4 w-4" />
-                          {field.value && parseLocalDate(field.value) 
-                            ? format(parseLocalDate(field.value)!, "dd/MM/yyyy") 
-                            : "Seleccionar fecha"}
-                        </Button>
-                      </FormControl>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={field.value ? parseLocalDate(field.value) : undefined}
-                        onSelect={(date) => {
-                          if (date) {
-                            // Format as yyyy-MM-dd using local time components (prevents timezone bug)
-                            field.onChange(formatLocalDate(date));
-                          }
-                        }}
-                        initialFocus
-                      />
-                    </PopoverContent>
-                  </Popover>
                   <FormMessage />
                 </FormItem>
               )}

@@ -6867,6 +6867,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
             sku = await storage.enrichSkuFromProduct(product.producto);
           }
           
+          // Calculate delivery date if not provided and tipo is Inmediato
+          let fechaEntrega = product.fechaEntrega ? new Date(product.fechaEntrega) : baseSaleData.fechaEntrega;
+          if (!fechaEntrega && baseSaleData.tipo === 'Inmediato') {
+            const calculatedDate = calculateDeliveryDate(
+              baseSaleData.fecha.toISOString().split('T')[0],
+              'Inmediato',
+              baseSaleData.direccionDespachoCiudad
+            );
+            fechaEntrega = calculatedDate ? new Date(calculatedDate) : null;
+          }
+          
           const saleData = {
             ...baseSaleData,
             product: product.producto,
@@ -6880,8 +6891,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             medidaEspecial: product.hasMedidaEspecial && product.medidaEspecial && product.medidaEspecial.trim()
               ? product.medidaEspecial.trim()
               : null,
-            // Product-specific fecha entrega (overrides baseSaleData if provided)
-            fechaEntrega: product.fechaEntrega ? new Date(product.fechaEntrega) : baseSaleData.fechaEntrega,
+            // Calculated or provided fecha entrega
+            fechaEntrega,
           };
           const newSale = await storage.createSale(saleData);
           createdSales.push(newSale);
