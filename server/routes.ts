@@ -64,6 +64,17 @@ function normalizeEstadoEntrega(status: string | null | undefined): string | nul
   return statusMap[normalized] || status; // Return original if not found in map
 }
 
+// Helper function to parse yyyy-MM-dd strings as local dates (prevents timezone bug)
+// CRITICAL: Never use new Date("YYYY-MM-DD") - it interprets as UTC midnight!
+function parseLocalDate(dateString: string): Date {
+  // Parse yyyy-MM-dd as local date, not UTC
+  // This prevents the "day before" timezone bug
+  const [year, month, day] = dateString.split('-').map(Number);
+  
+  // Month is 0-indexed in JavaScript Date
+  return new Date(year, month - 1, day);
+}
+
 // Helper function to format Date as yyyy-MM-dd using local time components
 // CRITICAL: Prevents timezone bugs - never use toISOString() for date-only values
 function formatLocalDate(date: Date): string {
@@ -6820,7 +6831,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         // Order information - totalUsd will be set per product, totalOrderUsd is the overall order total
         totalOrderUsd: body.totalUsd ? body.totalUsd.toString() : null, // Store the total order amount from main form
-        fecha: body.fecha ? new Date(body.fecha) : new Date(),
+        fecha: body.fecha ? parseLocalDate(body.fecha) : new Date(),
         canal: normalizeCanal(body.canal) || body.canal,
         estadoEntrega: body.estadoEntrega || "Pendiente", // Manual sales start as Pendiente
         orden: newOrderNumber,
