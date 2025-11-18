@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
 import { AutoExpandingTextarea } from "@/components/ui/auto-expanding-textarea";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { DateRangePicker } from "@/components/shared/date-range-picker";
@@ -364,6 +365,33 @@ export default function DispatchTable({
       });
     },
   });
+
+  const updateDespachadoMutation = useMutation({
+    mutationFn: async ({ saleId, despachado }: { saleId: string; despachado: boolean }) => {
+      return apiRequest("PATCH", `/api/sales/${saleId}`, { despachado });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ 
+        predicate: (query) => Array.isArray(query.queryKey) && typeof query.queryKey[0] === 'string' && query.queryKey[0].startsWith('/api/sales')
+      });
+      toast({
+        title: "Estado actualizado",
+        description: "El estado de despacho ha sido actualizado correctamente.",
+      });
+    },
+    onError: (error) => {
+      console.error('Failed to update despachado:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo actualizar el estado de despacho.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleDespachadoChange = (saleId: string, checked: boolean) => {
+    updateDespachadoMutation.mutate({ saleId, despachado: checked });
+  };
 
   // Mark as delivered mutation
   const markDeliveredMutation = useMutation({
@@ -727,6 +755,7 @@ export default function DispatchTable({
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[180px]">Transportista</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[150px]">Nro Guía</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[150px]">Fecha Despacho</th>
+                    <th className="text-center p-2 text-xs font-medium text-muted-foreground min-w-[120px]">DESPACHADO</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[150px]">Recepción de Cliente</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[150px]">Acciones</th>
                   </tr>
@@ -984,6 +1013,15 @@ export default function DispatchTable({
                             />
                           </PopoverContent>
                         </Popover>
+                      </td>
+                      
+                      <td className="p-2 min-w-[120px] text-center">
+                        <Checkbox
+                          checked={sale.despachado || false}
+                          onCheckedChange={(checked) => handleDespachadoChange(sale.id, checked as boolean)}
+                          disabled={updateDespachadoMutation.isPending}
+                          data-testid={`checkbox-despachado-${sale.id}`}
+                        />
                       </td>
                       
                       <td className="p-2 pr-6 min-w-[150px] text-xs">
