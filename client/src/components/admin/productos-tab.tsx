@@ -619,12 +619,6 @@ export function ProductosTab() {
       return;
     }
 
-    // Prevent selecting the same product as component
-    if (componentFormData.componenteId === selectedProductForComponents.id) {
-      toast({ title: "No puedes agregar el mismo producto como componente", variant: "destructive" });
-      return;
-    }
-
     // Check for duplicate component SKU
     const existingComponents = queryClient.getQueryData<ProductoComponente[]>([
       `/api/admin/productos/${selectedProductForComponents.id}/componentes`
