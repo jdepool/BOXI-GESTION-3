@@ -437,6 +437,7 @@ export interface IStorage {
     search?: string;
     tipoPago?: string;
     estadoVerificacion?: string;
+    orden?: string;
     limit?: number;
     offset?: number;
   }): Promise<{ data: any[]; total: number }>;
@@ -3578,6 +3579,7 @@ export class DatabaseStorage implements IStorage {
     tipoPago?: string;
     estadoVerificacion?: string;
     estadoEntrega?: string[];
+    orden?: string;
     limit?: number;
     offset?: number;
   }): Promise<{ data: any[]; total: number }> {
@@ -3585,6 +3587,11 @@ export class DatabaseStorage implements IStorage {
 
     // Build the base query with filters
     const whereConditions = [];
+    
+    // Filter by specific order number if provided
+    if (filters?.orden) {
+      whereConditions.push(eq(sales.orden, filters.orden));
+    }
     
     // Optional estado_entrega filter - if provided, filter by those statuses
     // If not provided, show all orders regardless of delivery status
@@ -3753,6 +3760,11 @@ export class DatabaseStorage implements IStorage {
     // Need to join with sales to get nombre and canal for display
     // Build cuotas where conditions with same filters as sales
     const cuotasWhereConditions = [];
+    
+    // Filter by specific order number if provided
+    if (filters?.orden) {
+      cuotasWhereConditions.push(eq(paymentInstallments.orden, filters.orden));
+    }
     
     // Apply estado_entrega filter if provided
     if (filters?.estadoEntrega && filters.estadoEntrega.length > 0) {
