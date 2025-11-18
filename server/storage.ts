@@ -254,6 +254,7 @@ export interface IStorage {
   // Productos Componentes
   getProductoComponentes(productoId: string): Promise<Array<ProductoComponente & { skuProducto: string; skuComponente: string }>>;
   createProductoComponente(componente: InsertProductoComponente): Promise<ProductoComponente & { skuProducto: string; skuComponente: string }>;
+  updateProductoComponente(productoId: string, componenteId: string, data: Partial<InsertProductoComponente>): Promise<ProductoComponente & { skuProducto: string; skuComponente: string }>;
   deleteProductoComponente(id: string): Promise<boolean>;
   deleteProductoComponentesByIds(productoId: string, componenteId: string): Promise<boolean>;
   replaceProductoComponentes(productoId: string, componentes: InsertProductoComponente[]): Promise<{ created: number }>;
@@ -2687,6 +2688,86 @@ export class DatabaseStorage implements IStorage {
       skuProducto: producto[0].sku || '',
       skuComponente: componenteProducto[0].sku || '',
     };
+  }
+
+  async updateProductoComponente(productoId: string, componenteId: string, data: Partial<InsertProductoComponente>): Promise<ProductoComponente & { skuProducto: string; skuComponente: string }> {
+    // Find the existing component record
+    const [existingComponente] = await db
+      .select()
+      .from(productosComponentes)
+      .where(
+        and(
+          eq(productosComponentes.productoId, productoId),
+          eq(productosComponentes.componenteId, componenteId)
+        )
+      )
+      .limit(1);
+    
+    if (!existingComponente) {
+      throw new Error(`Componente not found for producto ${productoId} and componente ${componenteId}`);
+    }
+    
+    // If changing the componenteId, validate the new component exists and check for duplicates
+    if (data.componenteId && data.componenteId !== componenteId) {
+      const [newComponenteProducto] = await db
+        .select()
+        .from(productos)
+        .where(eq(productos.id, data.componenteId))
+        .limit(1);
+      
+      if (!newComponenteProducto) {
+        throw new Error(`New componente with ID ${data.componenteId} not found`);
+      }
+      
+      // Check if the new component already exists for this product
+      const [duplicate] = await db
+        .select()
+        .from(productosComponentes)
+        .where(
+          and(
+            eq(productosComponentes.productoId, productoId),
+            eq(productosComponentes.componenteId, data.componenteId)
+          )
+        )
+        .limit(1);
+      
+      if (duplicate) {
+        throw new Error(`Component with ID ${data.componenteId} already exists for this product`);
+      }
+    }
+    
+    // Update the component
+    const [updatedComponente] = await db
+      .update(productosComponentes)
+      .set({
+        ...data,
+        updatedAt: new Date(),
+      })
+      .where(eq(productosComponentes.id, existingComponente.id))
+      .returning();
+    
+    // Fetch SKUs for response
+    const productoAlias = alias(productos, 'producto');
+    const componenteAlias = alias(productos, 'componente');
+    
+    const [result] = await db
+      .select({
+        id: productosComponentes.id,
+        productoId: productosComponentes.productoId,
+        componenteId: productosComponentes.componenteId,
+        cantidad: productosComponentes.cantidad,
+        createdAt: productosComponentes.createdAt,
+        updatedAt: productosComponentes.updatedAt,
+        skuProducto: productoAlias.sku,
+        skuComponente: componenteAlias.sku,
+      })
+      .from(productosComponentes)
+      .innerJoin(productoAlias, eq(productosComponentes.productoId, productoAlias.id))
+      .innerJoin(componenteAlias, eq(productosComponentes.componenteId, componenteAlias.id))
+      .where(eq(productosComponentes.id, updatedComponente.id))
+      .limit(1);
+    
+    return result;
   }
 
   async deleteProductoComponente(id: string): Promise<boolean> {

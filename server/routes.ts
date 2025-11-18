@@ -5256,6 +5256,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.put("/api/admin/productos/:productoId/componentes/:componenteId", async (req, res) => {
+    try {
+      const { productoId, componenteId } = req.params;
+      const validatedData = insertProductoComponenteSchema.partial().parse(req.body);
+      
+      const componente = await storage.updateProductoComponente(productoId, componenteId, validatedData);
+      res.json(componente);
+    } catch (error: any) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: "Invalid data", details: error.errors });
+      }
+      
+      // Check for duplicate component error
+      if (error.message && error.message.includes('already exists')) {
+        return res.status(409).json({ 
+          error: error.message
+        });
+      }
+      
+      console.error("Update producto componente error:", error);
+      res.status(500).json({ error: "Failed to update producto componente" });
+    }
+  });
+
   app.delete("/api/admin/productos/:productoId/componentes/:componenteId", async (req, res) => {
     try {
       const { productoId, componenteId } = req.params;

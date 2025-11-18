@@ -31,6 +31,7 @@ function ProductoRow({
   onEdit, 
   onDelete, 
   onManageComponents,
+  onEditComponent,
   onDeleteComponent,
   getClasificacionNombre, 
   getTipoColor,
@@ -43,6 +44,7 @@ function ProductoRow({
   onEdit: () => void;
   onDelete: () => void;
   onManageComponents: () => void;
+  onEditComponent: (producto: Producto, component: { componenteId: string; cantidad: number }) => void;
   onDeleteComponent: (productoId: string, componenteId: string) => void;
   getClasificacionNombre: (id: string | null | undefined) => string | null;
   getTipoColor: (tipo: string) => string;
@@ -212,16 +214,27 @@ function ProductoRow({
                             </TableCell>
                             <TableCell>{comp.cantidad}</TableCell>
                             <TableCell>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => onDeleteComponent(producto.id, comp.componenteId)}
-                                disabled={isDeletingComponent || isSelfReference}
-                                data-testid={`delete-component-${comp.id}`}
-                                title={isSelfReference ? "No se puede eliminar la auto-referencia" : "Eliminar componente"}
-                              >
-                                <Trash2 className="h-4 w-4 text-destructive" />
-                              </Button>
+                              <div className="flex gap-1">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => onEditComponent(producto, { componenteId: comp.componenteId, cantidad: comp.cantidad })}
+                                  data-testid={`edit-component-${comp.id}`}
+                                  title="Editar componente"
+                                >
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => onDeleteComponent(producto.id, comp.componenteId)}
+                                  disabled={isDeletingComponent || isSelfReference}
+                                  data-testid={`delete-component-${comp.id}`}
+                                  title={isSelfReference ? "No se puede eliminar la auto-referencia" : "Eliminar componente"}
+                                >
+                                  <Trash2 className="h-4 w-4 text-destructive" />
+                                </Button>
+                              </div>
                             </TableCell>
                           </TableRow>
                         );
@@ -261,6 +274,7 @@ export function ProductosTab() {
   const [expandedProducts, setExpandedProducts] = useState<Set<string>>(new Set());
   const [isComponentDialogOpen, setIsComponentDialogOpen] = useState(false);
   const [selectedProductForComponents, setSelectedProductForComponents] = useState<Producto | null>(null);
+  const [editingComponent, setEditingComponent] = useState<{ componenteId: string; cantidad: number } | null>(null);
   const [componentFormData, setComponentFormData] = useState({ componenteId: "", cantidad: 1 });
   
   const { toast } = useToast();
@@ -559,7 +573,21 @@ export function ProductosTab() {
 
   const openComponentDialog = async (producto: Producto) => {
     setSelectedProductForComponents(producto);
+    setEditingComponent(null);
     setComponentFormData({ componenteId: "", cantidad: 1 });
+    
+    // Prefetch components to ensure cache is populated for duplicate validation
+    await queryClient.ensureQueryData({
+      queryKey: [`/api/admin/productos/${producto.id}/componentes`],
+    });
+    
+    setIsComponentDialogOpen(true);
+  };
+
+  const openComponentDialogForEdit = async (producto: Producto, component: { componenteId: string; cantidad: number }) => {
+    setSelectedProductForComponents(producto);
+    setEditingComponent(component);
+    setComponentFormData({ componenteId: component.componenteId, cantidad: component.cantidad });
     
     // Prefetch components to ensure cache is populated for duplicate validation
     await queryClient.ensureQueryData({
@@ -605,6 +633,26 @@ export function ProductosTab() {
     },
   });
 
+  const updateComponentMutation = useMutation({
+    mutationFn: ({ productoId, componenteId, data }: { productoId: string; componenteId: string; data: { componenteId?: string; cantidad?: number } }) =>
+      apiRequest("PUT", `/api/admin/productos/${productoId}/componentes/${componenteId}`, data),
+    onSuccess: async (_, variables) => {
+      await queryClient.refetchQueries({ queryKey: [`/api/admin/productos/${variables.productoId}/componentes`] });
+      setIsComponentDialogOpen(false);
+      setEditingComponent(null);
+      setComponentFormData({ componenteId: "", cantidad: 1 });
+      toast({ title: "Componente actualizado exitosamente" });
+    },
+    onError: (error: any) => {
+      const errorMessage = error?.message || error?.error || "Error desconocido";
+      toast({ 
+        title: "Error al actualizar componente", 
+        description: errorMessage,
+        variant: "destructive" 
+      });
+    },
+  });
+
   const handleComponentSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedProductForComponents) return;
@@ -619,27 +667,51 @@ export function ProductosTab() {
       return;
     }
 
-    // Check for duplicate component SKU
+    // Check for duplicate component SKU (only when creating or changing componenteId)
     const existingComponents = queryClient.getQueryData<ProductoComponente[]>([
       `/api/admin/productos/${selectedProductForComponents.id}/componentes`
     ]);
 
-    if (existingComponents?.some(c => c.componenteId === componentFormData.componenteId)) {
-      toast({ 
-        title: "Componente duplicado", 
-        description: "Este SKU ya está agregado como componente",
-        variant: "destructive" 
-      });
-      return;
-    }
+    if (editingComponent) {
+      // EDITING MODE
+      const isChangingComponenteId = componentFormData.componenteId !== editingComponent.componenteId;
+      
+      if (isChangingComponenteId && existingComponents?.some(c => c.componenteId === componentFormData.componenteId)) {
+        toast({ 
+          title: "Componente duplicado", 
+          description: "Este SKU ya está agregado como componente",
+          variant: "destructive" 
+        });
+        return;
+      }
 
-    createComponentMutation.mutate({
-      productoId: selectedProductForComponents.id,
-      data: {
-        componenteId: componentFormData.componenteId,
-        cantidad: componentFormData.cantidad,
-      },
-    });
+      updateComponentMutation.mutate({
+        productoId: selectedProductForComponents.id,
+        componenteId: editingComponent.componenteId,
+        data: {
+          componenteId: componentFormData.componenteId,
+          cantidad: componentFormData.cantidad,
+        },
+      });
+    } else {
+      // CREATING MODE
+      if (existingComponents?.some(c => c.componenteId === componentFormData.componenteId)) {
+        toast({ 
+          title: "Componente duplicado", 
+          description: "Este SKU ya está agregado como componente",
+          variant: "destructive" 
+        });
+        return;
+      }
+
+      createComponentMutation.mutate({
+        productoId: selectedProductForComponents.id,
+        data: {
+          componenteId: componentFormData.componenteId,
+          cantidad: componentFormData.cantidad,
+        },
+      });
+    }
   };
 
   const handleDeleteComponent = (productoId: string, componenteId: string) => {
@@ -954,6 +1026,7 @@ export function ProductosTab() {
                   onEdit={() => openEditDialog(producto)}
                   onDelete={() => deleteMutation.mutate(producto.id)}
                   onManageComponents={() => openComponentDialog(producto)}
+                  onEditComponent={openComponentDialogForEdit}
                   onDeleteComponent={handleDeleteComponent}
                   getClasificacionNombre={getClasificacionNombre}
                   getTipoColor={getTipoColor}
@@ -970,9 +1043,11 @@ export function ProductosTab() {
       <Dialog open={isComponentDialogOpen} onOpenChange={setIsComponentDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Agregar Componente</DialogTitle>
+            <DialogTitle>{editingComponent ? "Editar Componente" : "Agregar Componente"}</DialogTitle>
             <DialogDescription>
-              Agrega un SKU componente a {selectedProductForComponents?.nombre}
+              {editingComponent 
+                ? `Edita el componente de ${selectedProductForComponents?.nombre}`
+                : `Agrega un SKU componente a ${selectedProductForComponents?.nombre}`}
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleComponentSubmit} className="space-y-4">
@@ -987,10 +1062,11 @@ export function ProductosTab() {
                 </SelectTrigger>
                 <SelectContent>
                   {(productos as Producto[])
-                    .filter(p => p.id !== selectedProductForComponents?.id && p.sku)
+                    .filter(p => p.sku)
                     .map((p) => (
                       <SelectItem key={p.id} value={p.id}>
                         {p.sku} - {p.nombre}
+                        {p.id === selectedProductForComponents?.id && " (Auto-referencia)"}
                       </SelectItem>
                     ))}
                 </SelectContent>
@@ -1020,10 +1096,12 @@ export function ProductosTab() {
               </Button>
               <Button
                 type="submit"
-                disabled={createComponentMutation.isPending}
+                disabled={createComponentMutation.isPending || updateComponentMutation.isPending}
                 data-testid="submit-componente"
               >
-                {createComponentMutation.isPending ? "Agregando..." : "Agregar"}
+                {editingComponent 
+                  ? (updateComponentMutation.isPending ? "Actualizando..." : "Actualizar")
+                  : (createComponentMutation.isPending ? "Agregando..." : "Agregar")}
               </Button>
             </div>
           </form>
