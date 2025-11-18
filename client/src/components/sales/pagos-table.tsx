@@ -205,12 +205,12 @@ export default function PagosTable({
   };
 
   const formatCurrency = (value: number | null) => {
-    if (value === null || value === undefined) return "$0";
+    if (value === null || value === undefined) return "$0.0";
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
+      minimumFractionDigits: 1,
+      maximumFractionDigits: 1,
     }).format(value);
   };
 
