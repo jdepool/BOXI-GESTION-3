@@ -112,7 +112,7 @@ export default function EditSaleModal({ open, onOpenChange, sale }: EditSaleModa
             // Case 2: ISO timestamp string (e.g., "2024-11-18T00:00:00.000Z")
             else if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}T/.test(value)) {
               // Extract yyyy-MM-dd portion without timezone conversion
-              fechaEntregaStr = value.substring(0, 10);
+              fechaEntregaStr = (value as string).substring(0, 10);
             }
             // Case 3: Date object (shouldn't happen after JSON serialization, but handle it)
             else if (value instanceof Date) {
@@ -122,7 +122,7 @@ export default function EditSaleModal({ open, onOpenChange, sale }: EditSaleModa
             // Fallback: try to parse any other format
             else {
               try {
-                const fechaStr = value.toString();
+                const fechaStr = String(value);
                 // If it starts with yyyy-MM-dd, extract that portion
                 if (/^\d{4}-\d{2}-\d{2}/.test(fechaStr)) {
                   fechaEntregaStr = fechaStr.substring(0, 10);
