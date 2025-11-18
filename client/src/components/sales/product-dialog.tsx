@@ -101,6 +101,13 @@ export default function ProductDialog({ isOpen, onClose, onSave, product, index,
     onClose();
   };
 
+  const handleProductChange = (productName: string) => {
+    form.setValue("producto", productName);
+    
+    const selectedProduct = products.find(p => p.nombre === productName);
+    form.setValue("sku", selectedProduct?.sku || "", { shouldDirty: true });
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-[500px]">
@@ -119,7 +126,7 @@ export default function ProductDialog({ isOpen, onClose, onSave, product, index,
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Producto *</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
+                  <Select onValueChange={handleProductChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger data-testid="select-producto">
                         <SelectValue placeholder="Seleccionar producto" />
