@@ -1,6 +1,6 @@
 # Overview
 
-BoxiSleep is a comprehensive sales management system for a sleep products company, designed to streamline operations from data ingestion to analytics. It supports multiple product lines (Boxi and Mompox) and their sales channels (Shopify, ShopMom). The system's key capabilities include sales data upload, advanced record management with filtering and export, financial payment tracking, and real-time analytics on sales performance, delivery status, and channel-specific metrics to empower informed business decisions.
+BoxiSleep is a sales management system for a sleep products company, aiming to streamline operations from data ingestion to analytics. It supports multiple product lines (Boxi and Mompox) across various sales channels (Shopify, ShopMom). Key capabilities include sales data upload, advanced record management, financial payment tracking, and real-time analytics on sales performance, delivery, and channel-specific metrics to empower informed business decisions.
 
 # User Preferences
 
@@ -16,43 +16,35 @@ Real-Time Notifications: WebSocket-based real-time notifications display modal d
 # System Architecture
 
 ## UI/UX Design
-The application utilizes a React 18 and TypeScript frontend, Wouter for routing, and shadcn/ui components (based on Radix UI) styled with Tailwind CSS for an accessible user interface. A tabbed structure organizes sales management and payment verification, with administrative functions accessible via a settings icon. A `DateRangePicker` handles date filtering. The system supports two distinct sales workflow pages ("Ventas" for Boxi products and "Ventas Mompox" for Mompox products), each with identical tab structures but filtered by their respective channel groups. Manual sales forms pre-fill the `canal` field based on the product line.
+The application uses a React 18 and TypeScript frontend with Wouter for routing. shadcn/ui components (based on Radix UI) styled with Tailwind CSS provide an accessible user interface. A tabbed structure organizes sales management and payment verification, with administrative functions under a settings icon. A `DateRangePicker` is used for date filtering. The system features distinct sales workflow pages for Boxi and Mompox products, each with identical tab structures filtered by product line. Manual sales forms pre-fill the `canal` field based on the product line.
 
 ## Technical Implementations
-The backend is an Express.js and TypeScript RESTful API, using PostgreSQL with Drizzle ORM. Authentication is handled by basic username/password with PostgreSQL session storage. Date-only fields are stored as `YYYY-MM-DD` strings to prevent timezone issues. Canal values are normalized during upload for consistency. The order search system employs dual modes (`search`, `ordenExacto`, `orden`) to prevent historical order confusion, especially in payment modals. A dual email system sends order confirmations using GoDaddy SMTP for Mompox sales and Microsoft Outlook via Graph API for Boxi sales. Real-time notifications are implemented via WebSocket connections with automatic reconnection logic.
+The backend is an Express.js and TypeScript RESTful API, utilizing PostgreSQL with Drizzle ORM. Authentication uses basic username/password with PostgreSQL session storage. Date-only fields are stored as `YYYY-MM-DD` strings to prevent timezone issues, requiring specific local date parsing patterns for calculations and display. Canal values are normalized during upload. The order search system uses dual modes to prevent historical order confusion. A dual email system handles order confirmations via GoDaddy SMTP for Mompox and Microsoft Outlook Graph API for Boxi. Real-time notifications are implemented with WebSockets and automatic reconnection logic.
 
-**CRITICAL Date Parsing Pattern**: When performing date calculations or arithmetic (adding days, comparing dates, etc.), NEVER use `new Date("YYYY-MM-DD")` directly as it interprets the string as UTC midnight, causing timezone shifts (e.g., "2024-11-18" becomes Nov 17 8pm in GMT-4, resulting in off-by-one errors). Instead, manually parse yyyy-MM-dd strings as local dates:
-```typescript
-// ❌ WRONG - causes timezone bugs
-const date = new Date("2024-11-18"); // Interpreted as UTC midnight
+**CRITICAL Date Parsing Pattern**: Date-only fields (e.g., `YYYY-MM-DD`) must be parsed as local dates (e.g., `new Date(year, month-1, day)`) to prevent timezone-related off-by-one errors. Avoid `new Date("YYYY-MM-DD")`. This pattern is critical for both backend calculations and frontend display, and specific utilities (`parseLocalDate`, `formatLocalDate`) enforce this.
 
-// ✅ CORRECT - parse as local date
-const parts = "2024-11-18".split('-');
-const date = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
-```
-This pattern is implemented in `calculateDeliveryDate` (shared/utils.ts), `formatLocalDate`, and `parseLocalDate` utilities (client/src/lib/date-utils.ts). Always use these utilities or follow this pattern for any date calculations to prevent off-by-one day errors.
+**Treble-Boxi Webhook Address Logic**: When address data is received via webhook, if billing and shipping addresses are the same (`misma_dir_fact` not "No"), both `direccionDespacho*` and `direccionFacturacion*` fields are populated identically. This mirrors manual form behavior.
 
-**Treble-Boxi Webhook Address Logic**: When the webhook receives address data with `misma_dir_fact` not containing "No" (addresses are the same), it populates BOTH `direccionDespacho*` and `direccionFacturacion*` fields with identical data. This mirrors the manual form behavior and ensures the Despacho table displays addresses correctly (since it checks `direccionFacturacionPais` first). When addresses differ, only the respective field sets are populated.
+**Payment Calculation Logic**: `fleteAPagar` (amount customer owes) is used for `ordenPlusFlete` calculations, not `pagoFleteUsd` (amount customer paid), to accurately determine `saldoPendiente`. The formula `ordenPlusFlete = ordenAPagar + (fleteGratis ? 0 : fleteAPagar)` is applied consistently.
 
-**Payment Calculation Logic**: Critical business rule for balance calculations: use `fleteAPagar` (amount customer owes) NOT `pagoFleteUsd` (amount customer paid) when calculating `ordenPlusFlete`. This ensures `saldoPendiente` correctly reflects outstanding balance. The formula `ordenPlusFlete = ordenAPagar + (fleteGratis ? 0 : fleteAPagar)` is implemented in checkAndAutoUpdateDeliveryStatus function, payment verification endpoint, and bank reconciliation auto-verification loop.
-**Cashea Payment Totals Logic**: Channel-specific calculation for "Total Pagado" and "Total Verificado" in the Pagos table. For Cashea/Cashea MP orders: Only `pagoFleteUsd` (freight payments) are included in totals. For all other channels: All payment types are included (`pagoInicialUsd` + `pagoFleteUsd` + `pagoCuotaUsd`).
+**Cashea Payment Totals Logic**: For Cashea/Cashea MP orders, "Total Pagado" and "Total Verificado" in the Pagos table only include `pagoFleteUsd`. For other channels, all payment types (`pagoInicialUsd` + `pagoFleteUsd` + `pagoCuotaUsd`) are included.
 
 ## Feature Specifications
-- **Sales Data Management**: Supports Excel uploads, filtering, searching, and export. Includes webhook integrations for automated order ingestion from Shopify (Boxi), ShopMom (Mompox), and address updates from Treble-Boxi. Features automatic SKU enrichment and a UI-based SKU correction tool.
-- **Order & Payment Tracking**: Comprehensive tracking of sales, delivery statuses, multi-product orders, and reservations. Features payment verification, multi-currency support, and `Pendiente` (balance) calculation. Includes automated payment verification via bank statement reconciliation.
-- **Delivery Workflow**: Manages channel-specific delivery status progression, returns, and cancellations.
-- **Lead Management (Prospectos)**: Tracks leads with a 3-phase CRM follow-up workflow, automated date calculations, visual status tracking, and daily email reminders.
-- **Follow-Up Protocols (Protocolos de Seguimiento)**: Configurable 3-phase follow-up protocols for both `Prospectos` and `Ordenes Pendientes`.
-- **Pricing & Cost Management**: Tracks product prices and unit costs in USD with effective dates, supporting multiple records per SKU, Excel uploads, and undo functionality, including IVA (%).
-- **Product Classification System**: A flat tag-based system using a single `categorias` table for Marca, Categoría, Subcategoría, and Característica.
-- **Product Components System**: A relational component tracking system for managing product composition, enabling inventory, cost calculation, and despacho verification for combo products. Includes self-referencing components for consistent queries.
-- **Inventory Management**: Comprehensive warehouse inventory tracking with stock levels (actual, reservado, mínimo) per product per warehouse. Features automatic stock deduction when the `despachado` checkbox is checked (not when dispatch date is set), handles combo product components, allows negative stock, and supports dual-mode inventory upload (manual and Excel import). Includes a principal warehouse system with atomic updates for transfers and detailed telemetry for imports. Stock deduction uses the almacenDespachoId or falls back to the principal warehouse, with the dispatch date (or current date if not set) for movement records.
-- **Estados and Ciudades Master Data**: Hierarchical address management system for Venezuela.
+- **Sales Data Management**: Excel uploads, filtering, searching, export, SKU enrichment/correction, and webhook integration for automated order/address ingestion.
+- **Order & Payment Tracking**: Sales, delivery, multi-product orders, reservations, payment verification, multi-currency support, `Pendiente` balance calculation, and automated bank reconciliation.
+- **Delivery Workflow**: Channel-specific delivery status progression, returns, and cancellations.
+- **Lead Management (Prospectos)**: 3-phase CRM with automated date calculations, visual tracking, and email reminders.
+- **Follow-Up Protocols**: Configurable 3-phase protocols for `Prospectos` and `Ordenes Pendientes`.
+- **Pricing & Cost Management**: Tracks product prices and unit costs (USD) with effective dates, IVA, Excel uploads, and undo functionality.
+- **Product Classification System**: Flat tag-based system (`categorias` table) for Marca, Categoría, Subcategoría, Característica.
+- **Product Components System**: Relational system for managing product composition, inventory, cost, and despacho verification for combo products.
+- **Inventory Management**: Warehouse tracking (actual, reservado, mínimo stock), automatic stock deduction on `despachado` check (not date set), combo product handling, negative stock support, manual/Excel uploads, and principal warehouse system with atomic updates for transfers.
+- **Estados and Ciudades Master Data**: Hierarchical address management for Venezuela.
 - **Automation**: Configurable automated Cashea order downloads and payment detail assignment.
-- **Reporting**: A dashboard-based system provides access to various reports, including temporary orders, lost orders, and lost prospects, all with date filtering and Excel export.
-- **Order Numbering**: Separate order number ranges for manual (20000+) and Tienda (30000+) orders.
-- **Accounts Payable (Egresos)**: A 4-stage workflow system (registration, authorization, payment recording, verification) for managing expenses.
-- **Guest Access System**: JWT-based token authentication system for third-party users with scoped permissions. Supports two access levels: Despacho (edit fechaDespacho and despachado checkbox only - checking despachado triggers automatic inventory deduction) and Inventario (full inventory management including dispatch registration, movement analysis, and warehouse transfers, except costs/prices). Features include shareable URLs for each scope, token revocation, complete audit trail, and real-time activity monitoring. Backend enforces server-side security with field stripping to prevent unauthorized updates. The despachado checkbox can ONLY be checked by guest users with Despacho scope, not by admins. All guest actions are logged with before/after values, timestamps, and IP addresses for compliance and security tracking.
+- **Reporting**: Dashboard with various reports (temporary orders, lost orders, lost prospects) with date filtering and Excel export.
+- **Order Numbering**: Separate ranges for manual (20000+) and Tienda (30000+) orders.
+- **Accounts Payable (Egresos)**: 4-stage workflow (registration, authorization, payment, verification) for expense management.
+- **Guest Access System**: JWT-based token authentication for third-party users with scoped permissions (Despacho, Inventario). Features shareable URLs, token revocation, audit trails, and real-time activity monitoring. Server-side security enforces field stripping and logs all guest actions.
 
 # External Dependencies
 
