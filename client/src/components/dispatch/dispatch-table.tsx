@@ -735,7 +735,7 @@ export default function DispatchTable({
                   <tr>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[100px] sticky left-0 bg-muted z-20 border-r border-border shadow-[2px_0_5px_rgba(0,0,0,0.1)]">Orden</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[150px] sticky left-[100px] bg-muted z-20 border-r border-border shadow-[2px_0_5px_rgba(0,0,0,0.1)]">Estado Venta/Entrega</th>
-                    <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[300px] sticky left-[250px] bg-muted z-20 border-r border-border shadow-[2px_0_5px_rgba(0,0,0,0.1)]">Dirección de Despacho</th>
+                    <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[150px] sticky left-[250px] bg-muted z-20 border-r border-border shadow-[2px_0_5px_rgba(0,0,0,0.1)]">Fecha Compromiso Entrega</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[100px]">Canal</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[100px]">Tipo</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[200px]">Nombre</th>
@@ -743,7 +743,7 @@ export default function DispatchTable({
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[120px]">Cédula</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[120px]">Estado</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[120px]">Ciudad</th>
-                    <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[150px]">Fecha Compromiso Entrega</th>
+                    <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[300px]">Dirección de Despacho</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[200px]">Producto</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[120px]">SKU</th>
                     <th className="text-center p-2 text-xs font-medium text-muted-foreground min-w-[80px]">Cant.</th>
@@ -796,34 +796,14 @@ export default function DispatchTable({
                         </Select>
                       </td>
                       
-                      <td className="p-2 min-w-[300px] text-xs sticky left-[250px] bg-background z-10 border-r border-border shadow-[2px_0_5px_rgba(0,0,0,0.1)]">
-                        {sale.direccionFacturacionPais ? (
-                          sale.direccionDespachoIgualFacturacion === "true" ? (
-                            <div className="text-xs space-y-1 max-w-72">
-                              <div className="font-medium">{sale.direccionFacturacionDireccion}</div>
-                              <div>{sale.direccionFacturacionPais}</div>
-                              {sale.direccionFacturacionUrbanizacion && (
-                                <div className="text-muted-foreground">Urb. {sale.direccionFacturacionUrbanizacion}</div>
-                              )}
-                              {sale.direccionFacturacionReferencia && (
-                                <div className="text-muted-foreground">Ref: {sale.direccionFacturacionReferencia}</div>
-                              )}
-                            </div>
-                          ) : (
-                            <div className="text-xs space-y-1 max-w-72">
-                              <div className="font-medium">{sale.direccionDespachoDireccion}</div>
-                              <div>{sale.direccionDespachoPais}</div>
-                              {sale.direccionDespachoUrbanizacion && (
-                                <div className="text-muted-foreground">Urb. {sale.direccionDespachoUrbanizacion}</div>
-                              )}
-                              {sale.direccionDespachoReferencia && (
-                                <div className="text-muted-foreground">Ref: {sale.direccionDespachoReferencia}</div>
-                              )}
-                            </div>
-                          )
+                      <td className="p-2 min-w-[150px] text-xs sticky left-[250px] bg-background z-10 border-r border-border shadow-[2px_0_5px_rgba(0,0,0,0.1)]">
+                        {sale.fechaEntrega ? (
+                          <div className="text-xs" data-testid={`fecha-entrega-${sale.id}`}>
+                            {new Date(sale.fechaEntrega).toLocaleDateString('es-ES')}
+                          </div>
                         ) : (
-                          <div className="text-xs text-amber-600 bg-amber-50 dark:bg-amber-950/20 p-2 rounded border border-amber-200 dark:border-amber-800 font-medium">
-                            ⚠️ Sin dirección
+                          <div className="text-xs text-amber-600 bg-amber-50 dark:bg-amber-950/20 p-2 rounded border border-amber-200 dark:border-amber-800 font-medium" data-testid={`warning-fecha-entrega-${sale.id}`}>
+                            ⚠️ SIN FECHA
                           </div>
                         )}
                       </td>
@@ -874,14 +854,34 @@ export default function DispatchTable({
                         )}
                       </td>
                       
-                      <td className="p-2 min-w-[150px] text-xs">
-                        {sale.fechaEntrega ? (
-                          <div className="text-xs" data-testid={`fecha-entrega-${sale.id}`}>
-                            {new Date(sale.fechaEntrega).toLocaleDateString('es-ES')}
-                          </div>
+                      <td className="p-2 min-w-[300px] text-xs">
+                        {sale.direccionFacturacionPais ? (
+                          sale.direccionDespachoIgualFacturacion === "true" ? (
+                            <div className="text-xs space-y-1 max-w-72">
+                              <div className="font-medium">{sale.direccionFacturacionDireccion}</div>
+                              <div>{sale.direccionFacturacionPais}</div>
+                              {sale.direccionFacturacionUrbanizacion && (
+                                <div className="text-muted-foreground">Urb. {sale.direccionFacturacionUrbanizacion}</div>
+                              )}
+                              {sale.direccionFacturacionReferencia && (
+                                <div className="text-muted-foreground">Ref: {sale.direccionFacturacionReferencia}</div>
+                              )}
+                            </div>
+                          ) : (
+                            <div className="text-xs space-y-1 max-w-72">
+                              <div className="font-medium">{sale.direccionDespachoDireccion}</div>
+                              <div>{sale.direccionDespachoPais}</div>
+                              {sale.direccionDespachoUrbanizacion && (
+                                <div className="text-muted-foreground">Urb. {sale.direccionDespachoUrbanizacion}</div>
+                              )}
+                              {sale.direccionDespachoReferencia && (
+                                <div className="text-muted-foreground">Ref: {sale.direccionDespachoReferencia}</div>
+                              )}
+                            </div>
+                          )
                         ) : (
-                          <div className="text-xs text-amber-600 bg-amber-50 dark:bg-amber-950/20 p-2 rounded border border-amber-200 dark:border-amber-800 font-medium" data-testid={`warning-fecha-entrega-${sale.id}`}>
-                            ⚠️ SIN FECHA
+                          <div className="text-xs text-amber-600 bg-amber-50 dark:bg-amber-950/20 p-2 rounded border border-amber-200 dark:border-amber-800 font-medium">
+                            ⚠️ Sin dirección
                           </div>
                         )}
                       </td>
