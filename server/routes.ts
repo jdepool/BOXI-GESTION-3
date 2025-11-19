@@ -2576,6 +2576,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log(`✅ Successfully updated ${updatedSales.length} product(s) for order ${orderNumber}`);
       
+      // Auto-calculate delivery date for Inmediato orders when ciudad is provided
+      if (ciudad && updatedSales.length > 0) {
+        const { calculateDeliveryDate } = await import('../shared/utils');
+        
+        for (const sale of updatedSales) {
+          // Only calculate for Inmediato orders that don't already have a delivery date
+          if (sale.tipo === 'Inmediato' && !sale.fechaEntrega) {
+            const deliveryDate = calculateDeliveryDate(sale.fecha, sale.tipo, ciudad);
+            
+            if (deliveryDate) {
+              // Update the fechaEntrega for this sale
+              await storage.updateSale(sale.id, { 
+                fechaEntrega: new Date(deliveryDate + 'T00:00:00')
+              });
+              console.log(`📅 Auto-calculated delivery date for sale ${sale.id}: ${deliveryDate}`);
+            }
+          }
+        }
+      }
+      
       // Send WebSocket notification about the address update
       const { broadcastWebSocketMessage } = await import('./websocket');
       const updatedFields: string[] = [];
@@ -3901,6 +3921,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (!updatedSale) {
         return res.status(500).json({ error: "Failed to update addresses" });
+      }
+
+      // Auto-calculate delivery date for Inmediato orders when ciudad is provided
+      const ciudad = addressData.direccionDespachoCiudad;
+      if (ciudad && updatedSale.orden) {
+        const { calculateDeliveryDate } = await import('../shared/utils');
+        
+        // Get all products from this order
+        const orderProducts = await storage.getSalesByOrderNumber(updatedSale.orden);
+        
+        // Update delivery date for each Inmediato product without a delivery date
+        for (const product of orderProducts) {
+          if (product.tipo === 'Inmediato' && !product.fechaEntrega) {
+            const deliveryDate = calculateDeliveryDate(product.fecha, product.tipo, ciudad);
+            
+            if (deliveryDate) {
+              await storage.updateSale(product.id, {
+                fechaEntrega: new Date(deliveryDate + 'T00:00:00')
+              });
+              console.log(`📅 Auto-calculated delivery date for sale ${product.id}: ${deliveryDate}`);
+            }
+          }
+        }
       }
 
       res.json({ success: true, sale: updatedSale });
