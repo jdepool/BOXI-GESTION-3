@@ -730,7 +730,7 @@ export default function DispatchTable({
         ) : (
           <div className="overflow-x-auto overflow-y-auto max-h-[calc(100vh-280px)] bg-background">
             <div className={cn("min-w-max transition-opacity duration-200", isLoading && "opacity-50")}>
-              <table className="w-full min-w-[3100px] relative">
+              <table className="w-full min-w-[3330px] relative">
                 <thead className="bg-muted sticky top-0 z-10">
                   <tr>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[100px] sticky left-0 bg-muted z-20 border-r border-border shadow-[2px_0_5px_rgba(0,0,0,0.1)]">Orden</th>
@@ -747,6 +747,8 @@ export default function DispatchTable({
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[200px]">Producto</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[120px]">SKU</th>
                     <th className="text-center p-2 text-xs font-medium text-muted-foreground min-w-[80px]">Cant.</th>
+                    <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[120px]">Componente SKU</th>
+                    <th className="text-center p-2 text-xs font-medium text-muted-foreground min-w-[110px]">Cant. Componente</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[200px]">Email</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[100px]">Especial</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[120px]">Fecha</th>
@@ -893,6 +895,12 @@ export default function DispatchTable({
                       </td>
                       
                       <td className="p-2 min-w-[80px] text-center text-xs">{sale.cantidad}</td>
+                      
+                      <td className="p-2 min-w-[120px] text-xs">
+                        {(sale as any).componenteSku || <span className="text-muted-foreground">—</span>}
+                      </td>
+                      
+                      <td className="p-2 min-w-[110px] text-center text-xs">{(sale as any).cantidadComponente || sale.cantidad}</td>
                       
                       <td className="p-2 min-w-[200px] text-xs">{sale.email}</td>
                       

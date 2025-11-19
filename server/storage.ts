@@ -1166,7 +1166,7 @@ export class DatabaseStorage implements IStorage {
       endDate?: string;
       search?: string;
     }
-  ): Promise<{ data: Sale[]; total: number }> {
+  ): Promise<{ data: any[]; total: number }> {
     // Build conditions array
     const conditions = [];
     
@@ -1226,7 +1226,8 @@ export class DatabaseStorage implements IStorage {
 
     const whereClause = and(...conditions);
 
-    const ordersForDispatch = await db
+    // Step 1: Get the paginated sales (without components) - this ensures we get complete orders
+    const paginatedSales = await db
       .select()
       .from(sales)
       .where(whereClause)
@@ -1234,14 +1235,67 @@ export class DatabaseStorage implements IStorage {
       .limit(limit)
       .offset(offset);
 
-    // Get total count with same conditions
+    // If no sales found, return empty result
+    if (paginatedSales.length === 0) {
+      const [{ totalCount }] = await db
+        .select({ totalCount: count() })
+        .from(sales)
+        .where(whereClause);
+      
+      return {
+        data: [],
+        total: totalCount,
+      };
+    }
+
+    // Step 2: Get sale IDs to fetch their components
+    const saleIds = paginatedSales.map(s => s.id);
+
+    // Step 3: Create alias for productos table to distinguish product from component
+    const productoAlias = alias(productos, 'producto');
+    const componenteAlias = alias(productos, 'componente');
+
+    // Step 4: Fetch components for the paginated sales
+    const ordersWithComponents = await db
+      .select({
+        // All sale fields
+        sale: sales,
+        // Component information
+        componenteSku: componenteAlias.sku,
+        cantidadComponente: sql<number>`${sales.cantidad} * COALESCE(${productosComponentes.cantidad}, 1)`,
+      })
+      .from(sales)
+      .leftJoin(productoAlias, eq(sales.sku, productoAlias.sku))
+      .leftJoin(productosComponentes, eq(productoAlias.id, productosComponentes.productoId))
+      .leftJoin(componenteAlias, eq(productosComponentes.componenteId, componenteAlias.id))
+      .where(inArray(sales.id, saleIds))
+      .orderBy(sql`${sales.fechaEntrega} ASC NULLS FIRST`, sales.orden);
+
+    // Step 5: Create a map of sale IDs to their original order position
+    const saleOrderMap = new Map(paginatedSales.map((sale, index) => [sale.id, index]));
+
+    // Step 6: Transform the results to include component info in the sale object
+    const expandedData = ordersWithComponents.map(row => ({
+      ...row.sale,
+      componenteSku: row.componenteSku || row.sale.sku, // Fallback to sale SKU if no component
+      cantidadComponente: row.cantidadComponente || row.sale.cantidad, // Fallback to sale quantity if no component
+      _orderPosition: saleOrderMap.get(row.sale.id) || 0, // Track original position for sorting
+    }));
+
+    // Step 7: Sort by original order position to maintain page ordering
+    expandedData.sort((a, b) => (a._orderPosition || 0) - (b._orderPosition || 0));
+
+    // Remove the temporary _orderPosition field
+    expandedData.forEach(row => delete (row as any)._orderPosition);
+
+    // Step 8: Get total count of sales (not expanded rows) for pagination
     const [{ totalCount }] = await db
       .select({ totalCount: count() })
       .from(sales)
       .where(whereClause);
 
     return {
-      data: ordersForDispatch,
+      data: expandedData,
       total: totalCount,
     };
   }
