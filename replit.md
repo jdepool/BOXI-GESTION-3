@@ -37,7 +37,12 @@ The backend is an Express.js and TypeScript RESTful API, utilizing PostgreSQL wi
 - **Follow-Up Protocols**: Configurable 3-phase protocols for `Prospectos` and `Ordenes Pendientes`.
 - **Pricing & Cost Management**: Tracks product prices and unit costs (USD) with effective dates, IVA, Excel uploads, and undo functionality.
 - **Product Classification System**: Flat tag-based system (`categorias` table) for Marca, Categoría, Subcategoría, Característica.
-- **Product Components System**: Relational system for managing product composition, inventory, cost, and despacho verification for combo products.
+- **Product Components System**: Relational system for managing product composition, inventory, cost, and despacho verification for combo products. Productos Excel export/import uses two-sheet format:
+  - **Sheet 1 "Productos"**: SKU, Nombre, Marca, Categoría, Subcategoría, Característica
+  - **Sheet 2 "Componentes"**: Producto SKU, Componente SKU, Cantidad (always exported with headers, even when empty, to provide template)
+  - Import validates SKU references and surfaces explicit errors for missing SKUs or invalid data
+  - Empty template rows are skipped gracefully during import
+  - This format enables production-to-development data migration with full component relationships
 - **Inventory Management**: Warehouse tracking (actual, reservado, mínimo stock), automatic stock deduction on `despachado` check (not date set), combo product handling, negative stock support, manual/Excel uploads, and principal warehouse system with atomic updates for transfers.
 - **Estados and Ciudades Master Data**: Hierarchical address management for Venezuela.
 - **Automation**: Configurable automated Cashea order downloads and payment detail assignment.
