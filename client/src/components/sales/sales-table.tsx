@@ -828,6 +828,24 @@ export default function SalesTable({
                         <span className="text-green-600 dark:text-green-400 font-bold">✓</span>
                       )}
                     </td>
+                    <td className="p-2 min-w-[120px]">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setSelectedSaleForAddress(sale);
+                          setAddressModalOpen(true);
+                        }}
+                        data-testid={`add-address-${sale.id}`}
+                        className="h-7 text-xs"
+                      >
+                        <MapPin className={cn(
+                          "h-3 w-3 mr-1",
+                          !sale.direccionFacturacionPais && "text-amber-500"
+                        )} />
+                        {sale.direccionFacturacionPais ? 'Editar' : 'Agregar'}
+                      </Button>
+                    </td>
                     {showDeliveryDateColumn && (
                       <td className="p-2 min-w-[130px]">
                         <div className="relative">
@@ -900,24 +918,6 @@ export default function SalesTable({
                         </div>
                       </td>
                     )}
-                    <td className="p-2 min-w-[120px]">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          setSelectedSaleForAddress(sale);
-                          setAddressModalOpen(true);
-                        }}
-                        data-testid={`add-address-${sale.id}`}
-                        className="h-7 text-xs"
-                      >
-                        <MapPin className={cn(
-                          "h-3 w-3 mr-1",
-                          !sale.direccionFacturacionPais && "text-amber-500"
-                        )} />
-                        {sale.direccionFacturacionPais ? 'Editar' : 'Agregar'}
-                      </Button>
-                    </td>
                     <td className="p-2 min-w-[120px]">
                       <Select
                         value={sale.asesorId || "none"}
