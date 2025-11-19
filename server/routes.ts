@@ -3,8 +3,9 @@ import express from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { db, withRetry } from "./db";
-import { sales, bancos, guestTokens, auditLogs, transportistas, type Sale } from "@shared/schema";
+import { sales, bancos, guestTokens, auditLogs, transportistas, productos, productosComponentes, type Sale } from "@shared/schema";
 import { eq, desc, and, gte, lte, or, ilike } from "drizzle-orm";
+import { alias } from "drizzle-orm/pg-core";
 import { 
   insertSaleSchema, insertUploadHistorySchema, insertBancoSchema, insertTipoEgresoSchema, insertAutorizadorSchema,
   insertProductoSchema, insertProductoComponenteSchema, insertMetodoPagoSchema, insertMonedaSchema, insertCategoriaSchema,
@@ -483,6 +484,90 @@ function parseProductosFile(buffer: Buffer, filename: string, clasificaciones: a
     return productosData;
   } catch (error) {
     throw new Error(`Error parsing productos file: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+}
+
+function parseComponentesFile(buffer: Buffer, filename: string) {
+  try {
+    // Only Excel files have multiple sheets, CSV doesn't support componentes import
+    if (filename.endsWith('.csv')) {
+      return []; // No componentes sheet in CSV
+    }
+
+    // Parse Excel file and get "Componentes" sheet
+    const workbook = XLSX.read(buffer, { type: 'buffer' });
+    
+    // Check if "Componentes" sheet exists
+    if (!workbook.SheetNames.includes('Componentes')) {
+      return []; // No componentes sheet, return empty array (not an error)
+    }
+    
+    const worksheet = workbook.Sheets['Componentes'];
+    const data = XLSX.utils.sheet_to_json(worksheet);
+
+    // Map the Excel data to componente format with row-level error handling
+    const componentesData = data
+      .map((row: any, index: number) => {
+        const rowNumber = index + 2; // +2 because Excel is 1-indexed and first row is header
+        
+        try {
+          // Handle different possible column names (case insensitive)
+          const productoSku = row['Producto SKU'] || row['producto_sku'] || row['ProductoSKU'];
+          const componenteSku = row['Componente SKU'] || row['componente_sku'] || row['ComponenteSKU'];
+          const cantidad = row['Cantidad'] || row['cantidad'];
+
+          // Skip completely empty rows (template rows)
+          const hasAnyData = (productoSku && String(productoSku).trim()) || 
+                             (componenteSku && String(componenteSku).trim()) ||
+                             (cantidad && String(cantidad).trim());
+          
+          if (!hasAnyData) {
+            return null; // Skip this row entirely
+          }
+
+          // Collect validation errors for this row
+          const rowErrors = [];
+          
+          if (!productoSku || String(productoSku).trim() === '') {
+            rowErrors.push('Missing required field: Producto SKU');
+          }
+          if (!componenteSku || String(componenteSku).trim() === '') {
+            rowErrors.push('Missing required field: Componente SKU');
+          }
+          if (!cantidad || isNaN(Number(cantidad)) || Number(cantidad) < 1) {
+            rowErrors.push('Cantidad must be a positive number');
+          }
+
+          if (rowErrors.length > 0) {
+            return {
+              row: rowNumber,
+              error: rowErrors.join('; '),
+              data: null
+            };
+          }
+
+          return {
+            row: rowNumber,
+            error: null,
+            data: {
+              productoSku: String(productoSku).trim(),
+              componenteSku: String(componenteSku).trim(),
+              cantidad: Number(cantidad)
+            }
+          };
+        } catch (error) {
+          return {
+            row: rowNumber,
+            error: `Error processing row: ${error instanceof Error ? error.message : 'Unknown error'}`,
+            data: null
+          };
+        }
+      })
+      .filter((row): row is { row: number; error: string | null; data: { productoSku: string; componenteSku: string; cantidad: number } | null } => row !== null);
+
+    return componentesData;
+  } catch (error) {
+    throw new Error(`Error parsing componentes file: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 }
 
@@ -5175,7 +5260,101 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log('[Upload Productos] Completed. Created:', created, 'Updated:', updated, 'Missing SKUs:', missingSKUs.length, 'Total rows:', parsedRows.length, 'Total errors:', allErrors.length);
 
-      // Return results with detailed statistics
+      // NOW HANDLE COMPONENTES SHEET (if exists)
+      let componentesCreated = 0;
+      let componentesErrors = 0;
+      const componentesErrorMessages: string[] = [];
+
+      try {
+        const parsedComponentes = parseComponentesFile(req.file.buffer, req.file.originalname);
+        
+        if (parsedComponentes.length > 0) {
+          console.log('[Upload Componentes] Found Componentes sheet with', parsedComponentes.length, 'rows');
+          
+          // Get all productos with their SKUs to create lookup map
+          const allProductos = await storage.getProductos();
+          const skuToIdMap = new Map();
+          allProductos.forEach(p => {
+            if (p.sku) {
+              skuToIdMap.set(p.sku, p.id);
+            }
+          });
+          
+          // Separate valid and invalid componentes
+          const validComponenteRows = parsedComponentes.filter(row => !row.error && row.data);
+          const invalidComponenteRows = parsedComponentes.filter(row => row.error);
+          
+          console.log('[Upload Componentes] Valid rows:', validComponenteRows.length, 'Invalid rows:', invalidComponenteRows.length);
+          
+          // Process valid componentes
+          for (const row of validComponenteRows) {
+            const { data } = row;
+            if (!data) continue;
+            
+            try {
+              // Look up product IDs by SKU
+              const productoId = skuToIdMap.get(data.productoSku);
+              const componenteId = skuToIdMap.get(data.componenteSku);
+              
+              if (!productoId) {
+                componentesErrorMessages.push(`Fila ${row.row}: Producto SKU "${data.productoSku}" not found`);
+                componentesErrors++;
+                continue;
+              }
+              
+              if (!componenteId) {
+                componentesErrorMessages.push(`Fila ${row.row}: Componente SKU "${data.componenteSku}" not found`);
+                componentesErrors++;
+                continue;
+              }
+              
+              // Check if relationship already exists
+              const existing = await db
+                .select()
+                .from(productosComponentes)
+                .where(and(
+                  eq(productosComponentes.productoId, productoId),
+                  eq(productosComponentes.componenteId, componenteId)
+                ))
+                .limit(1);
+              
+              if (existing.length > 0) {
+                // Update existing component
+                await db
+                  .update(productosComponentes)
+                  .set({ cantidad: data.cantidad, updatedAt: new Date() })
+                  .where(eq(productosComponentes.id, existing[0].id));
+              } else {
+                // Create new component
+                await db.insert(productosComponentes).values({
+                  productoId,
+                  componenteId,
+                  cantidad: data.cantidad,
+                  createdAt: new Date(),
+                  updatedAt: new Date()
+                });
+                componentesCreated++;
+              }
+            } catch (error) {
+              componentesErrorMessages.push(`Fila ${row.row}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+              componentesErrors++;
+            }
+          }
+          
+          // Add invalid row errors
+          invalidComponenteRows.forEach(row => {
+            componentesErrorMessages.push(`Fila ${row.row}: ${row.error}`);
+            componentesErrors++;
+          });
+          
+          console.log('[Upload Componentes] Completed. Created:', componentesCreated, 'Errors:', componentesErrors);
+        }
+      } catch (error) {
+        console.error('[Upload Componentes] Error processing componentes:', error);
+        componentesErrorMessages.push(`Error procesando hoja Componentes: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      }
+
+      // Return results with detailed statistics including componentes
       res.json({
         success: true,
         created,
@@ -5185,6 +5364,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         errorMessages: allErrors.length > 0 ? allErrors.map(e => `Fila ${e.row}: ${e.error}`).slice(0, 20) : undefined,
         inserted: created,
         missingSKUs: missingSKUs.length > 0 ? missingSKUs : undefined,
+        componentes: {
+          created: componentesCreated,
+          errors: componentesErrors,
+          errorMessages: componentesErrorMessages.length > 0 ? componentesErrorMessages.slice(0, 20) : undefined
+        },
         details: {
           validRows: validRows.length,
           invalidRows: invalidRows.length,
@@ -5214,20 +5398,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return clasificacion?.nombre || "";
       };
       
-      // Prepare data for Excel
-      const excelData = productos.map(prod => ({
-        Nombre: prod.nombre,
+      // Prepare productos data for Excel
+      const productosData = productos.map(prod => ({
         SKU: prod.sku || "",
+        Nombre: prod.nombre,
         Marca: getClasificacionNombre(prod.marcaId),
         Categoría: getClasificacionNombre(prod.categoriaId),
         Subcategoría: getClasificacionNombre(prod.subcategoriaId),
         Característica: getClasificacionNombre(prod.caracteristicaId)
       }));
 
-      // Create workbook and worksheet
-      const worksheet = XLSX.utils.json_to_sheet(excelData);
+      // Get all component relationships
+      // First get all componentes
+      const allComponentes = await db
+        .select()
+        .from(productosComponentes);
+      
+      // Get all productos to create a SKU lookup map
+      const productosMap = new Map();
+      productos.forEach(prod => {
+        if (prod.id) {
+          productosMap.set(prod.id, prod.sku || "");
+        }
+      });
+      
+      // Prepare componentes data for Excel with SKU lookups
+      const componentesData = allComponentes
+        .map(comp => ({
+          "Producto SKU": productosMap.get(comp.productoId) || "",
+          "Componente SKU": productosMap.get(comp.componenteId) || "",
+          "Cantidad": comp.cantidad
+        }))
+        .filter(comp => comp["Producto SKU"] && comp["Componente SKU"]) // Only include if both SKUs exist
+        .sort((a, b) => {
+          // Sort by Producto SKU, then Componente SKU
+          if (a["Producto SKU"] !== b["Producto SKU"]) {
+            return a["Producto SKU"].localeCompare(b["Producto SKU"]);
+          }
+          return a["Componente SKU"].localeCompare(b["Componente SKU"]);
+        });
+
+      // Create workbook with two sheets
       const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, "Productos");
+      
+      // Sheet 1: Productos
+      const productosSheet = XLSX.utils.json_to_sheet(productosData);
+      XLSX.utils.book_append_sheet(workbook, productosSheet, "Productos");
+      
+      // Sheet 2: Componentes (always include, even if empty, to provide template)
+      let componentesSheet;
+      if (componentesData.length > 0) {
+        componentesSheet = XLSX.utils.json_to_sheet(componentesData);
+      } else {
+        // Create empty sheet with headers using array of arrays
+        componentesSheet = XLSX.utils.aoa_to_sheet([
+          ["Producto SKU", "Componente SKU", "Cantidad"], // Header row
+          ["", "", ""] // Empty row to show template
+        ]);
+      }
+      XLSX.utils.book_append_sheet(workbook, componentesSheet, "Componentes");
 
       // Generate buffer
       const buffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' });

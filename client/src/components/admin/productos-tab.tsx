@@ -383,44 +383,71 @@ export function ProductosTab() {
       setIsUploading(false);
       setHasBackup(true);
       
-      const { created, inserted, total, errors, errorMessages, details } = result;
+      const { created, inserted, total, errors, errorMessages, details, componentes } = result;
       const productosCreated = created || inserted || 0;
+      const componentesCreated = componentes?.created || 0;
+      const componentesErrors = componentes?.errors || 0;
+      const componentesErrorList = componentes?.errorMessages || [];
       
       // Get error messages from either new or legacy format
       const errorList = errorMessages || (details?.errorList?.map((e: any) => `Fila ${e.row}: ${e.error}`));
-      const hasErrors = errors > 0;
+      const hasErrors = errors > 0 || componentesErrors > 0;
       
-      if (hasErrors && errorList && errorList.length > 0) {
+      if (hasErrors && (errorList?.length > 0 || componentesErrorList.length > 0)) {
         toast({ 
           title: productosCreated > 0 ? "Archivo procesado con errores" : "Error al procesar archivo",
           description: (
             <div className="space-y-1">
               <div>{productosCreated} de {total} productos procesados exitosamente</div>
-              <div className="font-semibold mt-2">Errores ({errors} total):</div>
-              <ul className="list-disc pl-4 space-y-1 max-h-40 overflow-y-auto">
-                {errorList.map((error: string, index: number) => (
-                  <li key={index} className="text-xs">{error}</li>
-                ))}
-              </ul>
-              {errorList.length < errors && (
-                <div className="text-xs italic mt-1">Mostrando primeros {errorList.length} errores de {errors} total...</div>
+              {componentesCreated > 0 && (
+                <div>{componentesCreated} componentes creados/actualizados</div>
+              )}
+              {errorList && errorList.length > 0 && (
+                <>
+                  <div className="font-semibold mt-2">Errores Productos ({errors} total):</div>
+                  <ul className="list-disc pl-4 space-y-1 max-h-40 overflow-y-auto">
+                    {errorList.map((error: string, index: number) => (
+                      <li key={index} className="text-xs">{error}</li>
+                    ))}
+                  </ul>
+                  {errorList.length < errors && (
+                    <div className="text-xs italic mt-1">Mostrando primeros {errorList.length} errores de {errors} total...</div>
+                  )}
+                </>
+              )}
+              {componentesErrorList.length > 0 && (
+                <>
+                  <div className="font-semibold mt-2">Errores Componentes ({componentesErrors} total):</div>
+                  <ul className="list-disc pl-4 space-y-1 max-h-40 overflow-y-auto">
+                    {componentesErrorList.map((error: string, index: number) => (
+                      <li key={index} className="text-xs">{error}</li>
+                    ))}
+                  </ul>
+                  {componentesErrorList.length < componentesErrors && (
+                    <div className="text-xs italic mt-1">Mostrando primeros {componentesErrorList.length} errores de {componentesErrors} total...</div>
+                  )}
+                </>
               )}
             </div>
           ),
           variant: productosCreated > 0 ? "default" : "destructive",
-          duration: 10000,
+          duration: 15000,
         });
       } else if (hasErrors) {
         // Fallback when we have errors count but no detailed messages
         toast({ 
           title: "Archivo procesado con errores",
-          description: `${productosCreated} de ${total} productos procesados. ${errors} errores encontrados.`,
+          description: `${productosCreated} de ${total} productos procesados. ${errors + componentesErrors} errores encontrados.`,
           variant: productosCreated > 0 ? "default" : "destructive"
         });
       } else {
+        const descriptionParts = [`${productosCreated} productos procesados`];
+        if (componentesCreated > 0) {
+          descriptionParts.push(`${componentesCreated} componentes creados/actualizados`);
+        }
         toast({ 
           title: "Archivo cargado exitosamente",
-          description: `${productosCreated} productos procesados`
+          description: descriptionParts.join(', ')
         });
       }
     },
