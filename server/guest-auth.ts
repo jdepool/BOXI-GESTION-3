@@ -40,7 +40,7 @@ export const validateGuestToken = async (
 ) => {
   try {
     // If user is already authenticated via session, allow access
-    if (req.isAuthenticated && req.isAuthenticated()) {
+    if (req.session?.user?.isAuthenticated) {
       return next();
     }
 
@@ -99,7 +99,7 @@ export const validateGuestToken = async (
 export const requireGuestScope = (section: "despacho" | "inventario", field?: string) => {
   return (req: Request, res: Response, next: NextFunction) => {
     // If authenticated user, allow all access
-    if (req.isAuthenticated && req.isAuthenticated()) {
+    if (req.session?.user?.isAuthenticated) {
       return next();
     }
 
