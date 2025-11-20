@@ -7176,6 +7176,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Failed to update sale" });
       }
       
+      // Automatic dispatch sheet cleanup when sale is delivered
+      // If estadoEntrega changed to "Entregado", delete the dispatch sheet file
+      const statusChangedToDelivered = 
+        body.estadoEntrega === "Entregado" && 
+        existingSale.estadoEntrega !== "Entregado";
+      
+      if (statusChangedToDelivered) {
+        try {
+          // Check if there's a dispatch sheet for this sale
+          const dispatchSheet = await storage.getDispatchSheetBySaleId(id);
+          
+          if (dispatchSheet) {
+            console.log(`🗑️ Auto-deleting dispatch sheet for delivered sale ${id}`);
+            
+            // Delete file from Object Storage
+            const { ObjectStorageService } = await import("./objectStorage");
+            const objectStorageService = new ObjectStorageService();
+            await objectStorageService.deleteDispatchSheet(dispatchSheet.filePath);
+            
+            // Delete database record
+            await storage.deleteDispatchSheet(dispatchSheet.id);
+            
+            console.log(`✅ Dispatch sheet deleted successfully for sale ${id}`);
+          }
+        } catch (error) {
+          // Don't fail the sale update if file deletion fails
+          console.error("Error deleting dispatch sheet during delivery:", error);
+        }
+      }
+      
       // Manual sales stay "Pendiente" until balance = 0, then auto-update to "A despachar"
       // Only Cashea orders use "En Proceso" status
       res.json(updatedSale);
