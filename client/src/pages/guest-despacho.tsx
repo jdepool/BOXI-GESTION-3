@@ -202,7 +202,7 @@ export default function GuestDespacho() {
                             size="sm"
                             variant="outline"
                             onClick={() => {
-                              const downloadUrl = `/api/dispatch-sheets/${sale.id}/download`;
+                              const downloadUrl = `/api/dispatch-sheets/${sale.dispatchSheetId}/download`;
                               window.open(downloadUrl, '_blank');
                             }}
                             data-testid={`button-download-dispatch-${sale.id}`}
