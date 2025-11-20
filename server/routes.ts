@@ -3770,7 +3770,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { id } = req.params;
       
       // Get dispatch sheet with base64 data
-      const dispatchSheet = await storage.getDispatchSheetBySaleId(id);
+      const dispatchSheet = await storage.getDispatchSheetById(id);
       if (!dispatchSheet) {
         return res.status(404).json({ error: "Dispatch sheet not found" });
       }
