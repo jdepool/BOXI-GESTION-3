@@ -4,7 +4,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { db, withRetry } from "./db";
 import { sales, bancos, guestTokens, auditLogs, transportistas, productos, productosComponentes, type Sale } from "@shared/schema";
-import { eq, desc, and, gte, lte, or, ilike } from "drizzle-orm";
+import { eq, desc, and, gte, lte, or, ilike, inArray } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { 
   insertSaleSchema, insertUploadHistorySchema, insertBancoSchema, insertTipoEgresoSchema, insertAutorizadorSchema,
@@ -9436,8 +9436,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
       
-      // Query sales with transportista join
-      const salesData = await db
+      // Step 1: Get base sales with transportista join
+      const baseSales = await db
         .select({
           id: sales.id,
           orden: sales.orden,
@@ -9455,9 +9455,105 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .leftJoin(transportistas, eq(sales.transportistaId, transportistas.id))
         .where(whereClause)
         .orderBy(desc(sales.fecha));
+
+      // Step 2: Enrich NULL SKUs with product name matching (same pattern as admin view)
+      const allProductos = await db.select().from(productos);
+      const skuMap = new Map<string, string>();
+      for (const producto of allProductos) {
+        if (producto.nombre && producto.sku) {
+          const normalized = producto.nombre.toLowerCase().trim();
+          skuMap.set(normalized, producto.sku);
+        }
+      }
+
+      const enrichedSales = baseSales.map((sale) => {
+        if (sale.sku) {
+          return sale;
+        }
+        if (sale.product) {
+          const normalized = sale.product.toLowerCase().trim();
+          const matchedSku = skuMap.get(normalized);
+          if (matchedSku) {
+            return { ...sale, sku: matchedSku };
+          }
+        }
+        return sale;
+      });
+
+      // Step 3: Component expansion using enriched SKUs
+      if (enrichedSales.length === 0) {
+        return res.json({ data: [] });
+      }
+
+      // Get unique enriched SKUs (not nulls)
+      const enrichedSkus = Array.from(new Set(
+        enrichedSales.map(s => s.sku).filter((sku): sku is string => sku !== null)
+      ));
+
+      // Fetch components for all enriched SKUs
+      const productoAlias = alias(productos, 'producto');
+      const componenteAlias = alias(productos, 'componente');
+
+      const componentRows = enrichedSkus.length > 0
+        ? await db
+            .select({
+              productoSku: productoAlias.sku,
+              componenteSku: componenteAlias.sku,
+              componenteCantidad: productosComponentes.cantidad,
+            })
+            .from(productoAlias)
+            .leftJoin(productosComponentes, eq(productoAlias.id, productosComponentes.productoId))
+            .leftJoin(componenteAlias, eq(productosComponentes.componenteId, componenteAlias.id))
+            .where(inArray(productoAlias.sku, enrichedSkus))
+        : [];
+
+      // Build map: producto SKU -> components
+      const componentsBySku = new Map<string, typeof componentRows>();
+      for (const row of componentRows) {
+        if (row.productoSku) {
+          if (!componentsBySku.has(row.productoSku)) {
+            componentsBySku.set(row.productoSku, []);
+          }
+          componentsBySku.get(row.productoSku)!.push(row);
+        }
+      }
+
+      // Step 4: Expand sales into component rows using enriched SKUs
+      const expandedData: any[] = [];
+      for (const sale of enrichedSales) {
+        if (!sale.sku) {
+          // No SKU (even after enrichment) - return sale as-is
+          expandedData.push({
+            ...sale,
+            componenteSku: null,
+            cantidadComponente: sale.cantidad,
+          });
+          continue;
+        }
+
+        const components = componentsBySku.get(sale.sku) || [];
+        
+        if (components.length > 0 && components[0].componenteSku) {
+          // Has components - create one row per component
+          for (const comp of components) {
+            expandedData.push({
+              ...sale,
+              componenteSku: comp.componenteSku || sale.sku,
+              cantidadComponente: sale.cantidad * (comp.componenteCantidad || 1),
+            });
+          }
+        } else {
+          // No components - create single row with sale SKU as component
+          expandedData.push({
+            ...sale,
+            componenteSku: sale.sku,
+            cantidadComponente: sale.cantidad,
+          });
+        }
+      }
       
       // Return data in expected format
-      res.json({ data: salesData });
+      res.json({ data: expandedData });
     } catch (error) {
       console.error("Error fetching sales for guest:", error);
       res.status(500).json({ error: "Failed to fetch sales" });

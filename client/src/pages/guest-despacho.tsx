@@ -22,6 +22,8 @@ type Sale = {
   product: string;
   sku: string | null;
   cantidad: number;
+  componenteSku: string | null;
+  cantidadComponente: number;
   transportistaNombre: string | null;
   nroGuia: string | null;
   fechaDespacho: string | null;
@@ -171,6 +173,8 @@ export default function GuestDespacho() {
                     <TableHead>Producto</TableHead>
                     <TableHead>SKU</TableHead>
                     <TableHead>Cantidad</TableHead>
+                    <TableHead>Componente SKU</TableHead>
+                    <TableHead>Cant. Componente</TableHead>
                     <TableHead>Transportista</TableHead>
                     <TableHead>Nro. Guía</TableHead>
                     <TableHead>Estado Entrega</TableHead>
@@ -187,6 +191,8 @@ export default function GuestDespacho() {
                       <TableCell data-testid={`text-product-${sale.id}`}>{sale.product}</TableCell>
                       <TableCell data-testid={`text-sku-${sale.id}`}>{sale.sku || "-"}</TableCell>
                       <TableCell data-testid={`text-cantidad-${sale.id}`}>{sale.cantidad}</TableCell>
+                      <TableCell data-testid={`text-componente-sku-${sale.id}`}>{sale.componenteSku || "-"}</TableCell>
+                      <TableCell data-testid={`text-cantidad-componente-${sale.id}`}>{sale.cantidadComponente}</TableCell>
                       <TableCell data-testid={`text-transportista-${sale.id}`}>{sale.transportistaNombre || "-"}</TableCell>
                       <TableCell data-testid={`text-nroguia-${sale.id}`}>{sale.nroGuia || "-"}</TableCell>
                       <TableCell>
