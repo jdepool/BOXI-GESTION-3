@@ -172,15 +172,14 @@ export default function GuestDespacho() {
                     <TableHead>Nombre</TableHead>
                     <TableHead>Producto</TableHead>
                     <TableHead>SKU</TableHead>
-                    <TableHead>Cantidad</TableHead>
                     <TableHead>Componente SKU</TableHead>
-                    <TableHead>Cant. Componente</TableHead>
+                    <TableHead>Cantidad</TableHead>
                     <TableHead>Transportista</TableHead>
                     <TableHead>Nro. Guía</TableHead>
                     <TableHead>Estado Entrega</TableHead>
                     <TableHead>Fecha Despacho</TableHead>
                     <TableHead className="text-center">DESPACHADO</TableHead>
-                    <TableHead className="text-right">Acciones</TableHead>
+                    <TableHead>Acciones</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -190,9 +189,8 @@ export default function GuestDespacho() {
                       <TableCell data-testid={`text-nombre-${sale.id}`}>{sale.nombre}</TableCell>
                       <TableCell data-testid={`text-product-${sale.id}`}>{sale.product}</TableCell>
                       <TableCell data-testid={`text-sku-${sale.id}`}>{sale.sku || "-"}</TableCell>
-                      <TableCell data-testid={`text-cantidad-${sale.id}`}>{sale.cantidad}</TableCell>
                       <TableCell data-testid={`text-componente-sku-${sale.id}`}>{sale.componenteSku || "-"}</TableCell>
-                      <TableCell data-testid={`text-cantidad-componente-${sale.id}`}>{sale.cantidadComponente}</TableCell>
+                      <TableCell data-testid={`text-cantidad-${sale.id}`}>{sale.cantidadComponente ?? sale.cantidad}</TableCell>
                       <TableCell data-testid={`text-transportista-${sale.id}`}>{sale.transportistaNombre || "-"}</TableCell>
                       <TableCell data-testid={`text-nroguia-${sale.id}`}>{sale.nroGuia || "-"}</TableCell>
                       <TableCell>

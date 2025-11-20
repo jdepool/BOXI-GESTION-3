@@ -51,7 +51,7 @@ The backend is an Express.js and TypeScript RESTful API, utilizing PostgreSQL wi
 - **Reporting**: Dashboard with various reports (temporary orders, lost orders, lost prospects) with date filtering and Excel export.
 - **Order Numbering**: Separate ranges for manual (20000+) and Tienda (30000+) orders.
 - **Accounts Payable (Egresos)**: 4-stage workflow (registration, authorization, payment, verification) for expense management.
-- **Guest Access System**: JWT-based token authentication for third-party users with scoped permissions (Despacho, Inventario). Features shareable URLs, token revocation, audit trails, and real-time activity monitoring. Server-side security enforces field stripping and logs all guest actions.
+- **Guest Access System**: JWT-based token authentication for third-party users with scoped permissions (Despacho, Inventario). Features shareable URLs, token revocation, audit trails, and real-time activity monitoring. Server-side security enforces field stripping and logs all guest actions. Guest Despacho view includes full component expansion matching the admin view - orders with multiple components (e.g., combo products) display as separate rows per component with componenteSku and cantidadComponente fields. The system enriches NULL SKUs via product name matching before component expansion to ensure Cashea MP and similar orders display component details correctly.
 
 # External Dependencies
 
