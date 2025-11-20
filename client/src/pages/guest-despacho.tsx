@@ -12,7 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient } from "@/lib/queryClient";
-import { Calendar, Shield } from "lucide-react";
+import { Calendar, Shield, Download } from "lucide-react";
 import { format } from "date-fns";
 
 type Sale = {
@@ -29,6 +29,8 @@ type Sale = {
   fechaDespacho: string | null;
   despachado: boolean;
   estadoEntrega: string;
+  dispatchSheetId: string | null;
+  dispatchSheetFileName: string | null;
 };
 
 export default function GuestDespacho() {
