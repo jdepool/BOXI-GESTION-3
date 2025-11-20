@@ -9601,7 +9601,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
       
-      // Step 1: Get base sales with transportista join
+      // Step 1: Get base sales with transportista and dispatch sheet joins
       const baseSales = await db
         .select({
           id: sales.id,
@@ -9615,9 +9615,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           fechaDespacho: sales.fechaDespacho,
           despachado: sales.despachado,
           estadoEntrega: sales.estadoEntrega,
+          dispatchSheetId: dispatchSheets.id,
+          dispatchSheetFileName: dispatchSheets.fileName,
         })
         .from(sales)
         .leftJoin(transportistas, eq(sales.transportistaId, transportistas.id))
+        .leftJoin(dispatchSheets, eq(sales.id, dispatchSheets.saleId))
         .where(whereClause)
         .orderBy(desc(sales.fecha));
 
@@ -9683,7 +9686,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
-      // Step 4: Expand sales into component rows using enriched SKUs
+      // Step 4: Expand sales into component rows using enriched SKUs (preserve dispatch sheet info)
       const expandedData: any[] = [];
       for (const sale of enrichedSales) {
         if (!sale.sku) {
@@ -9699,7 +9702,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const components = componentsBySku.get(sale.sku) || [];
         
         if (components.length > 0 && components[0].componenteSku) {
-          // Has components - create one row per component
+          // Has components - create one row per component (preserve dispatch sheet fields)
           for (const comp of components) {
             expandedData.push({
               ...sale,
@@ -9708,7 +9711,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             });
           }
         } else {
-          // No components - create single row with sale SKU as component
+          // No components - create single row with sale SKU as component (preserve dispatch sheet fields)
           expandedData.push({
             ...sale,
             componenteSku: sale.sku,
