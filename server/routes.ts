@@ -76,7 +76,7 @@ function parseLocalDate(dateString: string): Date {
   return new Date(year, month - 1, day);
 }
 
-// Configure multer for file uploads
+// Configure multer for file uploads (Excel/CSV)
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: {
@@ -95,6 +95,25 @@ const upload = multer({
       cb(null, true);
     } else {
       cb(new Error('Only Excel (.xlsx, .xls) and CSV (.csv) files are allowed'));
+    }
+  },
+});
+
+// Configure multer for PDF uploads (dispatch sheets)
+const uploadPDF = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    const allowedMimeTypes = [
+      'application/pdf',
+    ];
+    
+    if (allowedMimeTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only PDF files are allowed for dispatch sheets'));
     }
   },
 });
@@ -3661,7 +3680,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Dispatch sheet routes (PDF file management for orders)
   // Upload dispatch sheet directly - simplified approach
   // Allow all users to upload dispatch sheets
-  app.post("/api/dispatch-sheets", upload.single('file'), async (req, res) => {
+  app.post("/api/dispatch-sheets", uploadPDF.single('file'), async (req, res) => {
     try {
       const { saleId } = req.body;
       const file = req.file;
