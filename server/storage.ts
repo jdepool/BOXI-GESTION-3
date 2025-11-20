@@ -1,6 +1,6 @@
 import { 
   sales, uploadHistory, users, bancos, bancosBackup, tiposEgresos, autorizadores, egresos, productos, productosBackup, productosComponentes, metodosPago, monedas, categorias, canales, asesores, transportistas, estados, ciudades, seguimientoConfig, precios, preciosBackup, paymentInstallments, prospectos,
-  almacenes, inventario, movimientosInventario, transferencias,
+  almacenes, inventario, movimientosInventario, transferencias, dispatchSheets,
   type User, type InsertUser, type Sale, type InsertSale, type UploadHistory, type InsertUploadHistory,
   type Banco, type InsertBanco, type TipoEgreso, type InsertTipoEgreso, type Autorizador, type InsertAutorizador, type Egreso, type InsertEgreso,
   type Producto, type InsertProducto, type ProductoComponente, type InsertProductoComponente, type MetodoPago, type InsertMetodoPago,
@@ -8,7 +8,8 @@ import {
   type Canal, type InsertCanal, type Asesor, type InsertAsesor, type Transportista, type InsertTransportista, type Estado, type InsertEstado, type Ciudad, type InsertCiudad, type SeguimientoConfig, type InsertSeguimientoConfig, type Precio, type InsertPrecio,
   type PaymentInstallment, type InsertPaymentInstallment,
   type Prospecto, type InsertProspecto,
-  type Almacen, type InsertAlmacen, type Inventario, type InsertInventario, type MovimientoInventario, type InsertMovimientoInventario, type Transferencia, type InsertTransferencia
+  type Almacen, type InsertAlmacen, type Inventario, type InsertInventario, type MovimientoInventario, type InsertMovimientoInventario, type Transferencia, type InsertTransferencia,
+  type DispatchSheet, type InsertDispatchSheet
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, asc, count, sum, avg, and, gte, lte, or, ne, like, ilike, isNotNull, isNull, sql, inArray } from "drizzle-orm";
@@ -508,6 +509,11 @@ export interface IStorage {
 
   // Automatic inventory deduction when order is dispatched
   deductInventoryForOrder(orderNumber: string, almacenId: string, fechaDespacho: string): Promise<void>;
+
+  // Dispatch sheets (PDF files for orders)
+  createDispatchSheet(dispatchSheet: InsertDispatchSheet): Promise<DispatchSheet>;
+  getDispatchSheetBySaleId(saleId: string): Promise<DispatchSheet | undefined>;
+  deleteDispatchSheet(id: string): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -5036,6 +5042,30 @@ export class DatabaseStorage implements IStorage {
         }
       }
     }
+  }
+
+  async createDispatchSheet(dispatchSheet: InsertDispatchSheet): Promise<DispatchSheet> {
+    const [newDispatchSheet] = await db
+      .insert(dispatchSheets)
+      .values(dispatchSheet)
+      .returning();
+    return newDispatchSheet;
+  }
+
+  async getDispatchSheetBySaleId(saleId: string): Promise<DispatchSheet | undefined> {
+    const [dispatchSheet] = await db
+      .select()
+      .from(dispatchSheets)
+      .where(eq(dispatchSheets.saleId, saleId));
+    return dispatchSheet || undefined;
+  }
+
+  async deleteDispatchSheet(id: string): Promise<boolean> {
+    const result = await db
+      .delete(dispatchSheets)
+      .where(eq(dispatchSheets.id, id))
+      .returning();
+    return result.length > 0;
   }
 }
 

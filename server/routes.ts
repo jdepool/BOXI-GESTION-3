@@ -3655,6 +3655,149 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Dispatch sheet routes (PDF file management for orders)
+  // Get presigned URL for uploading dispatch sheet
+  app.get("/api/dispatch-sheets/upload-url", requireAuth, async (req, res) => {
+    try {
+      const { ObjectStorageService } = await import("./objectStorage");
+      const objectStorageService = new ObjectStorageService();
+      const uploadURL = await objectStorageService.getObjectEntityUploadURL();
+      res.json({ uploadURL });
+    } catch (error) {
+      console.error("Error getting upload URL:", error);
+      res.status(500).json({ error: "Failed to get upload URL" });
+    }
+  });
+
+  // Create dispatch sheet metadata after upload
+  app.post("/api/dispatch-sheets", requireAuth, async (req, res) => {
+    try {
+      const { saleId, fileName, filePath, fileSize } = req.body;
+      
+      if (!saleId || !fileName || !filePath || !fileSize) {
+        return res.status(400).json({ error: "Missing required fields" });
+      }
+
+      // Validate sale exists
+      const sale = await storage.getSaleById(saleId);
+      if (!sale) {
+        return res.status(404).json({ error: "Sale not found" });
+      }
+
+      // Check if dispatch sheet already exists for this sale
+      const existing = await storage.getDispatchSheetBySaleId(saleId);
+      if (existing) {
+        return res.status(400).json({ error: "Dispatch sheet already exists for this sale" });
+      }
+
+      // Set ACL policy for the uploaded file
+      const { ObjectStorageService } = await import("./objectStorage");
+      const objectStorageService = new ObjectStorageService();
+      const normalizedPath = await objectStorageService.trySetObjectEntityAclPolicy(
+        filePath,
+        {
+          owner: req.user!.id,
+          visibility: "private",
+        }
+      );
+
+      // Save dispatch sheet metadata
+      const dispatchSheet = await storage.createDispatchSheet({
+        saleId,
+        fileName,
+        filePath: normalizedPath,
+        fileSize,
+        uploadedBy: req.user!.id,
+      });
+
+      res.json(dispatchSheet);
+    } catch (error) {
+      console.error("Error creating dispatch sheet:", error);
+      res.status(500).json({ error: "Failed to create dispatch sheet" });
+    }
+  });
+
+  // Get dispatch sheet for a sale
+  app.get("/api/dispatch-sheets/sale/:saleId", requireAuth, async (req, res) => {
+    try {
+      const { saleId } = req.params;
+      const dispatchSheet = await storage.getDispatchSheetBySaleId(saleId);
+      
+      if (!dispatchSheet) {
+        return res.status(404).json({ error: "Dispatch sheet not found" });
+      }
+
+      res.json(dispatchSheet);
+    } catch (error) {
+      console.error("Error getting dispatch sheet:", error);
+      res.status(500).json({ error: "Failed to get dispatch sheet" });
+    }
+  });
+
+  // Delete dispatch sheet
+  app.delete("/api/dispatch-sheets/:id", requireAuth, async (req, res) => {
+    try {
+      const { id } = req.params;
+      
+      // Get dispatch sheet to get file path
+      const dispatchSheet = await storage.getDispatchSheetBySaleId(id);
+      if (!dispatchSheet) {
+        return res.status(404).json({ error: "Dispatch sheet not found" });
+      }
+
+      // Delete file from object storage
+      try {
+        const { ObjectStorageService } = await import("./objectStorage");
+        const objectStorageService = new ObjectStorageService();
+        const objectFile = await objectStorageService.getObjectEntityFile(dispatchSheet.filePath);
+        await objectStorageService.deleteObjectEntity(objectFile);
+      } catch (error) {
+        console.error("Error deleting file from object storage:", error);
+      }
+
+      // Delete metadata from database
+      const deleted = await storage.deleteDispatchSheet(dispatchSheet.id);
+      
+      if (!deleted) {
+        return res.status(500).json({ error: "Failed to delete dispatch sheet" });
+      }
+
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error deleting dispatch sheet:", error);
+      res.status(500).json({ error: "Failed to delete dispatch sheet" });
+    }
+  });
+
+  // Serve private objects (dispatch sheets) with authentication
+  app.get("/objects/:objectPath(*)", requireAuth, async (req, res) => {
+    try {
+      const { ObjectStorageService, ObjectNotFoundError } = await import("./objectStorage");
+      const { ObjectPermission } = await import("./objectAcl");
+      const objectStorageService = new ObjectStorageService();
+      
+      const objectFile = await objectStorageService.getObjectEntityFile(req.path);
+      const canAccess = await objectStorageService.canAccessObjectEntity({
+        objectFile,
+        userId: req.user?.id,
+        requestedPermission: ObjectPermission.READ,
+      });
+      
+      if (!canAccess) {
+        return res.sendStatus(401);
+      }
+      
+      objectStorageService.downloadObject(objectFile, res);
+    } catch (error: any) {
+      console.error("Error accessing object:", error);
+      const { ObjectNotFoundError } = await import("./objectStorage");
+      if (error instanceof ObjectNotFoundError) {
+        return res.sendStatus(404);
+      }
+      return res.sendStatus(500);
+    }
+  });
+
   // Mark all sales in an order as Perdida
   app.put("/api/sales/orders/:orderNumber/mark-perdida", async (req, res) => {
     try {

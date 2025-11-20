@@ -381,6 +381,21 @@ export const auditLogs = pgTable("audit_logs", {
   createdAtIdx: index("audit_logs_created_at_idx").on(table.createdAt),
 }));
 
+// Dispatch sheets for orders - stores PDF files in object storage
+export const dispatchSheets = pgTable("dispatch_sheets", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  saleId: varchar("sale_id").notNull().references(() => sales.id, { onDelete: "cascade" }),
+  fileName: text("file_name").notNull(),
+  filePath: text("file_path").notNull(), // Object storage path (e.g., /objects/uploads/uuid)
+  fileSize: integer("file_size").notNull(), // Size in bytes
+  uploadedBy: varchar("uploaded_by").notNull(), // User ID who uploaded
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => ({
+  saleIdIdx: index("dispatch_sheets_sale_id_idx").on(table.saleId),
+  saleIdUnique: unique("dispatch_sheets_sale_id_unique").on(table.saleId), // One dispatch sheet per sale
+}));
+
 export const casheaAutomationConfig = pgTable("cashea_automation_config", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   portal: text("portal").notNull().default("Cashea"), // "Cashea" or "Cashea MP"
@@ -650,6 +665,16 @@ export type GuestToken = typeof guestTokens.$inferSelect;
 export type InsertGuestToken = z.infer<typeof insertGuestTokenSchema>;
 export type AuditLog = typeof auditLogs.$inferSelect;
 export type InsertAuditLog = z.infer<typeof insertAuditLogSchema>;
+
+// Dispatch sheets schemas and types
+export const insertDispatchSheetSchema = createInsertSchema(dispatchSheets).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type DispatchSheet = typeof dispatchSheets.$inferSelect;
+export type InsertDispatchSheet = z.infer<typeof insertDispatchSheetSchema>;
+
 export type CasheaAutomationConfig = typeof casheaAutomationConfig.$inferSelect;
 export type InsertCasheaAutomationConfig = z.infer<typeof insertCasheaAutomationConfigSchema>;
 export type CasheaAutomaticDownload = typeof casheaAutomaticDownloads.$inferSelect;
