@@ -12,7 +12,7 @@ import { DateRangePicker } from "@/components/shared/date-range-picker";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Download, Package, ChevronLeft, ChevronRight, Filter, ChevronDown, ChevronUp, RotateCcw, CalendarIcon, Truck, Banknote, Upload, FileText, Trash2 } from "lucide-react";
+import { Download, Package, ChevronLeft, ChevronRight, Filter, ChevronDown, ChevronUp, RotateCcw, CalendarIcon, Truck, Banknote, Upload, FileText, Trash2, Gift } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -891,7 +891,12 @@ export default function DispatchTable({
                       </td>
                       
                       <td className="p-2 min-w-[200px] text-xs">
-                        <div className="font-medium">{sale.product}</div>
+                        <div className="font-medium flex items-center gap-1">
+                          {sale.esObsequio && (
+                            <Gift className="h-3.5 w-3.5 text-pink-500 flex-shrink-0" />
+                          )}
+                          <span>{sale.product}</span>
+                        </div>
                       </td>
                       
                       <td className="p-2 min-w-[120px] text-xs">
