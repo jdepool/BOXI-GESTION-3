@@ -994,6 +994,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   }));
 
+  // Import guest auth utilities at the top for reuse across routes
+  const { validateGuestToken, requireGuestScope, generateGuestToken } = await import("./guest-auth");
+  
   // Authentication middleware function
   const requireAuth = (req: any, res: any, next: any) => {
     if (req.session?.user?.isAuthenticated) {
@@ -3717,8 +3720,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get dispatch sheet for a sale
-  app.get("/api/dispatch-sheets/sale/:saleId", requireAuth, async (req, res) => {
+  // Get dispatch sheet for a sale (allow both admin and guest access with despacho scope)
+  // Note: validateGuestToken and requireGuestScope are imported at top of registerRoutes
+  app.get("/api/dispatch-sheets/sale/:saleId", validateGuestToken, requireGuestScope('despacho'), async (req, res) => {
     try {
       const { saleId } = req.params;
       const dispatchSheet = await storage.getDispatchSheetBySaleId(saleId);
@@ -9413,8 +9417,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // ==================== GUEST ACCESS MANAGEMENT ====================
   
-  // Import guest auth utilities
-  const { validateGuestToken, requireGuestScope, generateGuestToken } = await import("./guest-auth");
+  // Note: validateGuestToken, requireGuestScope, generateGuestToken are imported at top of registerRoutes
   const { logAction, calculateFieldChanges } = await import("./audit-logger");
   
   // Generate new guest token (admin only)

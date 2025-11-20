@@ -44,6 +44,7 @@ interface DispatchTableProps {
   limit?: number;
   offset?: number;
   isLoading: boolean;
+  isGuestView?: boolean;
   filters?: {
     canal?: string;
     tipo?: string;
@@ -65,6 +66,7 @@ export default function DispatchTable({
   limit = 20, 
   offset = 0, 
   isLoading,
+  isGuestView = false,
   filters: parentFilters,
   onFilterChange,
   onClearFilters,
@@ -757,9 +759,9 @@ export default function DispatchTable({
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[120px]">Fecha</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[150px]">Asesor</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[180px]">Notas</th>
-                    <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[150px]">Hoja de Despacho</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[180px]">Transportista</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[150px]">Nro Guía</th>
+                    <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[150px]">Guía de Despacho</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[150px]">Fecha Despacho</th>
                     <th className="text-center p-2 text-xs font-medium text-muted-foreground min-w-[120px]">DESPACHADO</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[150px]">Recepción de Cliente</th>
@@ -953,10 +955,6 @@ export default function DispatchTable({
                         )}
                       </td>
                       
-                      <td className="p-2 min-w-[150px]">
-                        <DispatchSheetCell saleId={sale.id} />
-                      </td>
-                      
                       <td className="p-2 min-w-[180px] text-xs">
                         <Select
                           value={sale.transportistaId || "unassigned"}
@@ -1000,6 +998,10 @@ export default function DispatchTable({
                             {sale.nroGuia || 'Click para agregar'}
                           </div>
                         )}
+                      </td>
+                      
+                      <td className="p-2 min-w-[150px]">
+                        <DispatchSheetCell saleId={sale.id} isGuestView={isGuestView} />
                       </td>
                       
                       <td className="p-2 min-w-[150px] text-xs">
@@ -1160,7 +1162,7 @@ export default function DispatchTable({
 }
 
 // DispatchSheetCell component for managing dispatch sheet uploads
-function DispatchSheetCell({ saleId }: { saleId: string }) {
+function DispatchSheetCell({ saleId, isGuestView = false }: { saleId: string; isGuestView?: boolean }) {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -1247,6 +1249,22 @@ function DispatchSheetCell({ saleId }: { saleId: string }) {
   }
 
   if (dispatchSheet) {
+    // If guest view, show download button only (no delete option)
+    if (isGuestView) {
+      return (
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-7 w-7 p-0"
+          onClick={() => window.open(`/objects/${dispatchSheet.filePath.replace('/objects/', '')}`, '_blank')}
+          data-testid={`button-download-dispatch-sheet-${saleId}`}
+        >
+          <FileText className="h-4 w-4" />
+        </Button>
+      );
+    }
+    
+    // Admin view: show dropdown with download and delete
     return (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
@@ -1286,6 +1304,13 @@ function DispatchSheetCell({ saleId }: { saleId: string }) {
     );
   }
 
+  // No file exists
+  // Guest view: hide upload button entirely
+  if (isGuestView) {
+    return null;
+  }
+
+  // Admin view: show upload button
   return (
     <ObjectUploader
       maxNumberOfFiles={1}
@@ -1294,7 +1319,7 @@ function DispatchSheetCell({ saleId }: { saleId: string }) {
       onComplete={handleUploadComplete}
       buttonClassName="h-7 w-full text-xs"
     >
-      Incluir Guia
+      Incluir Guía
     </ObjectUploader>
   );
 }
