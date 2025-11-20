@@ -1246,6 +1246,36 @@ function DispatchSheetCell({ saleId, isGuestView = false }: { saleId: string; is
     }
   };
 
+  const handleGuestDownload = async () => {
+    if (!dispatchSheet) return;
+    
+    try {
+      const token = new URLSearchParams(window.location.search).get('token');
+      const response = await fetch(`/api/dispatch-sheets/${dispatchSheet.id}/download`, {
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+      });
+      
+      if (!response.ok) throw new Error('Download failed');
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = dispatchSheet.fileName;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error('Download failed:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo descargar el archivo",
+        variant: "destructive"
+      });
+    }
+  };
+
   if (isLoading) {
     return <Skeleton className="h-8 w-full" />;
   }
@@ -1254,15 +1284,15 @@ function DispatchSheetCell({ saleId, isGuestView = false }: { saleId: string; is
     // If guest view, show download button only (no delete option)
     if (isGuestView) {
       return (
-        <a
-          href={`/api/dispatch-sheets/${dispatchSheet.id}/download`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-background hover:bg-accent hover:text-accent-foreground h-7 w-7 p-0"
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-7 w-7 p-0"
+          onClick={handleGuestDownload}
           data-testid={`button-download-dispatch-sheet-${saleId}`}
         >
           <FileText className="h-4 w-4" />
-        </a>
+        </Button>
       );
     }
     
@@ -1293,12 +1323,11 @@ function DispatchSheetCell({ saleId, isGuestView = false }: { saleId: string; is
             </a>
           </DropdownMenuItem>
           <DropdownMenuItem
-            onClick={(e) => {
-              if (deleteMutation.isPending) {
-                e.preventDefault();
-                return;
+            onSelect={(e) => {
+              e.preventDefault();
+              if (!deleteMutation.isPending) {
+                handleDelete();
               }
-              handleDelete();
             }}
             className={cn("text-red-600", deleteMutation.isPending && "opacity-50 cursor-not-allowed")}
             data-testid={`button-delete-dispatch-sheet-${saleId}`}

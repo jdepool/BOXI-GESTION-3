@@ -41,6 +41,33 @@ export default function GuestDespacho() {
   const [selectedSale, setSelectedSale] = useState<Sale | null>(null);
   const [newFechaDespacho, setNewFechaDespacho] = useState("");
 
+  const handleDispatchSheetDownload = async (dispatchSheetId: string, fileName: string) => {
+    try {
+      const response = await fetch(`/api/dispatch-sheets/${dispatchSheetId}/download`, {
+        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+      });
+      
+      if (!response.ok) throw new Error('Download failed');
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error('Download failed:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo descargar el archivo",
+        variant: "destructive"
+      });
+    }
+  };
+
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const tokenParam = params.get("token");
@@ -198,16 +225,15 @@ export default function GuestDespacho() {
                       <TableCell data-testid={`text-nroguia-${sale.id}`}>{sale.nroGuia || "-"}</TableCell>
                       <TableCell>
                         {sale.dispatchSheetId ? (
-                          <a
-                            href={`/api/dispatch-sheets/${sale.dispatchSheetId}/download`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-3"
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => handleDispatchSheetDownload(sale.dispatchSheetId!, sale.dispatchSheetFileName || "guia.pdf")}
                             data-testid={`button-download-dispatch-${sale.id}`}
                           >
                             <Download className="h-4 w-4 mr-2" />
                             {sale.dispatchSheetFileName || "Descargar"}
-                          </a>
+                          </Button>
                         ) : (
                           <span className="text-muted-foreground text-sm">-</span>
                         )}
