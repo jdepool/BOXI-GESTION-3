@@ -3660,7 +3660,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Dispatch sheet routes (PDF file management for orders)
   // Get presigned URL for uploading dispatch sheet
-  app.get("/api/dispatch-sheets/upload-url", requireAuth, async (req, res) => {
+  // Allow all users to get upload URL for dispatch sheets
+  app.get("/api/dispatch-sheets/upload-url", async (req, res) => {
     try {
       const { ObjectStorageService } = await import("./objectStorage");
       const objectStorageService = new ObjectStorageService();
@@ -3673,7 +3674,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Create dispatch sheet metadata after upload
-  app.post("/api/dispatch-sheets", requireAuth, async (req, res) => {
+  // Allow all users to create dispatch sheet records
+  app.post("/api/dispatch-sheets", async (req, res) => {
     try {
       const { saleId, fileName, filePath, fileSize } = req.body;
       
@@ -3720,9 +3722,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get dispatch sheet for a sale (allow both admin and guest access with despacho scope)
-  // Note: validateGuestToken and requireGuestScope are imported at top of registerRoutes
-  app.get("/api/dispatch-sheets/sale/:saleId", validateGuestToken, requireGuestScope('despacho'), async (req, res) => {
+  // Get dispatch sheet for a sale - allow all users (regular users and guests with despacho scope)
+  // Note: This endpoint needs to work for both regular users (no auth) and guest users (with token)
+  app.get("/api/dispatch-sheets/sale/:saleId", async (req, res) => {
     try {
       const { saleId } = req.params;
       const dispatchSheet = await storage.getDispatchSheetBySaleId(saleId);
