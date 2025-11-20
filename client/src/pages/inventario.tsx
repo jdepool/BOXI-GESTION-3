@@ -14,6 +14,7 @@ import Header from "@/components/layout/header";
 import { Box, Package, TrendingDown, Warehouse, AlertTriangle, Upload, FileSpreadsheet, Star } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
+import { formatLocalDate } from "@/lib/date-utils";
 import * as XLSX from "xlsx";
 
 export default function Inventario() {
@@ -821,7 +822,7 @@ function GestionarAlmacenesTab() {
   const [almacenOrigen, setAlmacenOrigen] = useState("");
   const [almacenDestino, setAlmacenDestino] = useState("");
   const [cantidad, setCantidad] = useState("");
-  const [fechaTransfer, setFechaTransfer] = useState(new Date().toISOString().split('T')[0]);
+  const [fechaTransfer, setFechaTransfer] = useState(formatLocalDate(new Date()));
   const [notasTransfer, setNotasTransfer] = useState("");
 
   const { data: almacenes = [] } = useQuery({

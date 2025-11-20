@@ -6,6 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { format, parse } from "date-fns";
 import { cn } from "@/lib/utils";
 import { filterCanalesByProductLine, type ProductLine } from "@/lib/canalFilters";
+import { formatLocalDate } from "@/lib/date-utils";
 
 // Helper function to safely parse YYYY-MM-DD as local date
 const parseLocalDate = (dateString: string) => {
@@ -87,7 +88,7 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
       telefono: "",
       email: "",
       totalUsd: "",
-      fecha: new Date().toISOString().split('T')[0],
+      fecha: formatLocalDate(new Date()),
       referencia: "",
       montoUsd: "",
       montoBs: "",

@@ -1,3 +1,12 @@
+// Format Date to yyyy-MM-dd using LOCAL time (prevents timezone bug)
+// CRITICAL: Prevents off-by-one date errors when converting current time to date string
+export function formatLocalDate(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
 export function normalizeCanal(canal: string | null | undefined): string | null {
   if (!canal || canal.trim() === '') return null;
   

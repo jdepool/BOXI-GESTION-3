@@ -23,7 +23,7 @@ import crypto from "crypto";
 import fetch from "node-fetch";
 import { sendOrderConfirmationEmail, sendInternalAlert, sendPaymentNotification, shouldNotifyPayment, type OrderEmailData, type InternalAlertData, type PaymentNotificationData } from "./services/email-service";
 import { performCasheaDownload } from "./services/cashea-download";
-import { normalizeCanal, calculateDeliveryDate } from "@shared/utils";
+import { normalizeCanal, calculateDeliveryDate, formatLocalDate } from "@shared/utils";
 
 // Helper function to normalize estadoEntrega casing
 // Prevents case-sensitivity bugs in status comparisons and database storage
@@ -820,10 +820,10 @@ function parseBankStatementFile(buffer: Buffer) {
         ''
       ).trim();
 
-      let fechaStr = new Date().toISOString().split('T')[0];
+      let fechaStr = formatLocalDate(new Date());
       try {
         if (fecha && !isNaN(fecha.getTime())) {
-          fechaStr = fecha.toISOString().split('T')[0];
+          fechaStr = formatLocalDate(fecha);
         }
       } catch (e) {
         console.warn(`Invalid date for row ${index + 1}, using current date`);
@@ -9181,7 +9181,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           tipo: 'transferencia_salida',
           cantidad: validation.data.cantidad,
           transferId: transferencia.id,
-          fecha: new Date().toISOString().split('T')[0],
+          fecha: formatLocalDate(new Date()),
           notas: `Transferencia a ${req.body.almacenDestinoNombre || 'otro almacén'}`,
         });
 
@@ -9193,7 +9193,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           tipo: 'transferencia_entrada',
           cantidad: validation.data.cantidad,
           transferId: transferencia.id,
-          fecha: new Date().toISOString().split('T')[0],
+          fecha: formatLocalDate(new Date()),
           notas: `Transferencia desde ${req.body.almacenOrigenNombre || 'otro almacén'}`,
         });
 
@@ -9228,7 +9228,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           tipo: 'transferencia_salida',
           cantidad: transferencia.cantidad,
           transferId: transferencia.id,
-          fecha: new Date().toISOString().split('T')[0],
+          fecha: formatLocalDate(new Date()),
           notas: `Transferencia verificada`,
         });
 
@@ -9240,7 +9240,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           tipo: 'transferencia_entrada',
           cantidad: transferencia.cantidad,
           transferId: transferencia.id,
-          fecha: new Date().toISOString().split('T')[0],
+          fecha: formatLocalDate(new Date()),
           notas: `Transferencia verificada`,
         });
 

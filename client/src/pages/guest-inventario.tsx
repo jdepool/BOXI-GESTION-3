@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
+import { formatLocalDate } from "@/lib/date-utils";
 import { Shield, Package, Upload, X, FileSpreadsheet, TrendingDown, AlertTriangle, Box } from "lucide-react";
 import * as XLSX from "xlsx";
 
@@ -819,7 +820,7 @@ function GestionarAlmacenesTab({ token }: { token: string }) {
   const [almacenOrigen, setAlmacenOrigen] = useState("");
   const [almacenDestino, setAlmacenDestino] = useState("");
   const [cantidad, setCantidad] = useState("");
-  const [fechaTransfer, setFechaTransfer] = useState(new Date().toISOString().split('T')[0]);
+  const [fechaTransfer, setFechaTransfer] = useState(formatLocalDate(new Date()));
   const [notasTransfer, setNotasTransfer] = useState("");
 
   const { data: almacenes = [] } = useQuery({
