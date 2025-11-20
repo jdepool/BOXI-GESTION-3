@@ -80,19 +80,6 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
   const hasInitialized = useRef(false);
   const lastProspectoId = useRef<string | null>(null);
 
-  // DEBUG: Log what date we're calculating
-  const currentDate = new Date();
-  const calculatedDate = formatLocalDate(currentDate);
-  console.log('🐛 DEBUG Date Info:', {
-    fullDateTime: currentDate.toString(),
-    timezoneOffset: currentDate.getTimezoneOffset(),
-    year: currentDate.getFullYear(),
-    month: currentDate.getMonth() + 1,
-    day: currentDate.getDate(),
-    calculatedDate,
-    oldBuggyMethod: currentDate.toISOString().split('T')[0]
-  });
-
   const form = useForm<ManualSaleFormData>({
     resolver: zodResolver(manualSaleSchema),
     defaultValues: {
@@ -101,7 +88,7 @@ export default function ManualSalesForm({ onSubmit, onCancel, isSubmitting = fal
       telefono: "",
       email: "",
       totalUsd: "",
-      fecha: calculatedDate,
+      fecha: formatLocalDate(new Date()),
       referencia: "",
       montoUsd: "",
       montoBs: "",

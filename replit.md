@@ -23,6 +23,8 @@ The backend is an Express.js and TypeScript RESTful API, utilizing PostgreSQL wi
 
 **CRITICAL Date Parsing Pattern**: Date-only fields (e.g., `YYYY-MM-DD`) must be parsed as local dates (e.g., `new Date(year, month-1, day)`) to prevent timezone-related off-by-one errors. Avoid `new Date("YYYY-MM-DD")`. This pattern is critical for both backend calculations and frontend display, and specific utilities (`parseLocalDate`, `formatLocalDate`) enforce this.
 
+**CRITICAL Date Creation Pattern**: When generating date strings for form defaults or server-side date assignments, ALWAYS use `formatLocalDate(new Date())` from `client/src/lib/date-utils.ts` or `shared/utils.ts`. NEVER use `new Date().toISOString().split('T')[0]` which converts to UTC first and causes off-by-one date errors for users in negative UTC offset timezones (e.g., Venezuela UTC-4). This fix was applied to manual sales forms, inventory transfers, bank statement imports, and prospecto-to-sale conversion. The formatLocalDate utility extracts year/month/day directly from the local Date object without UTC conversion.
+
 **Treble-Boxi Webhook Address Logic**: When address data is received via webhook, if billing and shipping addresses are the same (`misma_dir_fact` not "No"), both `direccionDespacho*` and `direccionFacturacion*` fields are populated identically. This mirrors manual form behavior.
 
 **Payment Calculation Logic**: `fleteAPagar` (amount customer owes) is used for `ordenPlusFlete` calculations, not `pagoFleteUsd` (amount customer paid), to accurately determine `saldoPendiente`. The formula `ordenPlusFlete = ordenAPagar + (fleteGratis ? 0 : fleteAPagar)` is applied consistently.
