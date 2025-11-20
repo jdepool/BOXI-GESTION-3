@@ -178,6 +178,7 @@ export default function GuestDespacho() {
                     <TableHead>Cantidad</TableHead>
                     <TableHead>Transportista</TableHead>
                     <TableHead>Nro. Guía</TableHead>
+                    <TableHead>Guía de Despacho</TableHead>
                     <TableHead>Estado Entrega</TableHead>
                     <TableHead>Fecha Despacho</TableHead>
                     <TableHead className="text-center">DESPACHADO</TableHead>
@@ -195,6 +196,24 @@ export default function GuestDespacho() {
                       <TableCell data-testid={`text-cantidad-${sale.id}`}>{sale.cantidadComponente ?? sale.cantidad}</TableCell>
                       <TableCell data-testid={`text-transportista-${sale.id}`}>{sale.transportistaNombre || "-"}</TableCell>
                       <TableCell data-testid={`text-nroguia-${sale.id}`}>{sale.nroGuia || "-"}</TableCell>
+                      <TableCell>
+                        {sale.dispatchSheetId ? (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              const downloadUrl = `/api/dispatch-sheets/${sale.id}/download`;
+                              window.open(downloadUrl, '_blank');
+                            }}
+                            data-testid={`button-download-dispatch-${sale.id}`}
+                          >
+                            <Download className="h-4 w-4 mr-2" />
+                            {sale.dispatchSheetFileName || "Descargar"}
+                          </Button>
+                        ) : (
+                          <span className="text-muted-foreground text-sm">-</span>
+                        )}
+                      </TableCell>
                       <TableCell>
                         <Badge variant="outline" data-testid={`badge-estado-${sale.id}`}>
                           {sale.estadoEntrega}
