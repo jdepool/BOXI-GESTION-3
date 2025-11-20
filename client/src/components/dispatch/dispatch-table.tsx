@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { AutoExpandingTextarea } from "@/components/ui/auto-expanding-textarea";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { DateRangePicker } from "@/components/shared/date-range-picker";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -1247,37 +1248,41 @@ function DispatchSheetCell({ saleId }: { saleId: string }) {
 
   if (dispatchSheet) {
     return (
-      <div className="flex gap-1">
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-7 text-xs flex-1"
-              onClick={() => window.open(`/objects/${dispatchSheet.filePath.replace('/objects/', '')}`, '_blank')}
-              data-testid={`button-download-dispatch-sheet-${saleId}`}
-            >
-              <FileText className="h-3 w-3" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>Ver/Descargar PDF</TooltipContent>
-        </Tooltip>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-7 text-xs text-red-600 hover:text-red-700"
-              onClick={handleDelete}
-              disabled={deleteMutation.isPending}
-              data-testid={`button-delete-dispatch-sheet-${saleId}`}
-            >
-              <Trash2 className="h-3 w-3" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>Eliminar</TooltipContent>
-        </Tooltip>
-      </div>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 w-7 p-0"
+            data-testid={`button-dispatch-sheet-menu-${saleId}`}
+          >
+            <FileText className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem
+            onClick={() => window.open(`/objects/${dispatchSheet.filePath.replace('/objects/', '')}`, '_blank')}
+            data-testid={`button-download-dispatch-sheet-${saleId}`}
+          >
+            <FileText className="h-4 w-4 mr-2" />
+            Ver/Descargar PDF
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={(e) => {
+              if (deleteMutation.isPending) {
+                e.preventDefault();
+                return;
+              }
+              handleDelete();
+            }}
+            className={cn("text-red-600", deleteMutation.isPending && "opacity-50 cursor-not-allowed")}
+            data-testid={`button-delete-dispatch-sheet-${saleId}`}
+          >
+            <Trash2 className="h-4 w-4 mr-2" />
+            {deleteMutation.isPending ? "Eliminando..." : "Eliminar"}
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
     );
   }
 
@@ -1289,8 +1294,7 @@ function DispatchSheetCell({ saleId }: { saleId: string }) {
       onComplete={handleUploadComplete}
       buttonClassName="h-7 w-full text-xs"
     >
-      <Upload className="h-3 w-3 mr-1" />
-      Subir
+      Incluir Guia
     </ObjectUploader>
   );
 }

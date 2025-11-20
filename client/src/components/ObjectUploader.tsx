@@ -51,7 +51,7 @@ export function ObjectUploader({
   // Cleanup Uppy instance on unmount
   useEffect(() => {
     return () => {
-      uppy.close();
+      uppy.cancelAll();
     };
   }, [uppy]);
 
@@ -66,6 +66,7 @@ export function ObjectUploader({
         open={showModal}
         onRequestClose={() => setShowModal(false)}
         proudlyDisplayPoweredByUppy={false}
+        note=""
       />
     </div>
   );
