@@ -1248,33 +1248,143 @@ export class DatabaseStorage implements IStorage {
       };
     }
 
-    // Step 2: Get sale IDs to fetch their components
-    const saleIds = paginatedSales.map(s => s.id);
+    // Step 2: SKU enrichment - match product names to productos when SKU is NULL
+    // Fetch productos once for exact matching
+    const allProductos = await db
+      .select({ nombre: productos.nombre, sku: productos.sku })
+      .from(productos)  
+      .where(and(isNotNull(productos.sku), isNotNull(productos.nombre)));
 
-    // Step 3: Create alias for productos table to distinguish product from component
+    // Build exact match lookup for O(1) performance
+    const skuMap = new Map<string, string>();
+    for (const producto of allProductos) {
+      if (producto.nombre && producto.sku) {
+        // Normalize for case-insensitive exact matching
+        const normalized = producto.nombre.toLowerCase().trim();
+        skuMap.set(normalized, producto.sku);
+      }
+    }
+
+    // Apply exact SKU matching - enrich sales with missing SKUs
+    const enrichedSales = paginatedSales.map((sale) => {
+      // Priority 1: If sale already has SKU (manual/Shopify), keep it
+      if (sale.sku) {
+        return sale;
+      }
+
+      // Priority 2: Try exact match with productos
+      if (sale.product) {
+        const normalized = sale.product.toLowerCase().trim();
+        const matchedSku = skuMap.get(normalized);
+        if (matchedSku) {
+          return { ...sale, sku: matchedSku };
+        }
+      }
+
+      // Priority 3: No match - return sale as-is with null SKU
+      return sale;
+    });
+
+    // PHASE 1: Run baseline LEFT JOIN for ALL sales (this is authoritative fallback)
+    const saleIds = enrichedSales.map(s => s.id);
     const productoAlias = alias(productos, 'producto');
     const componenteAlias = alias(productos, 'componente');
 
-    // Step 4: Fetch components for the paginated sales
-    const ordersWithComponents = await db
+    const baselineComponentRows = await db
       .select({
-        // All sale fields
         sale: sales,
-        // Component information
         componenteSku: componenteAlias.sku,
-        cantidadComponente: sql<number>`${sales.cantidad} * COALESCE(${productosComponentes.cantidad}, 1)`,
+        componenteCantidad: productosComponentes.cantidad,
       })
       .from(sales)
       .leftJoin(productoAlias, eq(sales.sku, productoAlias.sku))
       .leftJoin(productosComponentes, eq(productoAlias.id, productosComponentes.productoId))
       .leftJoin(componenteAlias, eq(productosComponentes.componenteId, componenteAlias.id))
-      .where(inArray(sales.id, saleIds))
-      .orderBy(sql`${sales.fechaEntrega} ASC NULLS FIRST`, sales.orden);
+      .where(inArray(sales.id, saleIds));
 
-    // Step 5: Create a map of sale IDs to their original order position
-    const saleOrderMap = new Map(paginatedSales.map((sale, index) => [sale.id, index]));
+    // PHASE 2: For NULL SKU sales where enrichment succeeded, fetch enriched components
+    const salesWithEnrichedSku = enrichedSales.filter(sale => {
+      const originalSku = paginatedSales.find(ps => ps.id === sale.id)?.sku;
+      return !originalSku && sale.sku; // NULL in DB, but enrichment found a SKU
+    });
+    
+    const enrichedSkus = Array.from(new Set(salesWithEnrichedSku.map(s => s.sku!)));
+    
+    const enrichedComponentRows = enrichedSkus.length > 0
+      ? await db
+          .select({
+            productoSku: productoAlias.sku,
+            componenteSku: componenteAlias.sku,
+            componenteCantidad: productosComponentes.cantidad,
+          })
+          .from(productoAlias)
+          .leftJoin(productosComponentes, eq(productoAlias.id, productosComponentes.productoId))
+          .leftJoin(componenteAlias, eq(productosComponentes.componenteId, componenteAlias.id))
+          .where(inArray(productoAlias.sku, enrichedSkus))
+      : [];
 
-    // Step 6: Transform the results to include component info in the sale object
+    // Build map: enriched SKU -> components
+    const enrichedComponentsBySku = new Map<string, typeof enrichedComponentRows>();
+    for (const row of enrichedComponentRows) {
+      if (row.productoSku) {
+        if (!enrichedComponentsBySku.has(row.productoSku)) {
+          enrichedComponentsBySku.set(row.productoSku, []);
+        }
+        enrichedComponentsBySku.get(row.productoSku)!.push(row);
+      }
+    }
+
+    // PHASE 3: Merge - start with baseline, replace with enriched when available
+    const mergedComponentRowsBySaleId = new Map<string, any[]>();
+    
+    // Step 3a: Load all baseline rows into map
+    for (const row of baselineComponentRows) {
+      if (!mergedComponentRowsBySaleId.has(row.sale.id)) {
+        mergedComponentRowsBySaleId.set(row.sale.id, []);
+      }
+      mergedComponentRowsBySaleId.get(row.sale.id)!.push({
+        sale: row.sale,
+        componenteSku: row.componenteSku,
+        cantidadComponente: row.sale.cantidad * (row.componenteCantidad || 1),
+      });
+    }
+    
+    // Step 3b: For sales with enriched SKUs, REPLACE baseline rows with enriched rows
+    for (const sale of salesWithEnrichedSku) {
+      const enrichedSku = sale.sku!;
+      const enrichedComps = enrichedComponentsBySku.get(enrichedSku);
+      
+      if (enrichedComps && enrichedComps.length > 0) {
+        // Replace baseline with enriched component rows
+        const enrichedSaleWithData = enrichedSales.find(s => s.id === sale.id)!;
+        const replacementRows = enrichedComps.map(comp => ({
+          sale: enrichedSaleWithData,
+          componenteSku: comp.componenteSku || enrichedSku,
+          cantidadComponente: enrichedSaleWithData.cantidad * (comp.componenteCantidad || 1),
+        }));
+        
+        mergedComponentRowsBySaleId.set(sale.id, replacementRows);
+      } else {
+        // Enriched SKU has no components - replace with self-reference
+        const enrichedSaleWithData = enrichedSales.find(s => s.id === sale.id)!;
+        mergedComponentRowsBySaleId.set(sale.id, [{
+          sale: enrichedSaleWithData,
+          componenteSku: enrichedSku,
+          cantidadComponente: enrichedSaleWithData.cantidad,
+        }]);
+      }
+    }
+    
+    // Step 3c: Flatten merged rows into final array
+    const ordersWithComponents: any[] = [];
+    for (const rows of mergedComponentRowsBySaleId.values()) {
+      ordersWithComponents.push(...rows);
+    }
+
+    // Step 4: Create a map of sale IDs to their original order position
+    const saleOrderMap = new Map(enrichedSales.map((sale, index) => [sale.id, index]));
+
+    // Step 5: Transform the results to include component info in the sale object
     const expandedData = ordersWithComponents.map(row => ({
       ...row.sale,
       componenteSku: row.componenteSku || row.sale.sku, // Fallback to sale SKU if no component
@@ -1282,13 +1392,13 @@ export class DatabaseStorage implements IStorage {
       _orderPosition: saleOrderMap.get(row.sale.id) || 0, // Track original position for sorting
     }));
 
-    // Step 7: Sort by original order position to maintain page ordering
+    // Step 6: Sort by original order position to maintain page ordering
     expandedData.sort((a, b) => (a._orderPosition || 0) - (b._orderPosition || 0));
 
     // Remove the temporary _orderPosition field
     expandedData.forEach(row => delete (row as any)._orderPosition);
 
-    // Step 8: Get total count of sales (not expanded rows) for pagination
+    // Step 7: Get total count of sales (not expanded rows) for pagination
     const [{ totalCount }] = await db
       .select({ totalCount: count() })
       .from(sales)
