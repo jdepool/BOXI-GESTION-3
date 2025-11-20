@@ -3778,6 +3778,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Decode base64 to binary buffer
       const pdfBuffer = Buffer.from(dispatchSheet.fileData, 'base64');
       
+      console.log(`📄 Downloading dispatch sheet ${id}: ${dispatchSheet.fileName}, size: ${pdfBuffer.length} bytes`);
+      
       // Set headers for PDF download
       res.setHeader('Content-Type', dispatchSheet.contentType || 'application/pdf');
       res.setHeader('Content-Disposition', `inline; filename="${dispatchSheet.fileName}"`);
