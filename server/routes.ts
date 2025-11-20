@@ -3,7 +3,7 @@ import express from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { db, withRetry } from "./db";
-import { sales, bancos, guestTokens, auditLogs, transportistas, productos, productosComponentes, type Sale } from "@shared/schema";
+import { sales, bancos, guestTokens, auditLogs, transportistas, productos, productosComponentes, dispatchSheets, type Sale } from "@shared/schema";
 import { eq, desc, and, gte, lte, or, ilike, inArray } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { 
