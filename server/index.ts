@@ -5,6 +5,7 @@ import { startCasheaScheduler, stopCasheaScheduler } from "./cashea-scheduler";
 import { startSeguimientoScheduler, stopSeguimientoScheduler } from "./seguimiento-scheduler";
 
 const app = express();
+app.set('trust proxy', true);
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
