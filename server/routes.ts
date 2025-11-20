@@ -3701,19 +3701,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Dispatch sheet already exists for this sale" });
       }
 
-      // Upload file to object storage
-      const { ObjectStorageService } = await import("./objectStorage");
-      const objectStorageService = new ObjectStorageService();
-      const filePath = await objectStorageService.uploadDispatchSheet(
-        file.buffer,
-        file.mimetype
-      );
+      // Convert PDF to base64
+      const fileData = file.buffer.toString('base64');
 
-      // Save dispatch sheet metadata
+      // Save dispatch sheet with base64 data
       const dispatchSheet = await storage.createDispatchSheet({
         saleId,
         fileName: file.originalname,
-        filePath,
+        fileData,
         fileSize: file.size,
         contentType: file.mimetype || 'application/pdf',
         uploadedBy: req.session?.user?.id || 'system',
@@ -3749,21 +3744,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { id } = req.params;
       
-      // Get dispatch sheet to get file path
+      // Get dispatch sheet to verify it exists
       const dispatchSheet = await storage.getDispatchSheetBySaleId(id);
       if (!dispatchSheet) {
         return res.status(404).json({ error: "Dispatch sheet not found" });
       }
 
-      // Delete file from object storage
-      try {
-        const { ObjectStorageService } = await import("./objectStorage");
-        const objectStorageService = new ObjectStorageService();
-        await objectStorageService.deleteDispatchSheet(dispatchSheet.filePath);
-      } catch (error) {
-        console.error("Error deleting file from object storage:", error);
-      }
-
+      // Delete from database (no file storage to clean up - it's in the DB)
       // Delete metadata from database
       const deleted = await storage.deleteDispatchSheet(dispatchSheet.id);
       
@@ -3780,38 +3767,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Download dispatch sheet PDF - allow all users (regular and guests with despacho scope)
   app.get("/api/dispatch-sheets/:id/download", async (req, res) => {
-    // Import once for entire route
-    const { ObjectStorageService, ObjectNotFoundError } = await import("./objectStorage");
-    
     try {
       const { id } = req.params;
       
-      // Get dispatch sheet metadata
+      // Get dispatch sheet with base64 data
       const dispatchSheet = await storage.getDispatchSheetBySaleId(id);
       if (!dispatchSheet) {
         return res.status(404).json({ error: "Dispatch sheet not found" });
       }
 
-      // Download file from object storage
-      const objectStorageService = new ObjectStorageService();
-      await objectStorageService.downloadDispatchSheet(
-        dispatchSheet.filePath,
-        dispatchSheet.contentType || 'application/pdf',
-        res
-      );
+      // Decode base64 to binary buffer
+      const pdfBuffer = Buffer.from(dispatchSheet.fileData, 'base64');
+      
+      // Set headers for PDF download
+      res.setHeader('Content-Type', dispatchSheet.contentType || 'application/pdf');
+      res.setHeader('Content-Disposition', `inline; filename="${dispatchSheet.fileName}"`);
+      res.setHeader('Content-Length', pdfBuffer.length);
+      
+      // Send PDF buffer
+      res.send(pdfBuffer);
     } catch (error) {
       console.error("Error downloading dispatch sheet:", error);
       
-      // Handle not found error specifically - return 404
-      if (error instanceof ObjectNotFoundError) {
-        if (!res.headersSent) {
-          return res.status(404).json({ error: "File not found in storage" });
-        }
-        // If headers already sent (rare edge case), just end the response
-        return;
-      }
-      
-      // All other errors - return 500
+      // Return 500 for any error
       if (!res.headersSent) {
         return res.status(500).json({ error: "Failed to download file" });
       }
@@ -7190,18 +7168,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           if (dispatchSheet) {
             console.log(`🗑️ Auto-deleting dispatch sheet for delivered sale ${id}`);
             
-            // Delete file from Object Storage
-            const { ObjectStorageService } = await import("./objectStorage");
-            const objectStorageService = new ObjectStorageService();
-            await objectStorageService.deleteDispatchSheet(dispatchSheet.filePath);
-            
-            // Delete database record
+            // Delete database record (file data is stored as base64 in the DB, so no separate file to delete)
             await storage.deleteDispatchSheet(dispatchSheet.id);
             
             console.log(`✅ Dispatch sheet deleted successfully for sale ${id}`);
           }
         } catch (error) {
-          // Don't fail the sale update if file deletion fails
+          // Don't fail the sale update if deletion fails
           console.error("Error deleting dispatch sheet during delivery:", error);
         }
       }

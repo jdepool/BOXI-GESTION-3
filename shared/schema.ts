@@ -381,12 +381,12 @@ export const auditLogs = pgTable("audit_logs", {
   createdAtIdx: index("audit_logs_created_at_idx").on(table.createdAt),
 }));
 
-// Dispatch sheets for orders - stores PDF files in object storage
+// Dispatch sheets for orders - stores PDF files as base64 in database
 export const dispatchSheets = pgTable("dispatch_sheets", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   saleId: varchar("sale_id").notNull().references(() => sales.id, { onDelete: "cascade" }),
   fileName: text("file_name").notNull(),
-  filePath: text("file_path").notNull(), // Object storage path (e.g., dispatch-sheets/uuid)
+  fileData: text("file_data").notNull(), // Base64 encoded PDF
   fileSize: integer("file_size").notNull(), // Size in bytes
   contentType: text("content_type").notNull().default("application/pdf"), // MIME type
   uploadedBy: varchar("uploaded_by").notNull(), // User ID who uploaded
