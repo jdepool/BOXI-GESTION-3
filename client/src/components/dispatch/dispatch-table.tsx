@@ -11,7 +11,9 @@ import { DateRangePicker } from "@/components/shared/date-range-picker";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Download, Package, ChevronLeft, ChevronRight, Filter, ChevronDown, ChevronUp, RotateCcw, CalendarIcon, Truck, Banknote } from "lucide-react";
+import { Download, Package, ChevronLeft, ChevronRight, Filter, ChevronDown, ChevronUp, RotateCcw, CalendarIcon, Truck, Banknote, Upload, FileText, Trash2 } from "lucide-react";
+import { ObjectUploader } from "@/components/ObjectUploader";
+import type { UploadResult } from "@uppy/core";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -754,6 +756,7 @@ export default function DispatchTable({
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[120px]">Fecha</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[150px]">Asesor</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[180px]">Notas</th>
+                    <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[150px]">Hoja de Despacho</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[180px]">Transportista</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[150px]">Nro Guía</th>
                     <th className="text-left p-2 text-xs font-medium text-muted-foreground min-w-[150px]">Fecha Despacho</th>
@@ -947,6 +950,10 @@ export default function DispatchTable({
                             <NotesDisplay notes={sale.notas} />
                           </div>
                         )}
+                      </td>
+                      
+                      <td className="p-2 min-w-[150px]">
+                        <DispatchSheetCell saleId={sale.id} />
                       </td>
                       
                       <td className="p-2 min-w-[180px] text-xs">
@@ -1148,5 +1155,142 @@ export default function DispatchTable({
         </div>
       )}
     </>
+  );
+}
+
+// DispatchSheetCell component for managing dispatch sheet uploads
+function DispatchSheetCell({ saleId }: { saleId: string }) {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  // Query to check if dispatch sheet exists
+  const { data: dispatchSheet, isLoading } = useQuery({
+    queryKey: [`/api/dispatch-sheets/sale/${saleId}`],
+    enabled: !!saleId,
+    retry: false,
+  });
+
+  // Upload mutation
+  const uploadMutation = useMutation({
+    mutationFn: async (data: { saleId: string; fileName: string; filePath: string; fileSize: number }) => {
+      return apiRequest(`/api/dispatch-sheets`, {
+        method: "POST",
+        body: JSON.stringify(data),
+        headers: { "Content-Type": "application/json" },
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/dispatch-sheets/sale/${saleId}`] });
+      toast({ title: "Éxito", description: "Hoja de despacho subida correctamente" });
+    },
+    onError: (error: any) => {
+      toast({ 
+        title: "Error", 
+        description: error.message || "Error al subir hoja de despacho",
+        variant: "destructive" 
+      });
+    },
+  });
+
+  // Delete mutation
+  const deleteMutation = useMutation({
+    mutationFn: async (dispatchSheetId: string) => {
+      return apiRequest(`/api/dispatch-sheets/${dispatchSheetId}`, {
+        method: "DELETE",
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/dispatch-sheets/sale/${saleId}`] });
+      toast({ title: "Éxito", description: "Hoja de despacho eliminada" });
+    },
+    onError: (error: any) => {
+      toast({ 
+        title: "Error", 
+        description: error.message || "Error al eliminar hoja de despacho",
+        variant: "destructive" 
+      });
+    },
+  });
+
+  const handleGetUploadUrl = async () => {
+    const response = await fetch("/api/dispatch-sheets/upload-url", {
+      credentials: "include",
+    });
+    const data = await response.json();
+    return {
+      method: "PUT" as const,
+      url: data.uploadURL,
+    };
+  };
+
+  const handleUploadComplete = (result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
+    if (result.successful && result.successful.length > 0) {
+      const file = result.successful[0];
+      uploadMutation.mutate({
+        saleId,
+        fileName: file.name,
+        filePath: file.uploadURL,
+        fileSize: file.size || 0,
+      });
+    }
+  };
+
+  const handleDelete = () => {
+    if (dispatchSheet && window.confirm("¿Está seguro de eliminar la hoja de despacho?")) {
+      deleteMutation.mutate(dispatchSheet.id);
+    }
+  };
+
+  if (isLoading) {
+    return <Skeleton className="h-8 w-full" />;
+  }
+
+  if (dispatchSheet) {
+    return (
+      <div className="flex gap-1">
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-7 text-xs flex-1"
+              onClick={() => window.open(`/objects/${dispatchSheet.filePath.replace('/objects/', '')}`, '_blank')}
+              data-testid={`button-download-dispatch-sheet-${saleId}`}
+            >
+              <FileText className="h-3 w-3" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Ver/Descargar PDF</TooltipContent>
+        </Tooltip>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-7 text-xs text-red-600 hover:text-red-700"
+              onClick={handleDelete}
+              disabled={deleteMutation.isPending}
+              data-testid={`button-delete-dispatch-sheet-${saleId}`}
+            >
+              <Trash2 className="h-3 w-3" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Eliminar</TooltipContent>
+        </Tooltip>
+      </div>
+    );
+  }
+
+  return (
+    <ObjectUploader
+      maxNumberOfFiles={1}
+      maxFileSize={10485760}
+      onGetUploadParameters={handleGetUploadUrl}
+      onComplete={handleUploadComplete}
+      buttonClassName="h-7 w-full text-xs"
+    >
+      <Upload className="h-3 w-3 mr-1" />
+      Subir
+    </ObjectUploader>
   );
 }
