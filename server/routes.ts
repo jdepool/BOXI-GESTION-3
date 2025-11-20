@@ -3696,6 +3696,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         fileName: file.originalname,
         filePath,
         fileSize: file.size,
+        contentType: file.mimetype || 'application/pdf',
         uploadedBy: req.session?.user?.id || 'system',
       });
 
@@ -3760,6 +3761,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Download dispatch sheet PDF - allow all users (regular and guests with despacho scope)
   app.get("/api/dispatch-sheets/:id/download", async (req, res) => {
+    // Import once for entire route
+    const { ObjectStorageService, ObjectNotFoundError } = await import("./objectStorage");
+    
     try {
       const { id } = req.params;
       
@@ -3770,13 +3774,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Download file from object storage
-      const { ObjectStorageService } = await import("./objectStorage");
       const objectStorageService = new ObjectStorageService();
-      await objectStorageService.downloadDispatchSheet(dispatchSheet.filePath, res);
+      await objectStorageService.downloadDispatchSheet(
+        dispatchSheet.filePath,
+        dispatchSheet.contentType || 'application/pdf',
+        res
+      );
     } catch (error) {
       console.error("Error downloading dispatch sheet:", error);
+      
+      // Handle not found error specifically - return 404
+      if (error instanceof ObjectNotFoundError) {
+        if (!res.headersSent) {
+          return res.status(404).json({ error: "File not found in storage" });
+        }
+        // If headers already sent (rare edge case), just end the response
+        return;
+      }
+      
+      // All other errors - return 500
       if (!res.headersSent) {
-        res.status(500).json({ error: "Failed to download file" });
+        return res.status(500).json({ error: "Failed to download file" });
       }
     }
   });

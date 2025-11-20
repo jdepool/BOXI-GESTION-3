@@ -386,8 +386,9 @@ export const dispatchSheets = pgTable("dispatch_sheets", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   saleId: varchar("sale_id").notNull().references(() => sales.id, { onDelete: "cascade" }),
   fileName: text("file_name").notNull(),
-  filePath: text("file_path").notNull(), // Object storage path (e.g., /objects/uploads/uuid)
+  filePath: text("file_path").notNull(), // Object storage path (e.g., dispatch-sheets/uuid)
   fileSize: integer("file_size").notNull(), // Size in bytes
+  contentType: text("content_type").notNull().default("application/pdf"), // MIME type
   uploadedBy: varchar("uploaded_by").notNull(), // User ID who uploaded
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
