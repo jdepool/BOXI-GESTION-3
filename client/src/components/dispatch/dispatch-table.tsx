@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -13,8 +13,6 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Download, Package, ChevronLeft, ChevronRight, Filter, ChevronDown, ChevronUp, RotateCcw, CalendarIcon, Truck, Banknote, Upload, FileText, Trash2 } from "lucide-react";
-import { ObjectUploader } from "@/components/ObjectUploader";
-import type { UploadResult } from "@uppy/core";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -1175,12 +1173,23 @@ function DispatchSheetCell({ saleId, isGuestView = false }: { saleId: string; is
 
   // Upload mutation
   const uploadMutation = useMutation({
-    mutationFn: async (data: { saleId: string; fileName: string; filePath: string; fileSize: number }) => {
-      return apiRequest(`/api/dispatch-sheets`, {
+    mutationFn: async (file: File) => {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('saleId', saleId);
+      
+      const response = await fetch(`/api/dispatch-sheets`, {
         method: "POST",
-        body: JSON.stringify(data),
-        headers: { "Content-Type": "application/json" },
+        body: formData,
+        credentials: "include",
       });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Upload failed');
+      }
+      
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/dispatch-sheets/sale/${saleId}`] });
@@ -1215,26 +1224,16 @@ function DispatchSheetCell({ saleId, isGuestView = false }: { saleId: string; is
     },
   });
 
-  const handleGetUploadUrl = async () => {
-    const response = await fetch("/api/dispatch-sheets/upload-url", {
-      credentials: "include",
-    });
-    const data = await response.json();
-    return {
-      method: "PUT" as const,
-      url: data.uploadURL,
-    };
-  };
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleUploadComplete = (result: UploadResult<Record<string, unknown>, Record<string, unknown>>) => {
-    if (result.successful && result.successful.length > 0) {
-      const file = result.successful[0];
-      uploadMutation.mutate({
-        saleId,
-        fileName: file.name,
-        filePath: file.uploadURL,
-        fileSize: file.size || 0,
-      });
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && file.type === 'application/pdf') {
+      uploadMutation.mutate(file);
+    }
+    // Reset input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
     }
   };
 
@@ -1256,7 +1255,7 @@ function DispatchSheetCell({ saleId, isGuestView = false }: { saleId: string; is
           variant="ghost"
           size="sm"
           className="h-7 w-7 p-0"
-          onClick={() => window.open(`/objects/${dispatchSheet.filePath.replace('/objects/', '')}`, '_blank')}
+          onClick={() => window.open(`/api/dispatch-sheets/${saleId}/download`, '_blank')}
           data-testid={`button-download-dispatch-sheet-${saleId}`}
         >
           <FileText className="h-4 w-4" />
@@ -1279,7 +1278,7 @@ function DispatchSheetCell({ saleId, isGuestView = false }: { saleId: string; is
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuItem
-            onClick={() => window.open(`/objects/${dispatchSheet.filePath.replace('/objects/', '')}`, '_blank')}
+            onClick={() => window.open(`/api/dispatch-sheets/${saleId}/download`, '_blank')}
             data-testid={`button-download-dispatch-sheet-${saleId}`}
           >
             <FileText className="h-4 w-4 mr-2" />
@@ -1312,14 +1311,23 @@ function DispatchSheetCell({ saleId, isGuestView = false }: { saleId: string; is
 
   // Admin view: show upload button
   return (
-    <ObjectUploader
-      maxNumberOfFiles={1}
-      maxFileSize={10485760}
-      onGetUploadParameters={handleGetUploadUrl}
-      onComplete={handleUploadComplete}
-      buttonClassName="h-7 w-full text-xs"
-    >
-      Incluir Guía
-    </ObjectUploader>
+    <>
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".pdf,application/pdf"
+        onChange={handleFileSelect}
+        style={{ display: 'none' }}
+        data-testid="hidden-file-input"
+      />
+      <Button 
+        onClick={() => fileInputRef.current?.click()} 
+        className="h-7 w-full text-xs"
+        disabled={uploadMutation.isPending}
+        data-testid="button-upload-dispatch-sheet"
+      >
+        {uploadMutation.isPending ? "Subiendo..." : "Incluir Guía"}
+      </Button>
+    </>
   );
 }

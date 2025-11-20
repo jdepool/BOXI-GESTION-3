@@ -19,9 +19,7 @@ export class ObjectStorageService {
     const objectId = randomUUID();
     const objectPath = `dispatch-sheets/${objectId}`;
     
-    const { ok, error } = await storageClient.uploadFromBytes(objectPath, fileBuffer, {
-      contentType: contentType || 'application/pdf',
-    });
+    const { ok, error } = await storageClient.uploadFromBytes(objectPath, fileBuffer);
     
     if (!ok) {
       console.error('Upload error:', error);
