@@ -1252,7 +1252,7 @@ function DispatchSheetCell({ saleId, isGuestView = false }: { saleId: string; is
     if (isGuestView) {
       return (
         <a
-          href={`/api/dispatch-sheets/${saleId}/download`}
+          href={`/api/dispatch-sheets/${dispatchSheet.id}/download`}
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-background hover:bg-accent hover:text-accent-foreground h-7 w-7 p-0"
@@ -1279,7 +1279,7 @@ function DispatchSheetCell({ saleId, isGuestView = false }: { saleId: string; is
         <DropdownMenuContent align="end">
           <DropdownMenuItem asChild>
             <a
-              href={`/api/dispatch-sheets/${saleId}/download`}
+              href={`/api/dispatch-sheets/${dispatchSheet.id}/download`}
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center cursor-pointer"
