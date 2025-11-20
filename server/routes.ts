@@ -3745,14 +3745,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { id } = req.params;
       
       // Get dispatch sheet to verify it exists
-      const dispatchSheet = await storage.getDispatchSheetBySaleId(id);
+      const dispatchSheet = await storage.getDispatchSheetById(id);
       if (!dispatchSheet) {
         return res.status(404).json({ error: "Dispatch sheet not found" });
       }
 
       // Delete from database (no file storage to clean up - it's in the DB)
-      // Delete metadata from database
-      const deleted = await storage.deleteDispatchSheet(dispatchSheet.id);
+      const deleted = await storage.deleteDispatchSheet(id);
       
       if (!deleted) {
         return res.status(500).json({ error: "Failed to delete dispatch sheet" });
