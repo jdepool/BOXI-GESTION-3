@@ -198,18 +198,16 @@ export default function GuestDespacho() {
                       <TableCell data-testid={`text-nroguia-${sale.id}`}>{sale.nroGuia || "-"}</TableCell>
                       <TableCell>
                         {sale.dispatchSheetId ? (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => {
-                              const downloadUrl = `/api/dispatch-sheets/${sale.dispatchSheetId}/download`;
-                              window.open(downloadUrl, '_blank');
-                            }}
+                          <a
+                            href={`/api/dispatch-sheets/${sale.dispatchSheetId}/download`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-9 px-3"
                             data-testid={`button-download-dispatch-${sale.id}`}
                           >
                             <Download className="h-4 w-4 mr-2" />
                             {sale.dispatchSheetFileName || "Descargar"}
-                          </Button>
+                          </a>
                         ) : (
                           <span className="text-muted-foreground text-sm">-</span>
                         )}

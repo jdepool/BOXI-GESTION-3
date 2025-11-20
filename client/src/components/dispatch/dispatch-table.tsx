@@ -1207,9 +1207,7 @@ function DispatchSheetCell({ saleId, isGuestView = false }: { saleId: string; is
   // Delete mutation
   const deleteMutation = useMutation({
     mutationFn: async (dispatchSheetId: string) => {
-      return apiRequest(`/api/dispatch-sheets/${dispatchSheetId}`, {
-        method: "DELETE",
-      });
+      return apiRequest("DELETE", `/api/dispatch-sheets/${dispatchSheetId}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [`/api/dispatch-sheets/sale/${saleId}`] });
