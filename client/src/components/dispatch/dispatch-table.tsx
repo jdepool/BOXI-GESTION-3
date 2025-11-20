@@ -1251,15 +1251,15 @@ function DispatchSheetCell({ saleId, isGuestView = false }: { saleId: string; is
     // If guest view, show download button only (no delete option)
     if (isGuestView) {
       return (
-        <Button
-          variant="ghost"
-          size="sm"
-          className="h-7 w-7 p-0"
-          onClick={() => window.open(`/api/dispatch-sheets/${saleId}/download`, '_blank')}
+        <a
+          href={`/api/dispatch-sheets/${saleId}/download`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-background hover:bg-accent hover:text-accent-foreground h-7 w-7 p-0"
           data-testid={`button-download-dispatch-sheet-${saleId}`}
         >
           <FileText className="h-4 w-4" />
-        </Button>
+        </a>
       );
     }
     
@@ -1277,12 +1277,17 @@ function DispatchSheetCell({ saleId, isGuestView = false }: { saleId: string; is
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuItem
-            onClick={() => window.open(`/api/dispatch-sheets/${saleId}/download`, '_blank')}
-            data-testid={`button-download-dispatch-sheet-${saleId}`}
-          >
-            <FileText className="h-4 w-4 mr-2" />
-            Ver/Descargar PDF
+          <DropdownMenuItem asChild>
+            <a
+              href={`/api/dispatch-sheets/${saleId}/download`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center cursor-pointer"
+              data-testid={`button-download-dispatch-sheet-${saleId}`}
+            >
+              <FileText className="h-4 w-4 mr-2" />
+              Ver/Descargar PDF
+            </a>
           </DropdownMenuItem>
           <DropdownMenuItem
             onClick={(e) => {
