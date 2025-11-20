@@ -512,6 +512,7 @@ export interface IStorage {
 
   // Dispatch sheets (PDF files for orders)
   createDispatchSheet(dispatchSheet: InsertDispatchSheet): Promise<DispatchSheet>;
+  getDispatchSheetById(id: string): Promise<DispatchSheet | undefined>;
   getDispatchSheetBySaleId(saleId: string): Promise<DispatchSheet | undefined>;
   deleteDispatchSheet(id: string): Promise<boolean>;
 }
