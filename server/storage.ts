@@ -5053,6 +5053,14 @@ export class DatabaseStorage implements IStorage {
     return newDispatchSheet;
   }
 
+  async getDispatchSheetById(id: string): Promise<DispatchSheet | undefined> {
+    const [dispatchSheet] = await db
+      .select()
+      .from(dispatchSheets)
+      .where(eq(dispatchSheets.id, id));
+    return dispatchSheet || undefined;
+  }
+
   async getDispatchSheetBySaleId(saleId: string): Promise<DispatchSheet | undefined> {
     const [dispatchSheet] = await db
       .select()
