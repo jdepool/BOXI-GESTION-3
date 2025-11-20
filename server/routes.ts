@@ -3659,27 +3659,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Dispatch sheet routes (PDF file management for orders)
-  // Get presigned URL for uploading dispatch sheet
-  // Allow all users to get upload URL for dispatch sheets
-  app.get("/api/dispatch-sheets/upload-url", async (req, res) => {
+  // Upload dispatch sheet directly - simplified approach
+  // Allow all users to upload dispatch sheets
+  app.post("/api/dispatch-sheets", upload.single('file'), async (req, res) => {
     try {
-      const { ObjectStorageService } = await import("./objectStorage");
-      const objectStorageService = new ObjectStorageService();
-      const uploadURL = await objectStorageService.getObjectEntityUploadURL();
-      res.json({ uploadURL });
-    } catch (error) {
-      console.error("Error getting upload URL:", error);
-      res.status(500).json({ error: "Failed to get upload URL" });
-    }
-  });
-
-  // Create dispatch sheet metadata after upload
-  // Allow all users to create dispatch sheet records
-  app.post("/api/dispatch-sheets", async (req, res) => {
-    try {
-      const { saleId, fileName, filePath, fileSize } = req.body;
+      const { saleId } = req.body;
+      const file = req.file;
       
-      if (!saleId || !fileName || !filePath || !fileSize) {
+      if (!saleId || !file) {
         return res.status(400).json({ error: "Missing required fields" });
       }
 
@@ -3695,24 +3682,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Dispatch sheet already exists for this sale" });
       }
 
-      // Set ACL policy for the uploaded file
+      // Upload file to object storage
       const { ObjectStorageService } = await import("./objectStorage");
       const objectStorageService = new ObjectStorageService();
-      const normalizedPath = await objectStorageService.trySetObjectEntityAclPolicy(
-        filePath,
-        {
-          owner: req.user!.id,
-          visibility: "private",
-        }
+      const filePath = await objectStorageService.uploadDispatchSheet(
+        file.buffer,
+        file.mimetype
       );
 
       // Save dispatch sheet metadata
       const dispatchSheet = await storage.createDispatchSheet({
         saleId,
-        fileName,
-        filePath: normalizedPath,
-        fileSize,
-        uploadedBy: req.user!.id,
+        fileName: file.originalname,
+        filePath,
+        fileSize: file.size,
+        uploadedBy: req.session?.user?.id || 'system',
       });
 
       res.json(dispatchSheet);
@@ -3755,8 +3739,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       try {
         const { ObjectStorageService } = await import("./objectStorage");
         const objectStorageService = new ObjectStorageService();
-        const objectFile = await objectStorageService.getObjectEntityFile(dispatchSheet.filePath);
-        await objectStorageService.deleteObjectEntity(objectFile);
+        await objectStorageService.deleteDispatchSheet(dispatchSheet.filePath);
       } catch (error) {
         console.error("Error deleting file from object storage:", error);
       }
@@ -3775,32 +3758,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Serve private objects (dispatch sheets) with authentication
-  app.get("/objects/:objectPath(*)", requireAuth, async (req, res) => {
+  // Download dispatch sheet PDF - allow all users (regular and guests with despacho scope)
+  app.get("/api/dispatch-sheets/:id/download", async (req, res) => {
     try {
-      const { ObjectStorageService, ObjectNotFoundError } = await import("./objectStorage");
-      const { ObjectPermission } = await import("./objectAcl");
+      const { id } = req.params;
+      
+      // Get dispatch sheet metadata
+      const dispatchSheet = await storage.getDispatchSheetBySaleId(id);
+      if (!dispatchSheet) {
+        return res.status(404).json({ error: "Dispatch sheet not found" });
+      }
+
+      // Download file from object storage
+      const { ObjectStorageService } = await import("./objectStorage");
       const objectStorageService = new ObjectStorageService();
-      
-      const objectFile = await objectStorageService.getObjectEntityFile(req.path);
-      const canAccess = await objectStorageService.canAccessObjectEntity({
-        objectFile,
-        userId: req.user?.id,
-        requestedPermission: ObjectPermission.READ,
-      });
-      
-      if (!canAccess) {
-        return res.sendStatus(401);
+      await objectStorageService.downloadDispatchSheet(dispatchSheet.filePath, res);
+    } catch (error) {
+      console.error("Error downloading dispatch sheet:", error);
+      if (!res.headersSent) {
+        res.status(500).json({ error: "Failed to download file" });
       }
-      
-      objectStorageService.downloadObject(objectFile, res);
-    } catch (error: any) {
-      console.error("Error accessing object:", error);
-      const { ObjectNotFoundError } = await import("./objectStorage");
-      if (error instanceof ObjectNotFoundError) {
-        return res.sendStatus(404);
-      }
-      return res.sendStatus(500);
     }
   });
 
