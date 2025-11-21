@@ -1300,50 +1300,47 @@ function DispatchSheetCell({ saleId, isGuestView = false }: { saleId: string; is
       );
     }
     
-    // Admin view: show download link and separate delete button
+    // Admin view: show dropdown with download and delete
     return (
-      <div className="flex items-center gap-1">
-        <a
-          href={`/api/dispatch-sheets/${dispatchSheet.id}/download`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-background hover:bg-accent hover:text-accent-foreground h-7 w-7 p-0"
-          data-testid={`button-download-dispatch-sheet-${saleId}`}
-        >
-          <FileText className="h-4 w-4" />
-        </a>
-        
-        <AlertDialog>
-          <AlertDialogTrigger asChild>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-7 w-7 p-0 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950"
-              disabled={deleteMutation.isPending}
-              data-testid={`button-delete-dispatch-sheet-${saleId}`}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 w-7 p-0"
+            data-testid={`button-dispatch-sheet-menu-${saleId}`}
+          >
+            <FileText className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem asChild>
+            <a
+              href={`/api/dispatch-sheets/${dispatchSheet.id}/download`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center cursor-pointer"
+              data-testid={`button-download-dispatch-sheet-${saleId}`}
             >
-              <Trash2 className="h-4 w-4" />
-            </Button>
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>¿Eliminar hoja de despacho?</AlertDialogTitle>
-              <AlertDialogDescription>
-                Esta acción no se puede deshacer. La hoja de despacho será eliminada permanentemente.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancelar</AlertDialogCancel>
-              <AlertDialogAction
-                onClick={() => deleteMutation.mutate(dispatchSheet.id)}
-                className="bg-red-600 hover:bg-red-700"
-              >
-                {deleteMutation.isPending ? "Eliminando..." : "Eliminar"}
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-      </div>
+              <FileText className="h-4 w-4 mr-2" />
+              Ver/Descargar PDF
+            </a>
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => {
+              if (window.confirm("¿Está seguro de eliminar la hoja de despacho?")) {
+                deleteMutation.mutate(dispatchSheet.id);
+              }
+            }}
+            className="text-red-600"
+            disabled={deleteMutation.isPending}
+            data-testid={`button-delete-dispatch-sheet-${saleId}`}
+          >
+            <Trash2 className="h-4 w-4 mr-2" />
+            {deleteMutation.isPending ? "Eliminando..." : "Eliminar"}
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
     );
   }
 
