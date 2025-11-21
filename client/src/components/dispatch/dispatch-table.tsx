@@ -1255,7 +1255,9 @@ function DispatchSheetCell({ saleId, isGuestView = false }: { saleId: string; is
       
       if (!response.ok) throw new Error('Download failed');
       
-      const blob = await response.blob();
+      // Create blob with explicit PDF MIME type
+      const arrayBuffer = await response.arrayBuffer();
+      const blob = new Blob([arrayBuffer], { type: 'application/pdf' });
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
