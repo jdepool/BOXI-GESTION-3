@@ -3767,7 +3767,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Download dispatch sheet PDF - allow all users (regular and guests with despacho scope)
-  app.get("/api/dispatch-sheets/:id/download", async (req, res) => {
+  app.get("/api/dispatch-sheets/:id/download", validateGuestToken, async (req, res) => {
     try {
       const { id } = req.params;
       
