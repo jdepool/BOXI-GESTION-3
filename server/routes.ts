@@ -3691,6 +3691,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Missing required fields" });
       }
 
+      // DEBUG: Log file details
+      console.log("📤 Upload received:", {
+        saleId,
+        fileName: file.originalname,
+        mimeType: file.mimetype,
+        fileSize: file.size,
+        bufferLength: file.buffer?.length || 0,
+        hasBuffer: !!file.buffer
+      });
+
       // Validate sale exists
       const sale = await storage.getSaleById(saleId);
       if (!sale) {
@@ -3705,6 +3715,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Convert PDF to base64
       const fileData = file.buffer.toString('base64');
+      
+      console.log("📝 Base64 conversion:", {
+        originalSize: file.size,
+        bufferLength: file.buffer.length,
+        base64Length: fileData.length,
+        isEmpty: fileData.length === 0
+      });
 
       // Save dispatch sheet with base64 data
       const dispatchSheet = await storage.createDispatchSheet({
