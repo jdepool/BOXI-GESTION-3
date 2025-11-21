@@ -9732,7 +9732,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Update sale fecha despacho and/or despachado (guest access with despacho scope)
-  app.patch("/api/guest/sales/:id", validateGuestToken, requireGuestScope("despacho", "fechaDespacho"), async (req, res) => {
+  app.patch("/api/guest/sales/:id", validateGuestToken, requireGuestScope("despacho"), async (req, res) => {
     try {
       const { fechaDespacho, despachado } = req.body;
       
