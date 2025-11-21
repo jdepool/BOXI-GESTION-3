@@ -1251,8 +1251,12 @@ function DispatchSheetCell({ saleId, isGuestView = false }: { saleId: string; is
     
     try {
       const token = new URLSearchParams(window.location.search).get('token');
-      const response = await fetch(`/api/dispatch-sheets/${dispatchSheet.id}/download`, {
-        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+      
+      const response = await fetch(`/api/guest/dispatch-sheets/${dispatchSheet.id}/download`, {
+        headers: { 'Authorization': `Bearer ${token}` }
       });
       
       if (!response.ok) throw new Error('Download failed');
