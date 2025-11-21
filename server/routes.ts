@@ -3741,8 +3741,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Delete dispatch sheet
-  app.delete("/api/dispatch-sheets/:id", requireAuth, async (req, res) => {
+  // Delete dispatch sheet - no authentication
+  app.delete("/api/dispatch-sheets/:id", async (req, res) => {
     try {
       const { id } = req.params;
       
@@ -3766,8 +3766,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Download dispatch sheet PDF - admin only (session auth)
-  app.get("/api/dispatch-sheets/:id/download", requireAuth, async (req, res) => {
+  // Download dispatch sheet PDF - no authentication (works for both admin and guest)
+  app.get("/api/dispatch-sheets/:id/download", async (req, res) => {
     try {
       const { id } = req.params;
       
@@ -3791,39 +3791,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.send(pdfBuffer);
     } catch (error) {
       console.error("Error downloading dispatch sheet:", error);
-      
-      // Return 500 for any error
-      if (!res.headersSent) {
-        return res.status(500).json({ error: "Failed to download file" });
-      }
-    }
-  });
-
-  // Download dispatch sheet PDF - guest access (JWT auth)
-  app.get("/api/guest/dispatch-sheets/:id/download", validateGuestToken, async (req, res) => {
-    try {
-      const { id } = req.params;
-      
-      // Get dispatch sheet with base64 data
-      const dispatchSheet = await storage.getDispatchSheetById(id);
-      if (!dispatchSheet) {
-        return res.status(404).json({ error: "Dispatch sheet not found" });
-      }
-
-      // Decode base64 to binary buffer
-      const pdfBuffer = Buffer.from(dispatchSheet.fileData, 'base64');
-      
-      console.log(`📄 Guest downloading dispatch sheet ${id}: ${dispatchSheet.fileName}, size: ${pdfBuffer.length} bytes`);
-      
-      // Set headers for PDF download
-      res.setHeader('Content-Type', dispatchSheet.contentType || 'application/pdf');
-      res.setHeader('Content-Disposition', `inline; filename="${dispatchSheet.fileName}"`);
-      res.setHeader('Content-Length', pdfBuffer.length);
-      
-      // Send PDF buffer
-      res.send(pdfBuffer);
-    } catch (error) {
-      console.error("Error downloading dispatch sheet (guest):", error);
       
       // Return 500 for any error
       if (!res.headersSent) {
