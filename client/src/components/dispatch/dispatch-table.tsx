@@ -1250,14 +1250,8 @@ function DispatchSheetCell({ saleId, isGuestView = false }: { saleId: string; is
     if (!dispatchSheet) return;
     
     try {
-      const token = new URLSearchParams(window.location.search).get('token');
-      if (!token) {
-        throw new Error('No authentication token found');
-      }
-      
-      const response = await fetch(`/api/guest/dispatch-sheets/${dispatchSheet.id}/download`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
+      // Simple fetch without authentication - endpoint is now open
+      const response = await fetch(`/api/dispatch-sheets/${dispatchSheet.id}/download`);
       
       if (!response.ok) throw new Error('Download failed');
       
