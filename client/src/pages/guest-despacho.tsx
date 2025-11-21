@@ -5,7 +5,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
@@ -193,82 +192,108 @@ export default function GuestDespacho() {
               No se encontraron ventas
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Orden</TableHead>
-                    <TableHead>Nombre</TableHead>
-                    <TableHead>Producto</TableHead>
-                    <TableHead>SKU</TableHead>
-                    <TableHead>Componente SKU</TableHead>
-                    <TableHead>Cantidad</TableHead>
-                    <TableHead>Transportista</TableHead>
-                    <TableHead>Nro. Guía</TableHead>
-                    <TableHead>Guía de Despacho</TableHead>
-                    <TableHead>Estado Entrega</TableHead>
-                    <TableHead>Fecha Despacho</TableHead>
-                    <TableHead className="text-center">DESPACHADO</TableHead>
-                    <TableHead>Acciones</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {salesData.data.map((sale) => (
-                    <TableRow key={sale.id}>
-                      <TableCell data-testid={`text-orden-${sale.id}`}>{sale.orden}</TableCell>
-                      <TableCell data-testid={`text-nombre-${sale.id}`}>{sale.nombre}</TableCell>
-                      <TableCell data-testid={`text-product-${sale.id}`}>{sale.product}</TableCell>
-                      <TableCell data-testid={`text-sku-${sale.id}`}>{sale.sku || "-"}</TableCell>
-                      <TableCell data-testid={`text-componente-sku-${sale.id}`}>{sale.componenteSku || "-"}</TableCell>
-                      <TableCell data-testid={`text-cantidad-${sale.id}`}>{sale.cantidadComponente ?? sale.cantidad}</TableCell>
-                      <TableCell data-testid={`text-transportista-${sale.id}`}>{sale.transportistaNombre || "-"}</TableCell>
-                      <TableCell data-testid={`text-nroguia-${sale.id}`}>{sale.nroGuia || "-"}</TableCell>
-                      <TableCell>
-                        {sale.dispatchSheetId ? (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleDispatchSheetDownload(sale.dispatchSheetId!, sale.dispatchSheetFileName || "guia.pdf")}
-                            data-testid={`button-download-dispatch-${sale.id}`}
-                          >
-                            <Download className="h-4 w-4 mr-2" />
-                            {sale.dispatchSheetFileName || "Descargar"}
-                          </Button>
-                        ) : (
-                          <span className="text-muted-foreground text-sm">-</span>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline" data-testid={`badge-estado-${sale.id}`}>
-                          {sale.estadoEntrega}
-                        </Badge>
-                      </TableCell>
-                      <TableCell data-testid={`text-fecha-${sale.id}`}>
-                        {sale.fechaDespacho ? format(new Date(sale.fechaDespacho), "dd/MM/yyyy") : "-"}
-                      </TableCell>
-                      <TableCell className="text-center">
-                        <Checkbox
-                          checked={sale.despachado}
-                          onCheckedChange={() => handleToggleDespachado(sale)}
-                          disabled={updateSaleMutation.isPending}
-                          data-testid={`checkbox-despachado-${sale.id}`}
-                        />
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => handleEditFechaDespacho(sale)}
-                          data-testid={`button-edit-fecha-${sale.id}`}
-                        >
-                          <Calendar className="h-4 w-4 mr-2" />
-                          Editar Fecha
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+            <div className="relative border rounded-lg">
+              <div className="overflow-x-auto max-w-full">
+                <div className="inline-block min-w-full align-middle">
+                  <table className="min-w-full divide-y divide-border">
+                    <thead className="bg-muted/50">
+                      <tr>
+                        <th className="sticky left-0 z-10 bg-muted/50 px-3 py-2 text-left text-xs font-medium whitespace-nowrap">Orden</th>
+                        <th className="px-3 py-2 text-left text-xs font-medium whitespace-nowrap">Nombre</th>
+                        <th className="px-3 py-2 text-left text-xs font-medium whitespace-nowrap">Producto</th>
+                        <th className="px-2 py-2 text-left text-xs font-medium whitespace-nowrap">SKU</th>
+                        <th className="px-2 py-2 text-left text-xs font-medium whitespace-nowrap">Comp SKU</th>
+                        <th className="px-2 py-2 text-center text-xs font-medium whitespace-nowrap">Cant</th>
+                        <th className="px-3 py-2 text-left text-xs font-medium whitespace-nowrap">Transportista</th>
+                        <th className="px-2 py-2 text-left text-xs font-medium whitespace-nowrap">Nro Guía</th>
+                        <th className="px-3 py-2 text-left text-xs font-medium whitespace-nowrap">Guía PDF</th>
+                        <th className="px-3 py-2 text-left text-xs font-medium whitespace-nowrap">Estado</th>
+                        <th className="px-3 py-2 text-left text-xs font-medium whitespace-nowrap">Fecha Desp.</th>
+                        <th className="px-3 py-2 text-center text-xs font-medium whitespace-nowrap bg-amber-50 dark:bg-amber-950">
+                          <div className="font-bold">DESPACHADO</div>
+                        </th>
+                        <th className="sticky right-0 z-10 bg-muted/50 px-3 py-2 text-right text-xs font-medium whitespace-nowrap">Acciones</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border bg-background">
+                      {salesData.data.map((sale) => (
+                        <tr key={sale.id} className="hover:bg-muted/50">
+                          <td className="sticky left-0 z-10 bg-background px-3 py-2 text-sm whitespace-nowrap font-medium" data-testid={`text-orden-${sale.id}`}>
+                            {sale.orden}
+                          </td>
+                          <td className="px-3 py-2 text-sm whitespace-nowrap" data-testid={`text-nombre-${sale.id}`}>
+                            {sale.nombre}
+                          </td>
+                          <td className="px-3 py-2 text-sm max-w-[200px] truncate" data-testid={`text-product-${sale.id}`} title={sale.product}>
+                            {sale.product}
+                          </td>
+                          <td className="px-2 py-2 text-sm whitespace-nowrap text-muted-foreground" data-testid={`text-sku-${sale.id}`}>
+                            {sale.sku || "-"}
+                          </td>
+                          <td className="px-2 py-2 text-sm whitespace-nowrap text-muted-foreground" data-testid={`text-componente-sku-${sale.id}`}>
+                            {sale.componenteSku || "-"}
+                          </td>
+                          <td className="px-2 py-2 text-sm text-center whitespace-nowrap" data-testid={`text-cantidad-${sale.id}`}>
+                            {sale.cantidadComponente ?? sale.cantidad}
+                          </td>
+                          <td className="px-3 py-2 text-sm whitespace-nowrap" data-testid={`text-transportista-${sale.id}`}>
+                            {sale.transportistaNombre || "-"}
+                          </td>
+                          <td className="px-2 py-2 text-sm whitespace-nowrap" data-testid={`text-nroguia-${sale.id}`}>
+                            {sale.nroGuia || "-"}
+                          </td>
+                          <td className="px-3 py-2 text-sm whitespace-nowrap">
+                            {sale.dispatchSheetId ? (
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="h-7 px-2"
+                                onClick={() => handleDispatchSheetDownload(sale.dispatchSheetId!, sale.dispatchSheetFileName || "guia.pdf")}
+                                data-testid={`button-download-dispatch-${sale.id}`}
+                              >
+                                <Download className="h-3.5 w-3.5" />
+                              </Button>
+                            ) : (
+                              <span className="text-muted-foreground">-</span>
+                            )}
+                          </td>
+                          <td className="px-3 py-2 text-sm whitespace-nowrap">
+                            <Badge variant="outline" className="text-xs" data-testid={`badge-estado-${sale.id}`}>
+                              {sale.estadoEntrega}
+                            </Badge>
+                          </td>
+                          <td className="px-3 py-2 text-sm whitespace-nowrap" data-testid={`text-fecha-${sale.id}`}>
+                            {sale.fechaDespacho ? format(new Date(sale.fechaDespacho), "dd/MM/yyyy") : "-"}
+                          </td>
+                          <td className="px-3 py-2 text-center whitespace-nowrap bg-amber-50 dark:bg-amber-950">
+                            <Checkbox
+                              checked={sale.despachado}
+                              onCheckedChange={() => handleToggleDespachado(sale)}
+                              disabled={updateSaleMutation.isPending}
+                              data-testid={`checkbox-despachado-${sale.id}`}
+                            />
+                          </td>
+                          <td className="sticky right-0 z-10 bg-background px-3 py-2 text-right whitespace-nowrap">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-7"
+                              onClick={() => handleEditFechaDespacho(sale)}
+                              data-testid={`button-edit-fecha-${sale.id}`}
+                            >
+                              <Calendar className="h-3.5 w-3.5 mr-1" />
+                              <span className="text-xs">Editar</span>
+                            </Button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              <div className="text-xs text-muted-foreground text-center py-2 border-t bg-muted/30">
+                ← Desliza horizontalmente para ver todas las columnas →
+              </div>
             </div>
           )}
         </CardContent>
